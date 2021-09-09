@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="18122" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="N5K-iL-P9Q">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="18093"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Announcements-->
+        <scene sceneID="1id-Tm-3Di">
+            <objects>
+                <viewController id="2dN-Hz-XAt" customClass="LatestNewsVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="X2T-lI-1tl">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="DdK-CF-p6S"/>
+                        <color key="backgroundColor" name="background"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Latest News" image="announcement" selectedImage="announcement" id="OcX-qw-wMR"/>
+                    <navigationItem key="navigationItem" title="Announcements" id="1YP-Sf-Ngx"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="uIV-u7-vpi" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1243" y="1312"/>
+        </scene>
+        <!--BB&N News-->
+        <scene sceneID="SaP-Zw-xeb">
+            <objects>
+                <navigationController id="olu-d4-nRY" sceneMemberID="viewController">
+                    <tabBarItem key="tabBarItem" title="BB&amp;N News" image="announcement" selectedImage="announcement" id="wCn-v5-u0H"/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="esH-86-5Hy">
+                        <rect key="frame" x="0.0" y="44" width="414" height="96"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textAttributes key="largeTitleTextAttributes">
+                            <color key="textColor" name="inverse"/>
+                        </textAttributes>
+                    </navigationBar>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="als-0h-4kl" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1243" y="574"/>
+        </scene>
+        <!--Bubble Tab Bar Controller-->
+        <scene sceneID="FHT-4R-h8A">
+            <objects>
+                <tabBarController id="bxd-nb-yUd" customClass="BubbleTabBarController" customModule="BubbleTabBar" sceneMemberID="viewController">
+                    <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="J8p-m0-L9b">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="49"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    </tabBar>
+                    <connections>
+                        <segue destination="E7k-Su-12S" kind="relationship" relationship="viewControllers" id="4dn-Jn-st5"/>
+                        <segue destination="YkL-hu-Gqn" kind="relationship" relationship="viewControllers" id="Nb2-CM-fph"/>
+                        <segue destination="2dN-Hz-XAt" kind="relationship" relationship="viewControllers" id="1r5-dJ-pzl"/>
+                        <segue destination="kxO-Rs-nNQ" kind="relationship" relationship="viewControllers" id="u1H-2G-oHG"/>
+                    </connections>
+                </tabBarController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Anu-cM-6h7" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="842" y="-273"/>
+        </scene>
+        <!--News-->
+        <scene sceneID="vE4-ow-dol">
+            <objects>
+                <viewController id="YkL-hu-Gqn" customClass="VanguardVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="qVw-Kg-RnH">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="Ici-O6-sUS"/>
+                        <color key="backgroundColor" name="background"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Vanguard" image="vanguardLogo" selectedImage="vanguardLogo" id="ZsQ-fQ-1jJ"/>
+                    <navigationItem key="navigationItem" title="News" id="xqp-td-wRJ"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="XxZ-xY-EbI" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="471" y="1313"/>
+        </scene>
+        <!--Vanguard-->
+        <scene sceneID="ak5-Th-YoC">
+            <objects>
+                <navigationController id="1bz-i7-2Qd" sceneMemberID="viewController">
+                    <tabBarItem key="tabBarItem" title="Vanguard" image="newspaper" catalog="system" selectedImage="newspaper" id="gtQ-Ae-EyN"/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="aDK-po-fvl">
+                        <rect key="frame" x="0.0" y="44" width="414" height="96"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textAttributes key="largeTitleTextAttributes">
+                            <color key="textColor" name="inverse"/>
+                        </textAttributes>
+                    </navigationBar>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="s36-aD-7ds" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="470" y="574"/>
+        </scene>
+        <!--My Schedule-->
+        <scene sceneID="OxD-Bv-8hl">
+            <objects>
+                <viewController id="E7k-Su-12S" customClass="CalendarVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="3Mg-fM-LmI">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="CJc-BH-m1q" customClass="FSCalendar">
+                                <rect key="frame" x="0.0" y="44" width="414" height="195"/>
+                                <color key="backgroundColor" name="background"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="195" id="FBx-fJ-B4a"/>
+                                </constraints>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="headerTitleColor">
+                                        <color key="value" name="inverse"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="todayColor">
+                                        <color key="value" name="gold-light"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="weekdayTextColor">
+                                        <color key="value" name="inverse"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="titleDefaultColor">
+                                        <color key="value" name="lightGray"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="titlePlaceholderColor">
+                                        <color key="value" name="darkGray"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9tx-KV-A07">
+                                <rect key="frame" x="0.0" y="239" width="414" height="1"/>
+                                <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="1" id="Xxb-WB-hIw"/>
+                                </constraints>
+                            </view>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="cpJ-7A-gBR">
+                                <rect key="frame" x="0.0" y="240" width="414" height="573"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                            </tableView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="ME1-Er-Rb6"/>
+                        <color key="backgroundColor" name="background"/>
+                        <constraints>
+                            <constraint firstItem="9tx-KV-A07" firstAttribute="leading" secondItem="ME1-Er-Rb6" secondAttribute="leading" id="0EP-zh-Wxt"/>
+                            <constraint firstItem="CJc-BH-m1q" firstAttribute="top" secondItem="ME1-Er-Rb6" secondAttribute="top" id="0VX-Bl-TZL"/>
+                            <constraint firstItem="CJc-BH-m1q" firstAttribute="trailing" secondItem="ME1-Er-Rb6" secondAttribute="trailing" id="FYq-n3-MTu"/>
+                            <constraint firstItem="ME1-Er-Rb6" firstAttribute="trailing" secondItem="cpJ-7A-gBR" secondAttribute="trailing" id="MVK-60-Xnk"/>
+                            <constraint firstItem="cpJ-7A-gBR" firstAttribute="top" secondItem="9tx-KV-A07" secondAttribute="bottom" id="OS7-tp-zJj"/>
+                            <constraint firstItem="9tx-KV-A07" firstAttribute="top" secondItem="CJc-BH-m1q" secondAttribute="bottom" id="TrR-xS-IjD"/>
+                            <constraint firstItem="CJc-BH-m1q" firstAttribute="leading" secondItem="ME1-Er-Rb6" secondAttribute="leading" id="V8w-hr-bjO"/>
+                            <constraint firstItem="ME1-Er-Rb6" firstAttribute="bottom" secondItem="cpJ-7A-gBR" secondAttribute="bottom" id="WqL-vK-esV"/>
+                            <constraint firstItem="9tx-KV-A07" firstAttribute="top" secondItem="CJc-BH-m1q" secondAttribute="bottom" id="bZS-ZG-f6O"/>
+                            <constraint firstItem="cpJ-7A-gBR" firstAttribute="leading" secondItem="ME1-Er-Rb6" secondAttribute="leading" id="fTn-YN-q5m"/>
+                            <constraint firstItem="ME1-Er-Rb6" firstAttribute="trailing" secondItem="9tx-KV-A07" secondAttribute="trailing" id="znb-lj-ev4"/>
+                        </constraints>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Schedule" image="calendar" catalog="system" selectedImage="calendar" id="9zU-cX-oIt"/>
+                    <navigationItem key="navigationItem" title="My Schedule" id="guX-Lm-JjH"/>
+                    <connections>
+                        <outlet property="CalendarHeightConstraint" destination="FBx-fJ-B4a" id="hKk-rr-2ec"/>
+                        <outlet property="ScheduleCalendar" destination="cpJ-7A-gBR" id="aBz-hh-pxv"/>
+                        <outlet property="calendar" destination="CJc-BH-m1q" id="88H-Ol-cFT"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="oGB-Ei-O8o" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-246.37681159420291" y="1312.5"/>
+        </scene>
+        <!--Schedule-->
+        <scene sceneID="aGN-0d-5cD">
+            <objects>
+                <navigationController id="gv1-9q-kN5" sceneMemberID="viewController">
+                    <tabBarItem key="tabBarItem" title="Schedule" image="calendar" catalog="system" selectedImage="calendar" id="JyA-7v-ReN"/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="7Qv-FQ-uGL">
+                        <rect key="frame" x="0.0" y="44" width="414" height="96"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textAttributes key="largeTitleTextAttributes">
+                            <color key="textColor" name="inverse"/>
+                        </textAttributes>
+                    </navigationBar>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="hfa-Qx-iwI" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-246" y="574"/>
+        </scene>
+        <!--Settings-->
+        <scene sceneID="DeT-8T-bZ0">
+            <objects>
+                <viewController id="kxO-Rs-nNQ" customClass="SettingsVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="3y9-eq-9Xx">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="YPC-kj-SMj"/>
+                        <color key="backgroundColor" name="background"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Settings" image="gear" catalog="system" selectedImage="gear" id="rQv-U0-3cc"/>
+                    <navigationItem key="navigationItem" title="Settings" id="kHJ-Ee-gYr"/>
+                    <connections>
+                        <segue destination="D97-9g-UUh" kind="presentation" identifier="Reset" modalPresentationStyle="fullScreen" modalTransitionStyle="crossDissolve" id="RmR-8h-qio"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="vKE-LF-2z3" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1970" y="574"/>
+        </scene>
+        <!--LoginVC-->
+        <scene sceneID="KmL-x6-47y">
+            <objects>
+                <viewController id="D97-9g-UUh" customClass="LoginVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="X7N-a2-nt1">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logo" translatesAutoresizingMaskIntoConstraints="NO" id="4cK-BE-d5J">
+                                <rect key="frame" x="87" y="157" width="240" height="240"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="240" id="OWr-uI-KD6"/>
+                                    <constraint firstAttribute="width" constant="240" id="oJt-fO-GOC"/>
+                                </constraints>
+                            </imageView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fhl-b4-s9d" customClass="GIDSignInButton">
+                                <rect key="frame" x="35" y="737" width="344" height="50"/>
+                                <color key="backgroundColor" name="inverse"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="50" id="gub-2a-6xC"/>
+                                    <constraint firstAttribute="width" constant="344" id="seE-Ts-Exu"/>
+                                </constraints>
+                                <connections>
+                                    <action selector="signIn:" destination="D97-9g-UUh" eventType="touchUpInside" id="EIn-yT-zrC"/>
+                                </connections>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="CPd-We-JYf"/>
+                        <color key="backgroundColor" name="background"/>
+                        <constraints>
+                            <constraint firstItem="fhl-b4-s9d" firstAttribute="centerX" secondItem="CPd-We-JYf" secondAttribute="centerX" id="7I7-Dt-zyc"/>
+                            <constraint firstItem="4cK-BE-d5J" firstAttribute="top" secondItem="CPd-We-JYf" secondAttribute="top" constant="113" id="7ZT-HS-Goc"/>
+                            <constraint firstItem="4cK-BE-d5J" firstAttribute="centerX" secondItem="CPd-We-JYf" secondAttribute="centerX" id="Vt4-Y5-jcS"/>
+                            <constraint firstItem="CPd-We-JYf" firstAttribute="bottom" secondItem="fhl-b4-s9d" secondAttribute="bottom" constant="75" id="YQM-D2-9fr"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="SignInButton" destination="fhl-b4-s9d" id="BGQ-r7-V0z"/>
+                        <segue destination="bxd-nb-yUd" kind="presentation" identifier="SignIn" modalPresentationStyle="fullScreen" modalTransitionStyle="crossDissolve" id="rpQ-tf-hs5"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Lgv-Hs-nvX" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="841" y="-1067"/>
+        </scene>
+        <!--LaunchVC-->
+        <scene sceneID="sgW-0d-QTf">
+            <objects>
+                <viewController id="N5K-iL-P9Q" customClass="LaunchVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="tFZ-bH-gOx">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logo" translatesAutoresizingMaskIntoConstraints="NO" id="iVy-4B-XOq">
+                                <rect key="frame" x="87" y="157" width="240" height="240"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="240" id="Six-Vp-uW3"/>
+                                    <constraint firstAttribute="height" constant="240" id="iRX-rE-IiS"/>
+                                </constraints>
+                            </imageView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="r64-NP-y6z"/>
+                        <color key="backgroundColor" name="background"/>
+                        <constraints>
+                            <constraint firstItem="iVy-4B-XOq" firstAttribute="centerX" secondItem="r64-NP-y6z" secondAttribute="centerX" id="3ay-WZ-Xxs"/>
+                            <constraint firstItem="iVy-4B-XOq" firstAttribute="top" secondItem="r64-NP-y6z" secondAttribute="top" constant="113" id="PQ9-dK-wQU"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <segue destination="D97-9g-UUh" kind="presentation" identifier="NotSignedIn" modalPresentationStyle="fullScreen" modalTransitionStyle="crossDissolve" id="IEd-bA-12x"/>
+                        <segue destination="bxd-nb-yUd" kind="presentation" identifier="SignedIn" modalPresentationStyle="fullScreen" modalTransitionStyle="crossDissolve" id="Szw-2S-RWR"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="uVK-zj-45w" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="112" y="-1830"/>
+        </scene>
+    </scenes>
+    <inferredMetricsTieBreakers>
+        <segue reference="RmR-8h-qio"/>
+        <segue reference="rpQ-tf-hs5"/>
+    </inferredMetricsTieBreakers>
+    <resources>
+        <image name="announcement" width="21.333333969116211" height="21.333333969116211"/>
+        <image name="calendar" catalog="system" width="128" height="106"/>
+        <image name="gear" catalog="system" width="128" height="119"/>
+        <image name="logo" width="1124" height="1162"/>
+        <image name="newspaper" catalog="system" width="128" height="108"/>
+        <image name="vanguardLogo" width="27.666666030883789" height="29"/>
+        <namedColor name="background">
+            <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+        </namedColor>
+        <namedColor name="darkGray">
+            <color red="0.7839999794960022" green="0.7839999794960022" blue="0.7839999794960022" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="gold-light">
+            <color red="0.95099997520446777" green="0.74099999666213989" blue="0.40799999237060547" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+        </namedColor>
+        <namedColor name="inverse">
+            <color red="0.1289999932050705" green="0.20800000429153442" blue="0.39599999785423279" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+        </namedColor>
+        <namedColor name="lightGray">
+            <color red="0.52899998426437378" green="0.52899998426437378" blue="0.52899998426437378" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>
