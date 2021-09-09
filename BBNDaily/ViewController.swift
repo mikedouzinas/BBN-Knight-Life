@@ -27,7 +27,7 @@ class LoginVC: UIViewController {
     static var fullName = ""
     static var email = ""
     static var phoneNum = ""
-    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","notifs":"true","uid":""]
+    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","googlePhoto":"true","lockerNum":"","lockerCode":"","notifs":"true","uid":""]
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
     @IBOutlet weak var SignInButton: GIDSignInButton!
     override func viewDidLoad() {
@@ -36,8 +36,8 @@ class LoginVC: UIViewController {
         SignInButton.layer.cornerRadius = 8
         SignInButton.dropShadow(scale: true, radius: 15)
     }
-    static func setProfileImage() {
-        if LoginVC.email.lowercased().contains("veson") {
+    static func setProfileImage(useGoogle: Bool) {
+        if !useGoogle {
             LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
             return
         }
@@ -111,7 +111,6 @@ class LoginVC: UIViewController {
                     return
                 }
                 LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
-                LoginVC.setProfileImage()
                 let db = Firestore.firestore()
                 db.collection("users").getDocuments { (snapshot, error) in
                     if error != nil {
@@ -123,6 +122,18 @@ class LoginVC: UIViewController {
                                 if id == FirebaseAuth.Auth.auth().currentUser?.uid {
                                     isCreated = true
                                     LoginVC.blocks = document.data()
+                                    if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
+                                        LoginVC.setProfileImage(useGoogle: true)
+                                    }
+                                    else {
+                                        LoginVC.setProfileImage(useGoogle: false)
+                                    }
+                                    if  ((LoginVC.blocks["grade"] ?? "11") as! String).contains("9") || ((LoginVC.blocks["grade"] ?? "11") as! String).contains("10") {
+                                        CalendarVC.isLunch1 = true
+                                    }
+                                    else {
+                                        CalendarVC.isLunch1 = false
+                                    }
                                     strongSelf.callTabBar()
                                     return
                                 }
@@ -141,8 +152,36 @@ class LoginVC: UIViewController {
             }
         }
     }
+    static func getLunchDays() -> [[block]]{
+        var monday = [block]()
+        var tuesday = [block]()
+        var wednesday = [block]()
+        var thursday = [block]()
+        var friday = [block]()
+        if CalendarVC.isLunch1 {
+            monday = CalendarVC.mondayL1
+            tuesday = CalendarVC.tuesdayL1
+            wednesday = CalendarVC.wednesdayL1
+            thursday = CalendarVC.thursdayL1
+            friday = CalendarVC.fridayL1
+        }
+        else {
+            monday = CalendarVC.monday
+            tuesday = CalendarVC.tuesday
+            wednesday = CalendarVC.wednesday
+            thursday = CalendarVC.thursday
+            friday = CalendarVC.friday
+        }
+        return [monday, tuesday, wednesday, thursday, friday]
+    }
     static func setNotifications() {
-        for x in CalendarVC.monday {
+        let bigArray = LoginVC.getLunchDays()
+        let monday = bigArray[0]
+        let tuesday = bigArray[1]
+        let wednesday = bigArray[2]
+        let thursday = bigArray[3]
+        let friday = bigArray[4]
+        for x in monday {
             // 1
             let time1 = x.reminderTime.prefix(5)
             
@@ -182,7 +221,7 @@ class LoginVC: UIViewController {
                 }
             }
         }
-        for x in CalendarVC.tuesday {
+        for x in tuesday {
             // 1
             let time1 = x.reminderTime.prefix(5)
             let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
@@ -221,7 +260,7 @@ class LoginVC: UIViewController {
                 }
             }
         }
-        for x in CalendarVC.wednesday {
+        for x in wednesday {
             // 1
             let time1 = x.reminderTime.prefix(5)
             let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
@@ -260,7 +299,7 @@ class LoginVC: UIViewController {
                 }
             }
         }
-        for x in CalendarVC.thursday {
+        for x in thursday {
             // 1
             let time1 = x.reminderTime.prefix(5)
             let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
@@ -299,7 +338,7 @@ class LoginVC: UIViewController {
                 }
             }
         }
-        for x in CalendarVC.friday {
+        for x in friday {
             // 1
             let time1 = x.reminderTime.prefix(5)
             let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
@@ -383,7 +422,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         else if section == 1 {
             return blocks.count
         }
-        return 1
+        return (2 + preferenceBlocks.count)
     }
     func numberOfSections(in tableView: UITableView) -> Int {
         return 3
@@ -436,30 +475,90 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             return cell
         }
         else {
-            let cell = UITableViewCell()
-            cell.backgroundColor = UIColor.white
-            cell.contentView.backgroundColor = UIColor.white
-            let label = UILabel()
-            label.text = "Notifications"
-            label.textColor = UIColor.systemGray
-            label.font = .systemFont(ofSize: 14, weight: .regular)
-            label.translatesAutoresizingMaskIntoConstraints = false
-            let switcher = UISwitch()
-            switcher.translatesAutoresizingMaskIntoConstraints = false
-            if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
-                switcher.isOn = true
+            if indexPath.row == 0 {
+                let cell = UITableViewCell()
+                cell.selectionStyle = .none
+                cell.backgroundColor = UIColor.white
+                cell.contentView.backgroundColor = UIColor.white
+                let label = UILabel()
+                label.text = "Notifications"
+                label.textColor = UIColor.systemGray
+                label.font = .systemFont(ofSize: 14, weight: .regular)
+                label.translatesAutoresizingMaskIntoConstraints = false
+                let switcher = UISwitch()
+                switcher.translatesAutoresizingMaskIntoConstraints = false
+                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
+                    switcher.isOn = true
+                }
+                else {
+                    switcher.isOn = false
+                }
+                switcher.addTarget(self, action: #selector(pressedSwitch(_:)), for: .touchUpInside)
+                cell.contentView.addSubview(label)
+                cell.contentView.addSubview(switcher)
+                label.centerYAnchor.constraint(equalTo: cell.centerYAnchor).isActive = true
+                label.leftAnchor.constraint(equalTo: cell.leftAnchor, constant: 10).isActive = true
+                switcher.centerYAnchor.constraint(equalTo: cell.centerYAnchor).isActive = true
+                switcher.rightAnchor.constraint(equalTo: cell.rightAnchor, constant: -20).isActive = true
+                return cell
+            }
+            else if indexPath.row == 1 {
+                let cell = UITableViewCell()
+                cell.selectionStyle = .none
+                cell.backgroundColor = UIColor.white
+                cell.contentView.backgroundColor = UIColor.white
+                let label = UILabel()
+                label.text = "Profile Photo"
+                label.textColor = UIColor.systemGray
+                label.font = .systemFont(ofSize: 14, weight: .regular)
+                label.translatesAutoresizingMaskIntoConstraints = false
+                let switcher = UISwitch()
+                switcher.translatesAutoresizingMaskIntoConstraints = false
+                if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
+                    switcher.isOn = true
+                    LoginVC.setProfileImage(useGoogle: true)
+                }
+                else {
+                    switcher.isOn = false
+                    LoginVC.setProfileImage(useGoogle: false)
+                }
+                switcher.addTarget(self, action: #selector(pressedPhotoSwitch(_:)), for: .touchUpInside)
+                cell.contentView.addSubview(label)
+                cell.contentView.addSubview(switcher)
+                label.centerYAnchor.constraint(equalTo: cell.centerYAnchor).isActive = true
+                label.leftAnchor.constraint(equalTo: cell.leftAnchor, constant: 10).isActive = true
+                switcher.centerYAnchor.constraint(equalTo: cell.centerYAnchor).isActive = true
+                switcher.rightAnchor.constraint(equalTo: cell.rightAnchor, constant: -20).isActive = true
+                return cell
             }
             else {
-                switcher.isOn = false
+                guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
+                    fatalError()
+                }
+                let imageview = UIImageView(image: UIImage(systemName: "chevron.right")!)
+                imageview.tintColor = UIColor(named: "darkGray")
+                cell.accessoryView = imageview
+                cell.configure(with: preferenceBlocks[indexPath.row-2])
+                return cell
             }
-            switcher.addTarget(self, action: #selector(pressedSwitch(_:)), for: .touchUpInside)
-            cell.contentView.addSubview(label)
-            cell.contentView.addSubview(switcher)
-            label.centerYAnchor.constraint(equalTo: cell.centerYAnchor).isActive = true
-            label.leftAnchor.constraint(equalTo: cell.leftAnchor, constant: 10).isActive = true
-            switcher.centerYAnchor.constraint(equalTo: cell.centerYAnchor).isActive = true
-            switcher.rightAnchor.constraint(equalTo: cell.rightAnchor, constant: -20).isActive = true
-            return cell
+        }
+    }
+    @objc func pressedPhotoSwitch(_ switcher: UISwitch) {
+        if switcher.isOn {
+            let db = Firestore.firestore()
+            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+            LoginVC.blocks["googlePhoto"] = "true"
+            currDoc.setData(LoginVC.blocks)
+            LoginVC.setProfileImage(useGoogle: true)
+            setHeader()
+        }
+        else {
+            let db = Firestore.firestore()
+            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+            LoginVC.blocks["googlePhoto"] = "false"
+            currDoc.setData(LoginVC.blocks)
+            LoginVC.setProfileImage(useGoogle: false)
+            setHeader()
         }
     }
     @objc func pressedSwitch(_ switcher: UISwitch) {
@@ -491,6 +590,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             alertController.addTextField { (textField) in
                 // configure the properties of the text field
                 textField.placeholder = "e.g. Math"
+                textField.text = "\(self.blocks[indexPath.row].className)"
             }
 
 
@@ -512,6 +612,112 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 }
                 tableView.reloadRows(at: [indexPath], with: .fade)
             }
+            
+            alertController.addAction(cancelAction)
+            alertController.addAction(saveAction)
+
+            present(alertController, animated: true, completion: nil)
+        }
+        else if indexPath.section == 2 && indexPath.row == 2 {
+            let alertController = UIAlertController(title: "Grade", message: "Please enter your grade to better configure your lunch blocks", preferredStyle: .actionSheet)
+            
+            // add the buttons/actions to the view controller
+            let freshman = UIAlertAction(title: "Freshman", style: .default) { _ in
+                LoginVC.blocks["grade"] = "9"
+                self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: "9")
+//                self.pr
+                let db = Firestore.firestore()
+                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                currDoc.setData(LoginVC.blocks)
+                CalendarVC.isLunch1 = true
+                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
+                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+                    LoginVC.setNotifications()
+                }
+                tableView.reloadRows(at: [indexPath], with: .fade)
+            }
+            let sophmore = UIAlertAction(title: "Sophmore", style: .default) { _ in
+                LoginVC.blocks["grade"] = "10"
+                self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: "10")
+                let db = Firestore.firestore()
+                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                currDoc.setData(LoginVC.blocks)
+                CalendarVC.isLunch1 = true
+                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
+                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+                    LoginVC.setNotifications()
+                }
+                tableView.reloadRows(at: [indexPath], with: .fade)
+            }
+            let junior = UIAlertAction(title: "Junior", style: .default) { _ in
+                LoginVC.blocks["grade"] = "11"
+                self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: "11")
+                let db = Firestore.firestore()
+                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                currDoc.setData(LoginVC.blocks)
+                CalendarVC.isLunch1 = false
+                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
+                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+                    LoginVC.setNotifications()
+                }
+                tableView.reloadRows(at: [indexPath], with: .fade)
+            }
+            let senior = UIAlertAction(title: "Senior", style: .default) { _ in
+                LoginVC.blocks["grade"] = "12"
+                self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: "12")
+                let db = Firestore.firestore()
+                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                currDoc.setData(LoginVC.blocks)
+                CalendarVC.isLunch1 = false
+                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
+                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+                    LoginVC.setNotifications()
+                }
+                tableView.reloadRows(at: [indexPath], with: .fade)
+            }
+            let cancel = UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                tableView.deselectRow(at: indexPath, animated: true)
+            }
+            alertController.addAction(freshman)
+            alertController.addAction(sophmore)
+            alertController.addAction(junior)
+            alertController.addAction(senior)
+            alertController.addAction(cancel)
+
+            present(alertController, animated: true, completion: nil)
+        }
+        else if indexPath.section == 2 && indexPath.row > 2 {
+            tableView.deselectRow(at: indexPath, animated: true)
+            let alertController = UIAlertController(title: "\(preferenceBlocks[indexPath.row-2].blockName)", message: "Please enter your \(blocks[indexPath.row].blockName)", preferredStyle: .alert)
+
+            alertController.addTextField { (textField) in
+                // configure the properties of the text field
+                textField.placeholder = "e.g. 123"
+                textField.text = "\(self.preferenceBlocks[indexPath.row-2].className)"
+            }
+
+
+            // add the buttons/actions to the view controller
+            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+            let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
+
+                // this code runs when the user hits the "save" button
+
+                let inputName = alertController.textFields![0].text
+                var name = ""
+                if self.preferenceBlocks[indexPath.row-2].blockName.lowercased().contains("locker #") {
+                    name = "lockerNum"
+                }
+                else {
+                    name = "lockerCode"
+                }
+                LoginVC.blocks["\(name)"] = inputName
+                self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: inputName!)
+                let db = Firestore.firestore()
+                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                currDoc.setData(LoginVC.blocks)
+                tableView.reloadRows(at: [indexPath], with: .fade)
+            }
 
             alertController.addAction(cancelAction)
             alertController.addAction(saveAction)
@@ -525,6 +731,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         self.performSegue(withIdentifier: "Reset", sender: nil)
     }
     private var blocks = [settingsBlock]()
+    private var preferenceBlocks = [settingsBlock]()
     private var profileCells = [ProfileCell]()
     private var tableView = UITableView()
     @objc func signOut() {
@@ -576,6 +783,8 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                   settingsBlock(blockName: "E", className: LoginVC.blocks["E"] as! String),
                   settingsBlock(blockName: "F", className: LoginVC.blocks["F"] as! String),
                   settingsBlock(blockName: "G", className: LoginVC.blocks["G"] as! String)]
+        preferenceBlocks = [settingsBlock(blockName: "Grade", className: "\(LoginVC.blocks["grade"] as! String)"),settingsBlock(blockName: "Locker #", className: "\(LoginVC.blocks["lockerNum"] as! String)"), settingsBlock(blockName: "Locker Code", className: "\(LoginVC.blocks["lockerCode"] as! String)")]
+        tableView = UITableView(frame: .zero, style: .grouped)
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
@@ -587,7 +796,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         tableView.delegate = self
         tableView.dataSource = self
         let button = UIButton(frame: CGRect(x: 0, y: 30, width: 30, height: 50))
-        button.setTitle("Credits", for: .normal)
+        button.setTitle("Credits & Feedback", for: .normal)
         button.setTitleColor(UIColor(named: "gold"), for: .normal)
         button.addTarget(self, action: #selector(openCredits), for: .touchUpInside)
         tableView.tableFooterView = button
@@ -603,6 +812,16 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             i+=1
         }
         self.tableView.reloadData()
+        setHeader()
+    }
+    static func setToLunch2() {
+        
+    }
+    static func setToLunch1() {
+        
+    }
+    func setHeader() {
+        
         let header = StretchyTableHeaderView(frame: CGRect(x: 0, y: 0, width: view.frame.size.width, height: view.frame.size.width))
 //        header.imageview.image = UIImage(named: "DefaultUserPhoto")
         header.imageview.image = LoginVC.profilePhoto.image
@@ -610,7 +829,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         tableView.tableHeaderView = header
     }
     @objc func openCredits() {
-        print("pressed")
+        self.performSegue(withIdentifier: "Credits", sender: nil)
     }
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard let header = tableView.tableHeaderView as? StretchyTableHeaderView else {
@@ -660,12 +879,22 @@ class SettingsBlockTableViewCell: UITableViewCell {
     }
     func configure(with viewModel: settingsBlock) {
         backgroundColor = UIColor.white
-        TitleLabel.text = "\(viewModel.blockName) Block"
+        if viewModel.blockName.count > 1 {
+            TitleLabel.text = "\(viewModel.blockName)"
+        }
+        else {
+            TitleLabel.text = "\(viewModel.blockName) Block"
+        }
         if viewModel.className != "" {
             DataLabel.text = viewModel.className
         }
         else {
-            DataLabel.text = "[Not Set]"
+            if viewModel.blockName.count > 1 {
+                DataLabel.text = "Not set"
+            }
+            else {
+                DataLabel.text = "[Class] [Room #]"
+            }
         }
     }
 }
@@ -794,7 +1023,6 @@ class LaunchVC: UIViewController {
                 return
             }
             LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
-            LoginVC.setProfileImage()
             
             let db = Firestore.firestore()
             db.collection("users").getDocuments { (snapshot, error) in
@@ -805,6 +1033,18 @@ class LaunchVC: UIViewController {
                         if let id = document.data()["uid"] as? String {
                             if id == FirebaseAuth.Auth.auth().currentUser?.uid {
                                 LoginVC.blocks = document.data()
+                                if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
+                                    LoginVC.setProfileImage(useGoogle: true)
+                                }
+                                else {
+                                    LoginVC.setProfileImage(useGoogle: false)
+                                }
+                                if  ((LoginVC.blocks["grade"] ?? "11") as! String).contains("9") || ((LoginVC.blocks["grade"] ?? "11") as! String).contains("10") {
+                                    CalendarVC.isLunch1 = true
+                                }
+                                else {
+                                    CalendarVC.isLunch1 = false
+                                }
                                 self.callTabBar()
                                 return
                             }
@@ -844,7 +1084,6 @@ class vc3Class: UIViewController, UITableViewDelegate, UITableViewDataSource, UI
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 150
     }
-    //
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = newsTableView.dequeueReusableCell(withIdentifier: NewsTableViewCell.identifier,
                                                            for: indexPath
@@ -1132,7 +1371,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         formatter1.dateStyle = .short
         let stringDate = formatter1.string(from: Date())
         if currentDate == stringDate {
-           
             let time1 = currentDay[indexPath.row].reminderTime.prefix(5)
             let time2 = currentDay[indexPath.row].endTime.prefix(5)
             let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
@@ -1161,6 +1399,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 cell.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
                 cell.contentView.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
             }
+            else {
+                cell.backgroundColor = UIColor(named: "background")
+                cell.contentView.backgroundColor = UIColor(named: "background")
+            }
         }
         else {
             cell.backgroundColor = UIColor(named: "background")
@@ -1174,20 +1416,60 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        setCurrentday(date: realCurrentDate)
         ScheduleCalendar.reloadData()
     }
+    static var isLunch1 = false
+    var calendarIsExpanded = true
+    @IBAction func switchCalendar(_ sender: UIBarButtonItem) {
+        if calendarIsExpanded {
+           
+            CalendarHeightConstraint.constant = 80
+            UIView.animate(withDuration: 0.5) {
+                //            viewToAnimate.alpha = 0
+                self.CalendarArrow.image = UIImage(systemName: "chevron.down")
+                self.view.layoutIfNeeded()
+                
+            }
+            self.calendar.scope = .week
+            calendarIsExpanded = false
+        }
+        else {
+            self.calendar.scope = .month
+            CalendarHeightConstraint.constant = height
+            UIView.animate(withDuration: 0.5) {
+                //            viewToAnimate.alpha = 0
+                self.CalendarArrow.image = UIImage(systemName: "chevron.up")
+                self.view.layoutIfNeeded()
+            }
+            
+            calendarIsExpanded = true
+        }
+    }
+    @IBOutlet weak var CalendarArrow: UIBarButtonItem!
     var currentDate = ""
     @IBOutlet weak var ScheduleCalendar: UITableView!
     @IBOutlet weak var calendar: FSCalendar!
     static let monday =  [
         block(name: "B", startTime: "08:15am", endTime: "09:00am", block: "B", reminderTime: "08:10am"),
         block(name: "D", startTime: "09:05am", endTime: "09:50am", block: "D", reminderTime: "09:00am"),
-        block(name: "Announcements/Special Programs", startTime: "09:55am", endTime: "10:35am", block: "N/A", reminderTime: "09:50am"),
+        block(name: "Assembly", startTime: "09:55am", endTime: "10:35am", block: "N/A", reminderTime: "09:50am"),
         block(name: "C", startTime: "10:40am", endTime: "11:25am", block: "C", reminderTime: "10:35am"),
         block(name: "F1", startTime: "11:30am", endTime: "12:15pm", block: "F", reminderTime: "11:25am"),
         block(name: "Lunch", startTime: "12:20pm", endTime: "12:45pm", block: "N/A", reminderTime: "12:15pm"),
         block(name: "Extended A", startTime: "12:50pm", endTime: "01:55pm", block: "A", reminderTime: "12:45pm"),
-        block(name: "Community Activity Block", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm"),
+        block(name: "Community Activity", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm"),
+        block(name: "E", startTime: "02:40pm", endTime: "03:25pm", block: "E", reminderTime: "02:35pm")
+    ]
+    static let mondayL1 =  [
+        block(name: "B", startTime: "08:15am", endTime: "09:00am", block: "B", reminderTime: "08:10am"),
+        block(name: "D", startTime: "09:05am", endTime: "09:50am", block: "D", reminderTime: "09:00am"),
+        block(name: "Assembly", startTime: "09:55am", endTime: "10:35am", block: "N/A", reminderTime: "09:50am"),
+        block(name: "C", startTime: "10:40am", endTime: "11:25am", block: "C", reminderTime: "10:35am"),
+        block(name: "Lunch", startTime: "11:30am", endTime: "11:55am", block: "N/A", reminderTime: "11:25am"),
+        block(name: "F2", startTime: "12:00pm", endTime: "12:45pm", block: "F", reminderTime: "11:55am"),
+        block(name: "Extended A", startTime: "12:50pm", endTime: "01:55pm", block: "A", reminderTime: "12:45pm"),
+        block(name: "Community Activity", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm"),
         block(name: "E", startTime: "02:40pm", endTime: "03:25pm", block: "E", reminderTime: "02:35pm")
     ]
     static let tuesday =  [
@@ -1201,6 +1483,17 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Advisory", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm"),
         block(name: "D", startTime: "02:40pm", endTime: "03:25pm", block: "D", reminderTime: "02:35pm")
     ]
+    static let tuesdayL1 =  [
+        block(name: "A", startTime: "08:15am", endTime: "09:00am", block: "A", reminderTime: "08:10am"),
+        block(name: "F", startTime: "09:05am", endTime: "09:50am", block: "F", reminderTime: "09:00am"),
+        block(name: "Wellness Break", startTime: "09:55am", endTime: "10:15am", block: "N/A", reminderTime: "09:50am"),
+        block(name: "Extended G", startTime: "10:20am", endTime: "11:25am", block: "G", reminderTime: "10:15am"),
+        block(name: "Lunch", startTime: "11:30am", endTime: "11:55am", block: "N/A", reminderTime: "11:25am"),
+        block(name: "E2", startTime: "12:00pm", endTime: "12:45pm", block: "E", reminderTime: "11:55am"),
+        block(name: "Extended B", startTime: "12:50pm", endTime: "1:55pm", block: "B", reminderTime: "12:45pm"),
+        block(name: "Advisory", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm"),
+        block(name: "D", startTime: "02:40pm", endTime: "03:25pm", block: "D", reminderTime: "02:35pm")
+    ]
     static let wednesday =  [
         block(name: "G", startTime: "08:15am", endTime: "09:00am", block: "G", reminderTime: "08:10am"),
         block(name: "C", startTime: "09:05am", endTime: "09:50am", block: "C", reminderTime: "09:00am"),
@@ -1208,7 +1501,16 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Extended F", startTime: "10:20am", endTime: "11:25am", block: "F", reminderTime: "10:15am"),
         block(name: "A1", startTime: "11:30am", endTime: "12:15pm", block: "A", reminderTime: "11:25am"),
         block(name: "Lunch", startTime: "12:20pm", endTime: "12:45pm", block: "N/A", reminderTime: "12:15pm"),
-        block(name: "Odd Week: CAB, Even Week: Faculty Time", startTime: "12:45pm", endTime: "1:25pm", block: "N/A", reminderTime: "12:45pm")
+        block(name: "Community Activity", startTime: "12:45pm", endTime: "1:25pm", block: "N/A", reminderTime: "12:45pm")
+    ]
+    static let wednesdayL1 =  [
+        block(name: "G", startTime: "08:15am", endTime: "09:00am", block: "G", reminderTime: "08:10am"),
+        block(name: "C", startTime: "09:05am", endTime: "09:50am", block: "C", reminderTime: "09:00am"),
+        block(name: "Class Meeting", startTime: "09:55am", endTime: "10:15am", block: "N/A", reminderTime: "09:50am"),
+        block(name: "Extended F", startTime: "10:20am", endTime: "11:25am", block: "F", reminderTime: "10:15am"),
+        block(name: "Lunch", startTime: "11:30am", endTime: "11:55am", block: "N/A", reminderTime: "11:25am"),
+        block(name: "A2", startTime: "12:00pm", endTime: "12:45pm", block: "A", reminderTime: "11:55am"),
+        block(name: "Community Activity", startTime: "12:45pm", endTime: "1:25pm", block: "N/A", reminderTime: "12:45pm")
     ]
     static let thursday =  [
         block(name: "C", startTime: "08:15am", endTime: "09:00am", block: "C", reminderTime: "08:10am"),
@@ -1221,24 +1523,48 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Office Hours", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm"),
         block(name: "F", startTime: "02:40pm", endTime: "03:25pm", block: "F", reminderTime: "02:35pm")
     ]
+    static let thursdayL1 =  [
+        block(name: "C", startTime: "08:15am", endTime: "09:00am", block: "C", reminderTime: "08:10am"),
+        block(name: "B", startTime: "09:05am", endTime: "09:50am", block: "B", reminderTime: "09:00am"),
+        block(name: "Advisory", startTime: "09:55am", endTime: "10:15am", block: "N/A", reminderTime: "09:50am"),
+        block(name: "Extended D", startTime: "10:20am", endTime: "11:25am", block: "D", reminderTime: "10:15am"),
+        block(name: "Lunch", startTime: "11:30am", endTime: "11:55am", block: "N/A", reminderTime: "11:25am"),
+        block(name: "G2", startTime: "12:00pm", endTime: "12:45pm", block: "G", reminderTime: "11:55am"),
+        block(name: "Extended E", startTime: "12:50pm", endTime: "1:55pm", block: "E", reminderTime: "12:45pm"),
+        block(name: "Office Hours", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm"),
+        block(name: "F", startTime: "02:40pm", endTime: "03:25pm", block: "F", reminderTime: "02:35pm")
+    ]
     static let friday = [
         block(name: "E", startTime: "08:15am", endTime: "09:00am", block: "E", reminderTime: "08:10am"),
         block(name: "G", startTime: "09:05am", endTime: "09:50am", block: "G", reminderTime: "09:00am"),
-        block(name: "Announcements/Special Programs", startTime: "09:55am", endTime: "10:35am", block: "N/A", reminderTime: "09:50am"),
+        block(name: "Assembly", startTime: "09:55am", endTime: "10:35am", block: "N/A", reminderTime: "09:50am"),
         block(name: "B", startTime: "10:40am", endTime: "11:25am", block: "B", reminderTime: "10:15am"),
         block(name: "D1", startTime: "11:30am", endTime: "12:15pm", block: "D", reminderTime: "11:25am"),
         block(name: "Lunch", startTime: "12:20pm", endTime: "12:45pm", block: "N/A", reminderTime: "12:15pm"),
         block(name: "Extended C", startTime: "12:50pm", endTime: "1:55pm", block: "C", reminderTime: "12:45pm"),
         block(name: "A", startTime: "02:00pm", endTime: "02:45pm", block: "A", reminderTime: "01:55pm"),
-        block(name: "Community Activity Block", startTime: "02:50pm", endTime: "03:25pm", block: "N/A", reminderTime: "02:35pm")
+        block(name: "Community Activity", startTime: "02:50pm", endTime: "03:25pm", block: "N/A", reminderTime: "02:35pm")
+    ]
+    static let fridayL1 = [
+        block(name: "E", startTime: "08:15am", endTime: "09:00am", block: "E", reminderTime: "08:10am"),
+        block(name: "G", startTime: "09:05am", endTime: "09:50am", block: "G", reminderTime: "09:00am"),
+        block(name: "Assembly", startTime: "09:55am", endTime: "10:35am", block: "N/A", reminderTime: "09:50am"),
+        block(name: "B", startTime: "10:40am", endTime: "11:25am", block: "B", reminderTime: "10:15am"),
+        block(name: "Lunch", startTime: "11:30am", endTime: "11:55am", block: "N/A", reminderTime: "11:25am"),
+        block(name: "D2", startTime: "12:00pm", endTime: "12:45pm", block: "D", reminderTime: "11:55am"),
+        block(name: "Extended C", startTime: "12:50pm", endTime: "1:55pm", block: "C", reminderTime: "12:45pm"),
+        block(name: "A", startTime: "02:00pm", endTime: "02:45pm", block: "A", reminderTime: "01:55pm"),
+        block(name: "Community Activity", startTime: "02:50pm", endTime: "03:25pm", block: "N/A", reminderTime: "02:35pm")
     ]
     @IBOutlet weak var CalendarHeightConstraint: NSLayoutConstraint!
     var currentDay = [block]()
+    var height = CGFloat(0)
     override func viewDidLoad() {
         super.viewDidLoad()
         ScheduleCalendar.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
         ScheduleCalendar.backgroundColor = UIColor(named: "background")
-        CalendarHeightConstraint.constant = view.frame.height/4
+        height = view.frame.height/4
+        CalendarHeightConstraint.constant = height
         view.layoutIfNeeded()
         ScheduleCalendar.showsVerticalScrollIndicator = false
         ScheduleCalendar.tableFooterView = UIView(frame: .zero)
@@ -1295,9 +1621,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         NoSchoolDay(date: "Monday, April 18, 2022", reason: "Patriots Day"),
         NoSchoolDay(date: "Monday, May 30, 2022", reason: "Memorial Day")
     ]
-    
+    var realCurrentDate = Date()
     let halfDays = [NoSchoolDay(date: "Wednesday, November 24, 2021", reason: "Thanksgiving Break Start")]
     func setCurrentday(date: Date) {
+        realCurrentDate = date
         let formatter2 = DateFormatter()
         formatter2.dateFormat = "yyyy-MM-dd"
         formatter2.dateStyle = .short
@@ -1308,17 +1635,23 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         formatter1.dateStyle = .full
         let stringDate = formatter1.string(from: date)
         let weekDay = stringDate.prefix(upTo: formatter1.string(from: date).firstIndex(of: ",")!)
+        let bigArray = LoginVC.getLunchDays()
+        let monday = bigArray[0]
+        let tuesday = bigArray[1]
+        let wednesday = bigArray[2]
+        let thursday = bigArray[3]
+        let friday = bigArray[4]
         switch weekDay {
         case "Monday":
-            currentDay = CalendarVC.monday
+            currentDay = monday
         case "Tuesday":
-            currentDay = CalendarVC.tuesday
+            currentDay = tuesday
         case "Wednesday":
-            currentDay = CalendarVC.wednesday
+            currentDay = wednesday
         case "Thursday":
-            currentDay = CalendarVC.thursday
+            currentDay = thursday
         case "Friday":
-            currentDay = CalendarVC.friday
+            currentDay = friday
         default:
             currentDay = [block]()
         }
@@ -1478,7 +1811,7 @@ class blockTableViewCell: UITableViewCell {
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 14, weight: .regular)
-        label.textColor = UIColor(named: "gold-light")
+        label.textColor = UIColor(named: "gold-bright")
         label.minimumScaleFactor = 0.8
         label.adjustsFontSizeToFitWidth = true
         label.textAlignment = .right
@@ -2043,4 +2376,17 @@ extension UIImage {
         return animation
     }
     
+}
+
+
+class CreditsVC: UIViewController {
+    @IBAction func close(_ sender: UIBarButtonItem) {
+        self.dismiss(animated: true, completion: nil)
+    }
+
+    @IBAction func openSheet(_ sender: Any) {
+        if let url = URL(string: "https://docs.google.com/spreadsheets/d/1A1CLxugRIGmxIV595mbiR6noLdw4ShuxAKe-tjxATCc/edit?usp=sharing") {
+            UIApplication.shared.open(url)
+        }
+    }
 }
