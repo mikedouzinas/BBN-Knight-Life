@@ -12,11 +12,11 @@ import ProgressHUD
 import InitialsImageView
 import SafariServices
 import FSCalendar
-import HTMLKit
+//import HTMLKit
 import WebKit
 
 class ViewController: UIViewController {
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -27,7 +27,7 @@ class LoginVC: UIViewController {
     static var fullName = ""
     static var email = ""
     static var phoneNum = ""
-    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","googlePhoto":"true","lockerNum":"","lockerCode":"","notifs":"true","uid":""]
+    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","googlePhoto":"true","lockerNum":"","notifs":"true","uid":""]
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
     @IBOutlet weak var SignInButton: GIDSignInButton!
     override func viewDidLoad() {
@@ -61,27 +61,27 @@ class LoginVC: UIViewController {
     }
     @IBAction func signIn(_ sender: GIDSignInButton) {
         guard let clientID = FirebaseApp.app()?.options.clientID else { return }
-
+        
         // Create Google Sign In configuration object.
         let config = GIDConfiguration(clientID: clientID)
-
+        
         // Start the sign in flow!
         GIDSignIn.sharedInstance.signIn(with: config, presenting: self) { [unowned self] user, error in
-
-          if let _ = error {
-            return
-          }
-
-          guard
-            let authentication = user?.authentication,
-            let idToken = authentication.idToken
-          else {
-            return
-          }
-
-          let credential = GoogleAuthProvider.credential(withIDToken: idToken,
-                                                         accessToken: authentication.accessToken)
-
+            
+            if let _ = error {
+                return
+            }
+            
+            guard
+                let authentication = user?.authentication,
+                let idToken = authentication.idToken
+            else {
+                return
+            }
+            
+            let credential = GoogleAuthProvider.credential(withIDToken: idToken,
+                                                           accessToken: authentication.accessToken)
+            
             Auth.auth().signIn(with: credential) {
                 [weak self]
                 result, error in
@@ -317,7 +317,7 @@ class LoginVC: UIViewController {
             dateComponents.timeZone = .current
             dateComponents.weekday = 5
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-//            UNCalendarNotificationTrigger(
+            //            UNCalendarNotificationTrigger(
             // 2
             let content = UNMutableNotificationContent()
             content.sound = UNNotificationSound.default
@@ -437,10 +437,10 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     }
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         let backview = UIView()
-        backview.backgroundColor = UIColor(named: "blue")?.withAlphaComponent(0.1)
+        backview.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.textColor = UIColor(named: "blue")
+        label.textColor = UIColor(named: "inverse")
         backview.addSubview(label)
         label.leftAnchor.constraint(equalTo: backview.leftAnchor, constant: 10).isActive = true
         label.centerYAnchor.constraint(equalTo: backview.centerYAnchor).isActive = true
@@ -483,8 +483,8 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             if indexPath.row == 0 {
                 let cell = UITableViewCell()
                 cell.selectionStyle = .none
-                cell.backgroundColor = UIColor.white
-                cell.contentView.backgroundColor = UIColor.white
+                cell.backgroundColor = UIColor(named: "background")
+                cell.contentView.backgroundColor = UIColor(named: "background")
                 let label = UILabel()
                 label.text = "Notifications"
                 label.textColor = UIColor.systemGray
@@ -510,8 +510,8 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             else if indexPath.row == 1 {
                 let cell = UITableViewCell()
                 cell.selectionStyle = .none
-                cell.backgroundColor = UIColor.white
-                cell.contentView.backgroundColor = UIColor.white
+                cell.backgroundColor = UIColor(named: "background")
+                cell.contentView.backgroundColor = UIColor(named: "background")
                 let label = UILabel()
                 label.text = "Profile Photo"
                 label.textColor = UIColor.systemGray
@@ -573,11 +573,11 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
             LoginVC.blocks["notifs"] = "true"
             currDoc.setData(LoginVC.blocks)
-//            UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
-//                for x in results {
-//                    print("title: \(x.content.title) ")
-//                }
-//            })
+            //            UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
+            //                for x in results {
+            //                    print("title: \(x.content.title) ")
+            //                }
+            //            })
         }
         else {
             let db = Firestore.firestore()
@@ -591,20 +591,20 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         if indexPath.section == 1 {
             tableView.deselectRow(at: indexPath, animated: true)
             let alertController = UIAlertController(title: "\(blocks[indexPath.row].blockName) Block", message: "Enter your class for \(blocks[indexPath.row].blockName) block", preferredStyle: .alert)
-
+            
             alertController.addTextField { (textField) in
                 // configure the properties of the text field
                 textField.placeholder = "e.g. Math"
                 textField.text = "\(self.blocks[indexPath.row].className)"
             }
-
-
+            
+            
             // add the buttons/actions to the view controller
             let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
             let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
-
+                
                 // this code runs when the user hits the "save" button
-
+                
                 let inputName = alertController.textFields![0].text
                 LoginVC.blocks["\(self.blocks[indexPath.row].blockName)"] = inputName
                 self.blocks[indexPath.row] = settingsBlock(blockName: "\(self.blocks[indexPath.row].blockName)", className: inputName!)
@@ -620,7 +620,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             
             alertController.addAction(cancelAction)
             alertController.addAction(saveAction)
-
+            
             present(alertController, animated: true, completion: nil)
         }
         else if indexPath.section == 2 && indexPath.row == 2 {
@@ -630,7 +630,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             let freshman = UIAlertAction(title: "Freshman", style: .default) { _ in
                 LoginVC.blocks["grade"] = "9"
                 self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: "9")
-//                self.pr
+                //                self.pr
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
                 currDoc.setData(LoginVC.blocks)
@@ -688,34 +688,29 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             alertController.addAction(junior)
             alertController.addAction(senior)
             alertController.addAction(cancel)
-
+            
             present(alertController, animated: true, completion: nil)
         }
         else if indexPath.section == 2 && indexPath.row > 2 {
             tableView.deselectRow(at: indexPath, animated: true)
             let alertController = UIAlertController(title: "\(preferenceBlocks[indexPath.row-2].blockName)", message: "Please enter your \(blocks[indexPath.row].blockName)", preferredStyle: .alert)
-
+            
             alertController.addTextField { (textField) in
                 // configure the properties of the text field
                 textField.placeholder = "e.g. 123"
                 textField.text = "\(self.preferenceBlocks[indexPath.row-2].className)"
             }
-
-
+            
+            
             // add the buttons/actions to the view controller
             let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
             let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
-
+                
                 // this code runs when the user hits the "save" button
-
+                
                 let inputName = alertController.textFields![0].text
                 var name = ""
-                if self.preferenceBlocks[indexPath.row-2].blockName.lowercased().contains("locker #") {
-                    name = "lockerNum"
-                }
-                else {
-                    name = "lockerCode"
-                }
+                name = "lockerNum"
                 LoginVC.blocks["\(name)"] = inputName
                 self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: inputName!)
                 let db = Firestore.firestore()
@@ -723,10 +718,10 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 currDoc.setData(LoginVC.blocks)
                 tableView.reloadRows(at: [indexPath], with: .fade)
             }
-
+            
             alertController.addAction(cancelAction)
             alertController.addAction(saveAction)
-
+            
             present(alertController, animated: true, completion: nil)
         }
     }
@@ -741,7 +736,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     private var tableView = UITableView()
     @objc func signOut() {
         let refreshAlert = UIAlertController(title: "Sign Out?", message: "Are you sure you want to sign out?", preferredStyle: UIAlertController.Style.alert)
-
+        
         refreshAlert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction!) in
             do {
                 try FirebaseAuth.Auth.auth().signOut()
@@ -752,11 +747,11 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 ProgressHUD.showFailed("Failed to Sign Out")
             }
         }))
-
+        
         refreshAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction!) in
-              
+            
         }))
-
+        
         present(refreshAlert, animated: true, completion: nil)
         
     }
@@ -773,7 +768,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     }()
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor.white
+        view.backgroundColor = UIColor(named: "background")
         view.addSubview(SignOutButton)
         SignOutButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 15).isActive = true
         SignOutButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -15).isActive = true
@@ -781,14 +776,16 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         SignOutButton.heightAnchor.constraint(equalToConstant: 45).isActive = true
         SignOutButton.addTarget(self, action: #selector(signOut), for: .touchUpInside)
         
-        blocks = [settingsBlock(blockName: "A", className: LoginVC.blocks["A"] as! String),
-                  settingsBlock(blockName: "B", className: LoginVC.blocks["B"] as! String),
-                  settingsBlock(blockName: "C", className: LoginVC.blocks["C"] as! String),
-                  settingsBlock(blockName: "D", className: LoginVC.blocks["D"] as! String),
-                  settingsBlock(blockName: "E", className: LoginVC.blocks["E"] as! String),
-                  settingsBlock(blockName: "F", className: LoginVC.blocks["F"] as! String),
-                  settingsBlock(blockName: "G", className: LoginVC.blocks["G"] as! String)]
-        preferenceBlocks = [settingsBlock(blockName: "Grade", className: "\(LoginVC.blocks["grade"] as! String)"),settingsBlock(blockName: "Locker #", className: "\(LoginVC.blocks["lockerNum"] as! String)"), settingsBlock(blockName: "Locker Code", className: "\(LoginVC.blocks["lockerCode"] as! String)")]
+        blocks = [
+            settingsBlock(blockName: "A", className: LoginVC.blocks["A"] as! String),
+            settingsBlock(blockName: "B", className: LoginVC.blocks["B"] as! String),
+            settingsBlock(blockName: "C", className: LoginVC.blocks["C"] as! String),
+            settingsBlock(blockName: "D", className: LoginVC.blocks["D"] as! String),
+            settingsBlock(blockName: "E", className: LoginVC.blocks["E"] as! String),
+            settingsBlock(blockName: "F", className: LoginVC.blocks["F"] as! String),
+            settingsBlock(blockName: "G", className: LoginVC.blocks["G"] as! String)
+        ]
+        preferenceBlocks = [settingsBlock(blockName: "Grade", className: "\(LoginVC.blocks["grade"] as! String)"),settingsBlock(blockName: "Locker #", className: "\(LoginVC.blocks["lockerNum"] as! String)")]
         tableView = UITableView(frame: .zero, style: .grouped)
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -796,7 +793,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         tableView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         tableView.bottomAnchor.constraint(equalTo: SignOutButton.topAnchor).isActive = true
         tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        tableView.backgroundColor = UIColor.white
+        tableView.backgroundColor = UIColor(named: "background")
         tableView.showsVerticalScrollIndicator = false
         tableView.delegate = self
         tableView.dataSource = self
@@ -828,7 +825,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     func setHeader() {
         
         let header = StretchyTableHeaderView(frame: CGRect(x: 0, y: 0, width: view.frame.size.width, height: view.frame.size.width))
-//        header.imageview.image = UIImage(named: "DefaultUserPhoto")
+        //        header.imageview.image = UIImage(named: "DefaultUserPhoto")
         header.imageview.image = LoginVC.profilePhoto.image
         header.nameLabel.text = LoginVC.fullName.capitalized
         tableView.tableHeaderView = header
@@ -883,7 +880,7 @@ class SettingsBlockTableViewCell: UITableViewCell {
         DataLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
     }
     func configure(with viewModel: settingsBlock) {
-        backgroundColor = UIColor.white
+        backgroundColor = UIColor(named: "background")
         if viewModel.blockName.count > 1 {
             TitleLabel.text = "\(viewModel.blockName)"
         }
@@ -937,7 +934,7 @@ class ProfileTableViewCell: UITableViewCell {
         DataLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 10).isActive = true
     }
     func configure(with viewModel: ProfileCell) {
-        contentView.backgroundColor = UIColor.white
+        contentView.backgroundColor = UIColor(named: "background")
         TitleLabel.text = viewModel.title
         DataLabel.text = viewModel.data
     }
@@ -1300,7 +1297,7 @@ class NewsTableViewCell: UITableViewCell {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     } ()
-
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         contentView.addSubview(newsTitleLabel)
@@ -1323,9 +1320,11 @@ class NewsTableViewCell: UITableViewCell {
         newsTitleLabel.rightAnchor.constraint(equalTo: newsImageView.leftAnchor, constant: -2).isActive = true
         newsTitleLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: 10).isActive = true
         newsTitleLabel.bottomAnchor.constraint(equalTo: subtitleLabel.topAnchor, constant: -2).isActive = true
+        
         subtitleLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: 10).isActive = true
         subtitleLabel.bottomAnchor.constraint(equalTo: DateLabel.topAnchor, constant: -2).isActive = true
         subtitleLabel.rightAnchor.constraint(equalTo: newsImageView.leftAnchor, constant: -2).isActive = true
+        
         DateLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: 10).isActive = true
         DateLabel.rightAnchor.constraint(equalTo: newsImageView.leftAnchor, constant: -2).isActive = true
         DateLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -2).isActive = true
@@ -1365,116 +1364,112 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         return currentDay.count
     }
     func setTimes() {
-//        let formatter1 = DateFormatter()
-//        formatter1.dateFormat = "yyyy-MM-dd"
-//        formatter1.dateStyle = .short
-//        let stringDate = formatter1.string(from: Date())
         var i = 0
         for x in currentWeekday {
             i+=1
-//            print("\(currentDate) and \(stringDate)")
-//            if currentDate == stringDate {
-            
-                let time = x.reminderTime.prefix(5)
-                let time1 = x.startTime.prefix(5)
-                let time2 = x.endTime.prefix(5)
-                let m = time.replacingOccurrences(of: time.prefix(3), with: "")
-                let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
-                let m2 = time2.replacingOccurrences(of: time2.prefix(3), with: "")
-                var amOrPm = 0
-                var amOrPm1 = 0
-                var amOrPm2 = 0
-                if x.reminderTime.contains("pm") && !time.prefix(2).contains("12"){
-                    amOrPm = 12
-                }
-                if x.startTime.contains("pm") && !time1.prefix(2).contains("12"){
-                    amOrPm1 = 12
-                }
-                if x.endTime.contains("pm") && !time2.prefix(2).contains("12") {
-                    amOrPm2 = 12
-                }
-                let calendar = Calendar.current
-                let now = Date()
-                let t = calendar.date(
-                    bySettingHour: (Int(time.prefix(2))!+amOrPm),
-                    minute: Int(m)!,
-                    second: 0,
-                    of: now)!
-                let t1 = calendar.date(
-                    bySettingHour: (Int(time1.prefix(2))!+amOrPm1),
-                    minute: Int(m1)!,
-                    second: 0,
-                    of: now)!
-                let t2 = calendar.date(
-                    bySettingHour: (Int(time2.prefix(2))!+amOrPm2),
-                    minute: Int(m2)!,
-                    second: 0,
-                    of: now)!
-                if now.isBetweenTimeFrame(date1: t, date2: t2) {
-                    currentBlock = x
-//                    cell.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
-//                    cell.contentView.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
-                    var name = ""
-                    if currentBlock.block != "N/A" {
-                        var className = LoginVC.blocks[currentBlock.block] as? String
-                        if className == "" {
-                            className = "[\(currentBlock.block) Class]"
-                        }
-                        name = className ?? ""
+            let time = x.reminderTime.prefix(5)
+            let time1 = x.startTime.prefix(5)
+            let time2 = x.endTime.prefix(5)
+            let m = time.replacingOccurrences(of: time.prefix(3), with: "")
+            let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
+            let m2 = time2.replacingOccurrences(of: time2.prefix(3), with: "")
+            var amOrPm = 0
+            var amOrPm1 = 0
+            var amOrPm2 = 0
+            if x.reminderTime.contains("pm") && !time.prefix(2).contains("12"){
+                amOrPm = 12
+            }
+            if x.startTime.contains("pm") && !time1.prefix(2).contains("12"){
+                amOrPm1 = 12
+            }
+            if x.endTime.contains("pm") && !time2.prefix(2).contains("12") {
+                amOrPm2 = 12
+            }
+            let calendar = Calendar.current
+            let now = Date()
+            let t = calendar.date(
+                bySettingHour: (Int(time.prefix(2))!+amOrPm),
+                minute: Int(m)!,
+                second: 0,
+                of: now)!
+            let t1 = calendar.date(
+                bySettingHour: (Int(time1.prefix(2))!+amOrPm1),
+                minute: Int(m1)!,
+                second: 0,
+                of: now)!
+            let t2 = calendar.date(
+                bySettingHour: (Int(time2.prefix(2))!+amOrPm2),
+                minute: Int(m2)!,
+                second: 0,
+                of: now)!
+            if now.isBetweenTimeFrame(date1: t, date2: t2) {
+                currentBlock = x
+                //                    cell.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
+                //                    cell.contentView.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
+                var name = ""
+                if currentBlock.block != "N/A" {
+                    var className = LoginVC.blocks[currentBlock.block] as? String
+                    if className == "" {
+                        className = "[\(currentBlock.block) Class]"
                     }
-                    else {
-                        name = "\(currentBlock.name)"
-                    }
-                    let formatter = DateComponentsFormatter()
-
-                    formatter.maximumUnitCount = 1
-                    formatter.unitsStyle = .abbreviated
-                    formatter.zeroFormattingBehavior = .dropAll
-                    formatter.allowedUnits = [.day, .hour, .minute, .second]
-                    if now.isBetweenTimeFrame(date1: t, date2: t1) {
-                        let interval = Date().getTimeBetween(to: t1)
-                        self.navigationItem.title = "\(formatter.string(from: interval)!) Until \(name)"
-                        Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [self] timer in
-                            print("interval")
-                             if interval <= 0 {
-                                timer.invalidate()
-                            }
-                            setTimes()
-                            ScheduleCalendar.reloadData()
+                    name = className ?? ""
+                }
+                else {
+                    name = "\(currentBlock.name)"
+                }
+                let formatter = DateComponentsFormatter()
+                
+                formatter.maximumUnitCount = 1
+                formatter.unitsStyle = .abbreviated
+                formatter.zeroFormattingBehavior = .dropAll
+                formatter.allowedUnits = [.day, .hour, .minute, .second]
+                if now.isBetweenTimeFrame(date1: t, date2: t1) {
+                    let interval = Date().getTimeBetween(to: t1)
+                    self.navigationItem.title = "\(formatter.string(from: interval)!) Until \(name)"
+                    Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [self] timer in
+                        print("interval")
+                        if interval <= 0 {
+                            timer.invalidate()
                         }
-                    }
-                    else {
-                        let interval = Date().getTimeBetween(to: t2)
-                        //                    interval.
-                        self.navigationItem.title = "\(formatter.string(from: interval)!) left in \(name)"
-                        Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [self] timer in
-                            print("interval")
-                            if interval <= 0 {
-                                timer.invalidate()
-                            }
-                            setTimes()
-                            ScheduleCalendar.reloadData()
-                        }
+                        setTimes()
+                        ScheduleCalendar.reloadData()
                     }
                 }
                 else {
-                    if currentBlock.reminderTime == x.reminderTime && i == currentWeekday.count {
-                        currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n", reminderTime: "3", length: 0)
-                        self.navigationItem.title = "My Schedule"
+                    let interval = Date().getTimeBetween(to: t2)
+                    //                    interval.
+                    self.navigationItem.title = "\(formatter.string(from: interval)!) left in \(name)"
+                    Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [self] timer in
+                        print("interval")
+                        if interval <= 0 {
+                            timer.invalidate()
+                        }
+                        setTimes()
+                        ScheduleCalendar.reloadData()
                     }
-////                    cell.backgroundColor = UIColor(named: "background")
-////                    cell.contentView.backgroundColor = UIColor(named: "background")
                 }
             }
-//        }
+            else {
+                if currentBlock.reminderTime == x.reminderTime && i == currentWeekday.count {
+                    currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n", reminderTime: "3", length: 0)
+                    self.navigationItem.title = "My Schedule"
+                }
+            }
+        }
     }
     var currentWeekday = [block]()
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: blockTableViewCell.identifier, for: indexPath) as? blockTableViewCell else {
             fatalError()
         }
-        cell.configure(with: currentDay[indexPath.row])
+        let thisBlock = currentDay[indexPath.row]
+        var isLunch = true
+        if !thisBlock.name.lowercased().contains("lunch") {
+            isLunch = false
+        }
+        cell.configure(with: currentDay[indexPath.row], isLunch: isLunch)
         
+        cell.selectionStyle = .none
         let formatter1 = DateFormatter()
         formatter1.dateFormat = "yyyy-MM-dd"
         formatter1.dateStyle = .short
@@ -1519,52 +1514,8 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 currentBlock = currentDay[indexPath.row]
                 cell.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
                 cell.contentView.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
-//                var name = ""
-//                if currentBlock.block != "N/A" {
-//                    var className = LoginVC.blocks[currentBlock.block] as? String
-//                    if className == "" {
-//                        className = "[\(currentBlock.block) Class]"
-//                    }
-//                    name = className ?? ""
-//                }
-//                else {
-//                    name = "\(currentBlock.name)"
-//                }
-//                let formatter = DateComponentsFormatter()
-//
-//                formatter.maximumUnitCount = 1
-//                formatter.unitsStyle = .abbreviated
-//                formatter.zeroFormattingBehavior = .dropAll
-//                formatter.allowedUnits = [.day, .hour, .minute, .second]
-//                if now.isBetweenTimeFrame(date1: t, date2: t1) {
-//                    let interval = Date().getTimeBetween(to: t1)
-//                    self.navigationItem.title = "\(formatter.string(from: interval)!) Until \(name)"
-//                    Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { timer in
-//                        print("interval")
-//                         if interval <= 0 {
-//                            timer.invalidate()
-//                        }
-//                        tableView.reloadData()
-//                    }
-//                }
-//                else {
-//                    let interval = Date().getTimeBetween(to: t2)
-////                    interval.
-//                    self.navigationItem.title = "\(formatter.string(from: interval)!) left in \(name)"
-//                    Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { timer in
-//                        print("interval")
-//                         if interval <= 0 {
-//                            timer.invalidate()
-//                        }
-//                        tableView.reloadData()
-//                    }
-//                }
             }
             else {
-//                if currentBlock.reminderTime == currentDay[indexPath.row].reminderTime && indexPath.row == currentDay.count {
-//                    currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n", reminderTime: "3", length: 0)
-//                    self.navigationItem.title = "My Schedule"
-//                }
                 cell.backgroundColor = UIColor(named: "background")
                 cell.contentView.backgroundColor = UIColor(named: "background")
             }
@@ -1573,8 +1524,14 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             cell.backgroundColor = UIColor(named: "background")
             cell.contentView.backgroundColor = UIColor(named: "background")
         }
-        cell.selectionStyle = .none
         return cell
+    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let block = currentDay[indexPath.row]
+        if block.name.lowercased().contains("lunch") {
+            (tableView.cellForRow(at: indexPath) as! blockTableViewCell).animateView()
+            self.performSegue(withIdentifier: "Lunch", sender: nil)
+        }
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 60
@@ -1590,7 +1547,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     var calendarIsExpanded = true
     @IBAction func switchCalendar(_ sender: UIBarButtonItem) {
         if calendarIsExpanded {
-            CalendarHeightConstraint.constant = 80
+            CalendarHeightConstraint.constant = 90
             UIView.animate(withDuration: 0.5) {
                 self.CalendarArrow.image = UIImage(systemName: "chevron.down")
                 self.view.layoutIfNeeded()
@@ -1606,7 +1563,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 self.CalendarArrow.image = UIImage(systemName: "chevron.up")
                 self.view.layoutIfNeeded()
             }
-            
             calendarIsExpanded = true
         }
     }
@@ -1737,14 +1693,14 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         calendar.dataSource = self
         ScheduleCalendar.delegate = self
         ScheduleCalendar.dataSource = self
-//        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        //        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
             for x in results {
                 print("title: \(x.content.title) ")
             }
         })
         setTimes()
-//        setNotif()
+        //        setNotif()
     }
     func setNotif() {
         let hours = 13
@@ -1755,15 +1711,15 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         dateComponents.timeZone = .current
         dateComponents.weekday = 6
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
-
+        
         // 2
         let content = UNMutableNotificationContent()
         content.title = "5 Minutes Until B Block"
         content.sound = UNNotificationSound.default
-
+        
         let randomIdentifier = UUID().uuidString
         let request = UNNotificationRequest(identifier: randomIdentifier, content: content, trigger: trigger)
-
+        
         // 3
         UNUserNotificationCenter.current().add(request) { error in
             if error != nil {
@@ -1866,7 +1822,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Advisory", startTime: "09:00am", endTime: "09:35am", block: "N/A", reminderTime: "07:25am", length: 45),
         block(name: "Orientation Block 1", startTime: "09:40am", endTime: "10:30am", block: "N/A", reminderTime: "07:25am", length: 45),
         block(name: "Orientation Block 2", startTime: "10:35am", endTime: "11:25am", block: "N/A", reminderTime: "07:25am", length: 45),
-block(name: "Cookout Lunch", startTime: "11:30am", endTime: "12:15pm", block: "N/A", reminderTime: "07:25am", length: 45),
+        block(name: "Cookout Lunch", startTime: "11:30am", endTime: "12:15pm", block: "N/A", reminderTime: "07:25am", length: 45),
         block(name: "Orientation Block 3", startTime: "12:20pm", endTime: "01:10pm", block: "N/A", reminderTime: "07:25am", length: 45),
         block(name: "Orientation Block 4", startTime: "01:15pm", endTime: "02:05pm", block: "N/A", reminderTime: "07:25am", length: 45),
         block(name: "Advisory", startTime: "02:10pm", endTime: "02:30pm", block: "N/A", reminderTime: "07:25am", length: 45),
@@ -1920,7 +1876,7 @@ struct NoSchoolDay {
     let reason: String
 }
 extension UITableView {
-
+    
     func setEmptyMessage(_ message: String) {
         let messageLabel = UILabel(frame: CGRect(x: 0, y: 0, width: self.bounds.size.width, height: self.bounds.size.height))
         messageLabel.text = message
@@ -1929,11 +1885,11 @@ extension UITableView {
         messageLabel.textAlignment = .center
         messageLabel.font = .systemFont(ofSize: 18, weight: .medium)
         messageLabel.sizeToFit()
-
+        
         self.backgroundView = messageLabel
         self.separatorStyle = .none
     }
-
+    
     func restore() {
         self.backgroundView = nil
         self.separatorStyle = .singleLine
@@ -1942,7 +1898,7 @@ extension UITableView {
 extension Date {
     func isBetweenTimeFrame(date1: Date, date2: Date) -> Bool {
         
-
+        
         // In recent versions of Swift Date objectst are comparable, so you can
         // do greater than, less than, or equal to comparisons on dates without
         // needing a date extension
@@ -1955,7 +1911,7 @@ extension Date {
     }
     func getTimeBetween(to toDate: Date) -> TimeInterval  {
         let delta = toDate.timeIntervalSince(self)
-//        let today = Date()
+        //        let today = Date()
         return delta
         //         if delta < 0 {
         //             return today
@@ -1963,16 +1919,16 @@ extension Date {
         //             return today.addingTimeInterval(delta)
         //         }
     }
-//    func getDeltaBetweenDates(to toDate: Date) -> TimeInterval  {
-//        let delta = toDate.timeIntervalSince(self)
-////        let today = Date()
-//        return delta
-//                 if delta < 0 {
-//                     return today
-//                 } else {
-//                     return today.addingTimeInterval(delta)
-//                 }
-//    }
+    //    func getDeltaBetweenDates(to toDate: Date) -> TimeInterval  {
+    //        let delta = toDate.timeIntervalSince(self)
+    ////        let today = Date()
+    //        return delta
+    //                 if delta < 0 {
+    //                     return today
+    //                 } else {
+    //                     return today.addingTimeInterval(delta)
+    //                 }
+    //    }
 }
 extension UITableView {
     func scrollToBottom(indexPath: IndexPath){
@@ -2040,7 +1996,7 @@ class blockTableViewCell: UITableViewCell {
     override func prepareForReuse(){
         super.prepareForReuse()
     }
-    func configure (with viewModel: block){
+    func configure (with viewModel: block, isLunch: Bool){
         if viewModel.block != "N/A" {
             BlockLabel.isHidden = false
             var className = LoginVC.blocks[viewModel.block] as? String
@@ -2048,12 +2004,18 @@ class blockTableViewCell: UITableViewCell {
                 className = "[\(viewModel.block) Class]"
             }
             TitleLabel.text = className
+            BlockLabel.text = "\(viewModel.name)"
         }
         else {
-            BlockLabel.isHidden = true
             TitleLabel.text = "\(viewModel.name)"
+            if isLunch {
+                BlockLabel.isHidden = false
+                BlockLabel.text = "Menu Available"
+            }
+            else {
+                BlockLabel.isHidden = true
+            }
         }
-        BlockLabel.text = "\(viewModel.name)"
         RightLabel.text = "\(viewModel.startTime) \u{2192} \(viewModel.endTime)"
     }
 }
@@ -2157,7 +2119,7 @@ class VanguardVC: CustomLoader, WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         hideLoaderView()
     }
-//    https://www.bbns.org/news-events/latest-news-from-bbn
+    //    https://www.bbns.org/news-events/latest-news-from-bbn
     let urlString = "https://vanguard.bbns.org/category/on-campus/"
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -2181,7 +2143,7 @@ class LatestNewsVC: CustomLoader, WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         hideLoaderView()
     }
-//    https://www.bbns.org/news-events/latest-news-from-bbn
+    //    https://www.bbns.org/news-events/latest-news-from-bbn
     let urlString = "https://www.bbns.org/news-events/latest-news-from-bbn"
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -2265,7 +2227,7 @@ class AnnouncementTableViewCell: UITableViewCell {
         imageView.contentMode = .scaleAspectFill
         return imageView
     } ()
-
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         contentView.addSubview(newsTitleLabel)
@@ -2325,8 +2287,8 @@ class AnnouncementTableViewCell: UITableViewCell {
 //}
 
 class CustomLoader: UIViewController {
-//
-//    static let instance = CustomLoader()
+    //
+    //    static let instance = CustomLoader()
     
     var viewColor: UIColor = .black
     var setAlpha: CGFloat = 0
@@ -2353,7 +2315,7 @@ class CustomLoader: UIViewController {
         self.view.addSubview(self.transparentView)
         self.transparentView.addSubview(self.gifImage)
         self.transparentView.bringSubviewToFront(self.gifImage)
-//        UIApplication.shared.keyWindow?.addSubview(transparentView)
+        //        UIApplication.shared.keyWindow?.addSubview(transparentView)
         
     }
     
@@ -2579,10 +2541,172 @@ class CreditsVC: UIViewController {
     @IBAction func close(_ sender: UIBarButtonItem) {
         self.dismiss(animated: true, completion: nil)
     }
-
+    
     @IBAction func openSheet(_ sender: Any) {
         if let url = URL(string: "https://docs.google.com/spreadsheets/d/1A1CLxugRIGmxIV595mbiR6noLdw4ShuxAKe-tjxATCc/edit?usp=sharing") {
             UIApplication.shared.open(url)
         }
+    }
+    @IBAction func openLibraries(_ sender: Any) {
+        self.performSegue(withIdentifier: "OpenSource", sender: nil)
+    }
+}
+
+class AboutUsVC: CustomLoader, WKNavigationDelegate, UITableViewDataSource, UITableViewDelegate{
+    @IBOutlet var sideMenuBtn: UIBarButtonItem!
+    private let tableView: UITableView = {
+        let table = UITableView(frame: .zero, style: .insetGrouped)
+        table.backgroundColor = UIColor(named: "background")
+        table.register(AboutTableViewCell.self,
+                       forCellReuseIdentifier: AboutTableViewCell.identifier)
+        return table
+    }()
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 1
+    }
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return "Open Source Libraries"
+    }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "Libraries Used"
+        view.backgroundColor = UIColor(named: "background")
+        tableView.tableFooterView = UIView(frame: .zero)
+        setData()
+        tableView.backgroundColor = UIColor (named: "background")
+    }
+    func setData() {
+        view.addSubview(tableView)
+        var libraries2 = [Library]()
+        libraries2.append(Library(name: "Firebase", url: "https://github.com/firebase/firebase-ios-sdk/blob/master/LICENSE"))
+        libraries2.append(Library(name: "Google Sign In", url: "https://github.com/google/GoogleSignIn-iOS/blob/main/LICENSE"))
+        libraries2.append(Library(name: "FS Calendar", url: "https://github.com/WenchaoD/FSCalendar/blob/master/LICENSE"))
+        libraries2.append(Library(name: "ICONS8", url: "https://icons8.com/vue-static/landings/pricing/icons8-license.pdf"))
+        libraries2.append(Library(name: "Progress HUD", url: "https://github.com/relatedcode/ProgressHUD/blob/master/LICENSE"))
+        libraries2.append(Library(name: "Initials ImageView", url: "https://github.com/bachonk/InitialsImageView/blob/master/LICENSE"))
+        tableViewData.append(Libraries(libraries: libraries2))
+        tableView.frame = view.bounds
+        tableView.dataSource = self
+        tableView.delegate = self
+    }
+    var tableViewData = [Libraries]()
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return tableViewData[section].libraries.count
+    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let library = tableViewData[indexPath.section].libraries[indexPath.row]
+        let vc = SFSafariViewController(url: URL(string: library.url)!)
+        present(vc, animated: true)
+    }
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: AboutTableViewCell.identifier,
+                                                 for: indexPath) as! AboutTableViewCell
+        cell.selectionStyle = .none
+        cell.configure(with: tableViewData[indexPath.section].libraries[indexPath.row])
+        return cell
+    }
+}
+
+
+class AboutTableViewCell: UITableViewCell {
+    static let identifier = "AboutTableViewCell"
+    let leftLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 18, weight: .regular)
+        label.textColor = UIColor(named: "inverse")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
+        //        contentView.backgroundColor =  UIColor(named: "inverseBackgroundCol")?.withAlphaComponent(0.1)
+        leftLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 10).isActive = true
+        leftLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
+    }
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        contentView.addSubview(leftLabel)
+    }
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
+    public func configure(with viewModel: Library) {
+        accessoryType = .disclosureIndicator
+        leftLabel.text = "\(viewModel.name)"
+    }
+}
+
+struct Libraries {
+    let libraries: [Library]
+}
+
+struct Library {
+    let name: String
+    let url: String
+}
+
+//class LunchMenuVC: UIViewController {
+//    override func viewDidLoad() {
+//        super.viewDidLoad()
+//        let storage = FirebaseStorage.Storage.storage()
+//        storage.reference(withPath: "lunchmenus/")
+//    }
+//}
+
+class LunchMenuVC: CustomLoader, WKNavigationDelegate {
+    private let webView: WKWebView = {
+        let webview = WKWebView(frame: .zero)
+        return webview
+    }()
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        hideLoaderView()
+    }
+//    let urlString = "https://firebasestorage.googleapis.com/v0/b/bbn-daily.appspot.com/o/lunchmenus%2Flunchmenu-allergy.docx?alt=media&token=3830574a-a486-419f-8eb1-2dc0bc00620c"
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        let storage = FirebaseStorage.Storage.storage()
+        let reference = storage.reference(withPath: "lunchmenus/lunchmenu-allergy.docx")
+        reference.downloadURL(completion: { [self] (url, error) in
+            if let error = error {
+                print(error)
+            }
+            else {
+                print("the url is: \(url!.absoluteString)")
+                let urlstring = url!.absoluteString
+                webView.backgroundColor = UIColor.white
+                view.addSubview(webView)
+                webView.frame = view.bounds
+                webView.navigationDelegate = self
+                guard let url = URL(string: urlstring) else {
+                    return
+                }
+                webView.load(URLRequest(url: url))
+                showLoaderView()
+            }
+        })
+//        reference.listAll(completion: { (list, error) in
+//            if let error = error {
+//                print(error)
+//            }
+//            else {
+//                let inStorage = list.items.map({ $0.name })
+//                print(inStorage)
+//            }
+//        })
+        view.backgroundColor = UIColor.white
+        
+    }
+}
+extension blockTableViewCell {
+    func animateView() {
+        UIView.animate(withDuration: 0.5, animations: {
+            self.backgroundColor = UIColor(named: "gold-bright")?.withAlphaComponent(0.5)
+            self.contentView.backgroundColor = UIColor(named: "gold-bright")?.withAlphaComponent(0.5)
+        }, completion: { _ in
+            self.backgroundColor = UIColor(named: "background")
+            self.contentView.backgroundColor = UIColor(named: "background")
+        })
     }
 }

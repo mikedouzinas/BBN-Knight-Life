@@ -14,6 +14,7 @@ target 'BBNDaily' do
 	pod 'Firebase/Auth'
 	pod 'Firebase/Core'
 	pod 'Firebase/Firestore'
+	pod 'Firebase/Storage'
 	pod 'GoogleSignIn'
 	pod 'HTMLKit'
   target 'BBNDailyTests' do

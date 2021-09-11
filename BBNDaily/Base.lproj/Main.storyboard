@@ -29,7 +29,6 @@
         <!--Navigation Controller-->
         <scene sceneID="G0h-l5-lrA">
             <objects>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="thP-S9-W3D" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
                 <navigationController id="Dc1-co-hSk" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="FSG-QZ-F5N">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="56"/>
@@ -42,6 +41,7 @@
                         <segue destination="BXH-42-24G" kind="relationship" relationship="rootViewController" id="igE-GY-Bbp"/>
                     </connections>
                 </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="thP-S9-W3D" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="2055" y="1309"/>
         </scene>
@@ -78,6 +78,13 @@
                                 <color key="textColor" name="darkGray"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="woo-l8-7cl">
+                                <rect key="frame" x="20" y="680" width="374" height="30"/>
+                                <state key="normal" title="Open Source Libraries"/>
+                                <connections>
+                                    <action selector="openLibraries:" destination="BXH-42-24G" eventType="touchUpInside" id="ngu-ww-xu8"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="hVM-Xd-afk"/>
                         <color key="backgroundColor" name="background"/>
@@ -86,11 +93,14 @@
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="Kuh-ZS-DNW" secondAttribute="trailing" constant="20" id="GeL-oa-iZw"/>
                             <constraint firstItem="TE1-GW-q0e" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="Mlk-c7-r6j"/>
                             <constraint firstItem="74q-Az-6yr" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="NWC-1W-bGz"/>
+                            <constraint firstItem="woo-l8-7cl" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="T6u-GX-lBP"/>
                             <constraint firstItem="fzX-Ny-tnU" firstAttribute="top" secondItem="74q-Az-6yr" secondAttribute="bottom" constant="30" id="U2Z-8a-8af"/>
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="fzX-Ny-tnU" secondAttribute="trailing" constant="20" id="WOV-P0-XtH"/>
                             <constraint firstItem="fzX-Ny-tnU" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="eQj-OO-HgM"/>
+                            <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="woo-l8-7cl" secondAttribute="trailing" constant="20" id="pDz-9h-7G8"/>
                             <constraint firstItem="Kuh-ZS-DNW" firstAttribute="top" secondItem="hVM-Xd-afk" secondAttribute="top" constant="70" id="qPZ-J4-dfU"/>
                             <constraint firstItem="74q-Az-6yr" firstAttribute="top" secondItem="Kuh-ZS-DNW" secondAttribute="bottom" constant="70" id="rdX-Nk-mrR"/>
+                            <constraint firstItem="TE1-GW-q0e" firstAttribute="top" secondItem="woo-l8-7cl" secondAttribute="bottom" constant="25" id="tcg-K0-UHf"/>
                             <constraint firstItem="Kuh-ZS-DNW" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="thl-Bf-9J1"/>
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="bottom" secondItem="TE1-GW-q0e" secondAttribute="bottom" constant="32" id="xUY-tT-65A"/>
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="TE1-GW-q0e" secondAttribute="trailing" constant="20" id="zVo-Ya-BfJ"/>
@@ -104,10 +114,29 @@
                             </connections>
                         </barButtonItem>
                     </navigationItem>
+                    <connections>
+                        <segue destination="D9e-iO-L9k" kind="show" identifier="OpenSource" id="UGe-OU-0Pt"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="79R-W8-nM2" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="3153.6231884057975" y="1300.4464285714284"/>
+        </scene>
+        <!--About UsVC-->
+        <scene sceneID="WdU-Fq-oXj">
+            <objects>
+                <viewController id="D9e-iO-L9k" customClass="AboutUsVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="G0C-AY-8Ge">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="Mnw-Ra-y3d"/>
+                        <color key="backgroundColor" name="background"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="HZT-ZN-kMT"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="pYq-Wg-xBu" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="3920" y="1308"/>
         </scene>
         <!--BB&N News-->
         <scene sceneID="SaP-Zw-xeb">
@@ -254,11 +283,28 @@
                         <outlet property="CalendarHeightConstraint" destination="FBx-fJ-B4a" id="hKk-rr-2ec"/>
                         <outlet property="ScheduleCalendar" destination="cpJ-7A-gBR" id="aBz-hh-pxv"/>
                         <outlet property="calendar" destination="CJc-BH-m1q" id="88H-Ol-cFT"/>
+                        <segue destination="MnO-c5-Moa" kind="show" identifier="Lunch" id="z0Q-XG-7SA"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="oGB-Ei-O8o" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-246.37681159420291" y="1312.5"/>
+        </scene>
+        <!--Lunch MenuVC-->
+        <scene sceneID="Ysh-5P-jBf">
+            <objects>
+                <viewController id="MnO-c5-Moa" customClass="LunchMenuVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="ArM-5L-yj5">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="wXa-Dv-zx1"/>
+                        <color key="backgroundColor" name="background"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="GoM-kl-bZS"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="RJY-Cz-srn" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-246" y="1998"/>
         </scene>
         <!--Schedule-->
         <scene sceneID="aGN-0d-5cD">
