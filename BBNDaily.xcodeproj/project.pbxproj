@@ -8,9 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		64F54C87B0FAF6B8DE29C7F4 /* Pods_BBNDailyTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 052A7ACCF0AF9B275D98E9CE /* Pods_BBNDailyTests.framework */; };
+		8704E96E26EEA5B9001826F8 /* LoginVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E96D26EEA5B9001826F8 /* LoginVC.swift */; };
+		8704E97026EEA5E9001826F8 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E96F26EEA5E9001826F8 /* Extensions.swift */; };
+		8704E97226EEA617001826F8 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97126EEA617001826F8 /* Settings.swift */; };
+		8704E97426EEA663001826F8 /* LaunchVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97326EEA663001826F8 /* LaunchVC.swift */; };
+		8704E97626EEA686001826F8 /* CalendarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97526EEA686001826F8 /* CalendarVC.swift */; };
+		8704E97826EEA6F2001826F8 /* VanguardVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97726EEA6F2001826F8 /* VanguardVC.swift */; };
+		8704E97A26EEA6FC001826F8 /* NewsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97926EEA6FC001826F8 /* NewsVC.swift */; };
 		87507FC726E6ADEB005DDFB4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FC626E6ADEB005DDFB4 /* AppDelegate.swift */; };
 		87507FC926E6ADEB005DDFB4 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FC826E6ADEB005DDFB4 /* SceneDelegate.swift */; };
-		87507FCB26E6ADEB005DDFB4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FCA26E6ADEB005DDFB4 /* ViewController.swift */; };
 		87507FCE26E6ADEB005DDFB4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87507FCC26E6ADEB005DDFB4 /* Main.storyboard */; };
 		87507FD026E6ADEB005DDFB4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87507FCF26E6ADEB005DDFB4 /* Assets.xcassets */; };
 		87507FD326E6ADEB005DDFB4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87507FD126E6ADEB005DDFB4 /* LaunchScreen.storyboard */; };
@@ -45,10 +51,16 @@
 		41234358532501BD0AED646E /* Pods_BBNDaily.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BBNDaily.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		49847246748BA3D748CB8435 /* Pods-BBNDaily.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDaily.debug.xcconfig"; path = "Target Support Files/Pods-BBNDaily/Pods-BBNDaily.debug.xcconfig"; sourceTree = "<group>"; };
 		7AC54026BFC1C4FAC95170AF /* Pods_BBNDaily_BBNDailyUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BBNDaily_BBNDailyUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8704E96D26EEA5B9001826F8 /* LoginVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginVC.swift; sourceTree = "<group>"; };
+		8704E96F26EEA5E9001826F8 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		8704E97126EEA617001826F8 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		8704E97326EEA663001826F8 /* LaunchVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchVC.swift; sourceTree = "<group>"; };
+		8704E97526EEA686001826F8 /* CalendarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarVC.swift; sourceTree = "<group>"; };
+		8704E97726EEA6F2001826F8 /* VanguardVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VanguardVC.swift; sourceTree = "<group>"; };
+		8704E97926EEA6FC001826F8 /* NewsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsVC.swift; sourceTree = "<group>"; };
 		87507FC326E6ADEB005DDFB4 /* BBNDaily.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BBNDaily.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		87507FC626E6ADEB005DDFB4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		87507FC826E6ADEB005DDFB4 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		87507FCA26E6ADEB005DDFB4 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		87507FCD26E6ADEB005DDFB4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		87507FCF26E6ADEB005DDFB4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		87507FD226E6ADEB005DDFB4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -118,6 +130,34 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
+		8704E97B26EEA84B001826F8 /* Tabs */ = {
+			isa = PBXGroup;
+			children = (
+				8704E97726EEA6F2001826F8 /* VanguardVC.swift */,
+				8704E97926EEA6FC001826F8 /* NewsVC.swift */,
+				8704E97126EEA617001826F8 /* Settings.swift */,
+				8704E97526EEA686001826F8 /* CalendarVC.swift */,
+			);
+			path = Tabs;
+			sourceTree = "<group>";
+		};
+		8704E97C26EEA865001826F8 /* Login */ = {
+			isa = PBXGroup;
+			children = (
+				8704E96D26EEA5B9001826F8 /* LoginVC.swift */,
+				8704E97326EEA663001826F8 /* LaunchVC.swift */,
+			);
+			path = Login;
+			sourceTree = "<group>";
+		};
+		8704E97D26EEA880001826F8 /* Other */ = {
+			isa = PBXGroup;
+			children = (
+				8704E96F26EEA5E9001826F8 /* Extensions.swift */,
+			);
+			path = Other;
+			sourceTree = "<group>";
+		};
 		87507FBA26E6ADEA005DDFB4 = {
 			isa = PBXGroup;
 			children = (
@@ -145,7 +185,9 @@
 			children = (
 				87507FC626E6ADEB005DDFB4 /* AppDelegate.swift */,
 				87507FC826E6ADEB005DDFB4 /* SceneDelegate.swift */,
-				87507FCA26E6ADEB005DDFB4 /* ViewController.swift */,
+				8704E97D26EEA880001826F8 /* Other */,
+				8704E97B26EEA84B001826F8 /* Tabs */,
+				8704E97C26EEA865001826F8 /* Login */,
 				87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */,
 				87507FCC26E6ADEB005DDFB4 /* Main.storyboard */,
 				87D73B1726EA2CA800724D6D /* demo.gif */,
@@ -414,9 +456,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				87507FCB26E6ADEB005DDFB4 /* ViewController.swift in Sources */,
+				8704E97026EEA5E9001826F8 /* Extensions.swift in Sources */,
 				87507FC726E6ADEB005DDFB4 /* AppDelegate.swift in Sources */,
+				8704E97426EEA663001826F8 /* LaunchVC.swift in Sources */,
+				8704E96E26EEA5B9001826F8 /* LoginVC.swift in Sources */,
 				87507FC926E6ADEB005DDFB4 /* SceneDelegate.swift in Sources */,
+				8704E97626EEA686001826F8 /* CalendarVC.swift in Sources */,
+				8704E97226EEA617001826F8 /* Settings.swift in Sources */,
+				8704E97826EEA6F2001826F8 /* VanguardVC.swift in Sources */,
+				8704E97A26EEA6FC001826F8 /* NewsVC.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -602,7 +650,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.11;
+				MARKETING_VERSION = 1.12;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -625,7 +673,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.11;
+				MARKETING_VERSION = 1.12;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

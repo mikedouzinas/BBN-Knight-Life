@@ -24,7 +24,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="uIV-u7-vpi" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1243" y="1312"/>
+            <point key="canvasLocation" x="1270" y="574"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="G0h-l5-lrA">
@@ -43,7 +43,7 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="thP-S9-W3D" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2055" y="1309"/>
+            <point key="canvasLocation" x="1970" y="1312"/>
         </scene>
         <!--Credits & Feedback-->
         <scene sceneID="tBR-ga-XQu">
@@ -120,7 +120,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="79R-W8-nM2" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3153.6231884057975" y="1300.4464285714284"/>
+            <point key="canvasLocation" x="1970" y="2028"/>
         </scene>
         <!--About UsVC-->
         <scene sceneID="WdU-Fq-oXj">
@@ -136,24 +136,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="pYq-Wg-xBu" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3920" y="1308"/>
-        </scene>
-        <!--BB&N News-->
-        <scene sceneID="SaP-Zw-xeb">
-            <objects>
-                <navigationController id="olu-d4-nRY" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="BB&amp;N News" image="announcement" selectedImage="announcement" id="wCn-v5-u0H"/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="esH-86-5Hy">
-                        <rect key="frame" x="0.0" y="44" width="414" height="96"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <textAttributes key="largeTitleTextAttributes">
-                            <color key="textColor" name="inverse"/>
-                        </textAttributes>
-                    </navigationBar>
-                </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="als-0h-4kl" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1243" y="574"/>
+            <point key="canvasLocation" x="1970" y="2766"/>
         </scene>
         <!--Bubble Tab Bar Controller-->
         <scene sceneID="FHT-4R-h8A">
@@ -190,24 +173,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="XxZ-xY-EbI" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="471" y="1313"/>
-        </scene>
-        <!--Vanguard-->
-        <scene sceneID="ak5-Th-YoC">
-            <objects>
-                <navigationController id="1bz-i7-2Qd" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="Vanguard" image="newspaper" catalog="system" selectedImage="newspaper" id="gtQ-Ae-EyN"/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="aDK-po-fvl">
-                        <rect key="frame" x="0.0" y="44" width="414" height="96"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <textAttributes key="largeTitleTextAttributes">
-                            <color key="textColor" name="inverse"/>
-                        </textAttributes>
-                    </navigationBar>
-                </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="s36-aD-7ds" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="470" y="574"/>
+            <point key="canvasLocation" x="539" y="574"/>
         </scene>
         <!--My Schedule-->
         <scene sceneID="OxD-Bv-8hl">
@@ -425,12 +391,12 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="uVK-zj-45w" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="112" y="-1830"/>
+            <point key="canvasLocation" x="841" y="-1846"/>
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="RmR-8h-qio"/>
-        <segue reference="rpQ-tf-hs5"/>
+        <segue reference="IEd-bA-12x"/>
+        <segue reference="Szw-2S-RWR"/>
     </inferredMetricsTieBreakers>
     <resources>
         <image name="announcement" width="21.333333969116211" height="21.333333969116211"/>
@@ -438,7 +404,6 @@
         <image name="chevron.up" catalog="system" width="128" height="72"/>
         <image name="gear" catalog="system" width="128" height="119"/>
         <image name="logo" width="1124" height="1162"/>
-        <image name="newspaper" catalog="system" width="128" height="108"/>
         <image name="vanguardLogo" width="27.666666030883789" height="29"/>
         <image name="xmark.circle" catalog="system" width="128" height="121"/>
         <namedColor name="background">
