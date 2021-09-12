@@ -27,7 +27,7 @@ class LoginVC: UIViewController {
     static var fullName = ""
     static var email = ""
     static var phoneNum = ""
-    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","googlePhoto":"true","lockerNum":"","notifs":"true","uid":""]
+    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"","l-tuesday":"","l-wednesday":"","l-thursday":"","l-friday":"","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
     @IBOutlet weak var SignInButton: GIDSignInButton!
     override func viewDidLoad() {
@@ -36,7 +36,7 @@ class LoginVC: UIViewController {
         SignInButton.layer.cornerRadius = 8
         SignInButton.dropShadow(scale: true, radius: 15)
     }
-    static func setProfileImage(useGoogle: Bool) {
+    static func setProfileImage(useGoogle: Bool, width: UInt) {
         if !useGoogle {
             LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
             return
@@ -46,8 +46,18 @@ class LoginVC: UIViewController {
             LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
         }
         else {
-            let url  = NSURL(string: imageUrl!)! as URL
-            let data = NSData(contentsOf: url)
+            //            LoginVC.profilePhoto.downloaded(from: (Auth.auth().currentUser?.photoURL!)!)
+            GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
+                if error != nil || user == nil {
+                    // Show the app's signed-out state.
+                    print("signed out")
+                } else {
+                    // Show the app's signed-in state.
+                    print("signed in")
+                }
+            }
+            let imgUrl = (GIDSignIn.sharedInstance.currentUser?.profile?.imageURL(withDimension: width) ?? Auth.auth().currentUser?.photoURL!)!
+            let data = NSData(contentsOf: imgUrl)
             if data != nil {
                 LoginVC.profilePhoto.image = UIImage(data: data! as Data)
             }
@@ -123,10 +133,10 @@ class LoginVC: UIViewController {
                                     isCreated = true
                                     LoginVC.blocks = document.data()
                                     if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
-                                        LoginVC.setProfileImage(useGoogle: true)
+                                        LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width))
                                     }
                                     else {
-                                        LoginVC.setProfileImage(useGoogle: false)
+                                        LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width))
                                     }
                                     if  ((LoginVC.blocks["grade"] ?? "11") as! String).contains("9") || ((LoginVC.blocks["grade"] ?? "11") as! String).contains("10") {
                                         CalendarVC.isLunch1 = true
@@ -521,11 +531,11 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 switcher.translatesAutoresizingMaskIntoConstraints = false
                 if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
                     switcher.isOn = true
-                    LoginVC.setProfileImage(useGoogle: true)
+                    LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width))
                 }
                 else {
                     switcher.isOn = false
-                    LoginVC.setProfileImage(useGoogle: false)
+                    LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width))
                 }
                 switcher.addTarget(self, action: #selector(pressedPhotoSwitch(_:)), for: .touchUpInside)
                 cell.contentView.addSubview(label)
@@ -554,7 +564,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
             LoginVC.blocks["googlePhoto"] = "true"
             currDoc.setData(LoginVC.blocks)
-            LoginVC.setProfileImage(useGoogle: true)
+            LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width))
             setHeader()
         }
         else {
@@ -562,7 +572,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
             LoginVC.blocks["googlePhoto"] = "false"
             currDoc.setData(LoginVC.blocks)
-            LoginVC.setProfileImage(useGoogle: false)
+            LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width))
             setHeader()
         }
     }
@@ -590,7 +600,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.section == 1 {
             tableView.deselectRow(at: indexPath, animated: true)
-            let alertController = UIAlertController(title: "\(blocks[indexPath.row].blockName) Block", message: "Enter your class for \(blocks[indexPath.row].blockName) block", preferredStyle: .alert)
+            let alertController = UIAlertController(title: "\(blocks[indexPath.row].blockName) Block", message: "Enter your class for \(blocks[indexPath.row].blockName) block followed by the room number", preferredStyle: .alert)
             
             alertController.addTextField { (textField) in
                 // configure the properties of the text field
@@ -693,7 +703,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         }
         else if indexPath.section == 2 && indexPath.row > 2 {
             tableView.deselectRow(at: indexPath, animated: true)
-            let alertController = UIAlertController(title: "\(preferenceBlocks[indexPath.row-2].blockName)", message: "Please enter your \(blocks[indexPath.row].blockName)", preferredStyle: .alert)
+            let alertController = UIAlertController(title: "\(preferenceBlocks[indexPath.row-2].blockName)", message: "Please enter your locker number", preferredStyle: .alert)
             
             alertController.addTextField { (textField) in
                 // configure the properties of the text field
@@ -1036,10 +1046,10 @@ class LaunchVC: UIViewController {
                             if id == FirebaseAuth.Auth.auth().currentUser?.uid {
                                 LoginVC.blocks = document.data()
                                 if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
-                                    LoginVC.setProfileImage(useGoogle: true)
+                                    LoginVC.setProfileImage(useGoogle: true, width: UInt(self.view.frame.width))
                                 }
                                 else {
-                                    LoginVC.setProfileImage(useGoogle: false)
+                                    LoginVC.setProfileImage(useGoogle: false, width: UInt(self.view.frame.width))
                                 }
                                 if  ((LoginVC.blocks["grade"] ?? "11") as! String).contains("9") || ((LoginVC.blocks["grade"] ?? "11") as! String).contains("10") {
                                     CalendarVC.isLunch1 = true
@@ -2013,6 +2023,9 @@ class blockTableViewCell: UITableViewCell {
                 BlockLabel.text = "Menu Available"
             }
             else {
+                if viewModel.name.lowercased().contains("advisory") {
+                    TitleLabel.text = "\(viewModel.name) \(LoginVC.blocks["room-advisory"] ?? "")"
+                }
                 BlockLabel.isHidden = true
             }
         }
@@ -2663,7 +2676,7 @@ class LunchMenuVC: CustomLoader, WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         hideLoaderView()
     }
-//    let urlString = "https://firebasestorage.googleapis.com/v0/b/bbn-daily.appspot.com/o/lunchmenus%2Flunchmenu-allergy.docx?alt=media&token=3830574a-a486-419f-8eb1-2dc0bc00620c"
+    //    let urlString = "https://firebasestorage.googleapis.com/v0/b/bbn-daily.appspot.com/o/lunchmenus%2Flunchmenu-allergy.docx?alt=media&token=3830574a-a486-419f-8eb1-2dc0bc00620c"
     override func viewDidLoad() {
         super.viewDidLoad()
         let storage = FirebaseStorage.Storage.storage()
@@ -2686,15 +2699,15 @@ class LunchMenuVC: CustomLoader, WKNavigationDelegate {
                 showLoaderView()
             }
         })
-//        reference.listAll(completion: { (list, error) in
-//            if let error = error {
-//                print(error)
-//            }
-//            else {
-//                let inStorage = list.items.map({ $0.name })
-//                print(inStorage)
-//            }
-//        })
+        //        reference.listAll(completion: { (list, error) in
+        //            if let error = error {
+        //                print(error)
+        //            }
+        //            else {
+        //                let inStorage = list.items.map({ $0.name })
+        //                print(inStorage)
+        //            }
+        //        })
         view.backgroundColor = UIColor.white
         
     }
@@ -2708,5 +2721,29 @@ extension blockTableViewCell {
             self.backgroundColor = UIColor(named: "background")
             self.contentView.backgroundColor = UIColor(named: "background")
         })
+    }
+}
+
+extension UIImageView {
+    func downloaded(from url: URL, contentMode mode: ContentMode = .scaleAspectFit) {
+        contentMode = mode
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard
+                let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode == 200,
+                let mimeType = response?.mimeType, mimeType.hasPrefix("image"),
+                let data = data, error == nil,
+                let image = UIImage(data: data)
+            else {
+                LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+                return
+            }
+            DispatchQueue.main.async() { [weak self] in
+                self?.image = image
+            }
+        }.resume()
+    }
+    func downloaded(from link: String, contentMode mode: ContentMode = .scaleAspectFit) {
+        guard let url = URL(string: link) else { return }
+        downloaded(from: url, contentMode: mode)
     }
 }
