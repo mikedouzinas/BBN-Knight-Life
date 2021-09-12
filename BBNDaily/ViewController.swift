@@ -27,7 +27,7 @@ class LoginVC: UIViewController {
     static var fullName = ""
     static var email = ""
     static var phoneNum = ""
-    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"","l-tuesday":"","l-wednesday":"","l-thursday":"","l-friday":"","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
+    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
     @IBOutlet weak var SignInButton: GIDSignInButton!
     override func viewDidLoad() {
@@ -138,12 +138,12 @@ class LoginVC: UIViewController {
                                     else {
                                         LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width))
                                     }
-                                    if  ((LoginVC.blocks["grade"] ?? "11") as! String).contains("9") || ((LoginVC.blocks["grade"] ?? "11") as! String).contains("10") {
-                                        CalendarVC.isLunch1 = true
-                                    }
-                                    else {
-                                        CalendarVC.isLunch1 = false
-                                    }
+//                                    if  ((LoginVC.blocks["grade"] ?? "11") as! String).contains("9") || ((LoginVC.blocks["grade"] ?? "11") as! String).contains("10") {
+//                                        CalendarVC.isLunch1 = true
+//                                    }
+//                                    else {
+//                                        CalendarVC.isLunch1 = false
+//                                    }
                                     strongSelf.callTabBar()
                                     return
                                 }
@@ -168,20 +168,50 @@ class LoginVC: UIViewController {
         var wednesday = [block]()
         var thursday = [block]()
         var friday = [block]()
-        if CalendarVC.isLunch1 {
-            monday = CalendarVC.mondayL1
-            tuesday = CalendarVC.tuesdayL1
-            wednesday = CalendarVC.wednesdayL1
-            thursday = CalendarVC.thursdayL1
-            friday = CalendarVC.fridayL1
+        if (LoginVC.blocks["l-monday"] as! String).lowercased().contains("2") {
+            monday = CalendarVC.monday
         }
         else {
-            monday = CalendarVC.monday
+            monday = CalendarVC.mondayL1
+        }
+        if (LoginVC.blocks["l-tuesday"] as! String).lowercased().contains("2") {
             tuesday = CalendarVC.tuesday
+        }
+        else {
+            tuesday = CalendarVC.tuesdayL1
+        }
+        if (LoginVC.blocks["l-wednesday"] as! String).lowercased().contains("2") {
             wednesday = CalendarVC.wednesday
+        }
+        else {
+            wednesday = CalendarVC.wednesdayL1
+        }
+        if (LoginVC.blocks["l-thursday"] as! String).lowercased().contains("2") {
             thursday = CalendarVC.thursday
+        }
+        else {
+            thursday = CalendarVC.thursdayL1
+        }
+        if (LoginVC.blocks["l-friday"] as! String).lowercased().contains("2") {
             friday = CalendarVC.friday
         }
+        else {
+            friday = CalendarVC.fridayL1
+        }
+//        if CalendarVC.isLunch1 {
+//            monday = CalendarVC.mondayL1
+//            tuesday = CalendarVC.tuesdayL1
+//            wednesday = CalendarVC.wednesdayL1
+//            thursday = CalendarVC.thursdayL1
+//            friday = CalendarVC.fridayL1
+//        }
+//        else {
+//            monday = CalendarVC.monday
+//            tuesday = CalendarVC.tuesday
+//            wednesday = CalendarVC.wednesday
+//            thursday = CalendarVC.thursday
+//            friday = CalendarVC.friday
+//        }
         return [monday, tuesday, wednesday, thursday, friday]
     }
     static func setNotifications() {
@@ -437,10 +467,13 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         else if section == 1 {
             return blocks.count
         }
+        else if section == 3 {
+            return lunchBlocks.count
+        }
         return (2 + preferenceBlocks.count)
     }
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 3
+        return 4
     }
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 30
@@ -460,6 +493,9 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         }
         else if section == 1 {
             label.text = "Blocks"
+        }
+        else if section == 3 {
+            label.text = "Lunch Configurations"
         }
         else {
             label.text = "Preferences"
@@ -487,6 +523,16 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             imageview.tintColor = UIColor(named: "darkGray")
             cell.accessoryView = imageview
             cell.configure(with: blocks[indexPath.row])
+            return cell
+        }
+        else if indexPath.section == 3 {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
+                fatalError()
+            }
+            let imageview = UIImageView(image: UIImage(systemName: "chevron.right")!)
+            imageview.tintColor = UIColor(named: "darkGray")
+            cell.accessoryView = imageview
+            cell.configure(with: lunchBlocks[indexPath.row])
             return cell
         }
         else {
@@ -604,7 +650,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             
             alertController.addTextField { (textField) in
                 // configure the properties of the text field
-                textField.placeholder = "e.g. Math"
+                textField.placeholder = "e.g. Math A-370"
                 textField.text = "\(self.blocks[indexPath.row].className)"
             }
             
@@ -634,7 +680,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             present(alertController, animated: true, completion: nil)
         }
         else if indexPath.section == 2 && indexPath.row == 2 {
-            let alertController = UIAlertController(title: "Grade", message: "Please enter your grade to better configure your lunch blocks", preferredStyle: .actionSheet)
+            let alertController = UIAlertController(title: "Grade", message: "Please enter your grade to better configure your schedule", preferredStyle: .actionSheet)
             
             // add the buttons/actions to the view controller
             let freshman = UIAlertAction(title: "Freshman", style: .default) { _ in
@@ -704,7 +750,11 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         else if indexPath.section == 2 && indexPath.row > 2 {
             tableView.deselectRow(at: indexPath, animated: true)
             let alertController = UIAlertController(title: "\(preferenceBlocks[indexPath.row-2].blockName)", message: "Please enter your locker number", preferredStyle: .alert)
-            
+            var isLocker = true
+            if preferenceBlocks[indexPath.row-2].blockName.lowercased().contains("advisory") {
+                alertController.message = "Please enter your advisory room number"
+                isLocker = false
+            }
             alertController.addTextField { (textField) in
                 // configure the properties of the text field
                 textField.placeholder = "e.g. 123"
@@ -720,7 +770,12 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 
                 let inputName = alertController.textFields![0].text
                 var name = ""
-                name = "lockerNum"
+                if isLocker {
+                    name = "lockerNum"
+                }
+                else {
+                    name = "room-advisory"
+                }
                 LoginVC.blocks["\(name)"] = inputName
                 self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: inputName!)
                 let db = Firestore.firestore()
@@ -734,6 +789,56 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             
             present(alertController, animated: true, completion: nil)
         }
+        else if indexPath.section == 3 {
+            var name = ""
+            switch indexPath.row {
+            case 0:
+                name = "monday"
+            case 1:
+                name = "tuesday"
+            case 2:
+                name = "wednesday"
+            case 3:
+                name = "thursday"
+            default:
+                name = "friday"
+            }
+            let alertController = UIAlertController(title: "Lunch", message: "Please enter your lunch preference for \(name.capitalized)", preferredStyle: .actionSheet)
+            let lunch1 = UIAlertAction(title: "1st Lunch", style: .default) { _ in
+                LoginVC.blocks["l-\(name)"] = "1st Lunch"
+                self.lunchBlocks[indexPath.row] = settingsBlock(blockName: "\(self.lunchBlocks[indexPath.row].blockName)", className: "1st Lunch")
+                let db = Firestore.firestore()
+                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                currDoc.setData(LoginVC.blocks)
+//                CalendarVC.isLunch1 = true
+                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
+                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+                    LoginVC.setNotifications()
+                }
+                tableView.reloadRows(at: [indexPath], with: .fade)
+            }
+            let lunch2 = UIAlertAction(title: "2nd Lunch", style: .default) { _ in
+                LoginVC.blocks["l-\(name)"] = "2nd Lunch"
+                self.lunchBlocks[indexPath.row] = settingsBlock(blockName: "\(self.lunchBlocks[indexPath.row].blockName)", className: "2nd Lunch")
+                let db = Firestore.firestore()
+                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                currDoc.setData(LoginVC.blocks)
+//                CalendarVC.isLunch1 = true
+                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
+                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+                    LoginVC.setNotifications()
+                }
+                tableView.reloadRows(at: [indexPath], with: .fade)
+            }
+            let cancel = UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                tableView.deselectRow(at: indexPath, animated: true)
+            }
+            alertController.addAction(lunch1)
+            alertController.addAction(lunch2)
+            alertController.addAction(cancel)
+            
+            present(alertController, animated: true, completion: nil)
+        }
     }
     func callReset() {
         ProgressHUD.colorAnimation = .green
@@ -742,6 +847,8 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     }
     private var blocks = [settingsBlock]()
     private var preferenceBlocks = [settingsBlock]()
+    private var lunchBlocks = [settingsBlock]()
+    
     private var profileCells = [ProfileCell]()
     private var tableView = UITableView()
     @objc func signOut() {
@@ -795,7 +902,20 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             settingsBlock(blockName: "F", className: LoginVC.blocks["F"] as! String),
             settingsBlock(blockName: "G", className: LoginVC.blocks["G"] as! String)
         ]
-        preferenceBlocks = [settingsBlock(blockName: "Grade", className: "\(LoginVC.blocks["grade"] as! String)"),settingsBlock(blockName: "Locker #", className: "\(LoginVC.blocks["lockerNum"] as! String)")]
+        
+        preferenceBlocks = [
+            settingsBlock(blockName: "Grade", className: "\(LoginVC.blocks["grade"] as! String)"),
+            settingsBlock(blockName: "Locker #", className: "\(LoginVC.blocks["lockerNum"] as! String)"),
+            settingsBlock(blockName: "Advisory Room", className: "\(LoginVC.blocks["room-advisory"] as! String)")
+        ]
+        
+        lunchBlocks = [
+            settingsBlock(blockName: "Monday Lunch", className: "\(LoginVC.blocks["l-monday"] as! String)"),
+            settingsBlock(blockName: "Tuesday Lunch", className: "\(LoginVC.blocks["l-tuesday"] as! String)"),
+            settingsBlock(blockName: "Wednesday Lunch", className: "\(LoginVC.blocks["l-wednesday"] as! String)"),
+            settingsBlock(blockName: "Thursday Lunch", className: "\(LoginVC.blocks["l-thursday"] as! String)"),
+            settingsBlock(blockName: "Friday Lunch", className: "\(LoginVC.blocks["l-friday"] as! String)")
+        ]
         tableView = UITableView(frame: .zero, style: .grouped)
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -903,6 +1023,9 @@ class SettingsBlockTableViewCell: UITableViewCell {
         else {
             if viewModel.blockName.count > 1 {
                 DataLabel.text = "Not set"
+            }
+            else if viewModel.blockName.lowercased().contains("lunch") {
+                DataLabel.text = "2nd Lunch"
             }
             else {
                 DataLabel.text = "[Class] [Room #]"
@@ -1051,12 +1174,12 @@ class LaunchVC: UIViewController {
                                 else {
                                     LoginVC.setProfileImage(useGoogle: false, width: UInt(self.view.frame.width))
                                 }
-                                if  ((LoginVC.blocks["grade"] ?? "11") as! String).contains("9") || ((LoginVC.blocks["grade"] ?? "11") as! String).contains("10") {
-                                    CalendarVC.isLunch1 = true
-                                }
-                                else {
-                                    CalendarVC.isLunch1 = false
-                                }
+//                                if  ((LoginVC.blocks["grade"] ?? "11") as! String).contains("9") || ((LoginVC.blocks["grade"] ?? "11") as! String).contains("10") {
+//                                    CalendarVC.isLunch1 = true
+//                                }
+//                                else {
+//                                    CalendarVC.isLunch1 = false
+//                                }
                                 self.callTabBar()
                                 return
                             }
