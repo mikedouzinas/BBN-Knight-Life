@@ -53,20 +53,20 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Made &amp; Designed by Mike Veson" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Kuh-ZS-DNW">
-                                <rect key="frame" x="20" y="126" width="374" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Made &amp; Designed by Mike Veson with inspiration from the original Knight Life" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Kuh-ZS-DNW">
+                                <rect key="frame" x="20" y="91" width="374" height="41"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="darkGray"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Feedback" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="74q-Az-6yr">
-                                <rect key="frame" x="20" y="217" width="374" height="21"/>
+                                <rect key="frame" x="20" y="167" width="374" height="21"/>
                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fzX-Ny-tnU">
-                                <rect key="frame" x="20" y="268" width="374" height="30"/>
+                                <rect key="frame" x="20" y="203" width="374" height="30"/>
                                 <state key="normal" title="Press here to go to the feedback sheet"/>
                                 <connections>
                                     <action selector="openSheet:" destination="BXH-42-24G" eventType="touchUpInside" id="G2H-Qe-hD5"/>
@@ -79,7 +79,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="woo-l8-7cl">
-                                <rect key="frame" x="20" y="680" width="374" height="30"/>
+                                <rect key="frame" x="20" y="695" width="374" height="30"/>
                                 <state key="normal" title="Open Source Libraries"/>
                                 <connections>
                                     <action selector="openLibraries:" destination="BXH-42-24G" eventType="touchUpInside" id="ngu-ww-xu8"/>
@@ -94,13 +94,13 @@
                             <constraint firstItem="TE1-GW-q0e" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="Mlk-c7-r6j"/>
                             <constraint firstItem="74q-Az-6yr" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="NWC-1W-bGz"/>
                             <constraint firstItem="woo-l8-7cl" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="T6u-GX-lBP"/>
-                            <constraint firstItem="fzX-Ny-tnU" firstAttribute="top" secondItem="74q-Az-6yr" secondAttribute="bottom" constant="30" id="U2Z-8a-8af"/>
+                            <constraint firstItem="fzX-Ny-tnU" firstAttribute="top" secondItem="74q-Az-6yr" secondAttribute="bottom" constant="15" id="U2Z-8a-8af"/>
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="fzX-Ny-tnU" secondAttribute="trailing" constant="20" id="WOV-P0-XtH"/>
                             <constraint firstItem="fzX-Ny-tnU" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="eQj-OO-HgM"/>
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="woo-l8-7cl" secondAttribute="trailing" constant="20" id="pDz-9h-7G8"/>
-                            <constraint firstItem="Kuh-ZS-DNW" firstAttribute="top" secondItem="hVM-Xd-afk" secondAttribute="top" constant="70" id="qPZ-J4-dfU"/>
-                            <constraint firstItem="74q-Az-6yr" firstAttribute="top" secondItem="Kuh-ZS-DNW" secondAttribute="bottom" constant="70" id="rdX-Nk-mrR"/>
-                            <constraint firstItem="TE1-GW-q0e" firstAttribute="top" secondItem="woo-l8-7cl" secondAttribute="bottom" constant="25" id="tcg-K0-UHf"/>
+                            <constraint firstItem="Kuh-ZS-DNW" firstAttribute="top" secondItem="hVM-Xd-afk" secondAttribute="top" constant="35" id="qPZ-J4-dfU"/>
+                            <constraint firstItem="74q-Az-6yr" firstAttribute="top" secondItem="Kuh-ZS-DNW" secondAttribute="bottom" constant="35" id="rdX-Nk-mrR"/>
+                            <constraint firstItem="TE1-GW-q0e" firstAttribute="top" secondItem="woo-l8-7cl" secondAttribute="bottom" constant="10" id="tcg-K0-UHf"/>
                             <constraint firstItem="Kuh-ZS-DNW" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="thl-Bf-9J1"/>
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="bottom" secondItem="TE1-GW-q0e" secondAttribute="bottom" constant="32" id="xUY-tT-65A"/>
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="TE1-GW-q0e" secondAttribute="trailing" constant="20" id="zVo-Ya-BfJ"/>

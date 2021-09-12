@@ -47,16 +47,26 @@ class LoginVC: UIViewController {
         }
         else {
             //            LoginVC.profilePhoto.downloaded(from: (Auth.auth().currentUser?.photoURL!)!)
+            let imgUrl = (Auth.auth().currentUser?.photoURL!)!
             GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
                 if error != nil || user == nil {
                     // Show the app's signed-out state.
-                    print("signed out")
+                    print("failed to get user")
                 } else {
                     // Show the app's signed-in state.
-                    print("signed in")
+                    print("GOT IMAGE")
+                    
+                    let newurl = (user!.profile?.imageURL(withDimension: width)!)!
+                    let data = NSData(contentsOf: newurl)
+                    if data != nil {
+                        LoginVC.profilePhoto.image = UIImage(data: data! as Data)
+                    }
+                    else {
+                        LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+                    }
+                    return
                 }
             }
-            let imgUrl = (GIDSignIn.sharedInstance.currentUser?.profile?.imageURL(withDimension: width) ?? Auth.auth().currentUser?.photoURL!)!
             let data = NSData(contentsOf: imgUrl)
             if data != nil {
                 LoginVC.profilePhoto.image = UIImage(data: data! as Data)
@@ -1174,12 +1184,6 @@ class LaunchVC: UIViewController {
                                 else {
                                     LoginVC.setProfileImage(useGoogle: false, width: UInt(self.view.frame.width))
                                 }
-//                                if  ((LoginVC.blocks["grade"] ?? "11") as! String).contains("9") || ((LoginVC.blocks["grade"] ?? "11") as! String).contains("10") {
-//                                    CalendarVC.isLunch1 = true
-//                                }
-//                                else {
-//                                    CalendarVC.isLunch1 = false
-//                                }
                                 self.callTabBar()
                                 return
                             }
