@@ -2719,6 +2719,7 @@ class AboutUsVC: CustomLoader, WKNavigationDelegate, UITableViewDataSource, UITa
         libraries2.append(Library(name: "FS Calendar", url: "https://github.com/WenchaoD/FSCalendar/blob/master/LICENSE"))
         libraries2.append(Library(name: "ICONS8", url: "https://icons8.com/vue-static/landings/pricing/icons8-license.pdf"))
         libraries2.append(Library(name: "Progress HUD", url: "https://github.com/relatedcode/ProgressHUD/blob/master/LICENSE"))
+        libraries2.append(Library(name: "Bubble Tab Bar", url: "https://github.com/Cuberto/bubble-icon-tabbar/blob/master/LICENSE"))
         libraries2.append(Library(name: "Initials ImageView", url: "https://github.com/bachonk/InitialsImageView/blob/master/LICENSE"))
         tableViewData.append(Libraries(libraries: libraries2))
         tableView.frame = view.bounds
