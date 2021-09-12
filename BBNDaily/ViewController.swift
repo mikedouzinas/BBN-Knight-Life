@@ -36,22 +36,32 @@ class LoginVC: UIViewController {
         SignInButton.layer.cornerRadius = 8
         SignInButton.dropShadow(scale: true, radius: 15)
     }
-    static func setProfileImage(useGoogle: Bool, width: UInt) {
+    static func setProfileImage(useGoogle: Bool, width: UInt, completion: @escaping (Swift.Result<UIImageView, Error>) -> Void) {
         if !useGoogle {
             LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+            completion(.success(LoginVC.profilePhoto))
             return
         }
         let imageUrl = Auth.auth().currentUser?.photoURL?.absoluteString
         if imageUrl == nil {
             LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+            completion(.success(LoginVC.profilePhoto))
         }
         else {
             //            LoginVC.profilePhoto.downloaded(from: (Auth.auth().currentUser?.photoURL!)!)
-            let imgUrl = (Auth.auth().currentUser?.photoURL!)!
             GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
                 if error != nil || user == nil {
                     // Show the app's signed-out state.
+                    let imgUrl = (Auth.auth().currentUser?.photoURL!)!
+                    let data = NSData(contentsOf: imgUrl)
+                    if data != nil {
+                        LoginVC.profilePhoto.image = UIImage(data: data! as Data)
+                    }
+                    else {
+                        LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+                    }
                     print("failed to get user")
+                    completion(.success(LoginVC.profilePhoto))
                 } else {
                     // Show the app's signed-in state.
                     print("GOT IMAGE")
@@ -64,16 +74,11 @@ class LoginVC: UIViewController {
                     else {
                         LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
                     }
-                    return
+                    completion(.success(LoginVC.profilePhoto))
                 }
             }
-            let data = NSData(contentsOf: imgUrl)
-            if data != nil {
-                LoginVC.profilePhoto.image = UIImage(data: data! as Data)
-            }
-            else {
-                LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
-            }
+            
+            
         }
     }
     func callTabBar() {
@@ -143,10 +148,14 @@ class LoginVC: UIViewController {
                                     isCreated = true
                                     LoginVC.blocks = document.data()
                                     if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
-                                        LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width))
+                                        LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: {_ in
+                                            
+                                        })
                                     }
                                     else {
-                                        LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width))
+                                        LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: {_ in
+                                            
+                                        })
                                     }
 //                                    if  ((LoginVC.blocks["grade"] ?? "11") as! String).contains("9") || ((LoginVC.blocks["grade"] ?? "11") as! String).contains("10") {
 //                                        CalendarVC.isLunch1 = true
@@ -587,11 +596,15 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 switcher.translatesAutoresizingMaskIntoConstraints = false
                 if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
                     switcher.isOn = true
-                    LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width))
+                    LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: {_ in
+                        
+                    })
                 }
                 else {
                     switcher.isOn = false
-                    LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width))
+                    LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: {_ in
+                        
+                    })
                 }
                 switcher.addTarget(self, action: #selector(pressedPhotoSwitch(_:)), for: .touchUpInside)
                 cell.contentView.addSubview(label)
@@ -620,16 +633,19 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
             LoginVC.blocks["googlePhoto"] = "true"
             currDoc.setData(LoginVC.blocks)
-            LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width))
-            setHeader()
+            LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: { [self]_ in
+                setHeader()
+            })
+           
         }
         else {
             let db = Firestore.firestore()
             let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
             LoginVC.blocks["googlePhoto"] = "false"
             currDoc.setData(LoginVC.blocks)
-            LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width))
-            setHeader()
+            LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: { [self]_ in
+                setHeader()
+            })
         }
     }
     @objc func pressedSwitch(_ switcher: UISwitch) {
@@ -1179,10 +1195,13 @@ class LaunchVC: UIViewController {
                             if id == FirebaseAuth.Auth.auth().currentUser?.uid {
                                 LoginVC.blocks = document.data()
                                 if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
-                                    LoginVC.setProfileImage(useGoogle: true, width: UInt(self.view.frame.width))
+                                    LoginVC.setProfileImage(useGoogle: true, width: UInt(self.view.frame.width), completion: {_ in
+                                        
+                                    })
                                 }
                                 else {
-                                    LoginVC.setProfileImage(useGoogle: false, width: UInt(self.view.frame.width))
+                                    LoginVC.setProfileImage(useGoogle: false, width: UInt(self.view.frame.width), completion: {_ in
+                                    })
                                 }
                                 self.callTabBar()
                                 return
