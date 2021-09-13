@@ -17,7 +17,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logo" translatesAutoresizingMaskIntoConstraints="NO" id="dxh-o1-YaT">
-                                <rect key="frame" x="87" y="157" width="240" height="240"/>
+                                <rect key="frame" x="87" y="133" width="240" height="240"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="240" id="1si-ML-FvH"/>
                                     <constraint firstAttribute="height" constant="240" id="fJC-Kl-G0w"/>
@@ -27,8 +27,8 @@
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="background"/>
                         <constraints>
+                            <constraint firstItem="dxh-o1-YaT" firstAttribute="centerY" secondItem="6Tk-OE-BBY" secondAttribute="centerY" constant="-200" id="Ie0-gG-x7e"/>
                             <constraint firstItem="dxh-o1-YaT" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="mFu-ej-YfP"/>
-                            <constraint firstItem="dxh-o1-YaT" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="113" id="t7v-Om-nhd"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -40,7 +40,7 @@
     <resources>
         <image name="logo" width="1124" height="1162"/>
         <namedColor name="background">
-            <color red="1" green="0.99998801950000005" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+            <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>
     </resources>
 </document>

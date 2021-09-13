@@ -370,7 +370,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logo" translatesAutoresizingMaskIntoConstraints="NO" id="iVy-4B-XOq">
-                                <rect key="frame" x="87" y="157" width="240" height="240"/>
+                                <rect key="frame" x="87" y="133" width="240" height="240"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="240" id="Six-Vp-uW3"/>
                                     <constraint firstAttribute="height" constant="240" id="iRX-rE-IiS"/>
@@ -381,7 +381,7 @@
                         <color key="backgroundColor" name="background"/>
                         <constraints>
                             <constraint firstItem="iVy-4B-XOq" firstAttribute="centerX" secondItem="r64-NP-y6z" secondAttribute="centerX" id="3ay-WZ-Xxs"/>
-                            <constraint firstItem="iVy-4B-XOq" firstAttribute="top" secondItem="r64-NP-y6z" secondAttribute="top" constant="113" id="PQ9-dK-wQU"/>
+                            <constraint firstItem="iVy-4B-XOq" firstAttribute="centerY" secondItem="r64-NP-y6z" secondAttribute="centerY" constant="-200" id="oqs-ZD-oh0"/>
                         </constraints>
                     </view>
                     <connections>
@@ -416,7 +416,7 @@
             <color red="1" green="0.84299999475479126" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="gold-light">
-            <color red="0.95099997520446777" green="0.74099999666213989" blue="0.40799999237060547" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+            <color red="0.95300000905990601" green="0.74099999666213989" blue="0.40799999237060547" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>
         <namedColor name="inverse">
             <color red="0.1289999932050705" green="0.20800000429153442" blue="0.39599999785423279" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
