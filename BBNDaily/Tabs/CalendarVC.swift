@@ -18,8 +18,11 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return currentDay.count
     }
+    var xc = 0
     func setTimes() {
+        xc+=1
         var i = 0
+        print("\(xc) ")
         for x in currentWeekday {
             i+=1
             let time = x.reminderTime.prefix(5)
@@ -58,6 +61,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 second: 0,
                 of: now)!
             if now.isBetweenTimeFrame(date1: t, date2: t2) {
+                print("is between times \(i)")
                 currentBlock = x
                 //                    cell.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
                 //                    cell.contentView.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
@@ -81,8 +85,8 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 if now.isBetweenTimeFrame(date1: t, date2: t1) {
                     let interval = Date().getTimeBetween(to: t1)
                     self.navigationItem.title = "\(formatter.string(from: interval)!) Until \(name)"
-                    Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [self] timer in
-                        print("interval")
+                    Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [self] timer in
+                        print("interval 1")
                         if interval <= 0 {
                             timer.invalidate()
                         }
@@ -94,8 +98,8 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                     let interval = Date().getTimeBetween(to: t2)
                     //                    interval.
                     self.navigationItem.title = "\(formatter.string(from: interval)!) left in \(name)"
-                    Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [self] timer in
-                        print("interval")
+                    Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [self] timer in
+                        print("interval 2")
                         if interval <= 0 {
                             timer.invalidate()
                         }
@@ -155,11 +159,11 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 minute: Int(m)!,
                 second: 0,
                 of: now)!
-            let t1 = calendar.date(
-                bySettingHour: (Int(time1.prefix(2))!+amOrPm1),
-                minute: Int(m1)!,
-                second: 0,
-                of: now)!
+//            let t1 = calendar.date(
+//                bySettingHour: (Int(time1.prefix(2))!+amOrPm1),
+//                minute: Int(m1)!,
+//                second: 0,
+//                of: now)!
             let t2 = calendar.date(
                 bySettingHour: (Int(time2.prefix(2))!+amOrPm2),
                 minute: Int(m2)!,
@@ -191,12 +195,16 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 60
     }
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         setCurrentday(date: realCurrentDate)
         ScheduleCalendar.reloadData()
-        setTimes()
+//        setTimes()
     }
+//    override func viewWillAppear(_ animated: Bool) {
+//        super.viewWillAppear(animated)
+//
+//    }
     var currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n", reminderTime: "3", length: 0)
     static var isLunch1 = false
     var calendarIsExpanded = true
@@ -511,7 +519,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
         setCurrentday(date: date)
         ScheduleCalendar.reloadData()
-        setTimes()
+//        setTimes()
     }
 }
 
@@ -623,7 +631,6 @@ class LunchMenuVC: CustomLoader, WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         hideLoaderView()
     }
-    //    let urlString = "https://firebasestorage.googleapis.com/v0/b/bbn-daily.appspot.com/o/lunchmenus%2Flunchmenu-allergy.docx?alt=media&token=3830574a-a486-419f-8eb1-2dc0bc00620c"
     override func viewDidLoad() {
         super.viewDidLoad()
         let storage = FirebaseStorage.Storage.storage()

@@ -36,7 +36,8 @@ class LoginVC: UIViewController {
         }
         let imageUrl = Auth.auth().currentUser?.photoURL?.absoluteString
         if imageUrl == nil {
-            LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+//            LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+            LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", gradientColors: (top: UIColor(named: "gold")!, bottom: UIColor(named: "blue")!), circular: false, textAttributes: nil)
             completion(.success(LoginVC.profilePhoto))
         }
         else {
@@ -206,6 +207,7 @@ class LoginVC: UIViewController {
         return [monday, tuesday, wednesday, thursday, friday]
     }
     static func setNotifications() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         let bigArray = LoginVC.getLunchDays()
         let monday = bigArray[0]
         let tuesday = bigArray[1]

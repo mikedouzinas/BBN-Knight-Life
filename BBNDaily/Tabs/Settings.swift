@@ -132,15 +132,15 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 switcher.translatesAutoresizingMaskIntoConstraints = false
                 if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
                     switcher.isOn = true
-                    LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: {_ in
+//                    LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: {_ in
                         
-                    })
+//                    })
                 }
                 else {
                     switcher.isOn = false
-                    LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: {_ in
-                        
-                    })
+//                    LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: {_ in
+
+//                    })
                 }
                 switcher.addTarget(self, action: #selector(pressedPhotoSwitch(_:)), for: .touchUpInside)
                 cell.contentView.addSubview(label)
@@ -508,12 +508,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         self.tableView.reloadData()
         setHeader()
     }
-    static func setToLunch2() {
-        
-    }
-    static func setToLunch1() {
-        
-    }
     func setHeader() {
         
         let header = StretchyTableHeaderView(frame: CGRect(x: 0, y: 0, width: view.frame.size.width, height: view.frame.size.width))
@@ -643,13 +637,16 @@ final class StretchyTableHeaderView: UIView {
         image.clipsToBounds = true
         return image
     } ()
-    public let nameLabel: UILabel = {
-        let label = UILabel()
+    public let nameLabel: PaddingLabel = {
+        let label = PaddingLabel()
         label.font = .systemFont(ofSize: 22, weight: .bold)
-        label.textColor = UIColor(named: "gold")
+        label.textColor = UIColor.white
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.backgroundColor = .clear
+        label.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         label.dropShadow(scale: true, radius: 50)
+        label.layer.masksToBounds = true
+        label.layer.cornerRadius = 8
+        label.padding(2, 2, 8, 8)
         return label
     } ()
     private var imageViewHeight = NSLayoutConstraint()
@@ -812,4 +809,27 @@ struct Libraries {
 struct Library {
     let name: String
     let url: String
+}
+
+class PaddingLabel: UILabel {
+    
+    var insets = UIEdgeInsets.zero
+    
+    func padding(_ top: CGFloat, _ bottom: CGFloat, _ left: CGFloat, _ right: CGFloat) {
+        self.frame = CGRect(x: 0, y: 0, width: self.frame.width + left + right, height: self.frame.height + top + bottom)
+        insets = UIEdgeInsets(top: top, left: left, bottom: bottom, right: right)
+    }
+    
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: rect.inset(by: insets))
+    }
+    
+    override var intrinsicContentSize: CGSize {
+        get {
+            var contentSize = super.intrinsicContentSize
+            contentSize.height += insets.top + insets.bottom
+            contentSize.width += insets.left + insets.right
+            return contentSize
+        }
+    }
 }
