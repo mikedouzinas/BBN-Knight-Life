@@ -77,14 +77,15 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                     name = "\(currentBlock.name)"
                 }
                 let formatter = DateComponentsFormatter()
-                
-                formatter.maximumUnitCount = 1
                 formatter.unitsStyle = .abbreviated
                 formatter.zeroFormattingBehavior = .dropAll
                 formatter.allowedUnits = [.day, .hour, .minute, .second]
+                formatter.maximumUnitCount = 2
+//                formatter.
                 if now.isBetweenTimeFrame(date1: t, date2: t1) {
                     let interval = Date().getTimeBetween(to: t1)
                     self.navigationItem.title = "\(formatter.string(from: interval)!) Until \(name)"
+                    
                     Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [self] timer in
                         print("interval 1")
                         if interval <= 0 {
@@ -122,9 +123,9 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             fatalError()
         }
         let thisBlock = currentDay[indexPath.row]
-        var isLunch = true
-        if !thisBlock.name.lowercased().contains("lunch") {
-            isLunch = false
+        var isLunch = false
+        if thisBlock.name.lowercased().contains("lunch") {
+            isLunch = true
         }
         cell.configure(with: currentDay[indexPath.row], isLunch: isLunch)
         
@@ -133,55 +134,75 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         formatter1.dateFormat = "yyyy-MM-dd"
         formatter1.dateStyle = .short
         let stringDate = formatter1.string(from: Date())
+        
         if currentDate == stringDate {
+            let calendar = Calendar.current
+            let time2 = currentDay[indexPath.row].endTime.prefix(5)
+            let m2 = time2.replacingOccurrences(of: time2.prefix(3), with: "")
+            var amOrPm2 = 0
+            if currentDay[indexPath.row].endTime.contains("pm") && !time2.prefix(2).contains("12") {
+                amOrPm2 = 12
+            }
+            let t2 = calendar.date(
+                bySettingHour: (Int(time2.prefix(2))!+amOrPm2),
+                minute: Int(m2)!,
+                second: 0,
+                of: Date())!
             let time = currentDay[indexPath.row].reminderTime.prefix(5)
             let time1 = currentDay[indexPath.row].startTime.prefix(5)
-            let time2 = currentDay[indexPath.row].endTime.prefix(5)
             let m = time.replacingOccurrences(of: time.prefix(3), with: "")
             let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
-            let m2 = time2.replacingOccurrences(of: time2.prefix(3), with: "")
             var amOrPm = 0
             var amOrPm1 = 0
-            var amOrPm2 = 0
+           
             if currentDay[indexPath.row].reminderTime.contains("pm") && !time.prefix(2).contains("12"){
                 amOrPm = 12
             }
             if currentDay[indexPath.row].startTime.contains("pm") && !time1.prefix(2).contains("12"){
                 amOrPm1 = 12
             }
-            if currentDay[indexPath.row].endTime.contains("pm") && !time2.prefix(2).contains("12") {
-                amOrPm2 = 12
-            }
-            let calendar = Calendar.current
+ 
+           
             let now = Date()
             let t = calendar.date(
                 bySettingHour: (Int(time.prefix(2))!+amOrPm),
                 minute: Int(m)!,
                 second: 0,
                 of: now)!
-//            let t1 = calendar.date(
-//                bySettingHour: (Int(time1.prefix(2))!+amOrPm1),
-//                minute: Int(m1)!,
-//                second: 0,
-//                of: now)!
-            let t2 = calendar.date(
-                bySettingHour: (Int(time2.prefix(2))!+amOrPm2),
-                minute: Int(m2)!,
-                second: 0,
-                of: now)!
             if now.isBetweenTimeFrame(date1: t, date2: t2) {
                 currentBlock = currentDay[indexPath.row]
+                cell.alpha = 1
+                cell.contentView.alpha = 1
                 cell.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
                 cell.contentView.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
             }
             else {
                 cell.backgroundColor = UIColor(named: "background")
                 cell.contentView.backgroundColor = UIColor(named: "background")
+                if Date() > t2 {
+                    cell.alpha = 0.3
+                    cell.contentView.alpha = 0.3
+//                    cell.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.6)
+//                    cell.contentView.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.6)
+                }
+                else {
+                    cell.alpha = 1
+                    cell.contentView.alpha = 1
+                }
             }
         }
         else {
             cell.backgroundColor = UIColor(named: "background")
             cell.contentView.backgroundColor = UIColor(named: "background")
+            if Date() > realCurrentDate {
+                cell.alpha = 0.3
+                cell.contentView.alpha = 0.3
+            }
+            else {
+                cell.alpha = 1
+                cell.contentView.alpha = 1
+           
+            }
         }
         return cell
     }
@@ -610,7 +631,7 @@ class blockTableViewCell: UITableViewCell {
             TitleLabel.text = "\(viewModel.name)"
             if isLunch {
                 BlockLabel.isHidden = false
-                BlockLabel.text = "Menu Available"
+                BlockLabel.text = "Press for Current Menu"
             }
             else {
                 if viewModel.name.lowercased().contains("advisory") {
