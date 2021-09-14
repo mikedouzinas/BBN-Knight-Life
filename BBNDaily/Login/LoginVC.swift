@@ -174,31 +174,31 @@ class LoginVC: UIViewController {
         var wednesday = [block]()
         var thursday = [block]()
         var friday = [block]()
-        if (LoginVC.blocks["l-monday"] as! String).lowercased().contains("2") {
+        if ((LoginVC.blocks["l-monday"] as? String) ?? "").lowercased().contains("2") {
             monday = CalendarVC.monday
         }
         else {
             monday = CalendarVC.mondayL1
         }
-        if (LoginVC.blocks["l-tuesday"] as! String).lowercased().contains("2") {
+        if ((LoginVC.blocks["l-tuesday"] as? String) ?? "").lowercased().contains("2") {
             tuesday = CalendarVC.tuesday
         }
         else {
             tuesday = CalendarVC.tuesdayL1
         }
-        if (LoginVC.blocks["l-wednesday"] as! String).lowercased().contains("2") {
+        if ((LoginVC.blocks["l-wednesday"] as? String) ?? "").lowercased().contains("2") {
             wednesday = CalendarVC.wednesday
         }
         else {
             wednesday = CalendarVC.wednesdayL1
         }
-        if (LoginVC.blocks["l-thursday"] as! String).lowercased().contains("2") {
+        if ((LoginVC.blocks["l-thursday"] as? String) ?? "").lowercased().contains("2") {
             thursday = CalendarVC.thursday
         }
         else {
             thursday = CalendarVC.thursdayL1
         }
-        if (LoginVC.blocks["l-friday"] as! String).lowercased().contains("2") {
+        if ((LoginVC.blocks["l-friday"] as? String) ?? "").lowercased().contains("2") {
             friday = CalendarVC.friday
         }
         else {

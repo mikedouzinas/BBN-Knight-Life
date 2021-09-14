@@ -456,27 +456,27 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         SignOutButton.addTarget(self, action: #selector(signOut), for: .touchUpInside)
         
         blocks = [
-            settingsBlock(blockName: "A", className: LoginVC.blocks["A"] as! String),
-            settingsBlock(blockName: "B", className: LoginVC.blocks["B"] as! String),
-            settingsBlock(blockName: "C", className: LoginVC.blocks["C"] as! String),
-            settingsBlock(blockName: "D", className: LoginVC.blocks["D"] as! String),
-            settingsBlock(blockName: "E", className: LoginVC.blocks["E"] as! String),
-            settingsBlock(blockName: "F", className: LoginVC.blocks["F"] as! String),
-            settingsBlock(blockName: "G", className: LoginVC.blocks["G"] as! String)
+            settingsBlock(blockName: "A", className: LoginVC.blocks["A"] as? String ?? ""),
+            settingsBlock(blockName: "B", className: LoginVC.blocks["B"] as? String ?? ""),
+            settingsBlock(blockName: "C", className: LoginVC.blocks["C"] as? String ?? ""),
+            settingsBlock(blockName: "D", className: LoginVC.blocks["D"] as? String ?? ""),
+            settingsBlock(blockName: "E", className: LoginVC.blocks["E"] as? String ?? ""),
+            settingsBlock(blockName: "F", className: LoginVC.blocks["F"] as? String ?? ""),
+            settingsBlock(blockName: "G", className: LoginVC.blocks["G"] as? String ?? "")
         ]
         
         preferenceBlocks = [
-            settingsBlock(blockName: "Grade", className: "\(LoginVC.blocks["grade"] as! String)"),
-            settingsBlock(blockName: "Locker #", className: "\(LoginVC.blocks["lockerNum"] as! String)"),
-            settingsBlock(blockName: "Advisory Room", className: "\(LoginVC.blocks["room-advisory"] as! String)")
+            settingsBlock(blockName: "Grade", className: "\(LoginVC.blocks["grade"] as? String ?? "")"),
+            settingsBlock(blockName: "Locker #", className: "\(LoginVC.blocks["lockerNum"] as? String ?? "")"),
+            settingsBlock(blockName: "Advisory Room", className: "\(LoginVC.blocks["room-advisory"] as? String ?? "")")
         ]
         
         lunchBlocks = [
-            settingsBlock(blockName: "Monday Lunch", className: "\(LoginVC.blocks["l-monday"] as! String)"),
-            settingsBlock(blockName: "Tuesday Lunch", className: "\(LoginVC.blocks["l-tuesday"] as! String)"),
-            settingsBlock(blockName: "Wednesday Lunch", className: "\(LoginVC.blocks["l-wednesday"] as! String)"),
-            settingsBlock(blockName: "Thursday Lunch", className: "\(LoginVC.blocks["l-thursday"] as! String)"),
-            settingsBlock(blockName: "Friday Lunch", className: "\(LoginVC.blocks["l-friday"] as! String)")
+            settingsBlock(blockName: "Monday Lunch", className: "\(LoginVC.blocks["l-monday"] as? String ?? "")"),
+            settingsBlock(blockName: "Tuesday Lunch", className: "\(LoginVC.blocks["l-tuesday"] as? String ?? "")"),
+            settingsBlock(blockName: "Wednesday Lunch", className: "\(LoginVC.blocks["l-wednesday"] as? String ?? "")"),
+            settingsBlock(blockName: "Thursday Lunch", className: "\(LoginVC.blocks["l-thursday"] as? String ?? "")"),
+            settingsBlock(blockName: "Friday Lunch", className: "\(LoginVC.blocks["l-friday"] as? String ?? "")")
         ]
         tableView = UITableView(frame: .zero, style: .grouped)
         view.addSubview(tableView)
