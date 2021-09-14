@@ -152,20 +152,11 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 second: 0,
                 of: Date())!
             let time = currentDay[indexPath.row].reminderTime.prefix(5)
-            let time1 = currentDay[indexPath.row].startTime.prefix(5)
             let m = time.replacingOccurrences(of: time.prefix(3), with: "")
-            let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
             var amOrPm = 0
-            var amOrPm1 = 0
-           
             if currentDay[indexPath.row].reminderTime.contains("pm") && !time.prefix(2).contains("12"){
                 amOrPm = 12
             }
-            if currentDay[indexPath.row].startTime.contains("pm") && !time1.prefix(2).contains("12"){
-                amOrPm1 = 12
-            }
- 
-           
             let now = Date()
             let t = calendar.date(
                 bySettingHour: (Int(time.prefix(2))!+amOrPm),
