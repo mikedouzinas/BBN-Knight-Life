@@ -19,7 +19,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         return currentDay.count
     }
     var xc = 0
-    func setTimes() {
+    func setTimes(recursive: Bool) {
         xc+=1
         var i = 0
         print("\(xc) ")
@@ -55,14 +55,14 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 minute: Int(m1)!,
                 second: 0,
                 of: now)!
-            print(time2)
+//            print(time2)
             let t2 = calendar.date(
                 bySettingHour: (Int(time2.prefix(2))!+amOrPm2),
                 minute: Int(m2)!,
                 second: 0,
                 of: now)!
             if now.isBetweenTimeFrame(date1: t, date2: t2) {
-                print("is between times \(i)")
+//                print("is between times \(i)")
                 currentBlock = x
                 //                    cell.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
                 //                    cell.contentView.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
@@ -86,36 +86,38 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 if now.isBetweenTimeFrame(date1: t, date2: t1) {
                     let interval = Date().getTimeBetween(to: t1)
                     self.navigationItem.title = "\(formatter.string(from: interval)!) Until \(name)"
-                    
-                    Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [self] timer in
-                        print("interval 1")
-                        if interval <= 0 {
-                            timer.invalidate()
-                        }
-                        setTimes()
-                        ScheduleCalendar.reloadData()
-                    }
                 }
                 else {
                     let interval = Date().getTimeBetween(to: t2)
                     //                    interval.
                     self.navigationItem.title = "\(formatter.string(from: interval)!) left in \(name)"
-                    Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [self] timer in
-                        print("interval 2")
-                        if interval <= 0 {
-                            timer.invalidate()
-                        }
-                        setTimes()
-                        ScheduleCalendar.reloadData()
-                    }
                 }
             }
             else {
-                if currentBlock.reminderTime == x.reminderTime && i == currentWeekday.count {
-                    currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n", reminderTime: "3", length: 0)
-                    self.navigationItem.title = "My Schedule"
+                let formatter1 = DateFormatter()
+                formatter1.dateFormat = "yyyy-MM-dd"
+                formatter1.dateStyle = .short
+                let stringDate = formatter1.string(from: Date())
+
+                if currentDate == stringDate {
+                    if currentBlock.reminderTime == x.reminderTime && i == currentWeekday.count {
+                        currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n", reminderTime: "3", length: 0)
+                        self.navigationItem.title = "My Schedule"
+                    }
                 }
             }
+        }
+        
+        ScheduleCalendar.refreshControl?.endRefreshing()
+        if recursive {
+            Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [self] timer in
+                
+                setTimes(recursive: true)
+                ScheduleCalendar.reloadData()
+            }
+        }
+        else {
+            ScheduleCalendar.reloadData()
         }
     }
     var currentWeekday = [block]()
@@ -219,9 +221,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     }
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        setCurrentday(date: realCurrentDate)
-        ScheduleCalendar.reloadData()
-//        setTimes()
+        setCurrentday(date: realCurrentDate, completion: {_ in
+            
+            self.ScheduleCalendar.reloadData()
+        })
     }
 //    override func viewWillAppear(_ animated: Bool) {
 //        super.viewWillAppear(animated)
@@ -364,28 +367,61 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     @IBOutlet weak var CalendarHeightConstraint: NSLayoutConstraint!
     var currentDay = [block]()
     var height = CGFloat(0)
+    @objc private func didPullToRefresh() {
+        setTimes(recursive: false)
+        ScheduleCalendar.reloadData()
+    }
+    func configureRefreshPull() {
+        ScheduleCalendar.refreshControl = UIRefreshControl()
+        ScheduleCalendar.refreshControl?.addTarget(self, action: #selector(didPullToRefresh), for: .valueChanged)
+    }
+    var v = 1
     override func viewDidLoad() {
         super.viewDidLoad()
+        v = 2
         ScheduleCalendar.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
         ScheduleCalendar.backgroundColor = UIColor(named: "background")
         height = view.frame.height/4
         CalendarHeightConstraint.constant = height
+        configureRefreshPull()
         view.layoutIfNeeded()
         ScheduleCalendar.showsVerticalScrollIndicator = false
         ScheduleCalendar.tableFooterView = UIView(frame: .zero)
-        currentWeekday = setCurrentday(date: Date())
-        calendar.delegate = self
-        calendar.dataSource = self
-        ScheduleCalendar.delegate = self
-        ScheduleCalendar.dataSource = self
+        setCurrentday(date: Date(), completion: { [self]result in
+            switch result {
+            case .success(let todayBlocks):
+                self.currentWeekday = todayBlocks
+                calendar.delegate = self
+                calendar.dataSource = self
+                ScheduleCalendar.delegate = self
+                ScheduleCalendar.dataSource = self
+                if currentWeekday.isEmpty {
+                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+                }
+                else {
+                    LoginVC.setNotifications()
+                }
+                setTimes(recursive: true)
+                
+            case .failure(_):
+                print("failed :(")
+            }
+        })
+       
         //        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
             for x in results {
                 print("title: \(x.content.title) ")
             }
         })
-        setTimes()
         //        setNotif()
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        if v != 2 {
+            setTimes(recursive: false)
+            ScheduleCalendar.reloadData()
+        }
+        v+=1
     }
     func setNotif() {
         let hours = 13
@@ -429,8 +465,9 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         NoSchoolDay(date: "Monday, May 30, 2022", reason: "Memorial Day")
     ]
     var realCurrentDate = Date()
-    let halfDays = [NoSchoolDay(date: "Wednesday, November 24, 2021", reason: "Thanksgiving Break Start")]
-    func setCurrentday(date: Date) -> [block] {
+//    var specialScheduleDays = 
+//    let halfDays = [NoSchoolDay(date: "Wednesday, November 24, 2021", reason: "Thanksgiving Break Start")]
+    func setCurrentday(date: Date, completion: @escaping (Swift.Result<[block], Error>) -> Void) {
         realCurrentDate = date
         let formatter2 = DateFormatter()
         formatter2.dateFormat = "yyyy-MM-dd"
@@ -474,32 +511,46 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 currentDay = [block]()
                 ScheduleCalendar.restore()
                 ScheduleCalendar.setEmptyMessage("No Class - \(x.reason)")
-                return currentDay
+//                UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+                completion(.success(currentDay))
+                return
             }
         }
         if date.isBetweenTimeFrame(date1: "18 Dec 2021 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Jan 2022 04:00".dateFromMultipleFormats() ?? Date()) || date.isBetweenTimeFrame(date1: "12 Mar 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "27 Mar 2022 04:00".dateFromMultipleFormats() ?? Date()) {
             currentDay = [block]()
             ScheduleCalendar.restore()
             ScheduleCalendar.setEmptyMessage("No Class - Enjoy Break!")
-            return currentDay
+//            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+            completion(.success(currentDay))
+            return
         }
-        
-        if stringDate == "Wednesday, September 8, 2021" {
-            ScheduleCalendar.restore()
-            currentDay = customWednesday
-            return currentDay
+        let db = Firestore.firestore()
+        db.collection("special-schedules").getDocuments { (snapshot, error) in
+            if error != nil {
+                ProgressHUD.showFailed("Failed to find 'special-schedules'")
+                completion(.success(self.currentDay))
+            } else {
+//                var isCreated = false
+                for document in (snapshot?.documents)! {
+                    if let id = document.data()["date"] as? String {
+                        if id.lowercased() == stringDate.lowercased() {
+                            let array = document.data()["blocks"] as? [[String: String]] ?? [["":""]]
+                            var blocks = [block]()
+                            for x in array {
+                                blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
+                            }
+                            self.currentDay = blocks
+                            completion(.success(self.currentDay))
+                            return
+                        }
+                    }
+                    completion(.success(self.currentDay))
+                    return
+                }
+                completion(.success(self.currentDay))
+                return
+            }
         }
-        if stringDate == "Thursday, September 9, 2021" {
-            ScheduleCalendar.restore()
-            currentDay = customThursday
-            return currentDay
-        }
-        if stringDate == "Friday, September 10, 2021" {
-            ScheduleCalendar.restore()
-            currentDay = customFriday
-            return currentDay
-        }
-        return currentDay
     }
     private var customWednesday = [
         block(name: "9's go to Biv", startTime: "07:30am", endTime: "08:15am", block: "N/A", reminderTime: "07:25am", length: 45),
@@ -539,9 +590,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Advisory", startTime: "02:10pm", endTime: "02:30pm", block: "N/A", reminderTime: "02:05pm", length: 45)
     ]
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
-        setCurrentday(date: date)
-        ScheduleCalendar.reloadData()
-//        setTimes()
+        setCurrentday(date: date, completion: { _ in
+            self.ScheduleCalendar.reloadData()
+        })
+        
     }
 }
 

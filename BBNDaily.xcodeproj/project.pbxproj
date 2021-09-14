@@ -58,6 +58,7 @@
 		8704E97526EEA686001826F8 /* CalendarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarVC.swift; sourceTree = "<group>"; };
 		8704E97726EEA6F2001826F8 /* VanguardVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VanguardVC.swift; sourceTree = "<group>"; };
 		8704E97926EEA6FC001826F8 /* NewsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsVC.swift; sourceTree = "<group>"; };
+		87078D2726F0DCC00061E9AF /* BBNDaily.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BBNDaily.entitlements; sourceTree = "<group>"; };
 		87507FC326E6ADEB005DDFB4 /* BBNDaily.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BBNDaily.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		87507FC626E6ADEB005DDFB4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		87507FC826E6ADEB005DDFB4 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -183,6 +184,7 @@
 		87507FC526E6ADEB005DDFB4 /* BBNDaily */ = {
 			isa = PBXGroup;
 			children = (
+				87078D2726F0DCC00061E9AF /* BBNDaily.entitlements */,
 				87507FC626E6ADEB005DDFB4 /* AppDelegate.swift */,
 				87507FC826E6ADEB005DDFB4 /* SceneDelegate.swift */,
 				8704E97D26EEA880001826F8 /* Other */,
@@ -641,6 +643,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BBNDaily/BBNDaily.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = JZUXQ9JH9H;
 				GCC_NO_COMMON_BLOCKS = NO;
@@ -650,7 +653,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.22;
+				MARKETING_VERSION = 1.23;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -664,6 +667,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BBNDaily/BBNDaily.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = JZUXQ9JH9H;
 				GCC_NO_COMMON_BLOCKS = NO;
@@ -673,7 +677,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.22;
+				MARKETING_VERSION = 1.23;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
