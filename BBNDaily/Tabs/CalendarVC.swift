@@ -55,6 +55,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 minute: Int(m1)!,
                 second: 0,
                 of: now)!
+            print(time2)
             let t2 = calendar.date(
                 bySettingHour: (Int(time2.prefix(2))!+amOrPm2),
                 minute: Int(m2)!,
@@ -283,7 +284,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Extended G", startTime: "10:20am", endTime: "11:25am", block: "G", reminderTime: "10:15am", length: 65),
         block(name: "E1", startTime: "11:30am", endTime: "12:15pm", block: "E", reminderTime: "11:25am", length: 45),
         block(name: "Lunch", startTime: "12:20pm", endTime: "12:45pm", block: "N/A", reminderTime: "12:15pm", length: 25),
-        block(name: "Extended B", startTime: "12:50pm", endTime: "1:55pm", block: "B", reminderTime: "12:45pm", length: 65),
+        block(name: "Extended B", startTime: "12:50pm", endTime: "01:55pm", block: "B", reminderTime: "12:45pm", length: 65),
         block(name: "Advisory", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm", length: 35),
         block(name: "D", startTime: "02:40pm", endTime: "03:25pm", block: "D", reminderTime: "02:35pm", length: 45)
     ]
@@ -294,7 +295,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Extended G", startTime: "10:20am", endTime: "11:25am", block: "G", reminderTime: "10:15am", length: 65),
         block(name: "Lunch", startTime: "11:30am", endTime: "11:55am", block: "N/A", reminderTime: "11:25am", length: 25),
         block(name: "E2", startTime: "12:00pm", endTime: "12:45pm", block: "E", reminderTime: "11:55am", length: 45),
-        block(name: "Extended B", startTime: "12:50pm", endTime: "1:55pm", block: "B", reminderTime: "12:45pm", length: 65),
+        block(name: "Extended B", startTime: "12:50pm", endTime: "01:55pm", block: "B", reminderTime: "12:45pm", length: 65),
         block(name: "Advisory", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm", length: 35),
         block(name: "D", startTime: "02:40pm", endTime: "03:25pm", block: "D", reminderTime: "02:35pm", length: 45)
     ]
@@ -305,7 +306,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Extended F", startTime: "10:20am", endTime: "11:25am", block: "F", reminderTime: "10:15am", length: 65),
         block(name: "A1", startTime: "11:30am", endTime: "12:15pm", block: "A", reminderTime: "11:25am", length: 45),
         block(name: "Lunch", startTime: "12:20pm", endTime: "12:45pm", block: "N/A", reminderTime: "12:15pm", length: 25),
-        block(name: "Community Activity", startTime: "12:45pm", endTime: "1:25pm", block: "N/A", reminderTime: "12:40pm", length: 40)
+        block(name: "Community Activity", startTime: "12:45pm", endTime: "01:25pm", block: "N/A", reminderTime: "12:40pm", length: 40)
     ]
     static let wednesdayL1 =  [
         block(name: "G", startTime: "08:15am", endTime: "09:00am", block: "G", reminderTime: "08:10am", length: 45),
@@ -314,7 +315,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Extended F", startTime: "10:20am", endTime: "11:25am", block: "F", reminderTime: "10:15am", length: 65),
         block(name: "Lunch", startTime: "11:30am", endTime: "11:55am", block: "N/A", reminderTime: "11:25am", length: 45),
         block(name: "A2", startTime: "12:00pm", endTime: "12:45pm", block: "A", reminderTime: "11:55am", length: 25),
-        block(name: "Community Activity", startTime: "12:45pm", endTime: "1:25pm", block: "N/A", reminderTime: "12:40pm", length: 40)
+        block(name: "Community Activity", startTime: "12:45pm", endTime: "01:25pm", block: "N/A", reminderTime: "12:40pm", length: 40)
     ]
     static let thursday =  [
         block(name: "C", startTime: "08:15am", endTime: "09:00am", block: "C", reminderTime: "08:10am", length: 45),
@@ -323,7 +324,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Extended D", startTime: "10:20am", endTime: "11:25am", block: "D", reminderTime: "10:15am", length: 45),
         block(name: "G1", startTime: "11:30am", endTime: "12:15pm", block: "G", reminderTime: "11:25am", length: 45),
         block(name: "Lunch", startTime: "12:20pm", endTime: "12:45pm", block: "N/A", reminderTime: "12:15pm", length: 25),
-        block(name: "Extended E", startTime: "12:50pm", endTime: "1:55pm", block: "E", reminderTime: "12:45pm", length: 65),
+        block(name: "Extended E", startTime: "12:50pm", endTime: "01:55pm", block: "E", reminderTime: "12:45pm", length: 65),
         block(name: "Office Hours", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm", length: 35),
         block(name: "F", startTime: "02:40pm", endTime: "03:25pm", block: "F", reminderTime: "02:35pm", length: 45)
     ]
@@ -334,7 +335,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Extended D", startTime: "10:20am", endTime: "11:25am", block: "D", reminderTime: "10:15am", length: 45),
         block(name: "Lunch", startTime: "11:30am", endTime: "11:55am", block: "N/A", reminderTime: "11:25am", length: 25),
         block(name: "G2", startTime: "12:00pm", endTime: "12:45pm", block: "G", reminderTime: "11:55am", length: 45),
-        block(name: "Extended E", startTime: "12:50pm", endTime: "1:55pm", block: "E", reminderTime: "12:45pm", length: 65),
+        block(name: "Extended E", startTime: "12:50pm", endTime: "01:55pm", block: "E", reminderTime: "12:45pm", length: 65),
         block(name: "Office Hours", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm", length: 35),
         block(name: "F", startTime: "02:40pm", endTime: "03:25pm", block: "F", reminderTime: "02:35pm", length: 45)
     ]
@@ -345,7 +346,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "B", startTime: "10:40am", endTime: "11:25am", block: "B", reminderTime: "10:15am", length: 45),
         block(name: "D1", startTime: "11:30am", endTime: "12:15pm", block: "D", reminderTime: "11:25am", length: 45),
         block(name: "Lunch", startTime: "12:20pm", endTime: "12:45pm", block: "N/A", reminderTime: "12:15pm", length: 25),
-        block(name: "Extended C", startTime: "12:50pm", endTime: "1:55pm", block: "C", reminderTime: "12:45pm", length: 65),
+        block(name: "Extended C", startTime: "12:50pm", endTime: "01:55pm", block: "C", reminderTime: "12:45pm", length: 65),
         block(name: "A", startTime: "02:00pm", endTime: "02:45pm", block: "A", reminderTime: "01:55pm", length: 45),
         block(name: "Community Activity", startTime: "02:50pm", endTime: "03:25pm", block: "N/A", reminderTime: "02:35pm", length: 35)
     ]
@@ -356,7 +357,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "B", startTime: "10:40am", endTime: "11:25am", block: "B", reminderTime: "10:15am", length: 45),
         block(name: "Lunch", startTime: "11:30am", endTime: "11:55am", block: "N/A", reminderTime: "11:25am", length: 25),
         block(name: "D2", startTime: "12:00pm", endTime: "12:45pm", block: "D", reminderTime: "11:55am", length: 45),
-        block(name: "Extended C", startTime: "12:50pm", endTime: "1:55pm", block: "C", reminderTime: "12:45pm", length: 65),
+        block(name: "Extended C", startTime: "12:50pm", endTime: "01:55pm", block: "C", reminderTime: "12:45pm", length: 65),
         block(name: "A", startTime: "02:00pm", endTime: "02:45pm", block: "A", reminderTime: "01:55pm", length: 45),
         block(name: "Community Activity", startTime: "02:50pm", endTime: "03:25pm", block: "N/A", reminderTime: "02:35pm", length: 35)
     ]
