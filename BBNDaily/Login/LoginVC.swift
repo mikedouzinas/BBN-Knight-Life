@@ -291,7 +291,7 @@ class LoginVC: UIViewController {
         }
         return CustomWeekday(blocks: currentDay, weekday: String(weekday))
     }
-    static func addNotif(x: block) {
+    static func addNotif(x: block, weekDay: String) {
         let time1 = x.reminderTime.prefix(5)
         
         let m1 = time1.replacingOccurrences(of: time1.prefix(3), with: "")
@@ -304,7 +304,25 @@ class LoginVC: UIViewController {
         dateComponents.hour = Int(hours)! + amOrPm1
         dateComponents.minute = Int(m1)!
         dateComponents.timeZone = .current
-        dateComponents.weekday = 2
+        
+        var weekNum = 1
+        switch weekDay {
+        case "sunday":
+            weekNum = 1
+        case "monday":
+            weekNum = 2
+        case "tuesday":
+            weekNum = 3
+        case "wednesday":
+            weekNum = 4
+        case "thursday":
+            weekNum = 5
+        case "friday":
+            weekNum = 6
+        default:
+            weekNum = 7
+        }
+        dateComponents.weekday = weekNum
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
         
         // 2
@@ -364,7 +382,7 @@ class LoginVC: UIViewController {
 //                title = "5 Minutes Until \(x.name)"
 //            }
 //            print("notifs for \(title) in \(todayArray.weekday)")
-            addNotif(x: x)
+            addNotif(x: x, weekDay: todayArray.weekday)
         }
         print("\n")
         for x in twoDaysArray.blocks {
@@ -380,7 +398,7 @@ class LoginVC: UIViewController {
 //                title = "5 Minutes Until \(x.name)"
 //            }
 //            print("notifs for \(title) in \(twoDaysArray.weekday)")
-            addNotif(x: x)
+            addNotif(x: x, weekDay: twoDaysArray.weekday)
         }
         print("\n")
         for x in threeDaysArray.blocks {
@@ -396,7 +414,7 @@ class LoginVC: UIViewController {
 //                title = "5 Minutes Until \(x.name)"
 //            }
 //            print("notifs for \(title) in \(threeDaysArray.weekday)")
-            addNotif(x: x)
+            addNotif(x: x, weekDay: threeDaysArray.weekday)
         }
 //        print("\n")
         for x in fourDaysArray.blocks {
@@ -412,7 +430,7 @@ class LoginVC: UIViewController {
 //                title = "5 Minutes Until \(x.name)"
 //            }
 //            print("notifs for \(title) in \(fourDaysArray.weekday)")
-            addNotif(x: x)
+            addNotif(x: x, weekDay: fourDaysArray.weekday)
         }
         print("\n")
         for x in fiveDaysArray.blocks {
@@ -428,7 +446,7 @@ class LoginVC: UIViewController {
 //                title = "5 Minutes Until \(x.name)"
 //            }
 //            print("notifs for \(title) in \(fiveDaysArray.weekday)")
-            addNotif(x: x)
+            addNotif(x: x, weekDay: fiveDaysArray.weekday)
         }
         print("\n")
         for x in sixDaysArray.blocks {
@@ -444,7 +462,7 @@ class LoginVC: UIViewController {
 //                title = "5 Minutes Until \(x.name)"
 //            }
 //            print("notifs for \(title) in \(sixDaysArray.weekday)")
-            addNotif(x: x)
+            addNotif(x: x, weekDay: sixDaysArray.weekday)
         }
         print("\n")
         for x in sevenDaysArray.blocks {
@@ -460,7 +478,7 @@ class LoginVC: UIViewController {
 //                title = "5 Minutes Until \(x.name)"
 //            }
 //            print("notifs for \(title) in \(sevenDaysArray.weekday)")
-            addNotif(x: x)
+            addNotif(x: x, weekDay: sevenDaysArray.weekday)
         }
         UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
             for x in results {
