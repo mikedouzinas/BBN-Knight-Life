@@ -176,8 +176,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 if Date() > t2 {
                     cell.alpha = 0.3
                     cell.contentView.alpha = 0.3
-//                    cell.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.6)
-//                    cell.contentView.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.6)
                 }
                 else {
                     cell.alpha = 1
@@ -217,10 +215,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             self.ScheduleCalendar.reloadData()
         })
     }
-//    override func viewWillAppear(_ animated: Bool) {
-//        super.viewWillAppear(animated)
-//
-//    }
     var currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n", reminderTime: "3", length: 0)
     static var isLunch1 = false
     var calendarIsExpanded = true

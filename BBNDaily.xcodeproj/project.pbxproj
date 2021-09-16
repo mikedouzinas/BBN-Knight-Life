@@ -22,6 +22,7 @@
 		87507FD326E6ADEB005DDFB4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87507FD126E6ADEB005DDFB4 /* LaunchScreen.storyboard */; };
 		87507FDE26E6ADEB005DDFB4 /* BBNDailyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FDD26E6ADEB005DDFB4 /* BBNDailyTests.swift */; };
 		87507FE926E6ADEB005DDFB4 /* BBNDailyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FE826E6ADEB005DDFB4 /* BBNDailyUITests.swift */; };
+		8761CA7226F29D3B00CADE56 /* Maps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8761CA7126F29D3B00CADE56 /* Maps.swift */; };
 		87D3254526E6BCB5009B28CB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */; };
 		87D73B1826EA2CA800724D6D /* demo.gif in Resources */ = {isa = PBXBuildFile; fileRef = 87D73B1726EA2CA800724D6D /* demo.gif */; };
 		87FB9ACEA10E974B53372F10 /* Pods_BBNDaily.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41234358532501BD0AED646E /* Pods_BBNDaily.framework */; };
@@ -72,6 +73,7 @@
 		87507FE426E6ADEB005DDFB4 /* BBNDailyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BBNDailyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		87507FE826E6ADEB005DDFB4 /* BBNDailyUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyUITests.swift; sourceTree = "<group>"; };
 		87507FEA26E6ADEB005DDFB4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8761CA7126F29D3B00CADE56 /* Maps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Maps.swift; sourceTree = "<group>"; };
 		87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		87D73B1726EA2CA800724D6D /* demo.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = demo.gif; sourceTree = "<group>"; };
 		B905DF855FA87A1BAA72452C /* Pods-BBNDaily.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDaily.release.xcconfig"; path = "Target Support Files/Pods-BBNDaily/Pods-BBNDaily.release.xcconfig"; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				8704E97726EEA6F2001826F8 /* VanguardVC.swift */,
+				8761CA7126F29D3B00CADE56 /* Maps.swift */,
 				8704E97926EEA6FC001826F8 /* NewsVC.swift */,
 				8704E97126EEA617001826F8 /* Settings.swift */,
 				8704E97526EEA686001826F8 /* CalendarVC.swift */,
@@ -230,6 +233,7 @@
 				87507FC026E6ADEB005DDFB4 /* Frameworks */,
 				87507FC126E6ADEB005DDFB4 /* Resources */,
 				6C7FE19C05F9440E869FD623 /* [CP] Embed Pods Frameworks */,
+				9DBA16749D44E77214DE38A0 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -268,6 +272,7 @@
 				87507FE126E6ADEB005DDFB4 /* Frameworks */,
 				87507FE226E6ADEB005DDFB4 /* Resources */,
 				8E96165CBCC85ABD9DA4E2C0 /* [CP] Embed Pods Frameworks */,
+				313273D0715F5A5BC51394A2 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -351,6 +356,23 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		313273D0715F5A5BC51394A2 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BBNDaily-BBNDailyUITests/Pods-BBNDaily-BBNDailyUITests-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BBNDaily-BBNDailyUITests/Pods-BBNDaily-BBNDailyUITests-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BBNDaily-BBNDailyUITests/Pods-BBNDaily-BBNDailyUITests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		6C7FE19C05F9440E869FD623 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -429,6 +451,23 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		9DBA16749D44E77214DE38A0 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BBNDaily/Pods-BBNDaily-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BBNDaily/Pods-BBNDaily-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BBNDaily/Pods-BBNDaily-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		DD2FA1541DA53376B280C83E /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -462,6 +501,7 @@
 				87507FC726E6ADEB005DDFB4 /* AppDelegate.swift in Sources */,
 				8704E97426EEA663001826F8 /* LaunchVC.swift in Sources */,
 				8704E96E26EEA5B9001826F8 /* LoginVC.swift in Sources */,
+				8761CA7226F29D3B00CADE56 /* Maps.swift in Sources */,
 				87507FC926E6ADEB005DDFB4 /* SceneDelegate.swift in Sources */,
 				8704E97626EEA686001826F8 /* CalendarVC.swift in Sources */,
 				8704E97226EEA617001826F8 /* Settings.swift in Sources */,

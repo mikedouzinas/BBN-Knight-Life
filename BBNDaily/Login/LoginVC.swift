@@ -13,6 +13,7 @@ import InitialsImageView
 import SafariServices
 import FSCalendar
 import WebKit
+import GoogleMaps
 
 
 class LoginVC: UIViewController {
@@ -168,7 +169,7 @@ class LoginVC: UIViewController {
             }
         }
     }
-    static func getLunchDays() -> [[block]]{
+    static func getLunchDays() -> [[block]] {
         var monday = [block]()
         var tuesday = [block]()
         var wednesday = [block]()
