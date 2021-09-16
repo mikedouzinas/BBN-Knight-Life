@@ -349,6 +349,14 @@ class LoginVC: UIViewController {
             }
         }
     }
+    static var todayArray: CustomWeekday!
+    static var twoDaysArray: CustomWeekday!
+    static var threeDaysArray: CustomWeekday!
+    static var fourDaysArray: CustomWeekday!
+    static var fiveDaysArray: CustomWeekday!
+    static var sixDaysArray: CustomWeekday!
+    static var sevenDaysArray: CustomWeekday!
+    static var bigArray = [CustomWeekday]()
     static func setNotifications() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         
@@ -361,14 +369,14 @@ class LoginVC: UIViewController {
         let sixDays = calendar.date(byAdding: .day, value: 5, to: Date())!
         let sevenDays = calendar.date(byAdding: .day, value: 6, to: Date())!
         
-        let todayArray = LoginVC.findArray(date: today)
-        let twoDaysArray = LoginVC.findArray(date: twoDays)
-        let threeDaysArray = LoginVC.findArray(date: threeDays)
-        let fourDaysArray = LoginVC.findArray(date: fourDays)
-        let fiveDaysArray = LoginVC.findArray(date: fiveDays)
-        let sixDaysArray = LoginVC.findArray(date: sixDays)
-        let sevenDaysArray = LoginVC.findArray(date: sevenDays)
-        
+        LoginVC.todayArray = LoginVC.findArray(date: today)
+        LoginVC.twoDaysArray = LoginVC.findArray(date: twoDays)
+        LoginVC.threeDaysArray = LoginVC.findArray(date: threeDays)
+        LoginVC.fourDaysArray = LoginVC.findArray(date: fourDays)
+        LoginVC.fiveDaysArray = LoginVC.findArray(date: fiveDays)
+        LoginVC.sixDaysArray = LoginVC.findArray(date: sixDays)
+        LoginVC.sevenDaysArray = LoginVC.findArray(date: sevenDays)
+        bigArray = [todayArray, twoDaysArray, threeDaysArray, fourDaysArray, fiveDaysArray, sixDaysArray, sevenDaysArray]
         for x in todayArray.blocks {
 //            var title = ""
 //            if x.block != "N/A" {
