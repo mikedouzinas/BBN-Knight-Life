@@ -96,10 +96,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 formatter1.dateStyle = .short
                 let stringDate = formatter1.string(from: Date())
                 if currentDate == stringDate {
-//                    if Date() > t2 {
-//                        currentWeekday.removeFirst()
-//                        i-=1
-//                    }
+                    if Date() > t2 {
+                        currentWeekday.removeFirst()
+                        i-=1
+                    }
                     if currentBlock.reminderTime == x.reminderTime && i == currentWeekday.count {
                         currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n", reminderTime: "3", length: 0)
                         self.navigationItem.title = "My Schedule"
@@ -109,37 +109,37 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             i+=1
             
         }
-//        if currentWeekday.isEmpty {
-//            var z = 0
-//            var currDate = Date()
-//            for x in LoginVC.bigArray {
-//                if z != 0 {
-//                    currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
-//                    if !x.blocks.isEmpty {
-//                        currentWeekday = x.blocks
-//                        calendar.select(currDate)
-//                        setCurrentday(date: currDate, completion: { _ in
-//                            self.ScheduleCalendar.reloadData()
-//                        })
-//                        self.navigationItem.title = "Next Day of Classes: \(x.weekday.capitalized)"
-//                        z-=1
-//                        break
-//                    }
-//                }
-//                z+=1
-//            }
-//            if z == LoginVC.bigArray.count {
-//                self.navigationItem.title = "My Schedule"
-//            }
-//        }
-//        let formatter1 = DateFormatter()
-//        formatter1.dateFormat = "yyyy-MM-dd"
-//        formatter1.dateStyle = .short
-//        let stringDate = formatter1.string(from: Date())
-//
-//        if currentDate == stringDate {
-//            currentDay = currentWeekday
-//        }
+        if currentWeekday.isEmpty {
+            var z = 0
+            var currDate = Date()
+            for x in LoginVC.bigArray {
+                if z != 0 {
+                    currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
+                    if !x.blocks.isEmpty {
+                        currentWeekday = x.blocks
+                        calendar.select(currDate)
+                        setCurrentday(date: currDate, completion: { _ in
+                            self.ScheduleCalendar.reloadData()
+                        })
+                        self.navigationItem.title = "Next Day of Classes: \(x.weekday.capitalized)"
+                        z-=1
+                        break
+                    }
+                }
+                z+=1
+            }
+            if z == LoginVC.bigArray.count {
+                self.navigationItem.title = "My Schedule"
+            }
+        }
+        let formatter1 = DateFormatter()
+        formatter1.dateFormat = "yyyy-MM-dd"
+        formatter1.dateStyle = .short
+        let stringDate = formatter1.string(from: Date())
+
+        if currentDate == stringDate {
+            currentDay = currentWeekday
+        }
         
         ScheduleCalendar.refreshControl?.endRefreshing()
         if recursive {
