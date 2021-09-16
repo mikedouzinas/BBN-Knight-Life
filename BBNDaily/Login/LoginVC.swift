@@ -22,6 +22,7 @@ class LoginVC: UIViewController {
     static var phoneNum = ""
     static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
     static var specialSchedules = [String: [block]]()
+    static var specialSchedulesL1 = [String: [block]]()
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
     @IBOutlet weak var SignInButton: GIDSignInButton!
     override func viewDidLoad() {
@@ -140,7 +141,7 @@ class LoginVC: UIViewController {
                         var newArray = [String: [block]]()
                         for document in (snapshot?.documents)! {
 //                            documen
-                            let array = document.data()["blocks"] as? [[String: String]] ?? [["":""]]
+                            let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
                             var blocks = [block]()
                             for x in array {
                                 blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
@@ -148,6 +149,17 @@ class LoginVC: UIViewController {
                             newArray[document.data()["date"] as? String ?? ""] = blocks
                         }
                         LoginVC.specialSchedules = newArray
+                        var newArray2 = [String: [block]]()
+                        for document in (snapshot?.documents)! {
+//                            documen
+                            let array = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
+                            var blocks = [block]()
+                            for x in array {
+                                blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
+                            }
+                            newArray2[document.data()["date"] as? String ?? ""] = blocks
+                        }
+                        LoginVC.specialSchedulesL1 = newArray2
                     }
                 }
                 db.collection("users").getDocuments { (snapshot, error) in
@@ -270,6 +282,10 @@ class LoginVC: UIViewController {
         for x in LoginVC.specialSchedules {
             if x.key.lowercased() == stringDate.lowercased() {
                 currentDay = x.value
+                if !((LoginVC.blocks["l-\(weekday)"] as? String) ?? "").lowercased().contains("2") {
+                    let obj = LoginVC.specialSchedulesL1[x.key]
+                    return CustomWeekday(blocks: obj ?? [block](), weekday: String(weekday))
+                }
                 return CustomWeekday(blocks: currentDay, weekday: String(weekday))
             }
         }

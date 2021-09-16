@@ -502,6 +502,12 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         for x in LoginVC.specialSchedules {
             if x.key.lowercased() == stringDate.lowercased() {
                 self.currentDay = x.value
+                if !((LoginVC.blocks["l-\(weekDay.lowercased())"] as? String) ?? "").lowercased().contains("2") {
+                    let obj = LoginVC.specialSchedulesL1[x.key]
+                    self.currentDay = obj ?? [block]()
+                    completion(.success(self.currentDay))
+                    return
+                }
                 completion(.success(self.currentDay))
                 return
             }

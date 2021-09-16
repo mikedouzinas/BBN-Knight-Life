@@ -43,7 +43,7 @@ class LaunchVC: UIViewController {
                     var newArray = [String: [block]]()
                     for document in (snapshot?.documents)! {
 //                            documen
-                        let array = document.data()["blocks"] as? [[String: String]] ?? [["":""]]
+                        let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
                         var blocks = [block]()
                         for x in array {
                             blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
@@ -51,6 +51,17 @@ class LaunchVC: UIViewController {
                         newArray[document.data()["date"] as? String ?? ""] = blocks
                     }
                     LoginVC.specialSchedules = newArray
+                    var newArray2 = [String: [block]]()
+                    for document in (snapshot?.documents)! {
+//                            documen
+                        let array = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
+                        var blocks = [block]()
+                        for x in array {
+                            blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
+                        }
+                        newArray2[document.data()["date"] as? String ?? ""] = blocks
+                    }
+                    LoginVC.specialSchedulesL1 = newArray2
                 }
             }
             db.collection("users").getDocuments { (snapshot, error) in

@@ -100,6 +100,17 @@ class MapsVC: UIViewController, UISearchResultsUpdating, ResultsViewControllerDe
         mapView.mapType = .satellite
         mapView.settings.scrollGestures = true
         mapView.settings.zoomGestures = true
+//        for x in places {
+//            let marker = GMSMarker()
+//            let coord = CLLocationCoordinate2D(latitude: x.lat, longitude: x.lon)
+//            marker.position = coord
+//    //        marker.p
+//            marker.title = "\(x.name)"
+//    //        marker.iconView = backview
+//            marker.snippet = "Upper School"
+//            marker.icon = UIImage(named: "map-marker")
+//            marker.map = mapView
+//        }
     }
     func createSearchBar(){
         searchVC = UISearchController(searchResultsController: ResultsViewController)
@@ -175,50 +186,51 @@ class MapsVC: UIViewController, UISearchResultsUpdating, ResultsViewControllerDe
         Classroom(name: "185", lat: 42.37153612174247, lon: -71.13528496630761),
         Classroom(name: "184", lat: 42.37151283805813, lon: -71.13514347978584),
         Classroom(name: "186", lat: 42.371545534293276, lon: -71.13519645341246),
-        Classroom(name: "204", lat: 0, lon: 0),
-        Classroom(name: "206", lat: 0, lon: 0),
-        Classroom(name: "210", lat: 0, lon: 0),
-        Classroom(name: "212", lat: 0, lon: 0),
-        Classroom(name: "214", lat: 0, lon: 0),
-        Classroom(name: "216", lat: 0, lon: 0),
-        Classroom(name: "218", lat: 0, lon: 0),
-        Classroom(name: "220", lat: 0, lon: 0),
-        Classroom(name: "222", lat: 0, lon: 0),
-        Classroom(name: "226", lat: 0, lon: 0),
-        Classroom(name: "230", lat: 0, lon: 0),
-        Classroom(name: "231", lat: 0, lon: 0),
-        Classroom(name: "233", lat: 0, lon: 0),
-        Classroom(name: "234", lat: 0, lon: 0),
-        Classroom(name: "235", lat: 0, lon: 0),
-        Classroom(name: "236", lat: 0, lon: 0),
-        Classroom(name: "237", lat: 0, lon: 0),
-        Classroom(name: "239", lat: 0, lon: 0),
-        Classroom(name: "241", lat: 0, lon: 0),
-        Classroom(name: "243", lat: 0, lon: 0),
-        Classroom(name: "245", lat: 0, lon: 0),
-        Classroom(name: "242", lat: 0, lon: 0),
-        Classroom(name: "244", lat: 0, lon: 0),
-        Classroom(name: "246", lat: 0, lon: 0),
-        Classroom(name: "247 Drama Room", lat: 0, lon: 0),
-        Classroom(name: "250 Theatre", lat: 0, lon: 0),
-        Classroom(name: "249 Library", lat: 0, lon: 0),
-        Classroom(name: "253 Library", lat: 0, lon: 0),
-        Classroom(name: "254", lat: 0, lon: 0),
-        Classroom(name: "255 Quiet Room", lat: 0, lon: 0),
-        Classroom(name: "256", lat: 0, lon: 0),
-        Classroom(name: "258", lat: 0, lon: 0),
-        Classroom(name: "264", lat: 0, lon: 0),
-        Classroom(name: "270", lat: 0, lon: 0),
-        Classroom(name: "272", lat: 0, lon: 0),
-        Classroom(name: "273", lat: 0, lon: 0),
-        Classroom(name: "276", lat: 0, lon: 0),
-        Classroom(name: "281", lat: 0, lon: 0),
-        Classroom(name: "278a", lat: 0, lon: 0),
-        Classroom(name: "278", lat: 0, lon: 0),
-        Classroom(name: "280", lat: 0, lon: 0),
-        Classroom(name: "282", lat: 0, lon: 0),
-        Classroom(name: "285", lat: 0, lon: 0),
-        Classroom(name: "283", lat: 0, lon: 0)
+        Classroom(name: "206", lat: 42.371143090592966, lon: -71.135895064596),
+        Classroom(name: "204", lat: 42.371117329758896, lon: -71.13596882534264),
+        Classroom(name: "210", lat: 42.371008876783286, lon: -71.13617720481203),
+        Classroom(name: "212", lat: 42.37092255405722, lon: -71.13616807208356),
+        Classroom(name: "214", lat: 42.370754754736275, lon: -71.13598899590134),
+        Classroom(name: "216", lat: 42.37078712146334, lon: -71.13609093818819),
+        Classroom(name: "218", lat: 42.37074224413571, lon: -71.13611700634371),
+        Classroom(name: "220", lat: 42.370749188701595, lon: -71.13608567368556),
+        Classroom(name: "222", lat: 42.370755554552986, lon: -71.13604180796412),
+        Classroom(name: "226 Gallery", lat: 42.37070299684498, lon: -71.13595847721366),
+        Classroom(name: "230", lat: 42.370662690200604, lon: -71.13590008662246),
+        Classroom(name: "231", lat: 42.3706458772055, lon: -71.13586362803443),
+        Classroom(name: "233", lat: 42.370744806032704, lon: -71.13580066093222),
+        Classroom(name: "234", lat: 42.3705348642929, lon: -71.13592253614607),
+        Classroom(name: "235", lat: 42.37065612517005, lon: -71.13575216760819),
+        Classroom(name: "236", lat: 42.37054459092512, lon: -71.13582968534519),
+        Classroom(name: "237", lat: 42.370648302752606, lon: -71.13555060294942),
+        Classroom(name: "239", lat: 42.3706563231378, lon: -71.13551970979613),
+        Classroom(name: "241", lat: 42.37071898518477, lon: -71.13562661216325),
+        Classroom(name: "243", lat: 42.3707252029457, lon: -71.1355639956915),
+        Classroom(name: "245", lat: 42.370701484867325, lon: -71.13554473357887),
+        Classroom(name: "242", lat: 42.370573336447684, lon: -71.13558104974827),
+        Classroom(name: "244", lat: 42.37060367222293, lon: -71.13539998355326),
+        Classroom(name: "246", lat: 42.37060813086598, lon: -71.13534499826905),
+        Classroom(name: "248", lat: 42.3706116213915, lon: -71.13531077565662),
+        Classroom(name: "247 Drama Room", lat: 42.370735987734065, lon: -71.1355087146159),
+        Classroom(name: "250 Theatre", lat: 42.37078418003762, lon: -71.13522258742238),
+        Classroom(name: "249 Library", lat: 42.3708945717684, lon: -71.13548970300788),
+        Classroom(name: "253 Library", lat: 42.37096975250899, lon: -71.13553985663359),
+        Classroom(name: "254", lat: 42.37100731426951, lon: -71.13529365712897),
+        Classroom(name: "255 Quiet Room", lat: 42.37111962109817, lon: -71.13543639267418),
+        Classroom(name: "256", lat: 42.371066894912545, lon: -71.13526796473083),
+        Classroom(name: "258", lat: 42.37111380603348, lon: -71.13523892388154),
+        Classroom(name: "264", lat: 42.37119186161864, lon: -71.13519372397114),
+        Classroom(name: "270", lat: 42.37125476092494, lon: -71.13518194674272),
+        Classroom(name: "272", lat: 42.371362237002565, lon: -71.1351742313013),
+        Classroom(name: "273", lat: 42.37135187500068, lon: -71.13530878606328),
+        Classroom(name: "276", lat: 42.37139976243327, lon: -71.13519029325981),
+        Classroom(name: "281", lat: 42.37142224641618, lon: -71.1352662932065),
+        Classroom(name: "278a", lat: 42.371423744174066, lon: -71.13519411707188),
+        Classroom(name: "278", lat: 42.371457963676285, lon: -71.13519245694023),
+        Classroom(name: "280", lat: 42.37148627367455, lon: -71.13517710000423),
+        Classroom(name: "282", lat: 42.371545534293276, lon: -71.13519645341246),
+        Classroom(name: "285", lat: 42.37153612174247, lon: -71.13528496630761),
+        Classroom(name: "283", lat: 42.37148856356952, lon: -71.13528898962103)
     ]
     override func viewWillAppear(_ animated: Bool) {
         self.navigationController?.navigationBar.isTranslucent = true
