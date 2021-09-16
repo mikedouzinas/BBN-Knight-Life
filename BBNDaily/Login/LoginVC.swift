@@ -227,213 +227,234 @@ class LoginVC: UIViewController {
         }
         return [monday, tuesday, wednesday, thursday, friday]
     }
-    static func setNotifications() {
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+    static func findArray(date: Date) -> CustomWeekday {
+        let formatter1 = DateFormatter()
+        formatter1.dateFormat = "yyyy-MM-dd"
+        formatter1.dateStyle = .full
+        let stringDate = formatter1.string(from: date)
+        var currentDay = [block]()
+        print(stringDate)
         let bigArray = LoginVC.getLunchDays()
         let monday = bigArray[0]
         let tuesday = bigArray[1]
         let wednesday = bigArray[2]
         let thursday = bigArray[3]
         let friday = bigArray[4]
-        for x in monday {
-            // 1
-            let time1 = x.reminderTime.prefix(5)
-            
-            let m1 = time1.replacingOccurrences(of: time1.prefix(3), with: "")
-            var amOrPm1 = 0
-            if x.reminderTime.contains("pm") && !time1.prefix(2).contains("12"){
-                amOrPm1 = 12
-            }
-            let hours = x.reminderTime.prefix(2)
-            var dateComponents = DateComponents()
-            dateComponents.hour = Int(hours)! + amOrPm1
-            dateComponents.minute = Int(m1)!
-            dateComponents.timeZone = .current
-            dateComponents.weekday = 2
-            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-            
-            // 2
-            let content = UNMutableNotificationContent()
-            content.sound = UNNotificationSound.default
-            if x.block != "N/A" {
-                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-                if tile == "" {
-                    tile = "\(x.block) Block"
-                }
-                content.title = "5 Minutes Until \(tile)"
-            }
-            else {
-                content.title = "5 Minutes Until \(x.name)"
-            }
-            
-            let randomIdentifier = UUID().uuidString
-            let request = UNNotificationRequest(identifier: randomIdentifier, content: content, trigger: trigger)
-            
-            // 3
-            UNUserNotificationCenter.current().add(request) { error in
-                if error != nil {
-                    print("something went wrong")
-                }
+        let index = stringDate.firstIndex(of: ",")
+        let weekday = stringDate.prefix(upTo: index!).lowercased()
+        switch weekday {
+        case "monday":
+            currentDay = monday
+        case "tuesday":
+            currentDay = tuesday
+        case "wednesday":
+            currentDay = wednesday
+        case "thursday":
+            currentDay = thursday
+        case "friday":
+            currentDay = friday
+        default:
+            currentDay = [block]()
+        }
+        
+        for x in CalendarVC.vacationDates {
+            if stringDate.lowercased() == x.date.lowercased() {
+                currentDay = [block]()
+                return CustomWeekday(blocks: currentDay, weekday: String(weekday))
             }
         }
-        for x in tuesday {
-            // 1
-            let time1 = x.reminderTime.prefix(5)
-            let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
-            var amOrPm1 = 0
-            if x.reminderTime.contains("pm") && !time1.prefix(2).contains("12"){
-                amOrPm1 = 12
-            }
-            let hours = x.reminderTime.prefix(2)
-            var dateComponents = DateComponents()
-            dateComponents.hour = Int(hours)! + amOrPm1
-            dateComponents.minute = Int(m1)!
-            dateComponents.timeZone = .current
-            dateComponents.weekday = 3
-            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-            
-            // 2
-            let content = UNMutableNotificationContent()
-            content.sound = UNNotificationSound.default
-            if x.block != "N/A" {
-                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-                if tile == "" {
-                    tile = "\(x.block) Block"
-                }
-                content.title = "5 Minutes Until \(tile)"
-            }
-            else {
-                content.title = "5 Minutes Until \(x.name)"
-            }
-            
-            let randomIdentifier = UUID().uuidString
-            let request = UNNotificationRequest(identifier: randomIdentifier, content: content, trigger: trigger)
-            
-            // 3
-            UNUserNotificationCenter.current().add(request) { error in
-                if error != nil {
-                    print("something went wrong")
-                }
+        if date.isBetweenTimeFrame(date1: "18 Dec 2021 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Jan 2022 04:00".dateFromMultipleFormats() ?? Date()) || date.isBetweenTimeFrame(date1: "12 Mar 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "27 Mar 2022 04:00".dateFromMultipleFormats() ?? Date()) {
+            currentDay = [block]()
+            return CustomWeekday(blocks: currentDay, weekday: String(weekday))
+        }
+        for x in LoginVC.specialSchedules {
+            if x.key.lowercased() == stringDate.lowercased() {
+                currentDay = x.value
+                return CustomWeekday(blocks: currentDay, weekday: String(weekday))
             }
         }
-        for x in wednesday {
-            // 1
-            let time1 = x.reminderTime.prefix(5)
-            let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
-            var amOrPm1 = 0
-            if x.reminderTime.contains("pm") && !time1.prefix(2).contains("12"){
-                amOrPm1 = 12
-            }
-            let hours = x.reminderTime.prefix(2)
-            var dateComponents = DateComponents()
-            dateComponents.hour = Int(hours)! + amOrPm1
-            dateComponents.minute = Int(m1)!
-            dateComponents.timeZone = .current
-            dateComponents.weekday = 4
-            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-            
-            // 2
-            let content = UNMutableNotificationContent()
-            content.sound = UNNotificationSound.default
-            if x.block != "N/A" {
-                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-                if tile == "" {
-                    tile = "\(x.block) Block"
-                }
-                content.title = "5 Minutes Until \(tile)"
-            }
-            else {
-                content.title = "5 Minutes Until \(x.name)"
-            }
-            
-            let randomIdentifier = UUID().uuidString
-            let request = UNNotificationRequest(identifier: randomIdentifier, content: content, trigger: trigger)
-            
-            // 3
-            UNUserNotificationCenter.current().add(request) { error in
-                if error != nil {
-                    print("something went wrong")
-                }
-            }
+        return CustomWeekday(blocks: currentDay, weekday: String(weekday))
+    }
+    static func addNotif(x: block) {
+        let time1 = x.reminderTime.prefix(5)
+        
+        let m1 = time1.replacingOccurrences(of: time1.prefix(3), with: "")
+        var amOrPm1 = 0
+        if x.reminderTime.contains("pm") && !time1.prefix(2).contains("12"){
+            amOrPm1 = 12
         }
-        for x in thursday {
-            // 1
-            let time1 = x.reminderTime.prefix(5)
-            let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
-            var amOrPm1 = 0
-            if x.reminderTime.contains("pm") && !time1.prefix(2).contains("12"){
-                amOrPm1 = 12
+        let hours = x.reminderTime.prefix(2)
+        var dateComponents = DateComponents()
+        dateComponents.hour = Int(hours)! + amOrPm1
+        dateComponents.minute = Int(m1)!
+        dateComponents.timeZone = .current
+        dateComponents.weekday = 2
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+        
+        // 2
+        let content = UNMutableNotificationContent()
+        content.sound = UNNotificationSound.default
+        if x.block != "N/A" {
+            var tile = (LoginVC.blocks[x.block] ?? "") as! String
+            if tile == "" {
+                tile = "\(x.block) Block"
             }
-            let hours = x.reminderTime.prefix(2)
-            var dateComponents = DateComponents()
-            dateComponents.hour = Int(hours)! + amOrPm1
-            dateComponents.minute = Int(m1)!
-            dateComponents.timeZone = .current
-            dateComponents.weekday = 5
-            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-            //            UNCalendarNotificationTrigger(
-            // 2
-            let content = UNMutableNotificationContent()
-            content.sound = UNNotificationSound.default
-            if x.block != "N/A" {
-                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-                if tile == "" {
-                    tile = "\(x.block) Block"
-                }
-                content.title = "5 Minutes Until \(tile)"
-            }
-            else {
-                content.title = "5 Minutes Until \(x.name)"
-            }
-            
-            let randomIdentifier = UUID().uuidString
-            let request = UNNotificationRequest(identifier: randomIdentifier, content: content, trigger: trigger)
-            
-            // 3
-            UNUserNotificationCenter.current().add(request) { error in
-                if error != nil {
-                    print("something went wrong")
-                }
-            }
+            content.title = "5 Minutes Until \(tile)"
         }
-        for x in friday {
-            // 1
-            let time1 = x.reminderTime.prefix(5)
-            let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
-            var amOrPm1 = 0
-            if x.reminderTime.contains("pm") && !time1.prefix(2).contains("12"){
-                amOrPm1 = 12
-            }
-            let hours = x.reminderTime.prefix(2)
-            var dateComponents = DateComponents()
-            dateComponents.hour = Int(hours)! + amOrPm1
-            dateComponents.minute = Int(m1)!
-            dateComponents.timeZone = .current
-            dateComponents.weekday = 6
-            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-            
-            // 2
-            let content = UNMutableNotificationContent()
-            content.sound = UNNotificationSound.default
-            if x.block != "N/A" {
-                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-                if tile == "" {
-                    tile = "\(x.block) Block"
-                }
-                content.title = "5 Minutes Until \(tile)"
-            }
-            else {
-                content.title = "5 Minutes Until \(x.name)"
-            }
-            let randomIdentifier = UUID().uuidString
-            let request = UNNotificationRequest(identifier: randomIdentifier, content: content, trigger: trigger)
-            
-            // 3
-            UNUserNotificationCenter.current().add(request) { error in
-                if error != nil {
-                    print("something went wrong")
-                }
+        else {
+            content.title = "5 Minutes Until \(x.name)"
+        }
+        
+        let randomIdentifier = UUID().uuidString
+        let request = UNNotificationRequest(identifier: randomIdentifier, content: content, trigger: trigger)
+        
+        // 3
+        UNUserNotificationCenter.current().add(request) { error in
+            if error != nil {
+                print("something went wrong")
             }
         }
     }
+    static func setNotifications() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        
+        let calendar = Calendar.current
+        let today = Date()
+        let twoDays = calendar.date(byAdding: .day, value: 1, to: Date())!
+        let threeDays = calendar.date(byAdding: .day, value: 2, to: Date())!
+        let fourDays = calendar.date(byAdding: .day, value: 3, to: Date())!
+        let fiveDays = calendar.date(byAdding: .day, value: 4, to: Date())!
+        let sixDays = calendar.date(byAdding: .day, value: 5, to: Date())!
+        let sevenDays = calendar.date(byAdding: .day, value: 6, to: Date())!
+        
+        let todayArray = LoginVC.findArray(date: today)
+        let twoDaysArray = LoginVC.findArray(date: twoDays)
+        let threeDaysArray = LoginVC.findArray(date: threeDays)
+        let fourDaysArray = LoginVC.findArray(date: fourDays)
+        let fiveDaysArray = LoginVC.findArray(date: fiveDays)
+        let sixDaysArray = LoginVC.findArray(date: sixDays)
+        let sevenDaysArray = LoginVC.findArray(date: sevenDays)
+        
+        for x in todayArray.blocks {
+//            var title = ""
+//            if x.block != "N/A" {
+//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
+//                if tile == "" {
+//                    tile = "\(x.block) Block"
+//                }
+//                title = "5 Minutes Until \(tile)"
+//            }
+//            else {
+//                title = "5 Minutes Until \(x.name)"
+//            }
+//            print("notifs for \(title) in \(todayArray.weekday)")
+            addNotif(x: x)
+        }
+        print("\n")
+        for x in twoDaysArray.blocks {
+//            var title = ""
+//            if x.block != "N/A" {
+//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
+//                if tile == "" {
+//                    tile = "\(x.block) Block"
+//                }
+//                title = "5 Minutes Until \(tile)"
+//            }
+//            else {
+//                title = "5 Minutes Until \(x.name)"
+//            }
+//            print("notifs for \(title) in \(twoDaysArray.weekday)")
+            addNotif(x: x)
+        }
+        print("\n")
+        for x in threeDaysArray.blocks {
+//            var title = ""
+//            if x.block != "N/A" {
+//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
+//                if tile == "" {
+//                    tile = "\(x.block) Block"
+//                }
+//                title = "5 Minutes Until \(tile)"
+//            }
+//            else {
+//                title = "5 Minutes Until \(x.name)"
+//            }
+//            print("notifs for \(title) in \(threeDaysArray.weekday)")
+            addNotif(x: x)
+        }
+//        print("\n")
+        for x in fourDaysArray.blocks {
+//            var title = ""
+//            if x.block != "N/A" {
+//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
+//                if tile == "" {
+//                    tile = "\(x.block) Block"
+//                }
+//                title = "5 Minutes Until \(tile)"
+//            }
+//            else {
+//                title = "5 Minutes Until \(x.name)"
+//            }
+//            print("notifs for \(title) in \(fourDaysArray.weekday)")
+            addNotif(x: x)
+        }
+        print("\n")
+        for x in fiveDaysArray.blocks {
+//            var title = ""
+//            if x.block != "N/A" {
+//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
+//                if tile == "" {
+//                    tile = "\(x.block) Block"
+//                }
+//                title = "5 Minutes Until \(tile)"
+//            }
+//            else {
+//                title = "5 Minutes Until \(x.name)"
+//            }
+//            print("notifs for \(title) in \(fiveDaysArray.weekday)")
+            addNotif(x: x)
+        }
+        print("\n")
+        for x in sixDaysArray.blocks {
+//            var title = ""
+//            if x.block != "N/A" {
+//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
+//                if tile == "" {
+//                    tile = "\(x.block) Block"
+//                }
+//                title = "5 Minutes Until \(tile)"
+//            }
+//            else {
+//                title = "5 Minutes Until \(x.name)"
+//            }
+//            print("notifs for \(title) in \(sixDaysArray.weekday)")
+            addNotif(x: x)
+        }
+        print("\n")
+        for x in sevenDaysArray.blocks {
+//            var title = ""
+//            if x.block != "N/A" {
+//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
+//                if tile == "" {
+//                    tile = "\(x.block) Block"
+//                }
+//                title = "5 Minutes Until \(tile)"
+//            }
+//            else {
+//                title = "5 Minutes Until \(x.name)"
+//            }
+//            print("notifs for \(title) in \(sevenDaysArray.weekday)")
+            addNotif(x: x)
+        }
+        UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
+            for x in results {
+                print("title: \(x.content.title)")
+            }
+        })
+    }
+}
+
+struct CustomWeekday {
+    let blocks: [block]
+    let weekday: String
 }

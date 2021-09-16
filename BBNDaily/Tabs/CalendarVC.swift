@@ -224,7 +224,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             UIView.animate(withDuration: 0.5) {
                 self.CalendarArrow.image = UIImage(systemName: "chevron.down")
                 self.view.layoutIfNeeded()
-                
             }
             self.calendar.scope = .week
             calendarIsExpanded = false
@@ -380,12 +379,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 calendar.dataSource = self
                 ScheduleCalendar.delegate = self
                 ScheduleCalendar.dataSource = self
-                if currentWeekday.isEmpty {
-                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-                }
-                else {
-                    LoginVC.setNotifications()
-                }
+                LoginVC.setNotifications()
                 setTimes(recursive: true)
                 
             case .failure(_):
@@ -394,11 +388,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         })
        
         //        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-        UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
-            for x in results {
-                print("title: \(x.content.title) ")
-            }
-        })
+       
         //        setNotif()
     }
     override func viewWillAppear(_ animated: Bool) {
@@ -433,7 +423,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             }
         }
     }
-    let vacationDates = [
+    static let vacationDates = [
         NoSchoolDay(date: "Monday, September 6, 2021", reason: "Labor Day"),
         NoSchoolDay(date: "Tuesday, September 7, 2021", reason: "Rosh Hashanah"),
         NoSchoolDay(date: "Thursday, September 16, 2021", reason: "Yom Kippur"),
@@ -454,6 +444,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
 //    let halfDays = [NoSchoolDay(date: "Wednesday, November 24, 2021", reason: "Thanksgiving Break Start")]
     func setCurrentday(date: Date, completion: @escaping (Swift.Result<[block], Error>) -> Void) {
         realCurrentDate = date
+//        let d =
         let formatter2 = DateFormatter()
         formatter2.dateFormat = "yyyy-MM-dd"
         formatter2.dateStyle = .short
@@ -491,7 +482,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             ScheduleCalendar.restore()
         }
         
-        for x in vacationDates {
+        for x in CalendarVC.vacationDates {
             if stringDate.lowercased() == x.date.lowercased() {
                 currentDay = [block]()
                 ScheduleCalendar.restore()
@@ -505,45 +496,18 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             currentDay = [block]()
             ScheduleCalendar.restore()
             ScheduleCalendar.setEmptyMessage("No Class - Enjoy Break!")
-//            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
             completion(.success(currentDay))
             return
         }
         for x in LoginVC.specialSchedules {
             if x.key.lowercased() == stringDate.lowercased() {
-                print("boom we got one")
                 self.currentDay = x.value
                 completion(.success(self.currentDay))
+                return
             }
         }
         completion(.success(self.currentDay))
-//        let db = Firestore.firestore()
-//        db.collection("special-schedules").getDocuments { (snapshot, error) in
-//            if error != nil {
-//                ProgressHUD.showFailed("Failed to find 'special-schedules'")
-//                completion(.success(self.currentDay))
-//            } else {
-////                var isCreated = false
-//                for document in (snapshot?.documents)! {
-//                    if let id = document.data()["date"] as? String {
-//                        if id.lowercased() == stringDate.lowercased() {
-//                            let array = document.data()["blocks"] as? [[String: String]] ?? [["":""]]
-//                            var blocks = [block]()
-//                            for x in array {
-//                                blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
-//                            }
-//                            self.currentDay = blocks
-//                            completion(.success(self.currentDay))
-//                            return
-//                        }
-//                    }
-//                    completion(.success(self.currentDay))
-//                    return
-//                }
-//                completion(.success(self.currentDay))
-//                return
-//            }
-//        }
+        return
     }
     private var customWednesday = [
         block(name: "9's go to Biv", startTime: "07:30am", endTime: "08:15am", block: "N/A", reminderTime: "07:25am", length: 45),

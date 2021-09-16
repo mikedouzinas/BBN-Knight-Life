@@ -10,6 +10,8 @@
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Please allow use of your location if you would like to see where you are in comparison to rooms. You may change this later in Settings if you wish.</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
