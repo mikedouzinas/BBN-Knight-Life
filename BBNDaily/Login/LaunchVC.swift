@@ -35,6 +35,24 @@ class LaunchVC: UIViewController {
             LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
             
             let db = Firestore.firestore()
+            db.collection("special-schedules").getDocuments { (snapshot, error) in
+                if error != nil {
+                    ProgressHUD.showFailed("Failed to find 'special-schedules'")
+                } else {
+                    //                var isCreated = false
+                    var newArray = [String: [block]]()
+                    for document in (snapshot?.documents)! {
+//                            documen
+                        let array = document.data()["blocks"] as? [[String: String]] ?? [["":""]]
+                        var blocks = [block]()
+                        for x in array {
+                            blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
+                        }
+                        newArray[document.data()["date"] as? String ?? ""] = blocks
+                    }
+                    LoginVC.specialSchedules = newArray
+                }
+            }
             db.collection("users").getDocuments { (snapshot, error) in
                 if error != nil {
                     ProgressHUD.showFailed("Failed to find 'users'")

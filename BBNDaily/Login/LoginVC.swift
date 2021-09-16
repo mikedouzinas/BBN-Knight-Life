@@ -21,6 +21,7 @@ class LoginVC: UIViewController {
     static var email = ""
     static var phoneNum = ""
     static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
+    static var specialSchedules = [String: [block]]()
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
     @IBOutlet weak var SignInButton: GIDSignInButton!
     override func viewDidLoad() {
@@ -131,6 +132,24 @@ class LoginVC: UIViewController {
                 }
                 LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
                 let db = Firestore.firestore()
+                db.collection("special-schedules").getDocuments { (snapshot, error) in
+                    if error != nil {
+                        ProgressHUD.showFailed("Failed to find 'special-schedules'")
+                    } else {
+                        //                var isCreated = false
+                        var newArray = [String: [block]]()
+                        for document in (snapshot?.documents)! {
+//                            documen
+                            let array = document.data()["blocks"] as? [[String: String]] ?? [["":""]]
+                            var blocks = [block]()
+                            for x in array {
+                                blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
+                            }
+                            newArray[document.data()["date"] as? String ?? ""] = blocks
+                        }
+                        LoginVC.specialSchedules = newArray
+                    }
+                }
                 db.collection("users").getDocuments { (snapshot, error) in
                     if error != nil {
                         ProgressHUD.showFailed("Failed to find 'users'")
@@ -166,6 +185,7 @@ class LoginVC: UIViewController {
                         strongSelf.callTabBar()
                     }
                 }
+                
             }
         }
     }

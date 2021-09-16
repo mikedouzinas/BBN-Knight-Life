@@ -509,33 +509,41 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             completion(.success(currentDay))
             return
         }
-        let db = Firestore.firestore()
-        db.collection("special-schedules").getDocuments { (snapshot, error) in
-            if error != nil {
-                ProgressHUD.showFailed("Failed to find 'special-schedules'")
+        for x in LoginVC.specialSchedules {
+            if x.key.lowercased() == stringDate.lowercased() {
+                print("boom we got one")
+                self.currentDay = x.value
                 completion(.success(self.currentDay))
-            } else {
-//                var isCreated = false
-                for document in (snapshot?.documents)! {
-                    if let id = document.data()["date"] as? String {
-                        if id.lowercased() == stringDate.lowercased() {
-                            let array = document.data()["blocks"] as? [[String: String]] ?? [["":""]]
-                            var blocks = [block]()
-                            for x in array {
-                                blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
-                            }
-                            self.currentDay = blocks
-                            completion(.success(self.currentDay))
-                            return
-                        }
-                    }
-                    completion(.success(self.currentDay))
-                    return
-                }
-                completion(.success(self.currentDay))
-                return
             }
         }
+        completion(.success(self.currentDay))
+//        let db = Firestore.firestore()
+//        db.collection("special-schedules").getDocuments { (snapshot, error) in
+//            if error != nil {
+//                ProgressHUD.showFailed("Failed to find 'special-schedules'")
+//                completion(.success(self.currentDay))
+//            } else {
+////                var isCreated = false
+//                for document in (snapshot?.documents)! {
+//                    if let id = document.data()["date"] as? String {
+//                        if id.lowercased() == stringDate.lowercased() {
+//                            let array = document.data()["blocks"] as? [[String: String]] ?? [["":""]]
+//                            var blocks = [block]()
+//                            for x in array {
+//                                blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
+//                            }
+//                            self.currentDay = blocks
+//                            completion(.success(self.currentDay))
+//                            return
+//                        }
+//                    }
+//                    completion(.success(self.currentDay))
+//                    return
+//                }
+//                completion(.success(self.currentDay))
+//                return
+//            }
+//        }
     }
     private var customWednesday = [
         block(name: "9's go to Biv", startTime: "07:30am", endTime: "08:15am", block: "N/A", reminderTime: "07:25am", length: 45),
