@@ -109,29 +109,29 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             i+=1
             
         }
-//        if currentWeekday.isEmpty {
-//            var z = 0
-//            var currDate = Date()
-//            for x in LoginVC.bigArray {
-//                if z != 0 {
-//                    currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
-//                    if !x.blocks.isEmpty {
-//                        currentWeekday = x.blocks
-//                        calendar.select(currDate)
-//                        setCurrentday(date: currDate, completion: { _ in
-//                            self.ScheduleCalendar.reloadData()
-//                        })
-//                        self.navigationItem.title = "Next Day of Classes: \(x.weekday.capitalized)"
-//                        z-=1
-//                        break
-//                    }
-//                }
-//                z+=1
-//            }
-//            if z == LoginVC.bigArray.count {
-//                self.navigationItem.title = "My Schedule"
-//            }
-//        }
+        if currentWeekday.isEmpty {
+            var z = 0
+            var currDate = Date()
+            for x in LoginVC.bigArray {
+                if z != 0 {
+                    currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
+                    if !x.blocks.isEmpty {
+                        currentWeekday = x.blocks
+                        calendar.select(currDate)
+                        setCurrentday(date: currDate, completion: { _ in
+                            self.ScheduleCalendar.reloadData()
+                        })
+                        self.navigationItem.title = "Next Day of Classes: \(x.weekday.capitalized)"
+                        z-=1
+                        break
+                    }
+                }
+                z+=1
+            }
+            if z == LoginVC.bigArray.count {
+                self.navigationItem.title = "My Schedule"
+            }
+        }
 //        let formatter1 = DateFormatter()
 //        formatter1.dateFormat = "yyyy-MM-dd"
 //        formatter1.dateStyle = .short
@@ -367,7 +367,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Lunch", startTime: "12:20pm", endTime: "12:45pm", block: "N/A", reminderTime: "12:15pm", length: 25),
         block(name: "Extended C", startTime: "12:50pm", endTime: "01:55pm", block: "C", reminderTime: "12:45pm", length: 65),
         block(name: "A", startTime: "02:00pm", endTime: "02:45pm", block: "A", reminderTime: "01:55pm", length: 45),
-        block(name: "Community Activity", startTime: "02:50pm", endTime: "03:25pm", block: "N/A", reminderTime: "02:35pm", length: 35)
+        block(name: "Community Activity", startTime: "02:50pm", endTime: "03:25pm", block: "N/A", reminderTime: "02:45pm", length: 35)
     ]
     static let fridayL1 = [
         block(name: "E", startTime: "08:15am", endTime: "09:00am", block: "E", reminderTime: "08:10am", length: 45),
@@ -378,7 +378,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "D2", startTime: "12:00pm", endTime: "12:45pm", block: "D", reminderTime: "11:55am", length: 45),
         block(name: "Extended C", startTime: "12:50pm", endTime: "01:55pm", block: "C", reminderTime: "12:45pm", length: 65),
         block(name: "A", startTime: "02:00pm", endTime: "02:45pm", block: "A", reminderTime: "01:55pm", length: 45),
-        block(name: "Community Activity", startTime: "02:50pm", endTime: "03:25pm", block: "N/A", reminderTime: "02:35pm", length: 35)
+        block(name: "Community Activity", startTime: "02:50pm", endTime: "03:25pm", block: "N/A", reminderTime: "02:45pm", length: 35)
     ]
     @IBOutlet weak var CalendarHeightConstraint: NSLayoutConstraint!
     var currentDay = [block]()
