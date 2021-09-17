@@ -44,19 +44,19 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             let calendar = Calendar.current
             let now = Date()
             let t = calendar.date(
-                bySettingHour: (Int(time.prefix(2))!+amOrPm),
-                minute: Int(m)!,
+                bySettingHour: ((Int(time.prefix(2)) ?? 0)+amOrPm),
+                minute: (Int(m) ?? 0),
                 second: 0,
                 of: now)!
             let t1 = calendar.date(
-                bySettingHour: (Int(time1.prefix(2))!+amOrPm1),
-                minute: Int(m1)!,
+                bySettingHour: ((Int(time1.prefix(2)) ?? 0)+amOrPm1),
+                minute: (Int(m1) ?? 0),
                 second: 0,
                 of: now)!
 //            print(time2)
             let t2 = calendar.date(
-                bySettingHour: (Int(time2.prefix(2))!+amOrPm2),
-                minute: Int(m2)!,
+                bySettingHour: ((Int(time2.prefix(2)) ?? 0)+amOrPm2),
+                minute: (Int(m2) ?? 0),
                 second: 0,
                 of: now)!
             
@@ -179,8 +179,8 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 amOrPm2 = 12
             }
             let t2 = calendar.date(
-                bySettingHour: (Int(time2.prefix(2))!+amOrPm2),
-                minute: Int(m2)!,
+                bySettingHour: ((Int(time2.prefix(2)) ?? 0)+amOrPm2),
+                minute: (Int(m2) ?? 0),
                 second: 0,
                 of: Date())!
             let time = currentDay[indexPath.row].reminderTime.prefix(5)
@@ -191,8 +191,8 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             }
             let now = Date()
             let t = calendar.date(
-                bySettingHour: (Int(time.prefix(2))!+amOrPm),
-                minute: Int(m)!,
+                bySettingHour: ((Int(time.prefix(2)) ?? 0)+amOrPm),
+                minute: (Int(m) ?? 0),
                 second: 0,
                 of: now)!
             if now.isBetweenTimeFrame(date1: t, date2: t2) {

@@ -301,8 +301,8 @@ class LoginVC: UIViewController {
         }
         let hours = x.reminderTime.prefix(2)
         var dateComponents = DateComponents()
-        dateComponents.hour = Int(hours)! + amOrPm1
-        dateComponents.minute = Int(m1)!
+        dateComponents.hour = (Int(hours ) ?? 0) + amOrPm1
+        dateComponents.minute = (Int(m1) ?? 0)
         dateComponents.timeZone = .current
         
         var weekNum = 1
