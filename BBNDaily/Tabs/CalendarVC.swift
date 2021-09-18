@@ -19,48 +19,59 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         return currentDay.count
     }
     var xc = 0
+    func getTimes(x: block) -> [Date] {
+        
+        let time = x.reminderTime.prefix(5)
+        let time1 = x.startTime.prefix(5)
+        let time2 = x.endTime.prefix(5)
+        let m = time.replacingOccurrences(of: time.prefix(3), with: "")
+        let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
+        let m2 = time2.replacingOccurrences(of: time2.prefix(3), with: "")
+        var amOrPm = 0
+        var amOrPm1 = 0
+        var amOrPm2 = 0
+        if x.reminderTime.contains("pm") && !time.prefix(2).contains("12"){
+            amOrPm = 12
+        }
+        if x.startTime.contains("pm") && !time1.prefix(2).contains("12"){
+            amOrPm1 = 12
+        }
+        if x.endTime.contains("pm") && !time2.prefix(2).contains("12") {
+            amOrPm2 = 12
+        }
+        let calendar = Calendar.current
+        let now = Date()
+        let t = calendar.date(
+            bySettingHour: ((Int(time.prefix(2)) ?? 0)+amOrPm),
+            minute: (Int(m) ?? 0),
+            second: 0,
+            of: now)!
+        let t1 = calendar.date(
+            bySettingHour: ((Int(time1.prefix(2)) ?? 0)+amOrPm1),
+            minute: (Int(m1) ?? 0),
+            second: 0,
+            of: now)!
+        //            print(time2)
+        let t2 = calendar.date(
+            bySettingHour: ((Int(time2.prefix(2)) ?? 0)+amOrPm2),
+            minute: (Int(m2) ?? 0),
+            second: 0,
+            of: now)!
+        return [now, t, t1, t2]
+    }
     func setTimes(recursive: Bool) {
         xc+=1
         var i = 0
-        for x in currentWeekday {
-            let time = x.reminderTime.prefix(5)
-            let time1 = x.startTime.prefix(5)
-            let time2 = x.endTime.prefix(5)
-            let m = time.replacingOccurrences(of: time.prefix(3), with: "")
-            let m1 = time1.replacingOccurrences(of:  time1.prefix(3), with: "")
-            let m2 = time2.replacingOccurrences(of: time2.prefix(3), with: "")
-            var amOrPm = 0
-            var amOrPm1 = 0
-            var amOrPm2 = 0
-            if x.reminderTime.contains("pm") && !time.prefix(2).contains("12"){
-                amOrPm = 12
+        for x in todayBlocks {
+            let big = getTimes(x: x)
+            let now = big[0]
+            var t = big[1]
+            if i == 0 {
+                t = Calendar.current.date(byAdding: .hour, value: -12, to: t) ?? t
             }
-            if x.startTime.contains("pm") && !time1.prefix(2).contains("12"){
-                amOrPm1 = 12
-            }
-            if x.endTime.contains("pm") && !time2.prefix(2).contains("12") {
-                amOrPm2 = 12
-            }
-            let calendar = Calendar.current
-            let now = Date()
-            let t = calendar.date(
-                bySettingHour: ((Int(time.prefix(2)) ?? 0)+amOrPm),
-                minute: (Int(m) ?? 0),
-                second: 0,
-                of: now)!
-            let t1 = calendar.date(
-                bySettingHour: ((Int(time1.prefix(2)) ?? 0)+amOrPm1),
-                minute: (Int(m1) ?? 0),
-                second: 0,
-                of: now)!
-//            print(time2)
-            let t2 = calendar.date(
-                bySettingHour: ((Int(time2.prefix(2)) ?? 0)+amOrPm2),
-                minute: (Int(m2) ?? 0),
-                second: 0,
-                of: now)!
-            
-            
+            let t1 = big[2]
+            i+=1
+            let t2 = big[3]
             if now.isBetweenTimeFrame(date1: t, date2: t2) {
                 currentBlock = x
                 var name = ""
@@ -79,7 +90,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 formatter.zeroFormattingBehavior = .dropAll
                 formatter.allowedUnits = [.day, .hour, .minute, .second]
                 formatter.maximumUnitCount = 2
-//                formatter.
                 if now.isBetweenTimeFrame(date1: t, date2: t1) {
                     let interval = Date().getTimeBetween(to: t1)
                     self.navigationItem.title = "\(formatter.string(from: interval)!) Until \(name)"
@@ -91,24 +101,11 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 }
             }
             else {
-                let formatter1 = DateFormatter()
-                formatter1.dateFormat = "yyyy-MM-dd"
-                formatter1.dateStyle = .short
-                let stringDate = formatter1.string(from: Date())
-                if currentDate == stringDate {
-                    if Date() > t2 {
-                        currentWeekday.removeFirst()
-                        i-=1
-                    }
-                    if currentBlock.reminderTime == x.reminderTime && i == currentWeekday.count {
-                        currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n", reminderTime: "3", length: 0)
-                        self.navigationItem.title = "My Schedule"
-                    }
-                }
+               
             }
             i+=1
-            
         }
+        setOld()
         if currentWeekday.isEmpty {
             var z = 0
             var currDate = Date()
@@ -132,15 +129,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 self.navigationItem.title = "My Schedule"
             }
         }
-//        let formatter1 = DateFormatter()
-//        formatter1.dateFormat = "yyyy-MM-dd"
-//        formatter1.dateStyle = .short
-//        let stringDate = formatter1.string(from: Date())
-//
-//        if currentDate == stringDate {
-//            currentDay = currentWeekday
-//        }
-        
         ScheduleCalendar.refreshControl?.endRefreshing()
         if recursive {
             Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [self] timer in
@@ -152,6 +140,30 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             ScheduleCalendar.reloadData()
         }
     }
+    func setOld() {
+        
+        let formatter1 = DateFormatter()
+        formatter1.dateFormat = "yyyy-MM-dd"
+        formatter1.dateStyle = .short
+        let stringDate = formatter1.string(from: Date())
+        var y = 0
+        for x in currentWeekday {
+            let big = getTimes(x: x)
+            let t2 = big[3]
+            if currentDate == stringDate {
+                if Date() > t2 {
+                    currentWeekday.remove(at: y)
+                    y-=1
+                }
+                if currentBlock.reminderTime == x.reminderTime && y == currentWeekday.count {
+                    currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n", reminderTime: "3", length: 0)
+                    self.navigationItem.title = "My Schedule"
+                }
+            }
+            y+=1
+        }
+    }
+    var todayBlocks = [block]()
     var currentWeekday = [block]()
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: blockTableViewCell.identifier, for: indexPath) as? blockTableViewCell else {
@@ -225,7 +237,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             else {
                 cell.alpha = 1
                 cell.contentView.alpha = 1
-           
+                
             }
         }
         return cell
@@ -394,6 +406,18 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     var v = 1
     override func viewDidLoad() {
         super.viewDidLoad()
+        print(" woah \n")
+        let date = Date()
+
+        // Create Date Formatter
+        let dateFormatter = DateFormatter()
+
+        // Set Date Format
+        dateFormatter.dateFormat = " MMM d, YYYY, HH:mm:ss"
+
+        // Convert Date to String
+        print(dateFormatter.string(from: date))
+        print("\n woah")
         v = 2
         ScheduleCalendar.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
         ScheduleCalendar.backgroundColor = UIColor(named: "background")
@@ -405,8 +429,9 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         ScheduleCalendar.tableFooterView = UIView(frame: .zero)
         setCurrentday(date: Date(), completion: { [self]result in
             switch result {
-            case .success(let todayBlocks):
-                self.currentWeekday = todayBlocks
+            case .success(let todBlocks):
+                self.currentWeekday = todBlocks
+                self.todayBlocks = todBlocks
                 calendar.delegate = self
                 calendar.dataSource = self
                 ScheduleCalendar.delegate = self
@@ -418,9 +443,9 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 print("failed :(")
             }
         })
-       
+        
         //        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-       
+        
         //        setNotif()
     }
     override func viewWillAppear(_ animated: Bool) {
