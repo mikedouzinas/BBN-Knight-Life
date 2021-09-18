@@ -62,6 +62,11 @@ class LaunchVC: UIViewController {
                         newArray2[document.data()["date"] as? String ?? ""] = blocks
                     }
                     LoginVC.specialSchedulesL1 = newArray2
+                    for x in LoginVC.specialSchedulesL1 {
+                        if x.value.isEmpty {
+                            LoginVC.specialSchedulesL1[x.key] = LoginVC.specialSchedules[x.key]
+                        }
+                    }
                 }
             }
             db.collection("users").getDocuments { (snapshot, error) in
