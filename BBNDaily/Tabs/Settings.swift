@@ -57,7 +57,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         }
         return backview
     }
-    
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 50
     }
@@ -582,8 +581,13 @@ class SettingsBlockTableViewCell: UITableViewCell {
         else {
             TitleLabel.text = "\(viewModel.blockName) Block"
         }
-        if viewModel.className != "" {
-            DataLabel.text = viewModel.className
+        var className = viewModel.className
+        if className != "" {
+            if className.contains("~") {
+                let array = className.getValues()
+                className = "\(array[0]) \(array[1].replacingOccurrences(of: "N/A", with: ""))"
+            }
+            DataLabel.text = className
         }
         else {
             if viewModel.blockName.count > 1 {
@@ -844,7 +848,7 @@ class PaddingLabel: UILabel {
 
 class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return Classes.count
+        return filteredClasses.count
     }
     @IBAction func addClass(_ sender: UIBarButtonItem) {
         ClassNameVC.link = self
@@ -859,15 +863,13 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         guard let cell = tableView.dequeueReusableCell(withIdentifier: blockTableViewCell.identifier, for: indexPath) as? blockTableViewCell else {
             fatalError()
         }
-        cell.configure(with: Classes[indexPath.row])
+        cell.configure(with: filteredClasses[indexPath.row])
         return cell
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        let selectedRow = Classes[indexPath.row]
+        let selectedRow = filteredClasses[indexPath.row]
         LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)"
-//    Subject: array[0], Teacher: array[1], Room: array[2], Block
-//        self.blocks[indexPath.row] = settingsBlock(blockName: "\(self.blocks[indexPath.row].blockName)", className: inputName!)
         let db = Firestore.firestore()
         let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
         currDoc.setData(LoginVC.blocks)
@@ -879,6 +881,7 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
     }
     static var currentBlock = "G"
     public var Classes = [ClassModel]()
+    public var filteredClasses = [ClassModel]()
     private let SearchController = UISearchController(searchResultsController: nil)
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -900,9 +903,11 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
                         Classes.append(ClassModel(Subject: array[0], Teacher: array[1], Room: array[2], Block: array[3]))
                     }
                 }
+                filteredClasses = Classes
                 tableView.reloadData()
             }
         }
+        ClassesOptionsPopupVC.newClass.Block = "\(ClassesOptionsPopupVC.currentBlock)"
     }
     func configureTableView() {
         tableView = UITableView(frame: view.bounds, style: .plain)
@@ -916,6 +921,7 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
     func createSearchBar(){
         self.navigationItem.searchController = SearchController
         self.SearchController.searchBar.delegate = self
+        self.navigationItem.hidesSearchBarWhenScrolling = false
         SearchController.hidesNavigationBarDuringPresentation = false
         SearchController.searchBar.searchTextField.layer.cornerRadius = 8
         SearchController.searchBar.searchTextField.layer.masksToBounds = true
@@ -924,45 +930,153 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         SearchController.searchBar.placeholder = "Search for your class or add a new one"
     }
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        // filter the text
+        let lowercased = searchText.lowercased()
+        if searchText == "" {
+            filteredClasses = Classes
+            tableView.reloadData()
+            return
+        }
+        filteredClasses = Classes.filter({
+            $0.Teacher.lowercased().contains(lowercased) || $0.Subject.contains(lowercased) || $0.Block.contains(lowercased) || $0.Room.contains(lowercased)
+        })
+        tableView.reloadData()
     }
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        // reset data and reload
+        filteredClasses = Classes
+        tableView.reloadData()
     }
 }
 struct ClassModel {
-    let Subject: String
-    let Teacher: String
-    let Room: String
-    let Block: String
+    var Subject: String
+    var Teacher: String
+    var Room: String
+    var Block: String
 }
 
-class ClassNameVC: UIViewController {
+class ClassNameVC: TextFieldVC, UITextFieldDelegate {
     static var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
+        guard var text = TextField.text, text != "", !text.contains("~") else {
+            ProgressHUD.colorAnimation = .red
+            ProgressHUD.showFailed("Please complete fields! (Don't use any ~)")
+            return
+        }
+        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        ClassesOptionsPopupVC.newClass.Subject = text
         self.performSegue(withIdentifier: "teacher", sender: nil)
     }
+    func hideKeyboardWhenTappedAbove() {
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+        tap.delegate = self
+    }
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if touch.location(in: view).y > TextField.frame.origin.y && touch.location(in: view).y < TextField.frame.maxY {
+            return false
+        }
+        view.unbindToKeyboard()
+        view.endEditing(true)
+        return true
+    }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        hideKeyboardWhenTappedAbove()
+        TextField.delegate = self
+    }
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        TextField.resignFirstResponder()
+        dismissKeyboard()
+        return true
+    }
+    @IBOutlet weak var TextField: UITextField!
     
 }
-class TeacherNameVC: UIViewController {
+class TeacherNameVC: TextFieldVC, UITextFieldDelegate {
     static var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
+        guard var text = TextField.text, text != "", !text.contains("~") else {
+            ProgressHUD.colorAnimation = .red
+            ProgressHUD.showFailed("Please complete fields! (Don't use any ~)")
+            return
+        }
+        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        ClassesOptionsPopupVC.newClass.Teacher = text
         self.performSegue(withIdentifier: "room", sender: nil)
     }
+    func hideKeyboardWhenTappedAbove() {
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+        tap.delegate = self
+    }
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        TextField.resignFirstResponder()
+        dismissKeyboard()
+        return true
+    }
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if touch.location(in: view).y > TextField.frame.origin.y && touch.location(in: view).y < TextField.frame.maxY {
+            return false
+        }
+        view.unbindToKeyboard()
+        view.endEditing(true)
+        return true
+    }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        hideKeyboardWhenTappedAbove()
+        TextField.delegate = self
+    }
+    @IBOutlet weak var TextField: UITextField!
     
 }
 
-class RoomNumVC: UIViewController {
+class RoomNumVC: TextFieldVC, UITextFieldDelegate {
+    @IBOutlet weak var TextField: UITextField!
     static var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
+        guard var text = TextField.text, text != "", !text.contains("~") else {
+            ProgressHUD.colorAnimation = .red
+            ProgressHUD.showFailed("Please complete fields! (Don't use any ~)")
+            return
+        }
+        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        ClassesOptionsPopupVC.newClass.Room = text
         self.performSegue(withIdentifier: "days", sender: nil)
+    }
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        TextField.resignFirstResponder()
+        dismissKeyboard()
+        return true
+    }
+    func hideKeyboardWhenTappedAbove() {
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+        tap.delegate = self
+    }
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if touch.location(in: view).y > TextField.frame.origin.y && touch.location(in: view).y < TextField.frame.maxY {
+            return false
+        }
+        view.unbindToKeyboard()
+        view.endEditing(true)
+        return true
+    }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        hideKeyboardWhenTappedAbove()
+        TextField.delegate = self
     }
 }
 
 class DaySelectVC: UIViewController {
+    @IBOutlet weak var MondaySwitch: UISwitch!
+    @IBOutlet weak var TuesdaySwitch: UISwitch!
+    @IBOutlet weak var WednesdaySwitch: UISwitch!
+    @IBOutlet weak var ThursdaySwitch: UISwitch!
+    @IBOutlet weak var FridaySwitch: UISwitch!
     static var link: ClassesOptionsPopupVC!
     var finalString = ""
-    func checkIfExists(word: String) -> Bool {
+    func alreadyExists(word: String) -> Bool {
         for selectedRow in DaySelectVC.link.Classes {
             if word == "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)" {
                 return true
@@ -973,7 +1087,8 @@ class DaySelectVC: UIViewController {
     @IBAction func p(_ sender: Any) {
         let selectedRow = ClassesOptionsPopupVC.newClass
         finalString = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)"
-        if checkIfExists(word: finalString) {
+        if alreadyExists(word: finalString) {
+            ProgressHUD.colorAnimation = .red
             ProgressHUD.showFailed("Class already exists!")
             return
         }
@@ -982,7 +1097,12 @@ class DaySelectVC: UIViewController {
         let data = ["name":"\(finalString)"]
         currDoc.setData(data)
         DaySelectVC.link.Classes.append(selectedRow)
+        DaySelectVC.link.filteredClasses = DaySelectVC.link.Classes
         DaySelectVC.link.tableView.reloadData()
         self.dismiss(animated: true, completion: nil)
     }
+}
+
+class TextFieldVC: UIViewController, UIGestureRecognizerDelegate {
+    let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(UIViewController.dismissKeyboard))
 }

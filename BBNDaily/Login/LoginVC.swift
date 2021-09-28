@@ -334,9 +334,14 @@ class LoginVC: UIViewController {
         let content = UNMutableNotificationContent()
         content.sound = UNNotificationSound.default
         if x.block != "N/A" {
-            var tile = (LoginVC.blocks[x.block] ?? "") as! String
+            var tile = ((LoginVC.blocks[x.block] ?? "") as? String) ?? ""
             if tile == "" {
                 tile = "\(x.block) Block"
+            }
+            else if tile.contains("~") {
+                let array = tile.getValues()
+                print("Contains ~ \(x.name)")
+                tile = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
             }
             content.title = "5 Minutes Until \(tile)"
         }
@@ -383,114 +388,24 @@ class LoginVC: UIViewController {
         LoginVC.sevenDaysArray = LoginVC.findArray(date: sevenDays)
         bigArray = [todayArray, twoDaysArray, threeDaysArray, fourDaysArray, fiveDaysArray, sixDaysArray, sevenDaysArray]
         for x in todayArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(todayArray.weekday)")
             addNotif(x: x, weekDay: todayArray.weekday)
         }
-        print("\n")
         for x in twoDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(twoDaysArray.weekday)")
             addNotif(x: x, weekDay: twoDaysArray.weekday)
         }
-        print("\n")
         for x in threeDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(threeDaysArray.weekday)")
             addNotif(x: x, weekDay: threeDaysArray.weekday)
         }
-//        print("\n")
         for x in fourDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(fourDaysArray.weekday)")
             addNotif(x: x, weekDay: fourDaysArray.weekday)
         }
-        print("\n")
         for x in fiveDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(fiveDaysArray.weekday)")
             addNotif(x: x, weekDay: fiveDaysArray.weekday)
         }
-        print("\n")
         for x in sixDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(sixDaysArray.weekday)")
             addNotif(x: x, weekDay: sixDaysArray.weekday)
         }
-        print("\n")
         for x in sevenDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(sevenDaysArray.weekday)")
             addNotif(x: x, weekDay: sevenDaysArray.weekday)
         }
         UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
