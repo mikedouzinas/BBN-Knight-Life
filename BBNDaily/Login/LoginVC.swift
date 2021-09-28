@@ -119,18 +119,18 @@ class LoginVC: UIViewController {
                 }
                 LoginVC.fullName = (FirebaseAuth.Auth.auth().currentUser?.displayName ?? "").replacingOccurrences(of: "**", with: "")
                 LoginVC.email = FirebaseAuth.Auth.auth().currentUser?.email ?? ""
-                if !LoginVC.email.checkForDomain() {
-                    ProgressHUD.colorAnimation = .red
-                    ProgressHUD.showFailed("The registered email is not a part of the BB&N domain")
-                    do {
-                        try FirebaseAuth.Auth.auth().signOut()
-                        
-                    }
-                    catch {
-                        return
-                    }
-                    return
-                }
+//                if !LoginVC.email.checkForDomain() {
+//                    ProgressHUD.colorAnimation = .red
+//                    ProgressHUD.showFailed("The registered email is not a part of the BB&N domain")
+//                    do {
+//                        try FirebaseAuth.Auth.auth().signOut()
+//                        
+//                    }
+//                    catch {
+//                        return
+//                    }
+//                    return
+//                }
                 LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
                 let db = Firestore.firestore()
                 db.collection("special-schedules").getDocuments { (snapshot, error) in

@@ -205,41 +205,47 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         }
     }
+    override func viewWillAppear(_ animated: Bool) {
+        setBlocks()
+        tableView.reloadData()
+    }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.section == 1 {
             tableView.deselectRow(at: indexPath, animated: true)
-            let alertController = UIAlertController(title: "\(blocks[indexPath.row].blockName) Block", message: "Enter your class for \(blocks[indexPath.row].blockName) block followed by the room number", preferredStyle: .alert)
-            
-            alertController.addTextField { (textField) in
-                // configure the properties of the text field
-                textField.placeholder = "e.g. Math A-370"
-                textField.text = "\(self.blocks[indexPath.row].className)"
-            }
-            
-            
-            // add the buttons/actions to the view controller
-            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-            let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
-                
-                // this code runs when the user hits the "save" button
-                
-                let inputName = alertController.textFields![0].text
-                LoginVC.blocks["\(self.blocks[indexPath.row].blockName)"] = inputName
-                self.blocks[indexPath.row] = settingsBlock(blockName: "\(self.blocks[indexPath.row].blockName)", className: inputName!)
-                let db = Firestore.firestore()
-                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                currDoc.setData(LoginVC.blocks)
-                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
-                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-                    LoginVC.setNotifications()
-                }
-                tableView.reloadRows(at: [indexPath], with: .fade)
-            }
-            
-            alertController.addAction(cancelAction)
-            alertController.addAction(saveAction)
-            
-            present(alertController, animated: true, completion: nil)
+            ClassesOptionsPopupVC.currentBlock = "\(self.blocks[indexPath.row].blockName)"
+            self.performSegue(withIdentifier: "options", sender: nil)
+//            let alertController = UIAlertController(title: "\(blocks[indexPath.row].blockName) Block", message: "Enter your class for \(blocks[indexPath.row].blockName) block followed by the room number", preferredStyle: .alert)
+//
+//            alertController.addTextField { (textField) in
+//                // configure the properties of the text field
+//                textField.placeholder = "e.g. Math A-370"
+//                textField.text = "\(self.blocks[indexPath.row].className)"
+//            }
+//
+//
+//            // add the buttons/actions to the view controller
+//            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+//            let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
+//
+//                // this code runs when the user hits the "save" button
+//
+//                let inputName = alertController.textFields![0].text
+//                LoginVC.blocks["\(self.blocks[indexPath.row].blockName)"] = inputName
+//                self.blocks[indexPath.row] = settingsBlock(blockName: "\(self.blocks[indexPath.row].blockName)", className: inputName!)
+//                let db = Firestore.firestore()
+//                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+//                currDoc.setData(LoginVC.blocks)
+//                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
+//                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+//                    LoginVC.setNotifications()
+//                }
+//                tableView.reloadRows(at: [indexPath], with: .fade)
+//            }
+//
+//            alertController.addAction(cancelAction)
+//            alertController.addAction(saveAction)
+//
+//            present(alertController, animated: true, completion: nil)
         }
         else if indexPath.section == 2 && indexPath.row == 2 {
             let alertController = UIAlertController(title: "Grade", message: "Please enter your grade to better configure your schedule", preferredStyle: .actionSheet)
@@ -445,16 +451,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         b.dropShadow()
         return b
     }()
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = UIColor(named: "background")
-        view.addSubview(SignOutButton)
-        SignOutButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 15).isActive = true
-        SignOutButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -15).isActive = true
-        SignOutButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -15).isActive = true
-        SignOutButton.heightAnchor.constraint(equalToConstant: 45).isActive = true
-        SignOutButton.addTarget(self, action: #selector(signOut), for: .touchUpInside)
-        
+    func setBlocks() {
         blocks = [
             settingsBlock(blockName: "A", className: LoginVC.blocks["A"] as? String ?? ""),
             settingsBlock(blockName: "B", className: LoginVC.blocks["B"] as? String ?? ""),
@@ -464,6 +461,17 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             settingsBlock(blockName: "F", className: LoginVC.blocks["F"] as? String ?? ""),
             settingsBlock(blockName: "G", className: LoginVC.blocks["G"] as? String ?? "")
         ]
+    }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = UIColor(named: "background")
+        view.addSubview(SignOutButton)
+        SignOutButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 15).isActive = true
+        SignOutButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -15).isActive = true
+        SignOutButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -15).isActive = true
+        SignOutButton.heightAnchor.constraint(equalToConstant: 45).isActive = true
+        SignOutButton.addTarget(self, action: #selector(signOut), for: .touchUpInside)
+        setBlocks()
         
         preferenceBlocks = [
             settingsBlock(blockName: "Grade", className: "\(LoginVC.blocks["grade"] as? String ?? "")"),
@@ -831,5 +839,150 @@ class PaddingLabel: UILabel {
             contentSize.width += insets.left + insets.right
             return contentSize
         }
+    }
+}
+
+class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return Classes.count
+    }
+    @IBAction func addClass(_ sender: UIBarButtonItem) {
+        ClassNameVC.link = self
+        TeacherNameVC.link = self
+        RoomNumVC.link = self
+        DaySelectVC.link = self
+        self.performSegue(withIdentifier: "textfield", sender: nil)
+    }
+    
+    static var newClass = ClassModel(Subject: "TOADS", Teacher: "MR MIKE", Room: "300", Block: "G")
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: blockTableViewCell.identifier, for: indexPath) as? blockTableViewCell else {
+            fatalError()
+        }
+        cell.configure(with: Classes[indexPath.row])
+        return cell
+    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let selectedRow = Classes[indexPath.row]
+        LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)"
+//    Subject: array[0], Teacher: array[1], Room: array[2], Block
+//        self.blocks[indexPath.row] = settingsBlock(blockName: "\(self.blocks[indexPath.row].blockName)", className: inputName!)
+        let db = Firestore.firestore()
+        let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+        currDoc.setData(LoginVC.blocks)
+        if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
+            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+            LoginVC.setNotifications()
+        }
+        self.navigationController?.popViewController(animated: true)
+    }
+    static var currentBlock = "G"
+    public var Classes = [ClassModel]()
+    private let SearchController = UISearchController(searchResultsController: nil)
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        configureClasses()
+        createSearchBar()
+        configureTableView()
+    }
+    func configureClasses() {
+        let db = Firestore.firestore()
+        db.collection("classes").getDocuments { [self] (snapshot, error) in
+            if error != nil {
+                ProgressHUD.showFailed("Failed to find 'special-schedules'")
+            } else {
+                Classes = [ClassModel]()
+                for document in (snapshot?.documents)! {
+                    let fullName = document.data()["name"] as? String ?? ""
+                    let array = fullName.getValues()
+                    if array[3].lowercased().contains("\(ClassesOptionsPopupVC.currentBlock.lowercased())") {
+                        Classes.append(ClassModel(Subject: array[0], Teacher: array[1], Room: array[2], Block: array[3]))
+                    }
+                }
+                tableView.reloadData()
+            }
+        }
+    }
+    func configureTableView() {
+        tableView = UITableView(frame: view.bounds, style: .plain)
+        view.addSubview(tableView)
+        tableView.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
+        tableView.backgroundColor = UIColor(named: "background")
+        tableView.delegate = self
+        tableView.dataSource = self
+    }
+    public var tableView = UITableView()
+    func createSearchBar(){
+        self.navigationItem.searchController = SearchController
+        self.SearchController.searchBar.delegate = self
+        SearchController.hidesNavigationBarDuringPresentation = false
+        SearchController.searchBar.searchTextField.layer.cornerRadius = 8
+        SearchController.searchBar.searchTextField.layer.masksToBounds = true
+        SearchController.searchBar.tintColor = .systemBlue
+        SearchController.obscuresBackgroundDuringPresentation = false
+        SearchController.searchBar.placeholder = "Search for your class or add a new one"
+    }
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        // filter the text
+    }
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        // reset data and reload
+    }
+}
+struct ClassModel {
+    let Subject: String
+    let Teacher: String
+    let Room: String
+    let Block: String
+}
+
+class ClassNameVC: UIViewController {
+    static var link: ClassesOptionsPopupVC!
+    @IBAction func pressed(_ sender: Any) {
+        self.performSegue(withIdentifier: "teacher", sender: nil)
+    }
+    
+}
+class TeacherNameVC: UIViewController {
+    static var link: ClassesOptionsPopupVC!
+    @IBAction func pressed(_ sender: Any) {
+        self.performSegue(withIdentifier: "room", sender: nil)
+    }
+    
+}
+
+class RoomNumVC: UIViewController {
+    static var link: ClassesOptionsPopupVC!
+    @IBAction func pressed(_ sender: Any) {
+        self.performSegue(withIdentifier: "days", sender: nil)
+    }
+}
+
+class DaySelectVC: UIViewController {
+    static var link: ClassesOptionsPopupVC!
+    var finalString = ""
+    func checkIfExists(word: String) -> Bool {
+        for selectedRow in DaySelectVC.link.Classes {
+            if word == "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)" {
+                return true
+            }
+        }
+        return false
+    }
+    @IBAction func p(_ sender: Any) {
+        let selectedRow = ClassesOptionsPopupVC.newClass
+        finalString = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)"
+        if checkIfExists(word: finalString) {
+            ProgressHUD.showFailed("Class already exists!")
+            return
+        }
+        let db = Firestore.firestore()
+        let currDoc = db.collection("classes").document(finalString)
+        let data = ["name":"\(finalString)"]
+        currDoc.setData(data)
+        DaySelectVC.link.Classes.append(selectedRow)
+        DaySelectVC.link.tableView.reloadData()
+        self.dismiss(animated: true, completion: nil)
     }
 }

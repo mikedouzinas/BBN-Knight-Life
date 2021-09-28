@@ -109,6 +109,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         if currentWeekday.isEmpty {
             var z = 0
             var currDate = Date()
+            
             for x in LoginVC.bigArray {
                 if z != 0 {
                     currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
@@ -164,7 +165,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         }
     }
     var todayBlocks = [block]()
-    var currentWeekday = [block]()
+    var currentWeekday = [block(name: "", startTime: "", endTime: "", block: "", reminderTime: "", length: 0)]
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: blockTableViewCell.identifier, for: indexPath) as? blockTableViewCell else {
             fatalError()
@@ -218,10 +219,14 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 cell.backgroundColor = UIColor(named: "background")
                 cell.contentView.backgroundColor = UIColor(named: "background")
                 if Date() > t2 {
-                    cell.alpha = 0.3
-                    cell.contentView.alpha = 0.3
+                    currentDay = currentWeekday
+                    tableView.reloadData()
+//                    tableView.cellf
+//                    cell.alpha = 0.3
+//                    cell.contentView.alpha = 0.3
                 }
                 else {
+//                    cell.isHidden = false
                     cell.alpha = 1
                     cell.contentView.alpha = 1
                 }
@@ -406,7 +411,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     var v = 1
     override func viewDidLoad() {
         super.viewDidLoad()
-        print(" woah \n")
         let date = Date()
 
         // Create Date Formatter
@@ -417,7 +421,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
 
         // Convert Date to String
         print(dateFormatter.string(from: date))
-        print("\n woah")
         v = 2
         ScheduleCalendar.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
         ScheduleCalendar.backgroundColor = UIColor(named: "background")
@@ -508,6 +511,15 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         formatter1.dateFormat = "yyyy-MM-dd"
         formatter1.dateStyle = .full
         let stringDate = formatter1.string(from: date)
+        let currentStringDate = formatter2.string(from: Date())
+//        print("x and \(currentWeekday)")
+//        if currentStringDate == currentDate && currentWeekday.isEmpty {
+//            currentDay = [block]()
+//            ScheduleCalendar.restore()
+//            ScheduleCalendar.setEmptyMessage("School Day is Over!")
+//            completion(.success(currentDay))
+//            return
+//        }
         let weekDay = stringDate.prefix(upTo: formatter1.string(from: date).firstIndex(of: ",")!)
         let bigArray = LoginVC.getLunchDays()
         let monday = bigArray[0]
@@ -659,11 +671,20 @@ class blockTableViewCell: UITableViewCell {
         label.textAlignment = .right
         return label
     } ()
+    private let BottomRightLabel: UILabel = {
+        let label = UILabel ()
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 12, weight: .regular)
+        label.textColor = UIColor(named: "lightGray")
+        return label
+    } ()
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         contentView.addSubview(TitleLabel)
         contentView.addSubview(BlockLabel)
         contentView.addSubview(RightLabel)
+        contentView.addSubview(BottomRightLabel)
         contentView.backgroundColor = UIColor(named: "background")
     }
     required init?(coder: NSCoder) {
@@ -681,12 +702,23 @@ class blockTableViewCell: UITableViewCell {
         RightLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 100).isActive = true
         RightLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10).isActive = true
         RightLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -10).isActive = true
+        BottomRightLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 10).isActive = true
+        BottomRightLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -10).isActive = true
         
     }
     override func prepareForReuse(){
         super.prepareForReuse()
     }
+    func configure (with viewModel: ClassModel){
+        BlockLabel.isHidden = false
+        BottomRightLabel.isHidden = false
+        TitleLabel.text = viewModel.Subject.capitalized
+        BlockLabel.text = viewModel.Teacher.capitalized
+        RightLabel.text = viewModel.Room
+        BottomRightLabel.text = "\(viewModel.Block.capitalized) Block"
+    }
     func configure (with viewModel: block, isLunch: Bool){
+        BottomRightLabel.isHidden = true
         if viewModel.block != "N/A" {
             BlockLabel.isHidden = false
             var className = LoginVC.blocks[viewModel.block] as? String
@@ -746,4 +778,10 @@ class LunchMenuVC: CustomLoader, WKNavigationDelegate {
         view.backgroundColor = UIColor.white
         
     }
+}
+
+
+class ClassPopupVC: UIViewController {
+    private var members = [String]()
+    
 }
