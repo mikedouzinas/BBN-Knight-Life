@@ -253,6 +253,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             (tableView.cellForRow(at: indexPath) as! blockTableViewCell).animateView()
             self.performSegue(withIdentifier: "Lunch", sender: nil)
         }
+        else if block.block != "N/A" {
+            ClassPopupVC.block = block.block
+            self.performSegue(withIdentifier: "class", sender: nil)
+        }
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 60
@@ -712,13 +716,22 @@ class blockTableViewCell: UITableViewCell {
     func configure (with viewModel: ClassModel){
         BlockLabel.isHidden = false
         BottomRightLabel.isHidden = false
+        RightLabel.isHidden = false
         TitleLabel.text = viewModel.Subject
         BlockLabel.text = viewModel.Teacher
         RightLabel.text = viewModel.Room
         BottomRightLabel.text = "\(viewModel.Block.capitalized) Block"
     }
+    func configure(with viewModel: Person) {
+        BlockLabel.isHidden = false
+        RightLabel.isHidden = true
+        BottomRightLabel.isHidden = true
+        TitleLabel.text = viewModel.name
+        BlockLabel.text = viewModel.email
+    }
     func configure (with viewModel: block, isLunch: Bool){
         BottomRightLabel.isHidden = true
+        RightLabel.isHidden = false
         if viewModel.block != "N/A" {
             BlockLabel.isHidden = false
             var className = LoginVC.blocks[viewModel.block] as? String
@@ -785,7 +798,60 @@ class LunchMenuVC: CustomLoader, WKNavigationDelegate {
 }
 
 
-class ClassPopupVC: UIViewController {
-    private var members = [String]()
-    
+class ClassPopupVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return members.count
+    }
+    static var block = ""
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: blockTableViewCell.identifier, for: indexPath) as? blockTableViewCell else {
+            fatalError()
+        }
+        cell.selectionStyle = .none
+        cell.configure(with: members[indexPath.row])
+        return cell
+    }
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return "Members"
+    }
+    private var members = [Person]()
+    private var tableView = UITableView()
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setMembers()
+        configureTableView()
+    }
+    func setMembers() {
+        let db = Firestore.firestore()
+        let memberDocs = db.collection("classes")
+        let blockName = (LoginVC.blocks["\(ClassPopupVC.block)"] as? String) ?? "N/A"
+        let arr = blockName.getValues()
+        self.navigationItem.title = "\(arr[0]) \(arr[1])"
+        let oldDoc = memberDocs.document(blockName)
+        oldDoc.getDocument(completion: { [self] (document, error) in
+            members = [Person]()
+            if let document = document, document.exists {
+                let array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
+                for x in array {
+                    members.append(Person(name: (x["name"] ?? ""), email: (x["email"] ?? "")))
+                }
+            } else {
+                print("Document does not exist, no members to add!")
+            }
+            tableView.reloadData()
+        })
+    }
+    func configureTableView() {
+        tableView = UITableView(frame: view.bounds, style: .plain)
+        view.addSubview(tableView)
+        tableView.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
+        tableView.backgroundColor = UIColor(named: "background")
+        tableView.delegate = self
+        tableView.dataSource = self
+    }
+}
+
+struct Person {
+    let name: String
+    let email: String
 }
