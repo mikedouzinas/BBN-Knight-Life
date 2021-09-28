@@ -9,11 +9,21 @@ import Foundation
 import UIKit
 
 extension String {
-    func checkForDomain() -> Bool {
-        if self.contains("bbns.org") {
-            return true
+    func getValues() -> [String]{
+        var fullName = self
+        let subject = String(fullName.prefix(upTo: fullName.firstIndex(of: "~") ?? fullName.startIndex)).setNotAvailable()
+        fullName.removeSubrange(subject.startIndex...(fullName.firstIndex(of: "~") ?? fullName.startIndex))
+        let teacher = String(fullName.prefix(upTo: fullName.firstIndex(of: "~") ?? fullName.startIndex)).setNotAvailable()
+        fullName.removeSubrange(subject.startIndex...(fullName.firstIndex(of: "~") ?? fullName.startIndex))
+        let room = String(fullName.prefix(upTo: fullName.firstIndex(of: "~") ?? fullName.startIndex)).setNotAvailable()
+        fullName.removeSubrange(subject.startIndex...(fullName.firstIndex(of: "~") ?? fullName.startIndex))
+        return [subject, teacher, room, fullName]
+    }
+    func setNotAvailable() -> String {
+        if self.isEmpty || self == "" {
+            return "N/A"
         }
-        return false
+        return self
     }
     func getDayOfWeek() -> Int? {
         let formatter  = DateFormatter()
