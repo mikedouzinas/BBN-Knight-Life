@@ -251,11 +251,12 @@
                         <outlet property="ScheduleCalendar" destination="cpJ-7A-gBR" id="aBz-hh-pxv"/>
                         <outlet property="calendar" destination="CJc-BH-m1q" id="88H-Ol-cFT"/>
                         <segue destination="MnO-c5-Moa" kind="show" identifier="Lunch" id="z0Q-XG-7SA"/>
+                        <segue destination="s4w-ik-a74" kind="show" identifier="class" id="hRx-xq-GDf"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="oGB-Ei-O8o" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-246.37681159420291" y="1312.5"/>
+            <point key="canvasLocation" x="-246" y="1296"/>
         </scene>
         <!--Lunch MenuVC-->
         <scene sceneID="Ysh-5P-jBf">
@@ -793,6 +794,22 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="6af-vu-fic" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="3657" y="21"/>
+        </scene>
+        <!--Class PopupVC-->
+        <scene sceneID="ZxD-KQ-3TW">
+            <objects>
+                <viewController id="s4w-ik-a74" customClass="ClassPopupVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="LUW-gh-DQY">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="HTA-RD-oRf"/>
+                        <color key="backgroundColor" name="background"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="tUk-pe-j2x"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="eK1-bO-Xlr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-957" y="1998"/>
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>

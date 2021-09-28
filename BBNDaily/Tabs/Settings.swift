@@ -171,7 +171,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: { [self]_ in
                 setHeader()
             })
-           
         }
         else {
             let db = Firestore.firestore()
@@ -190,11 +189,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
             LoginVC.blocks["notifs"] = "true"
             currDoc.setData(LoginVC.blocks)
-            //            UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
-            //                for x in results {
-            //                    print("title: \(x.content.title) ")
-            //                }
-            //            })
         }
         else {
             let db = Firestore.firestore()
@@ -327,8 +321,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 textField.placeholder = "e.g. 123"
                 textField.text = "\(self.preferenceBlocks[indexPath.row-2].className)"
             }
-            
-            
             // add the buttons/actions to the view controller
             let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
             let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
@@ -350,10 +342,8 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 currDoc.setData(LoginVC.blocks)
                 tableView.reloadRows(at: [indexPath], with: .fade)
             }
-            
             alertController.addAction(cancelAction)
             alertController.addAction(saveAction)
-            
             present(alertController, animated: true, completion: nil)
         }
         else if indexPath.section == 3 {
@@ -420,7 +410,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     private var tableView = UITableView()
     @objc func signOut() {
         let refreshAlert = UIAlertController(title: "Sign Out?", message: "Are you sure you want to sign out?", preferredStyle: UIAlertController.Style.alert)
-        
         refreshAlert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction!) in
             do {
                 try FirebaseAuth.Auth.auth().signOut()
@@ -431,11 +420,9 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 ProgressHUD.showFailed("Failed to Sign Out")
             }
         }))
-        
         refreshAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction!) in
             
         }))
-        
         present(refreshAlert, animated: true, completion: nil)
         
     }
@@ -868,16 +855,46 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        let selectedRow = filteredClasses[indexPath.row]
-        LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)"
         let db = Firestore.firestore()
-        let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-        currDoc.setData(LoginVC.blocks)
-        if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
-            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-            LoginVC.setNotifications()
-        }
-        self.navigationController?.popViewController(animated: true)
+        let selectedRow = filteredClasses[indexPath.row]
+        let realDef = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)".replacingOccurrences(of: "N/A", with: "")
+        let memberDocs = db.collection("classes")
+        let oldDoc = memberDocs.document((LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] as? String) ?? "N/A")
+        oldDoc.getDocument(completion: { (document, error) in
+            if let document = document, document.exists {
+                var array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
+                var i = 0
+                for x in array {
+                    if (x["name"] ?? "").lowercased().contains("\(LoginVC.fullName.lowercased())") {
+                        array.remove(at: i)
+                        break
+                    }
+                    i+=1
+                }
+                oldDoc.setData(["members":array], merge: true)
+            } else {
+                print("Document does not exist, no need to remove it!")
+            }
+            LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = realDef
+            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+            currDoc.setData(LoginVC.blocks)
+            let memberDoc = memberDocs.document("\(realDef)")
+            memberDoc.getDocument(completion: { (document, error) in
+                if let document = document, document.exists {
+                    var array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
+                    array.append(["name":"\(LoginVC.fullName)","email":"\(LoginVC.email)"])
+                    memberDoc.setData(["members":array], merge: true)
+                    if (((LoginVC.blocks["notifs"] ?? "") as? String) ?? "") == "true" {
+                        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+                        LoginVC.setNotifications()
+                    }
+                    self.navigationController?.popViewController(animated: true)
+                } else {
+                    print("Document does not exist, no need to remove it!")
+                }
+            })
+        })
+       
     }
     static var currentBlock = "G"
     public var Classes = [ClassModel]()
