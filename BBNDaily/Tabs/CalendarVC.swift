@@ -76,11 +76,15 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 currentBlock = x
                 var name = ""
                 if currentBlock.block != "N/A" {
-                    var className = LoginVC.blocks[currentBlock.block] as? String
+                    var className = (LoginVC.blocks[currentBlock.block] as? String) ?? ""
                     if className == "" {
                         className = "[\(currentBlock.block) Class]"
                     }
-                    name = className ?? ""
+                    else if className.contains("~") {
+                        let array = className.getValues()
+                        className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+                    }
+                    name = className
                 }
                 else {
                     name = "\(currentBlock.name)"
@@ -96,12 +100,8 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 }
                 else {
                     let interval = Date().getTimeBetween(to: t2)
-                    //                    interval.
                     self.navigationItem.title = "\(formatter.string(from: interval)!) left in \(name)"
                 }
-            }
-            else {
-               
             }
             i+=1
         }
@@ -712,8 +712,8 @@ class blockTableViewCell: UITableViewCell {
     func configure (with viewModel: ClassModel){
         BlockLabel.isHidden = false
         BottomRightLabel.isHidden = false
-        TitleLabel.text = viewModel.Subject.capitalized
-        BlockLabel.text = viewModel.Teacher.capitalized
+        TitleLabel.text = viewModel.Subject
+        BlockLabel.text = viewModel.Teacher
         RightLabel.text = viewModel.Room
         BottomRightLabel.text = "\(viewModel.Block.capitalized) Block"
     }
@@ -724,6 +724,10 @@ class blockTableViewCell: UITableViewCell {
             var className = LoginVC.blocks[viewModel.block] as? String
             if className == "" {
                 className = "[\(viewModel.block) Class]"
+            }
+            if (className ?? "").contains("~") {
+                let array = (className ?? "").getValues()
+                className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
             }
             TitleLabel.text = className
             BlockLabel.text = "\(viewModel.name)"

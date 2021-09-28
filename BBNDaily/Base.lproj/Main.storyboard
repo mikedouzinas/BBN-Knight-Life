@@ -426,6 +426,7 @@
                     </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="TextField" destination="QJw-gI-Uwi" id="SyU-eZ-E34"/>
                         <segue destination="PWt-sj-CHH" kind="show" identifier="teacher" id="Lp5-lv-zMK"/>
                     </connections>
                 </viewController>
@@ -586,6 +587,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="mkB-Ce-GLh"/>
                     <connections>
+                        <outlet property="TextField" destination="KP3-r9-AVR" id="9uE-JP-z05"/>
                         <segue destination="d18-3t-Us6" kind="show" identifier="room" id="mim-Gh-dEs"/>
                     </connections>
                 </viewController>
@@ -647,6 +649,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="XXs-l3-9cZ"/>
                     <connections>
+                        <outlet property="TextField" destination="ZrW-mP-3kk" id="Tcq-hD-wSA"/>
                         <segue destination="msB-pF-Vy9" kind="show" identifier="days" id="fbw-na-WVe"/>
                     </connections>
                 </viewController>
@@ -760,6 +763,13 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="Ubk-CY-8gJ"/>
+                    <connections>
+                        <outlet property="FridaySwitch" destination="RwI-H9-xOL" id="hJT-PX-QVw"/>
+                        <outlet property="MondaySwitch" destination="kky-y0-Z2M" id="SP0-y8-tma"/>
+                        <outlet property="ThursdaySwitch" destination="eS4-Et-K3m" id="Wja-BF-aZ3"/>
+                        <outlet property="TuesdaySwitch" destination="8M0-F7-11O" id="6Ik-hQ-mGw"/>
+                        <outlet property="WednesdaySwitch" destination="8ar-0r-u57" id="mtj-nk-bJ2"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="4Oa-ap-loX" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
