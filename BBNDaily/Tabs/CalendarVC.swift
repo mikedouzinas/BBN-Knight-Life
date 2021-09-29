@@ -224,14 +224,12 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 cell.contentView.backgroundColor = UIColor(named: "background")
                 if Date() > t2 {
                     if !dayIsOver {
-                        print(" not empty")
                         cell.alpha = 1
                         cell.contentView.alpha = 1
                         currentDay = currentWeekday
                         tableView.reloadData()
                     }
                     else {
-                        print(" empty")
                         currentDay = todayBlocks
                         cell.alpha = 0.3
                         cell.contentView.alpha = 0.3
@@ -736,7 +734,6 @@ class blockTableViewCell: UITableViewCell {
         BlockLabel.text = viewModel.email
     }
     func configure (with viewModel: block, isLunch: Bool){
-        BottomRightLabel.isHidden = true
         RightLabel.isHidden = false
         if viewModel.block != "N/A" {
             BlockLabel.isHidden = false
@@ -744,14 +741,19 @@ class blockTableViewCell: UITableViewCell {
             if className == "" {
                 className = "[\(viewModel.block) Class]"
             }
+            var text = "Update classes in settings to see details"
             if (className ?? "").contains("~") {
                 let array = (className ?? "").getValues()
                 className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+                text = "Press for details"
             }
             TitleLabel.text = className
             BlockLabel.text = "\(viewModel.name)"
+            BottomRightLabel.isHidden = false
+            BottomRightLabel.text = text
         }
         else {
+            BottomRightLabel.isHidden = true
             TitleLabel.text = "\(viewModel.name)"
             if isLunch {
                 BlockLabel.isHidden = false
