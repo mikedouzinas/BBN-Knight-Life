@@ -20,7 +20,7 @@ class LoginVC: UIViewController {
     static var fullName = ""
     static var email = ""
     static var phoneNum = ""
-    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
+    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
     static var specialSchedules = [String: [block]]()
     static var specialSchedulesL1 = [String: [block]]()
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
@@ -119,18 +119,6 @@ class LoginVC: UIViewController {
                 }
                 LoginVC.fullName = (FirebaseAuth.Auth.auth().currentUser?.displayName ?? "").replacingOccurrences(of: "**", with: "")
                 LoginVC.email = FirebaseAuth.Auth.auth().currentUser?.email ?? ""
-//                if !LoginVC.email.checkForDomain() {
-//                    ProgressHUD.colorAnimation = .red
-//                    ProgressHUD.showFailed("The registered email is not a part of the BB&N domain")
-//                    do {
-//                        try FirebaseAuth.Auth.auth().signOut()
-//                        
-//                    }
-//                    catch {
-//                        return
-//                    }
-//                    return
-//                }
                 LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
                 let db = Firestore.firestore()
                 db.collection("special-schedules").getDocuments { (snapshot, error) in
@@ -167,6 +155,7 @@ class LoginVC: UIViewController {
                         }
                     }
                 }
+                
                 db.collection("users").getDocuments { (snapshot, error) in
                     if error != nil {
                         ProgressHUD.showFailed("Failed to find 'users'")
@@ -197,6 +186,8 @@ class LoginVC: UIViewController {
                             let db = Firestore.firestore()
                             let currDoc = db.collection("users").document("\(Auth.auth().currentUser?.uid ?? "")")
                             LoginVC.blocks["uid"] = Auth.auth().currentUser?.uid ?? ""
+                            ProgressHUD.colorAnimation = .green
+                            ProgressHUD.showSucceed("Welcome to Knight Life!")
                             currDoc.setData(LoginVC.blocks)
                         }
                         strongSelf.callTabBar()
@@ -340,8 +331,12 @@ class LoginVC: UIViewController {
             }
             else if tile.contains("~") {
                 let array = tile.getValues()
-                print("Contains ~ \(x.name)")
+                let num = weekNum - 2
+                
                 tile = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+                if num >= 0 && num <= 4 && !(LoginVC.classMeetingDays["\(x.block.lowercased())"]?[num] ?? true) {
+                    tile = "\(x.block) Block"
+                }
             }
             content.title = "5 Minutes Until \(tile)"
         }
@@ -359,6 +354,7 @@ class LoginVC: UIViewController {
             }
         }
     }
+    static var classMeetingDays = ["a":[true, true, true, true, true],"b":[true, true, true, true, true],"c":[true, true, true, true, true],"d":[true, true, true, true, true],"e":[true, true, true, true, true], "f":[true, true, true, true, true], "g":[true, true, true, true, true]]
     static var todayArray: CustomWeekday!
     static var twoDaysArray: CustomWeekday!
     static var threeDaysArray: CustomWeekday!
@@ -369,7 +365,6 @@ class LoginVC: UIViewController {
     static var bigArray = [CustomWeekday]()
     static func setNotifications() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-        
         let calendar = Calendar.current
         let today = Date()
         let twoDays = calendar.date(byAdding: .day, value: 1, to: Date())!

@@ -859,7 +859,11 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         let selectedRow = filteredClasses[indexPath.row]
         let realDef = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)".replacingOccurrences(of: "N/A", with: "")
         let memberDocs = db.collection("classes")
-        let oldDoc = memberDocs.document((LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] as? String) ?? "N/A")
+        var doc = (LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] as? String) ?? "N/A"
+        if doc == "" {
+            doc = "OLD"
+        }
+        let oldDoc = memberDocs.document(doc)
         oldDoc.getDocument(completion: { (document, error) in
             if let document = document, document.exists {
                 var array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
@@ -867,13 +871,13 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
                 for x in array {
                     if (x["name"] ?? "").lowercased().contains("\(LoginVC.fullName.lowercased())") {
                         array.remove(at: i)
-                        break
+                        i-=1
                     }
                     i+=1
                 }
                 oldDoc.setData(["members":array], merge: true)
             } else {
-                print("Document does not exist, no need to remove it!")
+                print("Document does not exist, no need to remove it! document \(doc)")
             }
             LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = realDef
             let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
@@ -883,6 +887,8 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
                 if let document = document, document.exists {
                     var array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
                     array.append(["name":"\(LoginVC.fullName)","email":"\(LoginVC.email)"])
+                    
+                    LoginVC.classMeetingDays["\(ClassesOptionsPopupVC.currentBlock)"] = [((document.data()?["monday"] as? Bool) ?? true), ((document.data()?["tuesday"] as? Bool) ?? true), ((document.data()?["wednesday"] as? Bool) ?? true), ((document.data()?["thursday"] as? Bool) ?? true), ((document.data()?["friday"] as? Bool) ?? true)]
                     memberDoc.setData(["members":array], merge: true)
                     if (((LoginVC.blocks["notifs"] ?? "") as? String) ?? "") == "true" {
                         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
@@ -973,7 +979,7 @@ struct ClassModel {
 class ClassNameVC: TextFieldVC, UITextFieldDelegate {
     static var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
-        guard var text = TextField.text, text != "", !text.contains("~") else {
+        guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~") else {
             ProgressHUD.colorAnimation = .red
             ProgressHUD.showFailed("Please complete fields! (Don't use any ~)")
             return
@@ -1014,7 +1020,7 @@ class ClassNameVC: TextFieldVC, UITextFieldDelegate {
 class TeacherNameVC: TextFieldVC, UITextFieldDelegate {
     static var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
-        guard var text = TextField.text, text != "", !text.contains("~") else {
+        guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~") else {
             ProgressHUD.colorAnimation = .red
             ProgressHUD.showFailed("Please complete fields! (Don't use any ~)")
             return
@@ -1054,7 +1060,7 @@ class RoomNumVC: TextFieldVC, UITextFieldDelegate {
     @IBOutlet weak var TextField: UITextField!
     static var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
-        guard var text = TextField.text, text != "", !text.contains("~") else {
+        guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~") else {
             ProgressHUD.colorAnimation = .red
             ProgressHUD.showFailed("Please complete fields! (Don't use any ~)")
             return
@@ -1114,7 +1120,7 @@ class DaySelectVC: UIViewController {
         }
         let db = Firestore.firestore()
         let currDoc = db.collection("classes").document(finalString)
-        let data = ["name":"\(finalString)"]
+        let data = ["name":"\(finalString)", "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
         currDoc.setData(data)
         DaySelectVC.link.Classes.append(selectedRow)
         DaySelectVC.link.filteredClasses = DaySelectVC.link.Classes

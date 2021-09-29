@@ -179,7 +179,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         if thisBlock.name.lowercased().contains("lunch") {
             isLunch = true
         }
-        cell.configure(with: currentDay[indexPath.row], isLunch: isLunch)
+        cell.configure(with: currentDay[indexPath.row], isLunch: isLunch, selectedDay: selectedDay)
         
         cell.selectionStyle = .none
         let formatter1 = DateFormatter()
@@ -515,6 +515,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         NoSchoolDay(date: "Monday, April 18, 2022", reason: "Patriots Day"),
         NoSchoolDay(date: "Monday, May 30, 2022", reason: "Memorial Day")
     ]
+    var selectedDay = 0
     var realCurrentDate = Date()
     func setCurrentday(date: Date, completion: @escaping (Swift.Result<[block], Error>) -> Void) {
         realCurrentDate = date
@@ -537,16 +538,22 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         switch weekDay {
         case "Monday":
             currentDay = monday
+            selectedDay = 0
         case "Tuesday":
             currentDay = tuesday
+            selectedDay = 1
         case "Wednesday":
             currentDay = wednesday
+            selectedDay = 2
         case "Thursday":
             currentDay = thursday
+            selectedDay = 3
         case "Friday":
             currentDay = friday
+            selectedDay = 4
         default:
             currentDay = [block]()
+            selectedDay = 10
         }
         if currentDay.isEmpty {
             ScheduleCalendar.setEmptyMessage("No Class - Enjoy your Weekend")
@@ -655,9 +662,8 @@ class blockTableViewCell: UITableViewCell {
         label.numberOfLines = 0
         label.textColor = UIColor(named: "inverse")
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .systemFont(ofSize: 16, weight: .semibold)
-        label.minimumScaleFactor = 0.8
-        label.adjustsFontSizeToFitWidth = true
+        label.font = .systemFont(ofSize: 14, weight: .semibold)
+        label.minimumScaleFactor = 0.5
         return label
     } ()
     private let BlockLabel: UILabel = {
@@ -666,6 +672,7 @@ class blockTableViewCell: UITableViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 12, weight: .regular)
         label.textColor = UIColor(named: "lightGray")
+        label.minimumScaleFactor = 0.8
         return label
     } ()
     private let RightLabel: UILabel = {
@@ -675,7 +682,6 @@ class blockTableViewCell: UITableViewCell {
         label.font = .systemFont(ofSize: 14, weight: .regular)
         label.textColor = UIColor(named: "gold")
         label.minimumScaleFactor = 0.8
-        label.adjustsFontSizeToFitWidth = true
         label.textAlignment = .right
         return label
     } ()
@@ -684,6 +690,7 @@ class blockTableViewCell: UITableViewCell {
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 12, weight: .regular)
+        label.minimumScaleFactor = 0.8
         label.textColor = UIColor(named: "lightGray")
         return label
     } ()
@@ -733,7 +740,7 @@ class blockTableViewCell: UITableViewCell {
         TitleLabel.text = viewModel.name
         BlockLabel.text = viewModel.email
     }
-    func configure (with viewModel: block, isLunch: Bool){
+    func configure (with viewModel: block, isLunch: Bool, selectedDay: Int){
         RightLabel.isHidden = false
         if viewModel.block != "N/A" {
             BlockLabel.isHidden = false
@@ -746,6 +753,10 @@ class blockTableViewCell: UITableViewCell {
                 let array = (className ?? "").getValues()
                 className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
                 text = "Press for details"
+               
+                if !(LoginVC.classMeetingDays["\(viewModel.block.lowercased())"]?[selectedDay] ?? true) {
+                    className = "\(viewModel.name)"
+                }
             }
             TitleLabel.text = className
             BlockLabel.text = "\(viewModel.name)"
