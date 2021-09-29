@@ -982,6 +982,9 @@ class ClassNameVC: TextFieldVC, UITextFieldDelegate {
         ClassesOptionsPopupVC.newClass.Subject = text
         self.performSegue(withIdentifier: "teacher", sender: nil)
     }
+    @IBAction func cancel(_ sender: Any) {
+        self.dismiss(animated: true, completion: nil)
+    }
     func hideKeyboardWhenTappedAbove() {
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)

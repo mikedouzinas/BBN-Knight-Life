@@ -141,6 +141,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             ScheduleCalendar.reloadData()
         }
     }
+    var dayIsOver = false
     func setOld() {
         
         let formatter1 = DateFormatter()
@@ -162,6 +163,9 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 }
             }
             y+=1
+        }
+        if currentWeekday.isEmpty {
+            dayIsOver = true
         }
     }
     var todayBlocks = [block]()
@@ -219,8 +223,19 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 cell.backgroundColor = UIColor(named: "background")
                 cell.contentView.backgroundColor = UIColor(named: "background")
                 if Date() > t2 {
-                    currentDay = currentWeekday
-                    tableView.reloadData()
+                    if !dayIsOver {
+                        print(" not empty")
+                        cell.alpha = 1
+                        cell.contentView.alpha = 1
+                        currentDay = currentWeekday
+                        tableView.reloadData()
+                    }
+                    else {
+                        print(" empty")
+                        currentDay = todayBlocks
+                        cell.alpha = 0.3
+                        cell.contentView.alpha = 0.3
+                    }
 //                    tableView.cellf
 //                    cell.alpha = 0.3
 //                    cell.contentView.alpha = 0.3
@@ -515,15 +530,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         formatter1.dateFormat = "yyyy-MM-dd"
         formatter1.dateStyle = .full
         let stringDate = formatter1.string(from: date)
-        let currentStringDate = formatter2.string(from: Date())
-//        print("x and \(currentWeekday)")
-//        if currentStringDate == currentDate && currentWeekday.isEmpty {
-//            currentDay = [block]()
-//            ScheduleCalendar.restore()
-//            ScheduleCalendar.setEmptyMessage("School Day is Over!")
-//            completion(.success(currentDay))
-//            return
-//        }
         let weekDay = stringDate.prefix(upTo: formatter1.string(from: date).firstIndex(of: ",")!)
         let bigArray = LoginVC.getLunchDays()
         let monday = bigArray[0]
@@ -581,6 +587,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 return
             }
         }
+        print("currentDate: \(currentDate) and todays Date: \(formatter2.string(from: Date()))")
+        if currentDate == formatter2.string(from: Date()) {
+            print("wurds \(currentDay)")
+        }
         completion(.success(self.currentDay))
         return
     }
@@ -622,6 +632,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Advisory", startTime: "02:10pm", endTime: "02:30pm", block: "N/A", reminderTime: "02:05pm", length: 45)
     ]
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
+        setOld()
         setCurrentday(date: date, completion: { _ in
             self.ScheduleCalendar.reloadData()
         })
@@ -797,7 +808,6 @@ class LunchMenuVC: CustomLoader, WKNavigationDelegate {
     }
 }
 
-
 class ClassPopupVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return members.count
@@ -815,23 +825,26 @@ class ClassPopupVC: UIViewController, UITableViewDelegate, UITableViewDataSource
         return "Members"
     }
     private var members = [Person]()
-    private var tableView = UITableView()
+    @IBOutlet weak var tableView: UITableView!
     override func viewDidLoad() {
         super.viewDidLoad()
         setMembers()
         configureTableView()
     }
+    @IBOutlet public var HeightConstraint: NSLayoutConstraint!
     func setMembers() {
         let db = Firestore.firestore()
         let memberDocs = db.collection("classes")
         let blockName = (LoginVC.blocks["\(ClassPopupVC.block)"] as? String) ?? "N/A"
         let arr = blockName.getValues()
-        self.navigationItem.title = "\(arr[0]) \(arr[1])"
-        let oldDoc = memberDocs.document(blockName)
-        oldDoc.getDocument(completion: { [self] (document, error) in
+        self.navigationItem.title = "\(arr[0]) \(arr[1].replacingOccurrences(of: "N/A", with: ""))"
+        let doc = memberDocs.document(blockName)
+        doc.getDocument(completion: { [self] (document, error) in
             members = [Person]()
             if let document = document, document.exists {
                 let array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
+                let homeworkText = (document.data()?["homework"] as? String) ?? ""
+                TextView.text = homeworkText
                 for x in array {
                     members.append(Person(name: (x["name"] ?? ""), email: (x["email"] ?? "")))
                 }
@@ -841,17 +854,42 @@ class ClassPopupVC: UIViewController, UITableViewDelegate, UITableViewDataSource
             tableView.reloadData()
         })
     }
+    @IBOutlet public var TextView: UITextView!
     func configureTableView() {
-        tableView = UITableView(frame: view.bounds, style: .plain)
-        view.addSubview(tableView)
+        HeightConstraint.constant = view.frame.height/4
+        view.layoutIfNeeded()
         tableView.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
         tableView.backgroundColor = UIColor(named: "background")
         tableView.delegate = self
         tableView.dataSource = self
+    }
+    @IBAction func editText(_ sender: UIButton) {
+        TextEditVC.link = self
+        self.performSegue(withIdentifier: "edit", sender: nil)
     }
 }
 
 struct Person {
     let name: String
     let email: String
+}
+
+class TextEditVC: UIViewController {
+    static var link: ClassPopupVC!
+    @IBOutlet weak var TextView: UITextView!
+    @IBOutlet weak var HeightConstraint: NSLayoutConstraint!
+    override func viewDidLoad() {
+        TextView.text = TextEditVC.link.TextView.text
+        TextView.becomeFirstResponder()
+    }
+    @IBAction func save() {
+        let db = Firestore.firestore()
+        let memberDocs = db.collection("classes")
+        let blockName = (LoginVC.blocks["\(ClassPopupVC.block)"] as? String) ?? "N/A"
+        let doc = memberDocs.document(blockName)
+        doc.setData(["homework":"\(TextView.text ?? "")"], merge: true)
+        TextEditVC.link.TextView.text = "\(TextView.text ?? "")"
+        TextView.resignFirstResponder()
+        self.navigationController?.popViewController(animated: true)
+    }
 }
