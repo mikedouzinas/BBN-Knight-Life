@@ -269,8 +269,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             self.performSegue(withIdentifier: "Lunch", sender: nil)
         }
         else if block.block != "N/A" {
-            ClassPopupVC.block = block.block
-            self.performSegue(withIdentifier: "class", sender: nil)
+            if ((LoginVC.blocks["\(block.block)"] as? String) ?? "").contains("~") {
+                ClassPopupVC.block = block.block
+                self.performSegue(withIdentifier: "class", sender: nil)
+            }
         }
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -437,9 +439,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
 
         // Set Date Format
         dateFormatter.dateFormat = " MMM d, YYYY, HH:mm:ss"
-
-        // Convert Date to String
-        print(dateFormatter.string(from: date))
         v = 2
         ScheduleCalendar.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
         ScheduleCalendar.backgroundColor = UIColor(named: "background")
@@ -586,10 +585,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 completion(.success(self.currentDay))
                 return
             }
-        }
-        print("currentDate: \(currentDate) and todays Date: \(formatter2.string(from: Date()))")
-        if currentDate == formatter2.string(from: Date()) {
-            print("wurds \(currentDay)")
         }
         completion(.success(self.currentDay))
         return
