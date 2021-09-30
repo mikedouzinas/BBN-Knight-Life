@@ -25,10 +25,14 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         else if section == 3 {
             return lunchBlocks.count
         }
+        else if section == 4 {
+            return other.count
+        }
         return (2 + preferenceBlocks.count)
     }
+    private var other = [settingsBlock]()
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 4
+        return 5
     }
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 30
@@ -51,6 +55,9 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         }
         else if section == 3 {
             label.text = "Lunch Configurations"
+        }
+        else if section == 4 {
+            label.text = "Other"
         }
         else {
             label.text = "Preferences"
@@ -87,6 +94,16 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             imageview.tintColor = UIColor(named: "darkGray")
             cell.accessoryView = imageview
             cell.configure(with: lunchBlocks[indexPath.row])
+            return cell
+        }
+        else if indexPath.section == 4 {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
+                fatalError()
+            }
+            let imageview = UIImageView(image: UIImage(systemName: "square.and.arrow.up")!)
+            imageview.tintColor = UIColor(named: "inverse")
+            cell.accessoryView = imageview
+            cell.configure(with: other[indexPath.row])
             return cell
         }
         else {
@@ -131,15 +148,9 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 switcher.translatesAutoresizingMaskIntoConstraints = false
                 if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
                     switcher.isOn = true
-//                    LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: {_ in
-                        
-//                    })
                 }
                 else {
                     switcher.isOn = false
-//                    LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: {_ in
-
-//                    })
                 }
                 switcher.addTarget(self, action: #selector(pressedPhotoSwitch(_:)), for: .touchUpInside)
                 cell.contentView.addSubview(label)
@@ -207,38 +218,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             tableView.deselectRow(at: indexPath, animated: true)
             ClassesOptionsPopupVC.currentBlock = "\(self.blocks[indexPath.row].blockName)"
             self.performSegue(withIdentifier: "options", sender: nil)
-//            let alertController = UIAlertController(title: "\(blocks[indexPath.row].blockName) Block", message: "Enter your class for \(blocks[indexPath.row].blockName) block followed by the room number", preferredStyle: .alert)
-//
-//            alertController.addTextField { (textField) in
-//                // configure the properties of the text field
-//                textField.placeholder = "e.g. Math A-370"
-//                textField.text = "\(self.blocks[indexPath.row].className)"
-//            }
-//
-//
-//            // add the buttons/actions to the view controller
-//            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-//            let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
-//
-//                // this code runs when the user hits the "save" button
-//
-//                let inputName = alertController.textFields![0].text
-//                LoginVC.blocks["\(self.blocks[indexPath.row].blockName)"] = inputName
-//                self.blocks[indexPath.row] = settingsBlock(blockName: "\(self.blocks[indexPath.row].blockName)", className: inputName!)
-//                let db = Firestore.firestore()
-//                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-//                currDoc.setData(LoginVC.blocks)
-//                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
-//                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-//                    LoginVC.setNotifications()
-//                }
-//                tableView.reloadRows(at: [indexPath], with: .fade)
-//            }
-//
-//            alertController.addAction(cancelAction)
-//            alertController.addAction(saveAction)
-//
-//            present(alertController, animated: true, completion: nil)
         }
         else if indexPath.section == 2 && indexPath.row == 2 {
             let alertController = UIAlertController(title: "Grade", message: "Please enter your grade to better configure your schedule", preferredStyle: .actionSheet)
@@ -396,6 +375,12 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             
             present(alertController, animated: true, completion: nil)
         }
+        else if indexPath.section == 4 {
+            tableView.deselectRow(at: indexPath, animated: true)
+            if shareSheetVC != nil {
+                present(shareSheetVC!, animated: true)
+            }
+        }
     }
     func callReset() {
         ProgressHUD.colorAnimation = .green
@@ -437,6 +422,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         b.dropShadow()
         return b
     }()
+    var shareSheetVC: UIActivityViewController?
     func setBlocks() {
         blocks = [
             settingsBlock(blockName: "A", className: LoginVC.blocks["A"] as? String ?? ""),
@@ -446,7 +432,15 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             settingsBlock(blockName: "E", className: LoginVC.blocks["E"] as? String ?? ""),
             settingsBlock(blockName: "F", className: LoginVC.blocks["F"] as? String ?? ""),
             settingsBlock(blockName: "G", className: LoginVC.blocks["G"] as? String ?? "")
-        ]
+        ]// .trimmingCharacters(in: .whitespacesAndNewlines)
+        let a = (LoginVC.blocks["A"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        let b = (LoginVC.blocks["B"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        let c = (LoginVC.blocks["C"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        let d = (LoginVC.blocks["D"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        let e = (LoginVC.blocks["E"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        let f = (LoginVC.blocks["F"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        let g = (LoginVC.blocks["G"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        shareSheetVC = UIActivityViewController(activityItems: ["\(LoginVC.fullName)'s Classes","\nA: \(a.prefix(a.count-2))\nB: \(b.prefix(b.count-2))\nC: \(c.prefix(c.count-2))\nD: \(d.prefix(d.count-2))\nE: \(e.prefix(e.count-2))\nF: \(f.prefix(f.count-2))\nG: \(g.prefix(g.count-2))"], applicationActivities: nil)
     }
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -471,6 +465,9 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             settingsBlock(blockName: "Wednesday Lunch", className: "\(LoginVC.blocks["l-wednesday"] as? String ?? "")"),
             settingsBlock(blockName: "Thursday Lunch", className: "\(LoginVC.blocks["l-thursday"] as? String ?? "")"),
             settingsBlock(blockName: "Friday Lunch", className: "\(LoginVC.blocks["l-friday"] as? String ?? "")")
+        ]
+        other = [
+            settingsBlock(blockName: "Share Your Classes", className: "")
         ]
         tableView = UITableView(frame: .zero, style: .grouped)
         view.addSubview(tableView)
@@ -578,7 +575,12 @@ class SettingsBlockTableViewCell: UITableViewCell {
         }
         else {
             if viewModel.blockName.count > 1 {
-                DataLabel.text = "Not set"
+                if viewModel.blockName.lowercased().contains("share") {
+                    DataLabel.text = ""
+                }
+                else {
+                    DataLabel.text = "Not set"
+                }
             }
             else if viewModel.blockName.lowercased().contains("lunch") {
                 DataLabel.text = "2nd Lunch"
@@ -950,7 +952,8 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         SearchController.searchBar.searchTextField.layer.masksToBounds = true
         SearchController.searchBar.tintColor = .systemBlue
         SearchController.obscuresBackgroundDuringPresentation = false
-        SearchController.searchBar.placeholder = "Search for your class or add a new one"
+        self.navigationItem.title = "Available Classes in \(ClassesOptionsPopupVC.currentBlock)"
+        SearchController.searchBar.placeholder = "Search existing classes or add a new one"
     }
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         let lowercased = searchText.lowercased()
@@ -979,9 +982,9 @@ struct ClassModel {
 class ClassNameVC: TextFieldVC, UITextFieldDelegate {
     static var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
-        guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~") else {
+        guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~"), !text.contains("/") else {
             ProgressHUD.colorAnimation = .red
-            ProgressHUD.showFailed("Please complete fields! (Don't use any ~)")
+            ProgressHUD.showFailed("Please complete fields! (Don't use any ~ or /)")
             return
         }
         text = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1020,9 +1023,9 @@ class ClassNameVC: TextFieldVC, UITextFieldDelegate {
 class TeacherNameVC: TextFieldVC, UITextFieldDelegate {
     static var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
-        guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~") else {
+        guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~"), !text.contains("/") else {
             ProgressHUD.colorAnimation = .red
-            ProgressHUD.showFailed("Please complete fields! (Don't use any ~)")
+            ProgressHUD.showFailed("Please complete fields! (Don't use any ~ or /)")
             return
         }
         text = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1060,9 +1063,9 @@ class RoomNumVC: TextFieldVC, UITextFieldDelegate {
     @IBOutlet weak var TextField: UITextField!
     static var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
-        guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~") else {
+        guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~"), !text.contains("/") else {
             ProgressHUD.colorAnimation = .red
-            ProgressHUD.showFailed("Please complete fields! (Don't use any ~)")
+            ProgressHUD.showFailed("Please complete fields! (Don't use any ~ or /)")
             return
         }
         text = text.trimmingCharacters(in: .whitespacesAndNewlines)
