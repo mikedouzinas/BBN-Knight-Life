@@ -23,8 +23,8 @@
 		87507FDE26E6ADEB005DDFB4 /* BBNDailyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FDD26E6ADEB005DDFB4 /* BBNDailyTests.swift */; };
 		87507FE926E6ADEB005DDFB4 /* BBNDailyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FE826E6ADEB005DDFB4 /* BBNDailyUITests.swift */; };
 		8761CA7226F29D3B00CADE56 /* Maps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8761CA7126F29D3B00CADE56 /* Maps.swift */; };
+		87AAFC4327062AC6006AF8DC /* demo.gif in Resources */ = {isa = PBXBuildFile; fileRef = 87AAFC4227062AC6006AF8DC /* demo.gif */; };
 		87D3254526E6BCB5009B28CB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */; };
-		87D73B1826EA2CA800724D6D /* demo.gif in Resources */ = {isa = PBXBuildFile; fileRef = 87D73B1726EA2CA800724D6D /* demo.gif */; };
 		87FB9ACEA10E974B53372F10 /* Pods_BBNDaily.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41234358532501BD0AED646E /* Pods_BBNDaily.framework */; };
 		8DDE938FA377A520FC51B6FE /* Pods_BBNDaily_BBNDailyUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AC54026BFC1C4FAC95170AF /* Pods_BBNDaily_BBNDailyUITests.framework */; };
 /* End PBXBuildFile section */
@@ -74,8 +74,8 @@
 		87507FE826E6ADEB005DDFB4 /* BBNDailyUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyUITests.swift; sourceTree = "<group>"; };
 		87507FEA26E6ADEB005DDFB4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8761CA7126F29D3B00CADE56 /* Maps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Maps.swift; sourceTree = "<group>"; };
+		87AAFC4227062AC6006AF8DC /* demo.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = demo.gif; sourceTree = "<group>"; };
 		87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		87D73B1726EA2CA800724D6D /* demo.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = demo.gif; sourceTree = "<group>"; };
 		B905DF855FA87A1BAA72452C /* Pods-BBNDaily.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDaily.release.xcconfig"; path = "Target Support Files/Pods-BBNDaily/Pods-BBNDaily.release.xcconfig"; sourceTree = "<group>"; };
 		BE9032BE1CACD4EE2088EB73 /* Pods-BBNDaily-BBNDailyUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDaily-BBNDailyUITests.release.xcconfig"; path = "Target Support Files/Pods-BBNDaily-BBNDailyUITests/Pods-BBNDaily-BBNDailyUITests.release.xcconfig"; sourceTree = "<group>"; };
 		D631B185C9E1177FC85FDE8A /* Pods-BBNDailyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDailyTests.debug.xcconfig"; path = "Target Support Files/Pods-BBNDailyTests/Pods-BBNDailyTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -194,8 +194,8 @@
 				8704E97B26EEA84B001826F8 /* Tabs */,
 				8704E97C26EEA865001826F8 /* Login */,
 				87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */,
+				87AAFC4227062AC6006AF8DC /* demo.gif */,
 				87507FCC26E6ADEB005DDFB4 /* Main.storyboard */,
-				87D73B1726EA2CA800724D6D /* demo.gif */,
 				87507FCF26E6ADEB005DDFB4 /* Assets.xcassets */,
 				87507FD126E6ADEB005DDFB4 /* LaunchScreen.storyboard */,
 				87507FD426E6ADEB005DDFB4 /* Info.plist */,
@@ -333,7 +333,7 @@
 			files = (
 				87507FD326E6ADEB005DDFB4 /* LaunchScreen.storyboard in Resources */,
 				87D3254526E6BCB5009B28CB /* GoogleService-Info.plist in Resources */,
-				87D73B1826EA2CA800724D6D /* demo.gif in Resources */,
+				87AAFC4327062AC6006AF8DC /* demo.gif in Resources */,
 				87507FD026E6ADEB005DDFB4 /* Assets.xcassets in Resources */,
 				87507FCE26E6ADEB005DDFB4 /* Main.storyboard in Resources */,
 			);
@@ -694,7 +694,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.5.0;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -719,7 +719,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.5.0;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

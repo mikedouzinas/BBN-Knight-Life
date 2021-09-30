@@ -9,11 +9,16 @@ import Foundation
 import UIKit
 import GoogleMaps
 import MapKit
+import ProgressHUD
 
 protocol ResultsViewControllerDelegate: AnyObject {
     func didTapPlace(with classroom: Classroom)
 }
 class MapsVC: UIViewController, UISearchResultsUpdating, ResultsViewControllerDelegate, CLLocationManagerDelegate {
+    @IBAction func moreInfo(_ sender: UIBarButtonItem) {
+        ProgressHUD.colorAnimation = UIColor(named: "gold-bright")!
+        ProgressHUD.showSucceed("Coming Soon! \n Bus number is (617) 593-0396")
+    }
     var locationManager = CLLocationManager()
     func didTapPlace(with classroom: Classroom) {
         self.searchVC.searchBar.text = classroom.name
@@ -84,48 +89,21 @@ class MapsVC: UIViewController, UISearchResultsUpdating, ResultsViewControllerDe
         self.locationManager.startUpdatingLocation()
         ResultsViewController = ResultsVC()
         createSearchBar()
-        // Creates a marker in the center of the map.
-//        let marker = GMSMarker()
-//        marker.position = CLLocationCoordinate2D(latitude: 0, longitude: 0)
-//
-//        marker.title = "Buckingham Browne & Nichols"
-//        let backview = GMSPanoramaView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
-//        backview.layer.masksToBounds = true
-//        backview.backgroundColor = UIColor.red
-//        backview.layer.cornerRadius = 8
-//        marker.icon = UIImage(named: "vanguardLogo")
-////        marker.iconView = backview
-//        marker.snippet = "Cambridge, MA"
-//        marker.map = mapView
         mapView.mapType = .satellite
         mapView.settings.scrollGestures = true
         mapView.settings.zoomGestures = true
-//        for x in places {
-//            let marker = GMSMarker()
-//            let coord = CLLocationCoordinate2D(latitude: x.lat, longitude: x.lon)
-//            marker.position = coord
-//    //        marker.p
-//            marker.title = "\(x.name)"
-//    //        marker.iconView = backview
-//            marker.snippet = "Upper School"
-//            marker.icon = UIImage(named: "map-marker")
-//            marker.map = mapView
-//        }
     }
     func createSearchBar(){
         searchVC = UISearchController(searchResultsController: ResultsViewController)
         self.navigationItem.searchController = searchVC
         searchVC.searchResultsUpdater = self
-//        searchVC.searchBar.backgroundColor = UIColor(named: "blue")?.withAlphaComponent(0.5)
         searchVC.hidesNavigationBarDuringPresentation = false
         searchVC.searchBar.searchTextField.layer.cornerRadius = 8
         searchVC.searchBar.searchTextField.layer.masksToBounds = true
-//        searchVC.searchBar.compatibleSearchTextField.textColor = UIColor.XXX
         searchVC.searchBar.compatibleSearchTextField.backgroundColor = UIColor(named: "blue")?.withAlphaComponent(0.5)
         searchVC.searchBar.tintColor = .systemBlue
         searchVC.obscuresBackgroundDuringPresentation = false
         searchVC.searchBar.placeholder = "Search '112'"
-//        searchVC.searchBar.
     }
     var filteredPlaces = [Classroom]()
     private var places = [

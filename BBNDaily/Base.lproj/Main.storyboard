@@ -21,7 +21,14 @@
                         <color key="backgroundColor" name="background"/>
                     </view>
                     <tabBarItem key="tabBarItem" title="Latest News" image="announcement" selectedImage="announcement" id="OcX-qw-wMR"/>
-                    <navigationItem key="navigationItem" title="Search for Your Classroom" id="1YP-Sf-Ngx"/>
+                    <navigationItem key="navigationItem" title="Search for Your Classroom" id="1YP-Sf-Ngx">
+                        <barButtonItem key="rightBarButtonItem" image="text.book.closed.fill" catalog="system" id="43F-yQ-bWk">
+                            <color key="tintColor" name="gold-bright"/>
+                            <connections>
+                                <action selector="moreInfo:" destination="2dN-Hz-XAt" id="dOX-Xs-cAo"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="uIV-u7-vpi" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -925,6 +932,7 @@
         <image name="map.fill" catalog="system" width="128" height="110"/>
         <image name="pencil.circle" catalog="system" width="128" height="121"/>
         <image name="plus" catalog="system" width="128" height="113"/>
+        <image name="text.book.closed.fill" catalog="system" width="115" height="128"/>
         <image name="vanguardLogo" width="27.666666030883789" height="29"/>
         <image name="xmark.circle" catalog="system" width="128" height="121"/>
         <namedColor name="background">
@@ -943,7 +951,7 @@
             <color red="0.1289999932050705" green="0.20800000429153442" blue="0.39599999785423279" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>
         <namedColor name="inverse-low-alpha">
-            <color red="0.12941176470588234" green="0.20800000429153442" blue="0.39599999785423279" alpha="0.10000000000000001" colorSpace="custom" customColorSpace="displayP3"/>
+            <color red="0.1289999932050705" green="0.20800000429153442" blue="0.39599999785423279" alpha="0.10000000149011612" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>
         <namedColor name="lightGray">
             <color red="0.52899998426437378" green="0.52899998426437378" blue="0.52899998426437378" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
