@@ -12,6 +12,7 @@ import ProgressHUD
 import InitialsImageView
 import SafariServices
 import FSCalendar
+import SkeletonView
 import WebKit
 
 class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIScrollViewDelegate {
@@ -28,7 +29,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         else if section == 4 {
             return other.count
         }
-        return (2 + preferenceBlocks.count)
+        return (3 + preferenceBlocks.count)
     }
     private var other = [settingsBlock]()
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -161,6 +162,33 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 switcher.rightAnchor.constraint(equalTo: cell.rightAnchor, constant: -20).isActive = true
                 return cell
             }
+            else if indexPath.row == 2 {
+                let cell = UITableViewCell()
+                cell.selectionStyle = .none
+                cell.backgroundColor = UIColor(named: "background")
+                cell.contentView.backgroundColor = UIColor(named: "background")
+                let label = UILabel()
+                label.text = "Public Classes"
+                label.textColor = UIColor.systemGray
+                label.font = .systemFont(ofSize: 14, weight: .regular)
+                label.translatesAutoresizingMaskIntoConstraints = false
+                let switcher = UISwitch()
+                switcher.translatesAutoresizingMaskIntoConstraints = false
+                if ((LoginVC.blocks["publicClasses"] ?? "") as? String) == "true" {
+                    switcher.isOn = true
+                }
+                else {
+                    switcher.isOn = false
+                }
+                switcher.addTarget(self, action: #selector(pressedPublicClasses(_:)), for: .touchUpInside)
+                cell.contentView.addSubview(label)
+                cell.contentView.addSubview(switcher)
+                label.centerYAnchor.constraint(equalTo: cell.centerYAnchor).isActive = true
+                label.leftAnchor.constraint(equalTo: cell.leftAnchor, constant: 10).isActive = true
+                switcher.centerYAnchor.constraint(equalTo: cell.centerYAnchor).isActive = true
+                switcher.rightAnchor.constraint(equalTo: cell.rightAnchor, constant: -20).isActive = true
+                return cell
+            }
             else {
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
                     fatalError()
@@ -168,7 +196,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 let imageview = UIImageView(image: UIImage(systemName: "chevron.right")!)
                 imageview.tintColor = UIColor(named: "darkGray")
                 cell.accessoryView = imageview
-                cell.configure(with: preferenceBlocks[indexPath.row-2])
+                cell.configure(with: preferenceBlocks[indexPath.row-3])
                 return cell
             }
         }
@@ -191,6 +219,20 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: { [self]_ in
                 setHeader()
             })
+        }
+    }
+    @objc func pressedPublicClasses(_ switcher: UISwitch) {
+        if switcher.isOn {
+            let db = Firestore.firestore()
+            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+            LoginVC.blocks["publicClasses"] = "true"
+            currDoc.setData(LoginVC.blocks)
+        }
+        else {
+            let db = Firestore.firestore()
+            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+            LoginVC.blocks["publicClasses"] = "false"
+            currDoc.setData(LoginVC.blocks)
         }
     }
     @objc func pressedSwitch(_ switcher: UISwitch) {
@@ -219,13 +261,13 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             ClassesOptionsPopupVC.currentBlock = "\(self.blocks[indexPath.row].blockName)"
             self.performSegue(withIdentifier: "options", sender: nil)
         }
-        else if indexPath.section == 2 && indexPath.row == 2 {
+        else if indexPath.section == 2 && indexPath.row == 3 {
             let alertController = UIAlertController(title: "Grade", message: "Please enter your grade to better configure your schedule", preferredStyle: .actionSheet)
             
             // add the buttons/actions to the view controller
             let freshman = UIAlertAction(title: "Freshman", style: .default) { _ in
                 LoginVC.blocks["grade"] = "9"
-                self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: "9")
+                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "9")
                 //                self.pr
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
@@ -239,7 +281,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             }
             let sophmore = UIAlertAction(title: "Sophmore", style: .default) { _ in
                 LoginVC.blocks["grade"] = "10"
-                self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: "10")
+                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "10")
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
                 currDoc.setData(LoginVC.blocks)
@@ -252,7 +294,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             }
             let junior = UIAlertAction(title: "Junior", style: .default) { _ in
                 LoginVC.blocks["grade"] = "11"
-                self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: "11")
+                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "11")
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
                 currDoc.setData(LoginVC.blocks)
@@ -265,7 +307,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             }
             let senior = UIAlertAction(title: "Senior", style: .default) { _ in
                 LoginVC.blocks["grade"] = "12"
-                self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: "12")
+                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "12")
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
                 currDoc.setData(LoginVC.blocks)
@@ -287,18 +329,18 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             
             present(alertController, animated: true, completion: nil)
         }
-        else if indexPath.section == 2 && indexPath.row > 2 {
+        else if indexPath.section == 2 && indexPath.row > 3 {
             tableView.deselectRow(at: indexPath, animated: true)
-            let alertController = UIAlertController(title: "\(preferenceBlocks[indexPath.row-2].blockName)", message: "Please enter your locker number", preferredStyle: .alert)
+            let alertController = UIAlertController(title: "\(preferenceBlocks[indexPath.row-3].blockName)", message: "Please enter your locker number", preferredStyle: .alert)
             var isLocker = true
-            if preferenceBlocks[indexPath.row-2].blockName.lowercased().contains("advisory") {
+            if preferenceBlocks[indexPath.row-3].blockName.lowercased().contains("advisory") {
                 alertController.message = "Please enter your advisory room number"
                 isLocker = false
             }
             alertController.addTextField { (textField) in
                 // configure the properties of the text field
                 textField.placeholder = "e.g. 123"
-                textField.text = "\(self.preferenceBlocks[indexPath.row-2].className)"
+                textField.text = "\(self.preferenceBlocks[indexPath.row-3].className)"
             }
             // add the buttons/actions to the view controller
             let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
@@ -315,7 +357,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                     name = "room-advisory"
                 }
                 LoginVC.blocks["\(name)"] = inputName
-                self.preferenceBlocks[indexPath.row-2] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-2].blockName)", className: inputName!)
+                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: inputName!)
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
                 currDoc.setData(LoginVC.blocks)
@@ -433,14 +475,35 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             settingsBlock(blockName: "F", className: LoginVC.blocks["F"] as? String ?? ""),
             settingsBlock(blockName: "G", className: LoginVC.blocks["G"] as? String ?? "")
         ]// .trimmingCharacters(in: .whitespacesAndNewlines)
-        let a = (LoginVC.blocks["A"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
-        let b = (LoginVC.blocks["B"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
-        let c = (LoginVC.blocks["C"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
-        let d = (LoginVC.blocks["D"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
-        let e = (LoginVC.blocks["E"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
-        let f = (LoginVC.blocks["F"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
-        let g = (LoginVC.blocks["G"] as? String ?? "").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
-        shareSheetVC = UIActivityViewController(activityItems: ["\(LoginVC.fullName)'s Classes","\nA: \(a.prefix(a.count-2))\nB: \(b.prefix(b.count-2))\nC: \(c.prefix(c.count-2))\nD: \(d.prefix(d.count-2))\nE: \(e.prefix(e.count-2))\nF: \(f.prefix(f.count-2))\nG: \(g.prefix(g.count-2))"], applicationActivities: nil)
+        var a = (LoginVC.blocks["A"] as? String ?? "A Block--").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        var b = (LoginVC.blocks["B"] as? String ?? "B Block--").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        var c = (LoginVC.blocks["C"] as? String ?? "C Block--").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        var d = (LoginVC.blocks["D"] as? String ?? "D Block--").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        var e = (LoginVC.blocks["E"] as? String ?? "E Block--").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        var f = (LoginVC.blocks["F"] as? String ?? "F Block--").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        var g = (LoginVC.blocks["G"] as? String ?? "G Block--").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
+        if a.isEmpty {
+            a = "--"
+        }
+        if b.isEmpty {
+            b = "--"
+        }
+        if c.isEmpty {
+            c = "--"
+        }
+        if d.isEmpty {
+            d = "--"
+        }
+        if e.isEmpty {
+            e = "--"
+        }
+        if f.isEmpty {
+            f = "--"
+        }
+        if g.isEmpty {
+            g = "--"
+        }
+        shareSheetVC = UIActivityViewController(activityItems: ["\(LoginVC.fullName.trimmingCharacters(in: .whitespacesAndNewlines))'s Classes\nA: \(a.prefix(a.count-2))\nB: \(b.prefix(b.count-2))\nC: \(c.prefix(c.count-2))\nD: \(d.prefix(d.count-2))\nE: \(e.prefix(e.count-2))\nF: \(f.prefix(f.count-2))\nG: \(g.prefix(g.count-2))"], applicationActivities: nil)
     }
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -835,9 +898,12 @@ class PaddingLabel: UILabel {
     }
 }
 
-class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource {
+class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewDelegate, SkeletonTableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return filteredClasses.count
+    }
+    func collectionSkeletonView(_ skeletonView: UITableView, cellIdentifierForRowAt indexPath: IndexPath) -> ReusableCellIdentifier {
+        return blockTableViewCell.identifier
     }
     @IBAction func addClass(_ sender: UIBarButtonItem) {
         ClassNameVC.link = self
@@ -888,7 +954,7 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
             memberDoc.getDocument(completion: { (document, error) in
                 if let document = document, document.exists {
                     var array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
-                    array.append(["name":"\(LoginVC.fullName)","email":"\(LoginVC.email)"])
+                    array.append(["name":"\(LoginVC.fullName)","email":"\(LoginVC.email)", "uid":"\((LoginVC.blocks["uid"] ?? "N/A") as! String)"])
                     
                     LoginVC.classMeetingDays["\(ClassesOptionsPopupVC.currentBlock)"] = [((document.data()?["monday"] as? Bool) ?? true), ((document.data()?["tuesday"] as? Bool) ?? true), ((document.data()?["wednesday"] as? Bool) ?? true), ((document.data()?["thursday"] as? Bool) ?? true), ((document.data()?["friday"] as? Bool) ?? true)]
                     memberDoc.setData(["members":array], merge: true)
@@ -928,6 +994,8 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
                         Classes.append(ClassModel(Subject: array[0], Teacher: array[1], Room: array[2], Block: array[3]))
                     }
                 }
+                tableView.stopSkeletonAnimation()
+                view.hideSkeleton(reloadDataAfter: true, transition: .crossDissolve(0.25))
                 filteredClasses = Classes
                 tableView.reloadData()
             }
@@ -939,11 +1007,17 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         view.addSubview(tableView)
         tableView.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
         tableView.backgroundColor = UIColor(named: "background")
+        tableView.tableFooterView = UIView(frame: .zero)
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.rowHeight = 50
+        tableView.estimatedRowHeight = 50
+        tableView.isSkeletonable = true
+        tableView.showAnimatedGradientSkeleton()
     }
+   
     public var tableView = UITableView()
-    func createSearchBar(){
+    func createSearchBar() {
         self.navigationItem.searchController = SearchController
         self.SearchController.searchBar.delegate = self
         self.navigationItem.hidesSearchBarWhenScrolling = false
@@ -963,7 +1037,7 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
             return
         }
         filteredClasses = Classes.filter({
-            $0.Teacher.lowercased().contains(lowercased) || $0.Subject.contains(lowercased) || $0.Block.contains(lowercased) || $0.Room.contains(lowercased)
+            $0.Teacher.lowercased().contains(lowercased) || $0.Subject.lowercased().contains(lowercased) || $0.Block.lowercased().contains(lowercased) || $0.Room.lowercased().contains(lowercased)
         })
         tableView.reloadData()
     }

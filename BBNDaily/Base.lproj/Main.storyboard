@@ -245,6 +245,7 @@
                     </view>
                     <tabBarItem key="tabBarItem" title="Schedule" image="calendar" catalog="system" selectedImage="calendar" id="9zU-cX-oIt"/>
                     <navigationItem key="navigationItem" title="My Schedule" id="guX-Lm-JjH">
+                        <barButtonItem key="backBarButtonItem" title="Back" id="FDs-Z9-GKA"/>
                         <barButtonItem key="rightBarButtonItem" image="chevron.up" catalog="system" id="kSb-80-gAJ">
                             <color key="tintColor" name="gold-bright"/>
                             <connections>

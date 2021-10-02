@@ -17,6 +17,7 @@ target 'BBNDaily' do
 	pod 'Firebase/Storage'
 	pod 'GoogleSignIn'
 	pod 'GoogleMaps'
+	pod 'SkeletonView'
   target 'BBNDailyTests' do
     inherit! :search_paths
     # Pods for testing
