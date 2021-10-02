@@ -92,3 +92,4 @@ iOSInjectionProject/
 *.h
 *.inc
 *.m
+Pods/BoringSSL-GRPC/src/crypto
