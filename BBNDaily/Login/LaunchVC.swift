@@ -21,17 +21,6 @@ class LaunchVC: UIViewController {
         if FirebaseAuth.Auth.auth().currentUser != nil {
             LoginVC.fullName = (FirebaseAuth.Auth.auth().currentUser?.displayName ?? "").replacingOccurrences(of: "**", with: "")
             LoginVC.email = FirebaseAuth.Auth.auth().currentUser?.email ?? ""
-//            if !LoginVC.email.checkForDomain() {
-//                ProgressHUD.colorAnimation = .red
-//                ProgressHUD.showFailed("You are not a part of the BB&N domain")
-//                do {
-//                    try FirebaseAuth.Auth.auth().signOut()
-//                }
-//                catch {
-//                    return
-//                }
-//                return
-//            }
             LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
             
             let db = Firestore.firestore()
@@ -41,26 +30,28 @@ class LaunchVC: UIViewController {
                 } else {
                     //                var isCreated = false
                     var newArray = [String: [block]]()
+                    var reasonArray = [String: String]()
+                    var newArray2 = [String: [block]]()
                     for document in (snapshot?.documents)! {
 //                            documen
+                        let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
+                        var blocksl1 = [block]()
+                        for x in arrayl1 {
+                            blocksl1.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
+                        }
+                        
                         let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
                         var blocks = [block]()
                         for x in array {
                             blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
                         }
-                        newArray[document.data()["date"] as? String ?? ""] = blocks
+                        let date = document.data()["date"] as? String ?? "N/A"
+                        newArray[date] = blocks
+                        newArray2[date] = blocksl1
+                        reasonArray[date] = document.data()["reason"] as? String ?? "N/A"
                     }
+                    LoginVC.specialDayReasons = reasonArray
                     LoginVC.specialSchedules = newArray
-                    var newArray2 = [String: [block]]()
-                    for document in (snapshot?.documents)! {
-//                            documen
-                        let array = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
-                        var blocks = [block]()
-                        for x in array {
-                            blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
-                        }
-                        newArray2[document.data()["date"] as? String ?? ""] = blocks
-                    }
                     LoginVC.specialSchedulesL1 = newArray2
                     for x in LoginVC.specialSchedulesL1 {
                         if x.value.isEmpty {

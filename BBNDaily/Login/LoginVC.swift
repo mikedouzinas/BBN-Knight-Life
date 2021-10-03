@@ -23,6 +23,7 @@ class LoginVC: UIViewController {
     static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
     static var specialSchedules = [String: [block]]()
     static var specialSchedulesL1 = [String: [block]]()
+    static var specialDayReasons = [String: String]()
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
     @IBOutlet weak var SignInButton: GIDSignInButton!
     override func viewDidLoad() {
@@ -39,12 +40,10 @@ class LoginVC: UIViewController {
         }
         let imageUrl = Auth.auth().currentUser?.photoURL?.absoluteString
         if imageUrl == nil {
-//            LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
             LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", gradientColors: (top: UIColor(named: "gold")!, bottom: UIColor(named: "blue")!), circular: false, textAttributes: nil)
             completion(.success(LoginVC.profilePhoto))
         }
         else {
-            //            LoginVC.profilePhoto.downloaded(from: (Auth.auth().currentUser?.photoURL!)!)
             GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
                 if error != nil || user == nil {
                     // Show the app's signed-out state.
@@ -77,6 +76,7 @@ class LoginVC: UIViewController {
             
         }
     }
+    
     func callTabBar() {
         self.performSegue(withIdentifier: "SignIn", sender: nil)
     }
@@ -127,26 +127,28 @@ class LoginVC: UIViewController {
                     } else {
                         //                var isCreated = false
                         var newArray = [String: [block]]()
+                        var reasonArray = [String: String]()
+                        var newArray2 = [String: [block]]()
                         for document in (snapshot?.documents)! {
 //                            documen
+                            let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
+                            var blocksl1 = [block]()
+                            for x in arrayl1 {
+                                blocksl1.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
+                            }
+                            
                             let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
                             var blocks = [block]()
                             for x in array {
                                 blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
                             }
-                            newArray[document.data()["date"] as? String ?? ""] = blocks
+                            let date = document.data()["date"] as? String ?? "N/A"
+                            newArray[date] = blocks
+                            newArray2[date] = blocksl1
+                            reasonArray[date] = document.data()["reason"] as? String ?? "N/A"
                         }
+                        LoginVC.specialDayReasons = reasonArray
                         LoginVC.specialSchedules = newArray
-                        var newArray2 = [String: [block]]()
-                        for document in (snapshot?.documents)! {
-//                            documen
-                            let array = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
-                            var blocks = [block]()
-                            for x in array {
-                                blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
-                            }
-                            newArray2[document.data()["date"] as? String ?? ""] = blocks
-                        }
                         LoginVC.specialSchedulesL1 = newArray2
                         for x in LoginVC.specialSchedulesL1 {
                             if x.value.isEmpty {
@@ -241,7 +243,6 @@ class LoginVC: UIViewController {
         formatter1.dateStyle = .full
         let stringDate = formatter1.string(from: date)
         var currentDay = [block]()
-        print(stringDate)
         let bigArray = LoginVC.getLunchDays()
         let monday = bigArray[0]
         let tuesday = bigArray[1]
@@ -264,7 +265,6 @@ class LoginVC: UIViewController {
         default:
             currentDay = [block]()
         }
-        
         for x in CalendarVC.vacationDates {
             if stringDate.lowercased() == x.date.lowercased() {
                 currentDay = [block]()
@@ -382,32 +382,35 @@ class LoginVC: UIViewController {
         LoginVC.sixDaysArray = LoginVC.findArray(date: sixDays)
         LoginVC.sevenDaysArray = LoginVC.findArray(date: sevenDays)
         bigArray = [todayArray, twoDaysArray, threeDaysArray, fourDaysArray, fiveDaysArray, sixDaysArray, sevenDaysArray]
-        for x in todayArray.blocks {
-            addNotif(x: x, weekDay: todayArray.weekday)
-        }
-        for x in twoDaysArray.blocks {
-            addNotif(x: x, weekDay: twoDaysArray.weekday)
-        }
-        for x in threeDaysArray.blocks {
-            addNotif(x: x, weekDay: threeDaysArray.weekday)
-        }
-        for x in fourDaysArray.blocks {
-            addNotif(x: x, weekDay: fourDaysArray.weekday)
-        }
-        for x in fiveDaysArray.blocks {
-            addNotif(x: x, weekDay: fiveDaysArray.weekday)
-        }
-        for x in sixDaysArray.blocks {
-            addNotif(x: x, weekDay: sixDaysArray.weekday)
-        }
-        for x in sevenDaysArray.blocks {
-            addNotif(x: x, weekDay: sevenDaysArray.weekday)
-        }
-        UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
-            for x in results {
-                print("title: \(x.content.title)")
+        
+        if ((LoginVC.blocks["notifs"] as? String) ?? "") == "true" {
+            for x in todayArray.blocks {
+                addNotif(x: x, weekDay: todayArray.weekday)
             }
-        })
+            for x in twoDaysArray.blocks {
+                addNotif(x: x, weekDay: twoDaysArray.weekday)
+            }
+            for x in threeDaysArray.blocks {
+                addNotif(x: x, weekDay: threeDaysArray.weekday)
+            }
+            for x in fourDaysArray.blocks {
+                addNotif(x: x, weekDay: fourDaysArray.weekday)
+            }
+            for x in fiveDaysArray.blocks {
+                addNotif(x: x, weekDay: fiveDaysArray.weekday)
+            }
+            for x in sixDaysArray.blocks {
+                addNotif(x: x, weekDay: sixDaysArray.weekday)
+            }
+            for x in sevenDaysArray.blocks {
+                addNotif(x: x, weekDay: sevenDaysArray.weekday)
+            }
+            UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
+                for x in results {
+                    print("title: \(x.content.title)")
+                }
+            })
+        }
     }
 }
 

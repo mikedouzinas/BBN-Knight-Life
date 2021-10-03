@@ -21,7 +21,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     }
     var xc = 0
     func getTimes(x: block) -> [Date] {
-        
         let time = x.reminderTime.prefix(5)
         let time1 = x.startTime.prefix(5)
         let time2 = x.endTime.prefix(5)
@@ -52,7 +51,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             minute: (Int(m1) ?? 0),
             second: 0,
             of: now)!
-        //            print(time2)
         let t2 = calendar.date(
             bySettingHour: ((Int(time2.prefix(2)) ?? 0)+amOrPm2),
             minute: (Int(m2) ?? 0),
@@ -235,12 +233,8 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                         cell.alpha = 0.3
                         cell.contentView.alpha = 0.3
                     }
-//                    tableView.cellf
-//                    cell.alpha = 0.3
-//                    cell.contentView.alpha = 0.3
                 }
                 else {
-//                    cell.isHidden = false
                     cell.alpha = 1
                     cell.contentView.alpha = 1
                 }
@@ -256,7 +250,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             else {
                 cell.alpha = 1
                 cell.contentView.alpha = 1
-                
             }
         }
         return cell
@@ -431,12 +424,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     var v = 1
     override func viewDidLoad() {
         super.viewDidLoad()
-        let date = Date()
-
-        // Create Date Formatter
         let dateFormatter = DateFormatter()
-
-        // Set Date Format
         dateFormatter.dateFormat = " MMM d, YYYY, HH:mm:ss"
         v = 2
         ScheduleCalendar.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
@@ -558,7 +546,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         else {
             ScheduleCalendar.restore()
         }
-        
         for x in CalendarVC.vacationDates {
             if stringDate.lowercased() == x.date.lowercased() {
                 currentDay = [block]()
@@ -575,6 +562,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             completion(.success(currentDay))
             return
         }
+        
         for x in LoginVC.specialSchedules {
             if x.key.lowercased() == stringDate.lowercased() {
                 self.currentDay = x.value
@@ -584,6 +572,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                     completion(.success(self.currentDay))
                     return
                 }
+                if self.currentDay.isEmpty {
+                    ScheduleCalendar.restore()
+                    ScheduleCalendar.setEmptyMessage("No Class - \(LoginVC.specialDayReasons[x.key] ?? "No Reason")")
+                }
                 completion(.success(self.currentDay))
                 return
             }
@@ -591,43 +583,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         completion(.success(self.currentDay))
         return
     }
-    private var customWednesday = [
-        block(name: "9's go to Biv", startTime: "07:30am", endTime: "08:15am", block: "N/A", reminderTime: "07:25am", length: 45),
-        block(name: "New 10's and 11's community", startTime: "08:15am", endTime: "09:00am", block: "N/A", reminderTime: "07:25am", length: 45),
-        block(name: "Advisory", startTime: "09:00am", endTime: "09:35am", block: "N/A", reminderTime: "07:25am", length: 45),
-        block(name: "Orientation Block 1", startTime: "09:40am", endTime: "10:30am", block: "N/A", reminderTime: "07:25am", length: 45),
-        block(name: "Orientation Block 2", startTime: "10:35am", endTime: "11:25am", block: "N/A", reminderTime: "07:25am", length: 45),
-        block(name: "Cookout Lunch", startTime: "11:30am", endTime: "12:15pm", block: "N/A", reminderTime: "07:25am", length: 45),
-        block(name: "Orientation Block 3", startTime: "12:20pm", endTime: "01:10pm", block: "N/A", reminderTime: "07:25am", length: 45),
-        block(name: "Orientation Block 4", startTime: "01:15pm", endTime: "02:05pm", block: "N/A", reminderTime: "07:25am", length: 45),
-        block(name: "Advisory", startTime: "02:10pm", endTime: "02:30pm", block: "N/A", reminderTime: "07:25am", length: 45),
-        block(name: "Athletics", startTime: "03:00pm", endTime: "04:30pm", block: "N/A", reminderTime: "07:25am", length: 45)
-    ]
-    private var customThursday = [
-        block(name: "Advisory", startTime: "09:00am", endTime: "09:45am", block: "N/A", reminderTime: "08:55am", length: 45),
-        block(name: "Escape Room Orientation", startTime: "09:50am", endTime: "10:40am", block: "N/A", reminderTime: "09:50am", length: 45),
-        block(name: "Class Meetings", startTime: "10:45am", endTime: "11:30am", block: "N/A", reminderTime: "10:40am", length: 45),
-        block(name: "Cookout Lunch", startTime: "11:30am", endTime: "12:30pm", block: "N/A", reminderTime: "11:30am", length: 45),
-        block(name: "Senior Meeting, 10 and 11 on turf", startTime: "12:35pm", endTime: "01:20pm", block: "N/A", reminderTime: "12:30pm", length: 45),
-        block(name: "Advisory", startTime: "01:25pm", endTime: "02:10pm", block: "N/A", reminderTime: "01:20pm", length: 45),
-        block(name: "Ice Cream Truck", startTime: "02:15pm", endTime: "03:15pm", block: "N/A", reminderTime: "02:10pm", length: 45),
-        block(name: "Athletics", startTime: "03:30pm", endTime: "04:30pm", block: "N/A", reminderTime: "03:15pm", length: 45),
-        block(name: "Seniors Dinner", startTime: "05:30pm", endTime: "07:30pm", block: "N/A", reminderTime: "04:30pm", length: 45)
-    ]
-    private var customFriday = [
-        block(name: "Assembly", startTime: "08:15am", endTime: "08:40am", block: "N/A", reminderTime: "08:10am", length: 45),
-        block(name: "A", startTime: "08:50am", endTime: "09:20am", block: "A", reminderTime: "08:40am", length: 45),
-        block(name: "B", startTime: "09:25am", endTime: "09:55am", block: "B", reminderTime: "09:20am", length: 45),
-        block(name: "Break", startTime: "10:00am", endTime: "10:20am", block: "N/A", reminderTime: "09:55am", length: 45),
-        block(name: "C", startTime: "10:25am", endTime: "10:55am", block: "C", reminderTime: "10:20am", length: 45),
-        block(name: "D", startTime: "11:00am", endTime: "11:30am", block: "D", reminderTime: "10:55am", length: 45),
-        block(name: "Lunch", startTime: "11:35am", endTime: "12:05pm", block: "N/A", reminderTime: "11:30am", length: 45),
-        block(name: "E", startTime: "12:10pm", endTime: "12:40pm", block: "E", reminderTime: "12:05pm", length: 45),
-        block(name: "Break", startTime: "12:45pm", endTime: "12:55pm", block: "N/A", reminderTime: "12:40pm", length: 45),
-        block(name: "F", startTime: "01:00pm", endTime: "01:30pm", block: "F", reminderTime: "12:55pm", length: 45),
-        block(name: "G", startTime: "01:35pm", endTime: "02:05pm", block: "G", reminderTime: "01:30pm", length: 45),
-        block(name: "Advisory", startTime: "02:10pm", endTime: "02:30pm", block: "N/A", reminderTime: "02:05pm", length: 45)
-    ]
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
         setOld()
         setCurrentday(date: date, completion: { _ in

@@ -237,7 +237,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     }
     @objc func pressedSwitch(_ switcher: UISwitch) {
         if switcher.isOn {
-            LoginVC.setNotifications()
             let db = Firestore.firestore()
             let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
             LoginVC.blocks["notifs"] = "true"
@@ -248,8 +247,8 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
             LoginVC.blocks["notifs"] = "false"
             currDoc.setData(LoginVC.blocks)
-            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         }
+        LoginVC.setNotifications()
     }
     override func viewWillAppear(_ animated: Bool) {
         setBlocks()
@@ -272,11 +271,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
                 currDoc.setData(LoginVC.blocks)
-                CalendarVC.isLunch1 = true
-                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
-                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-                    LoginVC.setNotifications()
-                }
                 tableView.reloadRows(at: [indexPath], with: .fade)
             }
             let sophmore = UIAlertAction(title: "Sophmore", style: .default) { _ in
@@ -285,11 +279,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
                 currDoc.setData(LoginVC.blocks)
-                CalendarVC.isLunch1 = true
-                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
-                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-                    LoginVC.setNotifications()
-                }
                 tableView.reloadRows(at: [indexPath], with: .fade)
             }
             let junior = UIAlertAction(title: "Junior", style: .default) { _ in
@@ -298,11 +287,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
                 currDoc.setData(LoginVC.blocks)
-                CalendarVC.isLunch1 = false
-                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
-                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-                    LoginVC.setNotifications()
-                }
                 tableView.reloadRows(at: [indexPath], with: .fade)
             }
             let senior = UIAlertAction(title: "Senior", style: .default) { _ in
@@ -311,11 +295,14 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
                 currDoc.setData(LoginVC.blocks)
-                CalendarVC.isLunch1 = false
-                if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
-                    UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-                    LoginVC.setNotifications()
-                }
+                tableView.reloadRows(at: [indexPath], with: .fade)
+            }
+            let teacher = UIAlertAction(title: "Teacher", style: .default) { _ in
+                LoginVC.blocks["grade"] = "Teacher"
+                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "Teacher")
+                let db = Firestore.firestore()
+                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                currDoc.setData(LoginVC.blocks)
                 tableView.reloadRows(at: [indexPath], with: .fade)
             }
             let cancel = UIAlertAction(title: "Cancel", style: .cancel) { _ in
@@ -325,6 +312,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             alertController.addAction(sophmore)
             alertController.addAction(junior)
             alertController.addAction(senior)
+            alertController.addAction(teacher)
             alertController.addAction(cancel)
             
             present(alertController, animated: true, completion: nil)
