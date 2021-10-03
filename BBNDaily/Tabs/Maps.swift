@@ -29,9 +29,7 @@ class MapsVC: UIViewController, UISearchResultsUpdating, ResultsViewControllerDe
         let marker = GMSMarker()
         let coord = CLLocationCoordinate2D(latitude: classroom.lat, longitude: classroom.lon)
         marker.position = coord
-//        marker.p
         marker.title = "\(classroom.name)"
-//        marker.iconView = backview
         marker.snippet = "Upper School"
         marker.icon = UIImage(named: "map-marker")
         marker.map = mapView
@@ -54,36 +52,18 @@ class MapsVC: UIViewController, UISearchResultsUpdating, ResultsViewControllerDe
     var mapView: GMSMapView!
     override func viewDidLoad() {
         super.viewDidLoad()
-//        let map = MKMapView(frame: .zero)
-//        map.camera = MKMapCamera(lookingAtCenter: CLLocationCoordinate2D(latitude: 0, longitude: 0), fromDistance: 1000, pitch: 0, heading: 0)
-//        map.mapType = .satellite
-//        map.translatesAutoresizingMaskIntoConstraints = false
-//        view.addSubview(map)
-//        map.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-//        map.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-//        map.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
-//        map.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         GMSServices.provideAPIKey("AIzaSyBY5M_mXpnXwCz5-T889VLtkm22HjY8-rw")
-        let camera = GMSCameraPosition.camera(withLatitude: 42.37088697136021, longitude: -71.13551938855346, zoom: 19) // 42.37088697136021, -71.13551938855346
+        let camera = GMSCameraPosition.camera(withLatitude: 42.37088697136021, longitude: -71.13551938855346, zoom: 19)
         mapView = GMSMapView.map(withFrame: .zero, camera: camera)
         let marker = GMSMarker()
         let coord = CLLocationCoordinate2D(latitude: 42.37088697136021, longitude: -71.13551938855346)
         marker.position = coord
-//        marker.p
         marker.title = "Buckingham Browne & Nichols"
-//        marker.iconView = backview
         marker.icon = UIImage(named: "map-marker")
         marker.snippet = "Upper School"
         marker.map = mapView
-//        mapView.show
         self.view = mapView
         locationManager.requestWhenInUseAuthorization()
-//        if(CLLocationManager.authorizationStatus() == .authorizedWhenInUse ||
-//        CLLocationManager.authorizationStatus() == .authorizedAlways) {
-//           currentLoc = locationManager.location
-//           print(currentLoc.coordinate.latitude)
-//           print(currentLoc.coordinate.longitude)
-//        }
         self.mapView.isMyLocationEnabled = true
         self.locationManager.delegate = self
         self.locationManager.startUpdatingLocation()
