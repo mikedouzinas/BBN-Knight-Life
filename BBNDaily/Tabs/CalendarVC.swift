@@ -108,12 +108,12 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         if currentWeekday.isEmpty {
             var z = 0
             var currDate = Date()
-            
             for x in LoginVC.bigArray {
                 if z != 0 {
                     currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
                     if !x.blocks.isEmpty {
                         currentWeekday = x.blocks
+                        dayOverBlocks = x.blocks
                         calendar.select(currDate)
                         setCurrentday(date: currDate, completion: { _ in
                             self.ScheduleCalendar.reloadData()
@@ -140,6 +140,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             ScheduleCalendar.reloadData()
         }
     }
+    var dayOverBlocks = [block]()
     var dayIsOver = false
     func setOld() {
         
@@ -269,13 +270,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 60
-    }
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        setCurrentday(date: realCurrentDate, completion: {_ in
-            
-            self.ScheduleCalendar.reloadData()
-        })
     }
     var currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n", reminderTime: "3", length: 0)
     static var isLunch1 = false
@@ -422,8 +416,52 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         ScheduleCalendar.refreshControl?.addTarget(self, action: #selector(didPullToRefresh), for: .valueChanged)
     }
     var v = 1
+    override func viewWillAppear(_ animated: Bool) {
+        reloadPage()
+        v+=1
+    }
+    @objc func reloadPage() {
+        if v != 2 {
+            let formatter2 = DateFormatter()
+            formatter2.dateFormat = "yyyy-MM-dd"
+            formatter2.dateStyle = .short
+            let date = formatter2.string(from: Date())
+            if date != todaysDate {
+                setCurrentday(date: Date(), completion: { [self]result in
+                    switch result {
+                    case .success(let todBlocks):
+                        todaysDate = date
+                        calendar.select(Date())
+                        self.currentWeekday = todBlocks
+                        self.todayBlocks = todBlocks
+                        LoginVC.setNotifications()
+                        for x in todBlocks {
+                            print("\(x.name) \(x.startTime)\n")
+                        }
+                        ScheduleCalendar.reloadData()
+                        setTimes(recursive: false)
+                    case .failure(_):
+                        print("failed :(")
+                    }
+                })
+            }
+            else {
+                setCurrentday(date: realCurrentDate, completion: { [self]_ in
+                    setTimes(recursive: false)
+                    ScheduleCalendar.reloadData()
+                })
+            }
+        }
+        
+    }
+    var todaysDate = ""
     override func viewDidLoad() {
         super.viewDidLoad()
+        NotificationCenter.default.addObserver(self, selector: #selector(reloadPage), name: UIApplication.didBecomeActiveNotification, object: nil)
+        let formatter2 = DateFormatter()
+        formatter2.dateFormat = "yyyy-MM-dd"
+        formatter2.dateStyle = .short
+        todaysDate = formatter2.string(from: Date())
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = " MMM d, YYYY, HH:mm:ss"
         v = 2
@@ -445,19 +483,13 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 ScheduleCalendar.delegate = self
                 ScheduleCalendar.dataSource = self
                 LoginVC.setNotifications()
+                ScheduleCalendar.reloadData()
                 setTimes(recursive: true)
                 
             case .failure(_):
                 print("failed :(")
             }
         })
-    }
-    override func viewWillAppear(_ animated: Bool) {
-        if v != 2 {
-            setTimes(recursive: false)
-            ScheduleCalendar.reloadData()
-        }
-        v+=1
     }
     func setNotif() {
         let hours = 13
