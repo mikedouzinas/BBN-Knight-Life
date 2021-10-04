@@ -250,6 +250,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         }
         LoginVC.setNotifications()
     }
+    // remove all cases of user when joining class too
     override func viewWillAppear(_ animated: Bool) {
         setBlocks()
         tableView.reloadData()
@@ -942,6 +943,14 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
             memberDoc.getDocument(completion: { (document, error) in
                 if let document = document, document.exists {
                     var array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
+                    var i = 0
+                    for x in array {
+                        if x["name"] == "\(LoginVC.fullName)" {
+                            array.remove(at: i)
+                            i-=1
+                        }
+                        i+=1
+                    }
                     array.append(["name":"\(LoginVC.fullName)","email":"\(LoginVC.email)", "uid":"\((LoginVC.blocks["uid"] ?? "N/A") as! String)"])
                     
                     LoginVC.classMeetingDays["\(ClassesOptionsPopupVC.currentBlock)"] = [((document.data()?["monday"] as? Bool) ?? true), ((document.data()?["tuesday"] as? Bool) ?? true), ((document.data()?["wednesday"] as? Bool) ?? true), ((document.data()?["thursday"] as? Bool) ?? true), ((document.data()?["friday"] as? Bool) ?? true)]
