@@ -31,6 +31,7 @@ extension String {
         fullName.removeSubrange(subject.startIndex...(fullName.firstIndex(of: "~") ?? fullName.startIndex))
         return [subject, teacher, room, fullName]
     }
+    
     func setNotAvailable() -> String {
         if self.isEmpty || self == "" {
             return "N/A"
@@ -44,6 +45,26 @@ extension String {
         let myCalendar = Calendar(identifier: .gregorian)
         let weekDay = myCalendar.component(.weekday, from: todayDate)
         return weekDay
+    }
+}
+extension Int {
+    func switchBlock() -> String {
+        switch self {
+        case 0:
+            return "a"
+        case 1:
+            return "b"
+        case 2:
+            return "c"
+        case 3:
+            return "d"
+        case 4:
+            return "e"
+        case 5:
+            return "f"
+        default:
+            return "g"
+        }
     }
 }
 extension UIView {

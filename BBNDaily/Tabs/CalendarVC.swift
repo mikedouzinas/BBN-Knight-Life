@@ -420,6 +420,9 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         reloadPage()
         v+=1
     }
+    
+    // necessary things to do: working days per week classes
+    // 
     @objc func reloadPage() {
         if v != 2 {
             let formatter2 = DateFormatter()
@@ -752,7 +755,9 @@ class blockTableViewCell: UITableViewCell {
                 let array = (className ?? "").getValues()
                 className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
                 text = "Press for details"
-               
+                let bool = (LoginVC.classMeetingDays["\(viewModel.block.lowercased())"]?[selectedDay] ?? true)
+                print("bool: \(bool) and block: \(viewModel.block.lowercased()) and day: \(selectedDay)")
+                print("\n\(LoginVC.classMeetingDays)")
                 if !(LoginVC.classMeetingDays["\(viewModel.block.lowercased())"]?[selectedDay] ?? true) {
                     className = "\(viewModel.name)"
                 }
