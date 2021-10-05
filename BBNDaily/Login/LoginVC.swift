@@ -168,17 +168,45 @@ class LoginVC: UIViewController {
                                 if id == FirebaseAuth.Auth.auth().currentUser?.uid {
                                     isCreated = true
                                     LoginVC.blocks = document.data()
+                                    let array = ["a":LoginVC.blocks["A"], "b":LoginVC.blocks["B"], "c":LoginVC.blocks["C"], "d":LoginVC.blocks["D"], "e":LoginVC.blocks["E"], "f":LoginVC.blocks["F"], "g":LoginVC.blocks["G"]]
+                                    var i = 0
+                                    let myGroup = DispatchGroup()
+                                    for x in array {
+                                        myGroup.enter()
+                                        guard let str: String = x.value as? String, str.contains("~"), !str.contains("/") else {
+                                            i+=1
+                                            myGroup.leave()
+                                            return
+                                        }
+                                        let dep = db.collection("classes").document("\(str)")
+                                        dep.getDocument(completion: { (snap, err)  in
+                                            if error != nil {
+                                                print("Failed to get class")
+                                            }
+                                            else {
+                                                let arr = [
+                                                    ((snap?.data()?["monday"] as? Bool) ?? true), ((snap?.data()?["tuesday"] as? Bool) ?? true), ((snap?.data()?["wednesday"] as? Bool) ?? true), ((snap?.data()?["thursday"] as? Bool) ?? true), ((snap?.data()?["friday"] as? Bool) ?? true)]
+                                                LoginVC.classMeetingDays["\(x.key)"] = arr
+                                                
+                                                print("'\(str)' \(LoginVC.classMeetingDays["\(x.key)"] ?? [Bool]()) at position \(i)")
+                                                i+=1
+                                            }
+                                            myGroup.leave()
+                                        })
+                                    }
                                     if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
-                                        LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: {_ in
+                                        LoginVC.setProfileImage(useGoogle: true, width: UInt(strongSelf.view.frame.width), completion: {_ in
                                             
                                         })
                                     }
                                     else {
-                                        LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: {_ in
-                                            
+                                        LoginVC.setProfileImage(useGoogle: false, width: UInt(strongSelf.view.frame.width), completion: {_ in
                                         })
                                     }
-                                    strongSelf.callTabBar()
+                                    myGroup.notify(queue: .main) {
+                                        print("Finished all requests.")
+                                        strongSelf.callTabBar()
+                                    }
                                     return
                                 }
                             }
