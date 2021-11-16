@@ -420,9 +420,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         reloadPage()
         v+=1
     }
-    
-    // necessary things to do: working days per week classes
-    // 
     @objc func reloadPage() {
         if v != 2 {
             let formatter2 = DateFormatter()
@@ -430,7 +427,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             formatter2.dateStyle = .short
             let date = formatter2.string(from: Date())
             if date != todaysDate {
-                setCurrentday(date: Date(), completion: { [self]result in
+                setCurrentday(date: Date(), completion: { [self] result in
                     switch result {
                     case .success(let todBlocks):
                         todaysDate = date
@@ -441,8 +438,8 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                         for x in todBlocks {
                             print("\(x.name) \(x.startTime)\n")
                         }
-                        ScheduleCalendar.reloadData()
                         setTimes(recursive: false)
+                        ScheduleCalendar.reloadData()
                     case .failure(_):
                         print("failed :(")
                     }
