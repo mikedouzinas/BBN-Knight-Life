@@ -176,7 +176,7 @@ class LoginVC: UIViewController {
                                         guard let str: String = x.value as? String, str.contains("~"), !str.contains("/") else {
                                             i+=1
                                             myGroup.leave()
-                                            return
+                                            continue
                                         }
                                         let dep = db.collection("classes").document("\(str)")
                                         dep.getDocument(completion: { (snap, err)  in

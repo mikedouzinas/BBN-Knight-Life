@@ -429,6 +429,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         refreshAlert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction!) in
             do {
                 try FirebaseAuth.Auth.auth().signOut()
+                LoginVC.blocks = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
                 UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
                 self.callReset()
             }
@@ -937,7 +938,12 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
                 print("Document does not exist, no need to remove it! document \(doc)")
             }
             LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = realDef
-            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+            guard let uid: String = (LoginVC.blocks["uid"] as? String), uid != "" else {
+                ProgressHUD.colorAnimation = .red
+                ProgressHUD.showFailed("Please Sign Out To Fix Your Account ")
+                return
+            }
+            let currDoc = db.collection("users").document("\(uid)")
             currDoc.setData(LoginVC.blocks)
             let memberDoc = memberDocs.document("\(realDef)")
             memberDoc.getDocument(completion: { (document, error) in
@@ -1002,6 +1008,11 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
     func configureTableView() {
         tableView = UITableView(frame: view.bounds, style: .plain)
         view.addSubview(tableView)
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+        tableView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         tableView.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
         tableView.backgroundColor = UIColor(named: "background")
         tableView.tableFooterView = UIView(frame: .zero)
