@@ -1,2 +1,2 @@
-# BBN-Daily
-BBN Daily App
+# Knight Life
+BBN Knight Life App
