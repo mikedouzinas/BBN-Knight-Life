@@ -390,7 +390,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
                 currDoc.setData(LoginVC.blocks)
-//                CalendarVC.isLunch1 = true
                 if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
                     UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
                     LoginVC.setNotifications()
@@ -403,7 +402,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             alertController.addAction(lunch1)
             alertController.addAction(lunch2)
             alertController.addAction(cancel)
-            
             present(alertController, animated: true, completion: nil)
         }
         else if indexPath.section == 4 {
@@ -438,10 +436,8 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             }
         }))
         refreshAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction!) in
-            
         }))
         present(refreshAlert, animated: true, completion: nil)
-        
     }
     var SignOutButton: UIButton = {
         let b = UIButton()
@@ -464,7 +460,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             settingsBlock(blockName: "E", className: LoginVC.blocks["E"] as? String ?? ""),
             settingsBlock(blockName: "F", className: LoginVC.blocks["F"] as? String ?? ""),
             settingsBlock(blockName: "G", className: LoginVC.blocks["G"] as? String ?? "")
-        ]// .trimmingCharacters(in: .whitespacesAndNewlines)
+        ]
         var a = (LoginVC.blocks["A"] as? String ?? "A Block--").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
         var b = (LoginVC.blocks["B"] as? String ?? "B Block--").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
         var c = (LoginVC.blocks["C"] as? String ?? "C Block--").replacingOccurrences(of: "~", with: " ").replacingOccurrences(of: "  ", with: " ")
@@ -533,11 +529,25 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         tableView.showsVerticalScrollIndicator = false
         tableView.delegate = self
         tableView.dataSource = self
-        let button = UIButton(frame: CGRect(x: 0, y: 30, width: 30, height: 50))
+        let secretButton = UIButton(frame: CGRect(x: 0, y: 0, width: 30, height: 30))
+        secretButton.setTitle("", for: .normal)
+        secretButton.setImage(UIImage(systemName: "star.circle"), for: .normal)
+        secretButton.tintColor = UIColor(named: "inverse")
+        secretButton.addTarget(self, action: #selector(openSecretSchedule), for: .touchUpInside)
+        let button = UIButton(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 20))
         button.setTitle("Credits & Feedback", for: .normal)
         button.setTitleColor(UIColor(named: "gold"), for: .normal)
         button.addTarget(self, action: #selector(openCredits), for: .touchUpInside)
-        tableView.tableFooterView = button
+        button.translatesAutoresizingMaskIntoConstraints = false
+        secretButton.translatesAutoresizingMaskIntoConstraints = false
+        let smallview = UIView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 80))
+        smallview.addSubview(button)
+        smallview.addSubview(secretButton)
+        secretButton.centerXAnchor.constraint(equalTo: smallview.centerXAnchor).isActive = true
+        button.centerXAnchor.constraint(equalTo: smallview.centerXAnchor).isActive = true
+        button.topAnchor.constraint(equalTo: smallview.topAnchor).isActive = true
+        secretButton.topAnchor.constraint(equalTo: button.bottomAnchor, constant: 5).isActive = true
+        tableView.tableFooterView = smallview
         tableView.register(ProfileTableViewCell.self, forCellReuseIdentifier: ProfileTableViewCell.identifier)
         tableView.register(SettingsBlockTableViewCell.self, forCellReuseIdentifier: SettingsBlockTableViewCell.identifier)
         self.profileCells = [ProfileCell(title: "Email Address", data: "\(LoginVC.email)")]
@@ -552,10 +562,17 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         self.tableView.reloadData()
         setHeader()
     }
+    @objc func openSecretSchedule() {
+        if LoginVC.email.contains("mveson") {
+            self.performSegue(withIdentifier: "secretSchedule", sender: nil)
+        }
+        else {
+            ProgressHUD.colorAnimation = .red
+            ProgressHUD.showFailed("Oh no! Looks like you just got rejected.")
+        }
+    }
     func setHeader() {
-        
         let header = StretchyTableHeaderView(frame: CGRect(x: 0, y: 0, width: view.frame.size.width, height: view.frame.size.width))
-        //        header.imageview.image = UIImage(named: "DefaultUserPhoto")
         header.imageview.image = LoginVC.profilePhoto.image
         header.nameLabel.text = LoginVC.fullName.capitalized
         tableView.tableHeaderView = header
@@ -570,7 +587,6 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         header.scrollViewDidScroll(scrollView: tableView)
     }
 }
-
 
 struct settingsBlock {
     let blockName: String
@@ -687,7 +703,6 @@ class ProfileTableViewCell: UITableViewCell {
 final class StretchyTableHeaderView: UIView {
     public let imageview: UIImageView = {
         let image = UIImageView()
-        
         image.clipsToBounds = true
         return image
     } ()
@@ -758,7 +773,6 @@ class CreditsVC: UIViewController {
     @IBAction func close(_ sender: UIBarButtonItem) {
         self.dismiss(animated: true, completion: nil)
     }
-    
     @IBAction func openSheet(_ sender: Any) {
         if let url = URL(string: "https://docs.google.com/spreadsheets/d/1A1CLxugRIGmxIV595mbiR6noLdw4ShuxAKe-tjxATCc/edit?usp=sharing") {
             UIApplication.shared.open(url)
@@ -888,12 +902,13 @@ class PaddingLabel: UILabel {
     }
 }
 
+
 class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewDelegate, SkeletonTableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return filteredClasses.count
     }
     func collectionSkeletonView(_ skeletonView: UITableView, cellIdentifierForRowAt indexPath: IndexPath) -> ReusableCellIdentifier {
-        return blockTableViewCell.identifier
+        return editClassTableViewCell.identifier
     }
     @IBAction func addClass(_ sender: UIBarButtonItem) {
         ClassNameVC.link = self
@@ -905,7 +920,7 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
     
     static var newClass = ClassModel(Subject: "TOADS", Teacher: "MR MIKE", Room: "300", Block: "G")
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: blockTableViewCell.identifier, for: indexPath) as? blockTableViewCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: editClassTableViewCell.identifier, for: indexPath) as? editClassTableViewCell else {
             fatalError()
         }
         cell.configure(with: filteredClasses[indexPath.row])
@@ -940,7 +955,7 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
             LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = realDef
             guard let uid: String = (LoginVC.blocks["uid"] as? String), uid != "" else {
                 ProgressHUD.colorAnimation = .red
-                ProgressHUD.showFailed("Please Sign Out To Fix Your Account ")
+                ProgressHUD.showFailed("Please Sign Out To Fix Your Account")
                 return
             }
             let currDoc = db.collection("users").document("\(uid)")
@@ -1013,7 +1028,7 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         tableView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        tableView.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
+        tableView.register(editClassTableViewCell.self, forCellReuseIdentifier: editClassTableViewCell.identifier)
         tableView.backgroundColor = UIColor(named: "background")
         tableView.tableFooterView = UIView(frame: .zero)
         tableView.delegate = self
@@ -1059,6 +1074,69 @@ struct ClassModel {
     var Teacher: String
     var Room: String
     var Block: String
+}
+
+class editClassTableViewCell: coverTableViewCell {
+    static var link: ClassesOptionsPopupVC!
+    override func layoutSubviews() {
+        superLayoutSubviews()
+        constraint = TitleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10)
+        constraint.isActive = true
+        rightLabelWidthConstraint.isActive = false
+        backViewLeftConstraint.isActive = false
+        
+        backView.leftAnchor.constraint(equalTo: lineView.rightAnchor, constant: 5).isActive = true
+        backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5).isActive = true
+        backView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5).isActive = true
+        backView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5).isActive = true
+        
+        lineView.widthAnchor.constraint(equalToConstant: 0.5).isActive = true
+        lineView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10).isActive = true
+        lineView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10).isActive = true
+        lineView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: contentView.frame.width/5).isActive = true
+        
+        TitleLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 10).isActive = true
+        TitleLabel.rightAnchor.constraint(equalTo: lineView.leftAnchor, constant: -5).isActive = true
+        
+        BlockLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 10).isActive = true
+        BlockLabel.rightAnchor.constraint(equalTo: lineView.leftAnchor, constant: -5).isActive = true
+        BlockLabel.leftAnchor.constraint(equalTo: TitleLabel.leftAnchor).isActive = true
+        
+        editButton.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10).isActive = true
+        editButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10).isActive = true
+        editButton.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -10).isActive = true
+        editButton.widthAnchor.constraint(equalTo: editButton.heightAnchor).isActive = true
+        
+        RightLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10).isActive = true
+        RightLabel.leftAnchor.constraint(equalTo: lineView.rightAnchor, constant: 10).isActive = true
+        RightLabel.rightAnchor.constraint(equalTo: editButton.leftAnchor, constant: -5).isActive = true
+        
+        BottomRightLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 10).isActive = true
+        BottomRightLabel.leftAnchor.constraint(equalTo: lineView.rightAnchor, constant: 10).isActive = true
+        BottomRightLabel.rightAnchor.constraint(equalTo: editButton.leftAnchor, constant: -5).isActive = true
+    }
+    public let editButton: UIButton = {
+        let editButton = UIButton()
+        editButton.translatesAutoresizingMaskIntoConstraints = false
+        editButton.isSkeletonable = true
+        editButton.layer.cornerRadius = 6
+        editButton.layer.masksToBounds = true
+        editButton.setTitle("", for: .normal)
+        editButton.setImage(UIImage(systemName: "square.and.pencil"), for: .normal)
+        editButton.addTarget(self, action: #selector(editCell), for: .touchUpInside)
+        editButton.tintColor = UIColor(named: "inverse")
+        return editButton
+    } ()
+    @objc func editCell () {
+        print("pressedEdit")
+    }
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        contentView.addSubview(editButton)
+    }
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
 }
 
 class ClassNameVC: TextFieldVC, UITextFieldDelegate {

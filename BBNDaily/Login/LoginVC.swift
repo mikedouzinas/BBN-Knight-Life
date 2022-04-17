@@ -72,8 +72,6 @@ class LoginVC: UIViewController {
                     completion(.success(LoginVC.profilePhoto))
                 }
             }
-            
-            
         }
     }
     

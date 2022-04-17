@@ -2,8 +2,7 @@
 //  CalendarVC.swift
 //  BBNDaily
 //
-//  Created by Mike Veson on 9/12/21.
-//
+//  Created by Mike Veson on 9/12/21
 
 import UIKit
 import GoogleSignIn
@@ -15,7 +14,7 @@ import FSCalendar
 import WebKit
 import SkeletonView
 
-class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UITableViewDataSource, UITableViewDelegate {
+class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return currentDay.count
     }
@@ -61,7 +60,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     func setTimes(recursive: Bool) {
         xc+=1
         var i = 0
-        for x in todayBlocks {
+        for x in CalendarVC.todayBlocks {
             let big = getTimes(x: x)
             let now = big[0]
             var t = big[1]
@@ -131,7 +130,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         }
         ScheduleCalendar.refreshControl?.endRefreshing()
         if recursive {
-            Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [self] timer in
+            Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [self] timer in
                 setTimes(recursive: true)
                 ScheduleCalendar.reloadData()
             }
@@ -168,58 +167,89 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             dayIsOver = true
         }
     }
-    var todayBlocks = [block]()
+    func getReturnDates(indexPath: IndexPath) -> [Date] {
+        
+        let calendar = Calendar.current
+        let time2 = currentDay[indexPath.row].endTime.prefix(5)
+        let m2 = time2.replacingOccurrences(of: time2.prefix(3), with: "")
+        var amOrPm2 = 0
+        if currentDay[indexPath.row].endTime.contains("pm") && !time2.prefix(2).contains("12") {
+            amOrPm2 = 12
+        }
+        let t2 = calendar.date(
+            bySettingHour: ((Int(time2.prefix(2)) ?? 0)+amOrPm2),
+            minute: (Int(m2) ?? 0),
+            second: 0,
+            of: Date())!
+        
+        let time = currentDay[indexPath.row].reminderTime.prefix(5)
+        let m = time.replacingOccurrences(of: time.prefix(3), with: "")
+        var amOrPm = 0
+        if currentDay[indexPath.row].reminderTime.contains("pm") && !time.prefix(2).contains("12"){
+            amOrPm = 12
+        }
+        let t = calendar.date(
+            bySettingHour: ((Int(time.prefix(2)) ?? 0)+amOrPm),
+            minute: (Int(m) ?? 0),
+            second: 0,
+            of: Date())!
+        
+        let time3 = currentDay[indexPath.row].startTime.prefix(5)
+        let m3 = time3.replacingOccurrences(of: time3.prefix(3), with: "")
+        var amOrPm3 = 0
+        if currentDay[indexPath.row].startTime.contains("pm") && !time3.prefix(2).contains("12"){
+            amOrPm3 = 12
+        }
+        let t3 = calendar.date(
+            bySettingHour: ((Int(time3.prefix(2)) ?? 0)+amOrPm3),
+            minute: (Int(m3) ?? 0),
+            second: 0,
+            of: Date())!
+        return [t, t2, t3]
+    }
+    static var todayBlocks = [block]()
     var currentWeekday = [block(name: "", startTime: "", endTime: "", block: "", reminderTime: "", length: 0)]
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: blockTableViewCell.identifier, for: indexPath) as? blockTableViewCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: coverTableViewCell.identifier, for: indexPath) as? coverTableViewCell else {
             fatalError()
+        }
+        if indexPath.row > currentDay.count - 1 {
+            return coverTableViewCell()
         }
         let thisBlock = currentDay[indexPath.row]
         var isLunch = false
         if thisBlock.name.lowercased().contains("lunch") {
             isLunch = true
         }
-        cell.configure(with: currentDay[indexPath.row], isLunch: isLunch, selectedDay: selectedDay)
-        
-        cell.selectionStyle = .none
         let formatter1 = DateFormatter()
         formatter1.dateFormat = "yyyy-MM-dd"
         formatter1.dateStyle = .short
         let stringDate = formatter1.string(from: Date())
         
+        let dateformatter = DateFormatter()
+        dateformatter.dateFormat = "h:mm a"
+        dateformatter.amSymbol = "AM"
+        dateformatter.pmSymbol = "PM"
+        let dates = getReturnDates(indexPath: indexPath)
+        let t = dates[0]
+        let t2 = dates[1]
+        let t3 = dates[2]
+
+        dateformatter.string(from: t)
+        cell.configure(with: block(name: thisBlock.name, startTime: dateformatter.string(from: t3), endTime: dateformatter.string(from: t2), block: thisBlock.block, reminderTime: dateformatter.string(from: t), length: 0), isLunch: isLunch, selectedDay: selectedDay)
+        
+        cell.selectionStyle = .none
+        
         if currentDate == stringDate {
-            let calendar = Calendar.current
-            let time2 = currentDay[indexPath.row].endTime.prefix(5)
-            let m2 = time2.replacingOccurrences(of: time2.prefix(3), with: "")
-            var amOrPm2 = 0
-            if currentDay[indexPath.row].endTime.contains("pm") && !time2.prefix(2).contains("12") {
-                amOrPm2 = 12
-            }
-            let t2 = calendar.date(
-                bySettingHour: ((Int(time2.prefix(2)) ?? 0)+amOrPm2),
-                minute: (Int(m2) ?? 0),
-                second: 0,
-                of: Date())!
-            let time = currentDay[indexPath.row].reminderTime.prefix(5)
-            let m = time.replacingOccurrences(of: time.prefix(3), with: "")
-            var amOrPm = 0
-            if currentDay[indexPath.row].reminderTime.contains("pm") && !time.prefix(2).contains("12"){
-                amOrPm = 12
-            }
-            let now = Date()
-            let t = calendar.date(
-                bySettingHour: ((Int(time.prefix(2)) ?? 0)+amOrPm),
-                minute: (Int(m) ?? 0),
-                second: 0,
-                of: now)!
-            if now.isBetweenTimeFrame(date1: t, date2: t2) {
+            
+            if Date().isBetweenTimeFrame(date1: t, date2: t2) {
                 currentBlock = currentDay[indexPath.row]
                 cell.alpha = 1
                 cell.contentView.alpha = 1
-                cell.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
-                cell.contentView.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
+                cell.backView.backgroundColor = UIColor(named: "current-cell")?.withAlphaComponent(0.1)
             }
             else {
+                cell.backView.backgroundColor = .clear
                 cell.backgroundColor = UIColor(named: "background")
                 cell.contentView.backgroundColor = UIColor(named: "background")
                 if Date() > t2 {
@@ -230,7 +260,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                         tableView.reloadData()
                     }
                     else {
-                        currentDay = todayBlocks
+                        currentDay = CalendarVC.todayBlocks
                         cell.alpha = 0.3
                         cell.contentView.alpha = 0.3
                     }
@@ -242,6 +272,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             }
         }
         else {
+            cell.backView.backgroundColor = .clear
             cell.backgroundColor = UIColor(named: "background")
             cell.contentView.backgroundColor = UIColor(named: "background")
             if Date() > realCurrentDate {
@@ -255,10 +286,18 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         }
         return cell
     }
+    fileprivate lazy var scopeGesture: UIPanGestureRecognizer = {
+        [unowned self] in
+        let panGesture = UIPanGestureRecognizer(target: self.calendar, action: #selector(self.calendar.handleScopeGesture(_:)))
+        panGesture.delegate = self
+        panGesture.minimumNumberOfTouches = 1
+        panGesture.maximumNumberOfTouches = 2
+        return panGesture
+    }()
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let block = currentDay[indexPath.row]
         if block.name.lowercased().contains("lunch") {
-            (tableView.cellForRow(at: indexPath) as! blockTableViewCell).animateView()
+            (tableView.cellForRow(at: indexPath) as! coverTableViewCell).animateView()
             self.performSegue(withIdentifier: "Lunch", sender: nil)
         }
         else if block.block != "N/A" {
@@ -275,30 +314,29 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     static var isLunch1 = false
     var calendarIsExpanded = true
     @IBAction func switchCalendar(_ sender: UIBarButtonItem) {
-        if calendarIsExpanded {
-            CalendarHeightConstraint.constant = 90
+        if self.calendar.scope == .month {
+            self.calendar.setScope(.week, animated: true)
             UIView.animate(withDuration: 0.5) {
                 self.CalendarArrow.image = UIImage(systemName: "chevron.down")
                 self.view.layoutIfNeeded()
             }
-            self.calendar.scope = .week
-            calendarIsExpanded = false
-        }
-        else {
-            self.calendar.scope = .month
-            CalendarHeightConstraint.constant = height
+        } else {
+            self.calendar.setScope(.month, animated: true)
             UIView.animate(withDuration: 0.5) {
                 self.CalendarArrow.image = UIImage(systemName: "chevron.up")
                 self.view.layoutIfNeeded()
             }
-            calendarIsExpanded = true
         }
+    }
+    func calendar(_ calendar: FSCalendar, boundingRectWillChange bounds: CGRect, animated: Bool) {
+        self.CalendarHeightConstraint.constant = bounds.height
+        self.view.layoutIfNeeded()
     }
     @IBOutlet weak var CalendarArrow: UIBarButtonItem!
     var currentDate = ""
     @IBOutlet weak var ScheduleCalendar: UITableView!
     @IBOutlet weak var calendar: FSCalendar!
-    static let monday =  [
+    static let monday = [
         block(name: "B", startTime: "08:15am", endTime: "09:00am", block: "B", reminderTime: "08:10am", length: 45),
         block(name: "D", startTime: "09:05am", endTime: "09:50am", block: "D", reminderTime: "09:00am", length: 45),
         block(name: "Assembly", startTime: "09:55am", endTime: "10:35am", block: "N/A", reminderTime: "09:50am", length: 40),
@@ -309,7 +347,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Community Activity", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm", length: 35),
         block(name: "E", startTime: "02:40pm", endTime: "03:25pm", block: "E", reminderTime: "02:35pm", length: 45)
     ]
-    static let mondayL1 =  [
+    static let mondayL1 = [
         block(name: "B", startTime: "08:15am", endTime: "09:00am", block: "B", reminderTime: "08:10am", length: 45),
         block(name: "D", startTime: "09:05am", endTime: "09:50am", block: "D", reminderTime: "09:00am", length: 45),
         block(name: "Assembly", startTime: "09:55am", endTime: "10:35am", block: "N/A", reminderTime: "09:50am", length: 40),
@@ -320,7 +358,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Community Activity", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm", length: 35),
         block(name: "E", startTime: "02:40pm", endTime: "03:25pm", block: "E", reminderTime: "02:35pm", length: 45)
     ]
-    static let tuesday =  [
+    static let tuesday = [
         block(name: "A", startTime: "08:15am", endTime: "09:00am", block: "A", reminderTime: "08:10am", length: 45),
         block(name: "F", startTime: "09:05am", endTime: "09:50am", block: "F", reminderTime: "09:00am", length: 45),
         block(name: "Wellness Break", startTime: "09:55am", endTime: "10:15am", block: "N/A", reminderTime: "09:50am", length: 40),
@@ -331,7 +369,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Advisory", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm", length: 35),
         block(name: "D", startTime: "02:40pm", endTime: "03:25pm", block: "D", reminderTime: "02:35pm", length: 45)
     ]
-    static let tuesdayL1 =  [
+    static let tuesdayL1 = [
         block(name: "A", startTime: "08:15am", endTime: "09:00am", block: "A", reminderTime: "08:10am", length: 45),
         block(name: "F", startTime: "09:05am", endTime: "09:50am", block: "F", reminderTime: "09:00am", length: 45),
         block(name: "Wellness Break", startTime: "09:55am", endTime: "10:15am", block: "N/A", reminderTime: "09:50am", length: 40),
@@ -342,7 +380,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Advisory", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm", length: 35),
         block(name: "D", startTime: "02:40pm", endTime: "03:25pm", block: "D", reminderTime: "02:35pm", length: 45)
     ]
-    static let wednesday =  [
+    static let wednesday = [
         block(name: "G", startTime: "08:15am", endTime: "09:00am", block: "G", reminderTime: "08:10am", length: 45),
         block(name: "C", startTime: "09:05am", endTime: "09:50am", block: "C", reminderTime: "09:00am", length: 45),
         block(name: "Class Meeting", startTime: "09:55am", endTime: "10:15am", block: "N/A", reminderTime: "09:50am", length: 20),
@@ -351,7 +389,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Lunch", startTime: "12:20pm", endTime: "12:45pm", block: "N/A", reminderTime: "12:15pm", length: 25),
         block(name: "Community Activity", startTime: "12:45pm", endTime: "01:25pm", block: "N/A", reminderTime: "12:40pm", length: 40)
     ]
-    static let wednesdayL1 =  [
+    static let wednesdayL1 = [
         block(name: "G", startTime: "08:15am", endTime: "09:00am", block: "G", reminderTime: "08:10am", length: 45),
         block(name: "C", startTime: "09:05am", endTime: "09:50am", block: "C", reminderTime: "09:00am", length: 45),
         block(name: "Class Meeting", startTime: "09:55am", endTime: "10:15am", block: "N/A", reminderTime: "09:50am", length: 20),
@@ -360,7 +398,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "A2", startTime: "12:00pm", endTime: "12:45pm", block: "A", reminderTime: "11:55am", length: 25),
         block(name: "Community Activity", startTime: "12:45pm", endTime: "01:25pm", block: "N/A", reminderTime: "12:40pm", length: 40)
     ]
-    static let thursday =  [
+    static let thursday = [
         block(name: "C", startTime: "08:15am", endTime: "09:00am", block: "C", reminderTime: "08:10am", length: 45),
         block(name: "B", startTime: "09:05am", endTime: "09:50am", block: "B", reminderTime: "09:00am", length: 45),
         block(name: "Advisory", startTime: "09:55am", endTime: "10:15am", block: "N/A", reminderTime: "09:50am", length: 20),
@@ -371,7 +409,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "Office Hours", startTime: "02:00pm", endTime: "02:35pm", block: "N/A", reminderTime: "01:55pm", length: 35),
         block(name: "F", startTime: "02:40pm", endTime: "03:25pm", block: "F", reminderTime: "02:35pm", length: 45)
     ]
-    static let thursdayL1 =  [
+    static let thursdayL1 = [
         block(name: "C", startTime: "08:15am", endTime: "09:00am", block: "C", reminderTime: "08:10am", length: 45),
         block(name: "B", startTime: "09:05am", endTime: "09:50am", block: "B", reminderTime: "09:00am", length: 45),
         block(name: "Advisory", startTime: "09:55am", endTime: "10:15am", block: "N/A", reminderTime: "09:50am", length: 20),
@@ -404,6 +442,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         block(name: "A", startTime: "02:00pm", endTime: "02:45pm", block: "A", reminderTime: "01:55pm", length: 45),
         block(name: "Community Activity", startTime: "02:50pm", endTime: "03:25pm", block: "N/A", reminderTime: "02:45pm", length: 35)
     ]
+    @IBOutlet weak var dragView: UIView!
     @IBOutlet weak var CalendarHeightConstraint: NSLayoutConstraint!
     var currentDay = [block]()
     var height = CGFloat(0)
@@ -417,8 +456,13 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     }
     var v = 1
     override func viewWillAppear(_ animated: Bool) {
+        print("view WILL appear -> reloading the page")
         reloadPage()
         v+=1
+    }
+    @objc func screenReopened() {
+        print("screen has reopened -> reloading the page")
+        reloadPage()
     }
     @objc func reloadPage() {
         if v != 2 {
@@ -427,37 +471,81 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             formatter2.dateStyle = .short
             let date = formatter2.string(from: Date())
             if date != todaysDate {
-                setCurrentday(date: Date(), completion: { [self] result in
-                    switch result {
-                    case .success(let todBlocks):
-                        todaysDate = date
-                        calendar.select(Date())
-                        self.currentWeekday = todBlocks
-                        self.todayBlocks = todBlocks
-                        LoginVC.setNotifications()
-                        for x in todBlocks {
-                            print("\(x.name) \(x.startTime)\n")
-                        }
-                        setTimes(recursive: false)
-                        ScheduleCalendar.reloadData()
-                    case .failure(_):
-                        print("failed :(")
-                    }
-                })
+                NotificationCenter.default.removeObserver(self)
+                todaysDate = date
+                let storyboard = UIStoryboard(name: "Main", bundle: nil)
+                let vc = storyboard.instantiateViewController(withIdentifier: "CalendarVC")
+                var viewcontrollers = self.navigationController?.viewControllers ?? [UIViewController]()
+                if !viewcontrollers.isEmpty {
+                    viewcontrollers.removeAll()
+                }
+                viewcontrollers.append(vc)
+                self.navigationController?.setViewControllers(viewcontrollers, animated: false)
+                
+//                setCurrentday(date: Date(), completion: { [self] result in
+//                    switch result {
+//                    case .success(let todBlocks):
+//                        todaysDate = date
+//                        calendar.select(Date())
+//                        self.currentWeekday = todBlocks
+//                        CalendarVC.todayBlocks = todBlocks
+//                        LoginVC.setNotifications()
+//                        setTimes(recursive: false)
+//                        ScheduleCalendar.reloadData()
+//                    case .failure(_):
+//                        print("failed :(")
+//                    }
+//                })
             }
             else {
                 setCurrentday(date: realCurrentDate, completion: { [self]_ in
                     setTimes(recursive: false)
+                    print("normal reload")
                     ScheduleCalendar.reloadData()
                 })
             }
         }
-        
     }
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        let shouldBegin = self.ScheduleCalendar.contentOffset.y <= -self.ScheduleCalendar.contentInset.top
+        if shouldBegin {
+            let velocity = self.scopeGesture.velocity(in: self.view)
+            switch self.calendar.scope {
+            case .month:
+                UIView.animate(withDuration: 0.5) {
+                    self.CalendarArrow.image = UIImage(systemName: "chevron.down")
+                    self.view.layoutIfNeeded()
+                }
+                return velocity.y < 0
+            case .week:
+                UIView.animate(withDuration: 0.5) {
+                    self.CalendarArrow.image = UIImage(systemName: "chevron.up")
+                    self.view.layoutIfNeeded()
+                }
+                return velocity.y > 0
+            @unknown default:
+                print("boom failed")
+            }
+        }
+        return shouldBegin
+    }
+    @IBOutlet weak var roundedView: UIView!
     var todaysDate = ""
     override func viewDidLoad() {
         super.viewDidLoad()
-        NotificationCenter.default.addObserver(self, selector: #selector(reloadPage), name: UIApplication.didBecomeActiveNotification, object: nil)
+        print("view DID load")
+        NotificationCenter.default.addObserver(self, selector: #selector(screenReopened), name: UIApplication.didBecomeActiveNotification, object: nil)
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationItem.backBarButtonItem?.tintColor = .white
+        self.calendar.scope = .week
+        navigationController?.navigationBar.scrollEdgeAppearance?.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
+        self.dragView.layer.masksToBounds = true
+        self.dragView.layer.cornerRadius = 2
+        self.roundedView.clipsToBounds = true
+        self.roundedView.layer.cornerRadius = 12
+        self.view.addGestureRecognizer(self.scopeGesture)
+        self.ScheduleCalendar.panGestureRecognizer.require(toFail: self.scopeGesture)
         let formatter2 = DateFormatter()
         formatter2.dateFormat = "yyyy-MM-dd"
         formatter2.dateStyle = .short
@@ -465,19 +553,17 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = " MMM d, YYYY, HH:mm:ss"
         v = 2
-        ScheduleCalendar.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
+        ScheduleCalendar.register(coverTableViewCell.self, forCellReuseIdentifier: coverTableViewCell.identifier)
         ScheduleCalendar.backgroundColor = UIColor(named: "background")
         height = view.frame.height/4
-        CalendarHeightConstraint.constant = height
         configureRefreshPull()
-        view.layoutIfNeeded()
         ScheduleCalendar.showsVerticalScrollIndicator = false
         ScheduleCalendar.tableFooterView = UIView(frame: .zero)
         setCurrentday(date: Date(), completion: { [self]result in
             switch result {
             case .success(let todBlocks):
                 self.currentWeekday = todBlocks
-                self.todayBlocks = todBlocks
+                CalendarVC.todayBlocks = todBlocks
                 calendar.delegate = self
                 calendar.dataSource = self
                 ScheduleCalendar.delegate = self
@@ -485,7 +571,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 LoginVC.setNotifications()
                 ScheduleCalendar.reloadData()
                 setTimes(recursive: true)
-                
             case .failure(_):
                 print("failed :(")
             }
@@ -525,7 +610,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         NoSchoolDay(date: "Thursday, November 11, 2021", reason: "Veterans Day"),
         NoSchoolDay(date: "Thursday, November 25, 2021", reason: "Thankgiving Break"),
         NoSchoolDay(date: "Friday, November 26, 2021", reason: "Thankgiving Break"),
-        NoSchoolDay(date: "Tuesday, January 4, 2022", reason: "Thankgiving Break"),
         NoSchoolDay(date: "Monday, January 17, 2022", reason: "MLK Jr. Day"),
         NoSchoolDay(date: "Monday, February 21, 2022", reason: "Presidents Day"),
         NoSchoolDay(date: "Tuesday, February 22, 2022", reason: "Professional Day"),
@@ -625,12 +709,12 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
 }
 
 struct block {
-    let name: String
-    let startTime: String
-    let endTime: String
-    let block: String
-    let reminderTime: String
-    let length: Int
+    var name: String
+    var startTime: String
+    var endTime: String
+    var block: String
+    var reminderTime: String
+    var length: Int
 }
 
 struct NoSchoolDay {
@@ -669,8 +753,8 @@ class blockTableViewCell: UITableViewCell {
         let label = UILabel ()
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .systemFont(ofSize: 14, weight: .regular)
-        label.textColor = UIColor(named: "gold")
+        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.textColor = UIColor(named: "gold-text")
         label.minimumScaleFactor = 0.8
         label.textAlignment = .right
         label.text = "ndiewniedneddeewjd"
@@ -709,13 +793,17 @@ class blockTableViewCell: UITableViewCell {
         super.layoutSubviews()
         constraint = TitleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10)
         constraint.isActive = true
+        
         TitleLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 10).isActive = true
         TitleLabel.rightAnchor.constraint(equalTo: RightLabel.leftAnchor, constant: -2).isActive = true
+        
         BlockLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 10).isActive = true
         BlockLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 10).isActive = true
+        
         RightLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 100).isActive = true
         RightLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10).isActive = true
         RightLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -10).isActive = true
+        
         BottomRightLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 10).isActive = true
         BottomRightLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -10).isActive = true
         
@@ -752,9 +840,6 @@ class blockTableViewCell: UITableViewCell {
                 let array = (className ?? "").getValues()
                 className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
                 text = "Press for details"
-                let bool = (LoginVC.classMeetingDays["\(viewModel.block.lowercased())"]?[selectedDay] ?? true)
-                print("bool: \(bool) and block: \(viewModel.block.lowercased()) and day: \(selectedDay)")
-                print("\n\(LoginVC.classMeetingDays)")
                 if !(LoginVC.classMeetingDays["\(viewModel.block.lowercased())"]?[selectedDay] ?? true) {
                     className = "\(viewModel.name)"
                 }
@@ -782,6 +867,276 @@ class blockTableViewCell: UITableViewCell {
     }
 }
 
+class calendarTableViewCell: UITableViewCell {
+    static let identifier = "calendarTableViewCell"
+    
+    internal let TitleLabel: UILabel = {
+        let label = UILabel ()
+        label.numberOfLines = 0
+        label.textColor = UIColor(named: "inverse")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 14, weight: .semibold)
+        label.minimumScaleFactor = 0.5
+        label.text = "ndiewniedneddeewjd"
+        label.skeletonCornerRadius = 4
+        label.isSkeletonable = true
+        return label
+    } ()
+    internal let BlockLabel: UILabel = {
+        let label = UILabel ()
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 12, weight: .regular)
+        label.textColor = UIColor(named: "lightGray")
+        label.minimumScaleFactor = 0.8
+        label.text = "ndiewniedneddeewjd"
+        label.skeletonCornerRadius = 4
+        label.isSkeletonable = true
+        return label
+    } ()
+    internal let RightLabel: UILabel = {
+        let label = UILabel ()
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.textColor = UIColor(named: "gold-text")
+        label.minimumScaleFactor = 0.8
+        label.textAlignment = .right
+        label.text = "ndiewniedneddeewjd"
+        label.skeletonCornerRadius = 4
+        label.isSkeletonable = true
+        return label
+    } ()
+    internal let BottomRightLabel: UILabel = {
+        let label = UILabel ()
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 12, weight: .regular)
+        label.textColor = UIColor(named: "lightGray")
+        label.minimumScaleFactor = 0.8
+        label.text = "ndiewniedneddeewjd"
+        label.skeletonCornerRadius = 4
+        label.isSkeletonable = true
+        return label
+    } ()
+    public let backView: UIView = {
+        let backview = UIView()
+        backview.translatesAutoresizingMaskIntoConstraints = false
+        backview.isSkeletonable = true
+        backview.layer.cornerRadius = 6
+        backview.layer.masksToBounds = true
+        backview.skeletonCornerRadius = 8
+        backview.backgroundColor = .clear
+        return backview
+    } ()
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        contentView.addSubview(backView)
+        contentView.addSubview(TitleLabel)
+        contentView.addSubview(BlockLabel)
+        contentView.addSubview(RightLabel)
+        contentView.addSubview(BottomRightLabel)
+        contentView.backgroundColor = UIColor(named: "background")
+        backgroundColor = UIColor(named: "background")
+        
+        isSkeletonable = true
+        contentView.isSkeletonable = true
+    }
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
+    internal var backViewLeftConstraint = NSLayoutConstraint()
+    var constraint = NSLayoutConstraint()
+//    internal var backViewLeftConstraint = NSLayoutConstraint()
+    internal var rightLabelWidthConstraint = NSLayoutConstraint()
+//    internal var backViewLeftConstraint = NSLayoutConstraint()
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        constraint = TitleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10)
+        constraint.isActive = true
+        
+        backViewLeftConstraint = backView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 5)
+        backViewLeftConstraint.isActive = true
+        backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5).isActive = true
+        backView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5).isActive = true
+        backView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5).isActive = true
+        
+        TitleLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 10).isActive = true
+        TitleLabel.rightAnchor.constraint(equalTo: RightLabel.leftAnchor, constant: -2).isActive = true
+        
+        BlockLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 10).isActive = true
+        BlockLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 10).isActive = true
+        
+        rightLabelWidthConstraint = RightLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 100)
+        rightLabelWidthConstraint.isActive = true
+        RightLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10).isActive = true
+        RightLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -10).isActive = true
+        
+        BottomRightLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 10).isActive = true
+        BottomRightLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -10).isActive = true
+    }
+    override func prepareForReuse(){
+        super.prepareForReuse()
+    }
+    func superLayoutSubviews() {
+        super.layoutSubviews()
+    }
+    func configure (with viewModel: ClassModel){
+        BlockLabel.isHidden = false
+        BottomRightLabel.isHidden = false
+        RightLabel.isHidden = false
+        TitleLabel.text = viewModel.Room
+        BlockLabel.text = "\(viewModel.Block.capitalized) Block"
+        RightLabel.text = viewModel.Subject
+        BottomRightLabel.text = viewModel.Teacher
+    }
+    func configure(with viewModel: Person) {
+        BlockLabel.isHidden = false
+        RightLabel.isHidden = true
+        BottomRightLabel.isHidden = true
+        TitleLabel.text = viewModel.name
+        BlockLabel.text = viewModel.email
+    }
+    func configure (with viewModel: block, isLunch: Bool, selectedDay: Int){
+        RightLabel.isHidden = false
+        if viewModel.block != "N/A" {
+            BlockLabel.isHidden = false
+            var className = LoginVC.blocks[viewModel.block] as? String
+            if className == "" {
+                className = "[\(viewModel.block) Class]"
+            }
+            var text = "Update classes in settings to see details"
+            if (className ?? "").contains("~") {
+                let array = (className ?? "").getValues()
+                className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+                text = "Press for details"
+                if !(LoginVC.classMeetingDays["\(viewModel.block.lowercased())"]?[selectedDay] ?? true) {
+                    className = "\(viewModel.name)"
+                }
+            }
+            TitleLabel.text = className
+            BlockLabel.text = "\(viewModel.name)"
+            BottomRightLabel.isHidden = false
+            BottomRightLabel.text = text
+        }
+        else {
+            BottomRightLabel.isHidden = true
+            TitleLabel.text = "\(viewModel.name)"
+            if isLunch {
+                BlockLabel.isHidden = false
+                BlockLabel.text = "Press for Current Menu"
+            }
+            else {
+                if viewModel.name.lowercased().contains("advisory") {
+                    TitleLabel.text = "\(viewModel.name) \(LoginVC.blocks["room-advisory"] ?? "")"
+                }
+                BlockLabel.isHidden = true
+            }
+        }
+        RightLabel.text = "\(viewModel.startTime) \u{2192} \(viewModel.endTime)"
+    }
+}
+
+
+class coverTableViewCell: calendarTableViewCell {
+    override func layoutSubviews() {
+        superLayoutSubviews()
+        constraint = TitleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10)
+        constraint.isActive = true
+        rightLabelWidthConstraint.isActive = false
+        backViewLeftConstraint.isActive = false
+        
+        backView.leftAnchor.constraint(equalTo: lineView.rightAnchor, constant: 5).isActive = true
+        backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5).isActive = true
+        backView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5).isActive = true
+        backView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5).isActive = true
+        
+        lineView.widthAnchor.constraint(equalToConstant: 0.5).isActive = true
+        lineView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10).isActive = true
+        lineView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10).isActive = true
+        lineView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: contentView.frame.width/5).isActive = true
+        
+        TitleLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 10).isActive = true
+        TitleLabel.rightAnchor.constraint(equalTo: lineView.leftAnchor, constant: -5).isActive = true
+        
+        BlockLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 10).isActive = true
+        BlockLabel.rightAnchor.constraint(equalTo: lineView.leftAnchor, constant: -5).isActive = true
+        BlockLabel.leftAnchor.constraint(equalTo: TitleLabel.leftAnchor).isActive = true
+        
+        RightLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10).isActive = true
+        RightLabel.leftAnchor.constraint(equalTo: lineView.rightAnchor, constant: 10).isActive = true
+        
+        BottomRightLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 10).isActive = true
+        BottomRightLabel.leftAnchor.constraint(equalTo: lineView.rightAnchor, constant: 10).isActive = true
+    }
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        contentView.addSubview(lineView)
+        TitleLabel.font = .systemFont(ofSize: 13, weight: .regular)
+        TitleLabel.textAlignment = .right
+        BlockLabel.font = .systemFont(ofSize: 13, weight: .regular)
+        BlockLabel.textAlignment = .right
+        RightLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        RightLabel.textColor = UIColor(named: "inverse")
+        RightLabel.textAlignment = .left
+    }
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
+    public let lineView: UIView = {
+        let backview = UIView()
+        backview.translatesAutoresizingMaskIntoConstraints = false
+        backview.isSkeletonable = true
+        backview.layer.cornerRadius = 6
+        backview.layer.masksToBounds = true
+        backview.backgroundColor = UIColor(named: "lightGray")
+        return backview
+    } ()
+    override func configure(with viewModel: block, isLunch: Bool, selectedDay: Int) {
+        RightLabel.isHidden = false
+        BlockLabel.isHidden = false
+        if viewModel.block != "N/A" {
+            var className = LoginVC.blocks[viewModel.block] as? String
+            if className == "" {
+                className = "[\(viewModel.block) Class]"
+            }
+            var text = "Update classes in settings to see details"
+            if (className ?? "").contains("~") {
+                let array = (className ?? "").getValues()
+                className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+                text = "Press for details"
+                if !(LoginVC.classMeetingDays["\(viewModel.block.lowercased())"]?[selectedDay] ?? true) {
+                    className = "\(viewModel.name)"
+                }
+            }
+            // corrected
+            RightLabel.text = "\(className ?? "")"
+            // BlockLabel.text = "\(viewModel.name)"
+            BottomRightLabel.isHidden = false
+            BottomRightLabel.text = "\(viewModel.name) | \(text)"
+        }
+        else {
+            // BottomRightLabel.isHidden = true
+            // corrected
+            RightLabel.text = "\(viewModel.name)"
+            if isLunch {
+                BottomRightLabel.isHidden = false
+                BottomRightLabel.text = "Press for Current Menu"
+            }
+            else {
+                if viewModel.name.lowercased().contains("advisory") {
+                    RightLabel.text = "\(viewModel.name) \(LoginVC.blocks["room-advisory"] ?? "")"
+                }
+                BottomRightLabel.isHidden = true
+            }
+        }
+        //        RightLabel.text = "\(viewModel.startTime) \u{2192} \(viewModel.endTime)"
+        // corrected
+        TitleLabel.text = "\(viewModel.startTime)"
+        BlockLabel.text = "\(viewModel.endTime)"
+    }
+}
 class LunchMenuVC: CustomLoader, WKNavigationDelegate {
     private let webView: WKWebView = {
         let webview = WKWebView(frame: .zero)
@@ -800,7 +1155,9 @@ class LunchMenuVC: CustomLoader, WKNavigationDelegate {
             }
             else {
                 print("the url is: \(url!.absoluteString)")
-                let urlstring = url!.absoluteString
+//                let urlstring = url!.absoluteString
+                let urlstring = "http://docs.google.com/document/d/1QL-uIHSCOC5oZV3tOthRAuGEjmDjGIl-hlMdzcrpwIk/edit?usp=sharing"
+//                webView.load
                 webView.backgroundColor = UIColor.white
                 view.addSubview(webView)
                 webView.frame = view.bounds

@@ -15,10 +15,13 @@ import FSCalendar
 import WebKit
 
 
-class LaunchVC: UIViewController {
+class LaunchVC: CustomLoader {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if FirebaseAuth.Auth.auth().currentUser != nil {
+            self.gifName = "snowfall"
+            self.isLarge = true
+//            showLoaderView()
             LoginVC.fullName = (FirebaseAuth.Auth.auth().currentUser?.displayName ?? "").replacingOccurrences(of: "**", with: "")
             LoginVC.email = FirebaseAuth.Auth.auth().currentUser?.email ?? ""
             LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
@@ -122,6 +125,7 @@ class LaunchVC: UIViewController {
         }
     }
     func callTabBar() {
+//        hideLoaderView()
         self.performSegue(withIdentifier: "SignedIn", sender: nil)
     }
 }
