@@ -911,19 +911,35 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         return editClassTableViewCell.identifier
     }
     @IBAction func addClass(_ sender: UIBarButtonItem) {
+        ClassesOptionsPopupVC.newClass = ClassModel(Subject: "", Teacher: "", Room: "", Block: ClassesOptionsPopupVC.newClass.Block)
+        DaySelectVC.isEditing = false
         ClassNameVC.link = self
         TeacherNameVC.link = self
         RoomNumVC.link = self
         DaySelectVC.link = self
         self.performSegue(withIdentifier: "textfield", sender: nil)
     }
-    
+    static var indexPath = IndexPath(row: 0, section: 0)
+    public func editCell(viewModel: ClassModel, indexPath: IndexPath) {
+        ClassesOptionsPopupVC.editedClass = viewModel
+        ClassesOptionsPopupVC.newClass = viewModel
+        DaySelectVC.isEditing = true
+        ClassesOptionsPopupVC.indexPath = indexPath
+        
+        ClassNameVC.link = self
+        TeacherNameVC.link = self
+        RoomNumVC.link = self
+        DaySelectVC.link = self
+        self.performSegue(withIdentifier: "textfield", sender: nil)
+    }
     static var newClass = ClassModel(Subject: "TOADS", Teacher: "MR MIKE", Room: "300", Block: "G")
+    static var editedClass = ClassModel(Subject: "TOADS", Teacher: "MR MIKE", Room: "300", Block: "G")
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: editClassTableViewCell.identifier, for: indexPath) as? editClassTableViewCell else {
             fatalError()
         }
-        cell.configure(with: filteredClasses[indexPath.row])
+        cell.link = self
+        cell.configure(with: filteredClasses[indexPath.row], indexPath: indexPath)
         return cell
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -1077,7 +1093,9 @@ struct ClassModel {
 }
 
 class editClassTableViewCell: coverTableViewCell {
-    static var link: ClassesOptionsPopupVC!
+    public var link: ClassesOptionsPopupVC!
+    var classModel: ClassModel!
+    var indexPath: IndexPath!
     override func layoutSubviews() {
         superLayoutSubviews()
         constraint = TitleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10)
@@ -1128,7 +1146,13 @@ class editClassTableViewCell: coverTableViewCell {
         return editButton
     } ()
     @objc func editCell () {
-        print("pressedEdit")
+        print("pressed edit local")
+        link.editCell(viewModel: classModel, indexPath: indexPath)
+    }
+    func configure(with viewModel: ClassModel, indexPath: IndexPath) {
+        super.configure(with: viewModel)
+        self.classModel = viewModel
+        self.indexPath = indexPath
     }
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -1171,6 +1195,7 @@ class ClassNameVC: TextFieldVC, UITextFieldDelegate {
         super.viewDidLoad()
         hideKeyboardWhenTappedAbove()
         TextField.delegate = self
+        TextField.text = ClassesOptionsPopupVC.newClass.Subject
     }
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         TextField.resignFirstResponder()
@@ -1214,6 +1239,7 @@ class TeacherNameVC: TextFieldVC, UITextFieldDelegate {
         super.viewDidLoad()
         hideKeyboardWhenTappedAbove()
         TextField.delegate = self
+        TextField.text = ClassesOptionsPopupVC.newClass.Teacher
     }
     @IBOutlet weak var TextField: UITextField!
     
@@ -1254,6 +1280,7 @@ class RoomNumVC: TextFieldVC, UITextFieldDelegate {
         super.viewDidLoad()
         hideKeyboardWhenTappedAbove()
         TextField.delegate = self
+        TextField.text = ClassesOptionsPopupVC.newClass.Room
     }
 }
 
@@ -1264,6 +1291,7 @@ class DaySelectVC: UIViewController {
     @IBOutlet weak var ThursdaySwitch: UISwitch!
     @IBOutlet weak var FridaySwitch: UISwitch!
     static var link: ClassesOptionsPopupVC!
+    static var isEditing = false
     var finalString = ""
     func alreadyExists(word: String) -> Bool {
         for selectedRow in DaySelectVC.link.Classes {
@@ -1276,19 +1304,67 @@ class DaySelectVC: UIViewController {
     @IBAction func p(_ sender: Any) {
         let selectedRow = ClassesOptionsPopupVC.newClass
         finalString = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)"
-        if alreadyExists(word: finalString) {
-            ProgressHUD.colorAnimation = .red
-            ProgressHUD.showFailed("Class already exists!")
-            return
-        }
+        
         let db = Firestore.firestore()
-        let currDoc = db.collection("classes").document(finalString)
-        let data = ["name":"\(finalString)", "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
-        currDoc.setData(data)
-        DaySelectVC.link.Classes.append(selectedRow)
-        DaySelectVC.link.filteredClasses = DaySelectVC.link.Classes
-        DaySelectVC.link.tableView.reloadData()
-        self.dismiss(animated: true, completion: nil)
+        print("IsEditing: \(DaySelectVC.isEditing)")
+        if DaySelectVC.isEditing {
+            let oldRow = ClassesOptionsPopupVC.editedClass
+            let oldString = "\(oldRow.Subject)~\(oldRow.Teacher)~\(oldRow.Room)~\(oldRow.Block)"
+            let oldDoc = db.collection("classes")
+            let doc = oldDoc.document(oldString)
+            doc.getDocument(completion: { [self] (document, error) in
+                if let document = document, document.exists {
+                    let array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
+                    let homeworkText = (document.data()?["homework"] as? String) ?? ""
+                    let currDoc = db.collection("classes").document(finalString)
+                    let data = ["name":"\(finalString)", "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn, "members":array, "homework":homeworkText] as [String : Any]
+                    currDoc.setData(data)
+                    
+                    // delete old one and change all of people's data to this one
+                    for x in array {
+                        let uid = (x["uid"] ?? "1234")
+                        let personDoc = db.collection("users").document("\((uid))")
+                        personDoc.setData(["\(oldRow.Block.replacingOccurrences(of: " Block", with: ""))":"\(finalString)"], merge: true)
+                        if uid == ((LoginVC.blocks["uid"] as? String) ?? "") {
+                            LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = finalString
+                            LoginVC.classMeetingDays["\(ClassesOptionsPopupVC.currentBlock)"] = [MondaySwitch.isOn, TuesdaySwitch.isOn, WednesdaySwitch.isOn, ThursdaySwitch.isOn, FridaySwitch.isOn]
+                        }
+                    }
+                    doc.delete() { err in
+                        if let err = err {
+                            print("Error removing document: \(err)")
+                        } else {
+                            print("Document successfully removed!")
+                        }
+                    }
+                    DaySelectVC.link.Classes.remove(at: ClassesOptionsPopupVC.indexPath.row)
+                    DaySelectVC.link.Classes.append(selectedRow)
+                    DaySelectVC.link.filteredClasses = DaySelectVC.link.Classes
+                    DaySelectVC.link.tableView.reloadData()
+                    self.dismiss(animated: true, completion: nil)
+                } else {
+                    print("Document does not exist, no members to add!")
+                }
+//                TextView.stopSkeletonAnimation()
+//                tableView.stopSkeletonAnimation()
+//                view.hideSkeleton(reloadDataAfter: true, transition: .crossDissolve(0.25))
+//                tableView.reloadData()
+            })
+        }
+        else {
+            if alreadyExists(word: finalString) {
+                ProgressHUD.colorAnimation = .red
+                ProgressHUD.showFailed("Class already exists!")
+                return
+            }
+            let currDoc = db.collection("classes").document(finalString)
+            let data = ["name":"\(finalString)", "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
+            currDoc.setData(data)
+            DaySelectVC.link.Classes.append(selectedRow)
+            DaySelectVC.link.filteredClasses = DaySelectVC.link.Classes
+            
+        }
+        
     }
 }
 
