@@ -261,100 +261,132 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             ClassesOptionsPopupVC.currentBlock = "\(self.blocks[indexPath.row].blockName)"
             self.performSegue(withIdentifier: "options", sender: nil)
         }
-        else if indexPath.section == 2 && indexPath.row == 3 {
-            let alertController = UIAlertController(title: "Grade", message: "Please enter your grade to better configure your schedule", preferredStyle: .actionSheet)
-            
-            // add the buttons/actions to the view controller
-            let freshman = UIAlertAction(title: "Freshman", style: .default) { _ in
-                LoginVC.blocks["grade"] = "9"
-                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "9")
-                //                self.pr
-                let db = Firestore.firestore()
-                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                currDoc.setData(LoginVC.blocks)
-                tableView.reloadRows(at: [indexPath], with: .fade)
+        else if indexPath.section == 2 {
+            if indexPath.row == 3 {
+                let alertController = UIAlertController(title: "Grade", message: "Please enter your grade to better configure your schedule", preferredStyle: .actionSheet)
+                
+                // add the buttons/actions to the view controller
+                let freshman = UIAlertAction(title: "Freshman", style: .default) { _ in
+                    LoginVC.blocks["grade"] = "9"
+                    self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "9")
+                    //                self.pr
+                    let db = Firestore.firestore()
+                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                    currDoc.setData(LoginVC.blocks)
+                    tableView.reloadRows(at: [indexPath], with: .fade)
+                }
+                let sophmore = UIAlertAction(title: "Sophmore", style: .default) { _ in
+                    LoginVC.blocks["grade"] = "10"
+                    self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "10")
+                    let db = Firestore.firestore()
+                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                    currDoc.setData(LoginVC.blocks)
+                    tableView.reloadRows(at: [indexPath], with: .fade)
+                }
+                let junior = UIAlertAction(title: "Junior", style: .default) { _ in
+                    LoginVC.blocks["grade"] = "11"
+                    self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "11")
+                    let db = Firestore.firestore()
+                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                    currDoc.setData(LoginVC.blocks)
+                    tableView.reloadRows(at: [indexPath], with: .fade)
+                }
+                let senior = UIAlertAction(title: "Senior", style: .default) { _ in
+                    LoginVC.blocks["grade"] = "12"
+                    self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "12")
+                    let db = Firestore.firestore()
+                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                    currDoc.setData(LoginVC.blocks)
+                    tableView.reloadRows(at: [indexPath], with: .fade)
+                }
+                let teacher = UIAlertAction(title: "Teacher", style: .default) { _ in
+                    LoginVC.blocks["grade"] = "Teacher"
+                    self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "Teacher")
+                    let db = Firestore.firestore()
+                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                    currDoc.setData(LoginVC.blocks)
+                    tableView.reloadRows(at: [indexPath], with: .fade)
+                }
+                let cancel = UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                    tableView.deselectRow(at: indexPath, animated: true)
+                }
+                alertController.addAction(freshman)
+                alertController.addAction(sophmore)
+                alertController.addAction(junior)
+                alertController.addAction(senior)
+                alertController.addAction(teacher)
+                alertController.addAction(cancel)
+                
+                present(alertController, animated: true, completion: nil)
             }
-            let sophmore = UIAlertAction(title: "Sophmore", style: .default) { _ in
-                LoginVC.blocks["grade"] = "10"
-                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "10")
-                let db = Firestore.firestore()
-                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                currDoc.setData(LoginVC.blocks)
-                tableView.reloadRows(at: [indexPath], with: .fade)
+            else if indexPath.row == 6 {
+                print("selected")
+                let alertController = UIAlertController(title: "Appearance", message: "Please select your preferred appearance", preferredStyle: .actionSheet)
+                guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+                   return
+                }
+                
+                // add the buttons/actions to the view controller
+                let lightMode = UIAlertAction(title: "Light Mode", style: .default) { _ in
+                    appDelegate.changeTheme(themeVal: "light")
+                    tableView.deselectRow(at: indexPath, animated: true)
+                }
+                let darkMode = UIAlertAction(title: "Dark Mode", style: .default) { _ in
+                    appDelegate.changeTheme(themeVal: "dark")
+                    tableView.deselectRow(at: indexPath, animated: true)
+                }
+                let system = UIAlertAction(title: "Match System", style: .default) { _ in
+                    appDelegate.changeTheme(themeVal: "default")
+                    tableView.deselectRow(at: indexPath, animated: true)
+                }
+                let cancel = UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                    tableView.deselectRow(at: indexPath, animated: true)
+                }
+                alertController.addAction(lightMode)
+                alertController.addAction(darkMode)
+                alertController.addAction(system)
+                alertController.addAction(cancel)
+                
+                present(alertController, animated: true, completion: nil)
             }
-            let junior = UIAlertAction(title: "Junior", style: .default) { _ in
-                LoginVC.blocks["grade"] = "11"
-                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "11")
-                let db = Firestore.firestore()
-                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                currDoc.setData(LoginVC.blocks)
-                tableView.reloadRows(at: [indexPath], with: .fade)
-            }
-            let senior = UIAlertAction(title: "Senior", style: .default) { _ in
-                LoginVC.blocks["grade"] = "12"
-                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "12")
-                let db = Firestore.firestore()
-                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                currDoc.setData(LoginVC.blocks)
-                tableView.reloadRows(at: [indexPath], with: .fade)
-            }
-            let teacher = UIAlertAction(title: "Teacher", style: .default) { _ in
-                LoginVC.blocks["grade"] = "Teacher"
-                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "Teacher")
-                let db = Firestore.firestore()
-                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                currDoc.setData(LoginVC.blocks)
-                tableView.reloadRows(at: [indexPath], with: .fade)
-            }
-            let cancel = UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            else if indexPath.row > 3 {
                 tableView.deselectRow(at: indexPath, animated: true)
-            }
-            alertController.addAction(freshman)
-            alertController.addAction(sophmore)
-            alertController.addAction(junior)
-            alertController.addAction(senior)
-            alertController.addAction(teacher)
-            alertController.addAction(cancel)
-            
-            present(alertController, animated: true, completion: nil)
-        }
-        else if indexPath.section == 2 && indexPath.row > 3 {
-            tableView.deselectRow(at: indexPath, animated: true)
-            let alertController = UIAlertController(title: "\(preferenceBlocks[indexPath.row-3].blockName)", message: "Please enter your locker number", preferredStyle: .alert)
-            var isLocker = true
-            if preferenceBlocks[indexPath.row-3].blockName.lowercased().contains("advisory") {
-                alertController.message = "Please enter your advisory room number"
-                isLocker = false
-            }
-            alertController.addTextField { (textField) in
-                // configure the properties of the text field
-                textField.placeholder = "e.g. 123"
-                textField.text = "\(self.preferenceBlocks[indexPath.row-3].className)"
-            }
-            // add the buttons/actions to the view controller
-            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-            let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
-                
-                // this code runs when the user hits the "save" button
-                
-                let inputName = alertController.textFields![0].text
-                var name = ""
-                if isLocker {
-                    name = "lockerNum"
+                let alertController = UIAlertController(title: "\(preferenceBlocks[indexPath.row-3].blockName)", message: "Please enter your locker number", preferredStyle: .alert)
+                var isLocker = true
+                if preferenceBlocks[indexPath.row-3].blockName.lowercased().contains("advisory") {
+                    alertController.message = "Please enter your advisory room number"
+                    isLocker = false
                 }
-                else {
-                    name = "room-advisory"
+                alertController.addTextField { (textField) in
+                    // configure the properties of the text field
+                    textField.placeholder = "e.g. 123"
+                    textField.text = "\(self.preferenceBlocks[indexPath.row-3].className)"
                 }
-                LoginVC.blocks["\(name)"] = inputName
-                self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: inputName!)
-                let db = Firestore.firestore()
-                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                currDoc.setData(LoginVC.blocks)
-                tableView.reloadRows(at: [indexPath], with: .fade)
+                // add the buttons/actions to the view controller
+                let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+                let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
+                    
+                    // this code runs when the user hits the "save" button
+                    
+                    let inputName = alertController.textFields![0].text
+                    var name = ""
+                    if isLocker {
+                        name = "lockerNum"
+                    }
+                    else {
+                        name = "room-advisory"
+                    }
+                    LoginVC.blocks["\(name)"] = inputName
+                    self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: inputName!)
+                    let db = Firestore.firestore()
+                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                    currDoc.setData(LoginVC.blocks)
+                    tableView.reloadRows(at: [indexPath], with: .fade)
+                }
+                alertController.addAction(cancelAction)
+                alertController.addAction(saveAction)
+                present(alertController, animated: true, completion: nil)
             }
-            alertController.addAction(cancelAction)
-            alertController.addAction(saveAction)
-            present(alertController, animated: true, completion: nil)
         }
         else if indexPath.section == 3 {
             var name = ""
@@ -370,14 +402,14 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             default:
                 name = "friday"
             }
-            let alertController = UIAlertController(title: "Lunch", message: "Please enter your lunch preference for \(name.capitalized)", preferredStyle: .actionSheet)
+            let alertController = UIAlertController(title: "Lunch", message: "Please enter your lunch preference for \(name.capitalized). You may need to restart the app to save your changes.", preferredStyle: .actionSheet)
             let lunch1 = UIAlertAction(title: "1st Lunch", style: .default) { _ in
                 LoginVC.blocks["l-\(name)"] = "1st Lunch"
                 self.lunchBlocks[indexPath.row] = settingsBlock(blockName: "\(self.lunchBlocks[indexPath.row].blockName)", className: "1st Lunch")
                 let db = Firestore.firestore()
                 let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
                 currDoc.setData(LoginVC.blocks)
-//                CalendarVC.isLunch1 = true
+                //                CalendarVC.isLunch1 = true
                 if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
                     UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
                     LoginVC.setNotifications()
@@ -505,7 +537,8 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         preferenceBlocks = [
             settingsBlock(blockName: "Grade", className: "\(LoginVC.blocks["grade"] as? String ?? "")"),
             settingsBlock(blockName: "Locker #", className: "\(LoginVC.blocks["lockerNum"] as? String ?? "")"),
-            settingsBlock(blockName: "Advisory Room", className: "\(LoginVC.blocks["room-advisory"] as? String ?? "")")
+            settingsBlock(blockName: "Advisory Room", className: "\(LoginVC.blocks["room-advisory"] as? String ?? "")"),
+            settingsBlock(blockName: "Appearance", className: "Match System")
         ]
         
         lunchBlocks = [
@@ -990,7 +1023,7 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
                     }
                     array.append(["name":"\(LoginVC.fullName)","email":"\(LoginVC.email)", "uid":"\((LoginVC.blocks["uid"] ?? "N/A") as! String)"])
                     
-                    LoginVC.classMeetingDays["\(ClassesOptionsPopupVC.currentBlock)"] = [((document.data()?["monday"] as? Bool) ?? true), ((document.data()?["tuesday"] as? Bool) ?? true), ((document.data()?["wednesday"] as? Bool) ?? true), ((document.data()?["thursday"] as? Bool) ?? true), ((document.data()?["friday"] as? Bool) ?? true)]
+                    LoginVC.classMeetingDays["\(ClassesOptionsPopupVC.currentBlock.lowercased())"] = [((document.data()?["monday"] as? Bool) ?? true), ((document.data()?["tuesday"] as? Bool) ?? true), ((document.data()?["wednesday"] as? Bool) ?? true), ((document.data()?["thursday"] as? Bool) ?? true), ((document.data()?["friday"] as? Bool) ?? true)]
                     memberDoc.setData(["members":array], merge: true)
                     if (((LoginVC.blocks["notifs"] ?? "") as? String) ?? "") == "true" {
                         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
@@ -1310,15 +1343,20 @@ class DaySelectVC: UIViewController {
         if DaySelectVC.isEditing {
             let oldRow = ClassesOptionsPopupVC.editedClass
             let oldString = "\(oldRow.Subject)~\(oldRow.Teacher)~\(oldRow.Room)~\(oldRow.Block)"
+            if finalString != oldString && alreadyExists(word: finalString) {
+                ProgressHUD.colorAnimation = .red
+                ProgressHUD.showFailed("Class already exists!")
+                return
+            }
             let oldDoc = db.collection("classes")
             let doc = oldDoc.document(oldString)
             doc.getDocument(completion: { [self] (document, error) in
                 if let document = document, document.exists {
                     let array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
                     let homeworkText = (document.data()?["homework"] as? String) ?? ""
-                    let currDoc = db.collection("classes").document(finalString)
+                    
+                    let data2 = ["monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
                     let data = ["name":"\(finalString)", "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn, "members":array, "homework":homeworkText] as [String : Any]
-                    currDoc.setData(data)
                     
                     // delete old one and change all of people's data to this one
                     for x in array {
@@ -1327,16 +1365,24 @@ class DaySelectVC: UIViewController {
                         personDoc.setData(["\(oldRow.Block.replacingOccurrences(of: " Block", with: ""))":"\(finalString)"], merge: true)
                         if uid == ((LoginVC.blocks["uid"] as? String) ?? "") {
                             LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = finalString
-                            LoginVC.classMeetingDays["\(ClassesOptionsPopupVC.currentBlock)"] = [MondaySwitch.isOn, TuesdaySwitch.isOn, WednesdaySwitch.isOn, ThursdaySwitch.isOn, FridaySwitch.isOn]
+                            LoginVC.classMeetingDays["\(ClassesOptionsPopupVC.currentBlock.lowercased())"] = [MondaySwitch.isOn, TuesdaySwitch.isOn, WednesdaySwitch.isOn, ThursdaySwitch.isOn, FridaySwitch.isOn]
                         }
                     }
-                    doc.delete() { err in
-                        if let err = err {
-                            print("Error removing document: \(err)")
-                        } else {
-                            print("Document successfully removed!")
+                    if finalString == oldString {
+                        doc.setData(data2, merge: true)
+                    }
+                    else {
+                        let currDoc = db.collection("classes").document(finalString)
+                        currDoc.setData(data, merge: true)
+                        doc.delete() { err in
+                            if let err = err {
+                                print("Error removing document: \(err)")
+                            } else {
+                                print("Document successfully removed!")
+                            }
                         }
                     }
+                    
                     DaySelectVC.link.Classes.remove(at: ClassesOptionsPopupVC.indexPath.row)
                     DaySelectVC.link.Classes.append(selectedRow)
                     DaySelectVC.link.filteredClasses = DaySelectVC.link.Classes
@@ -1345,10 +1391,6 @@ class DaySelectVC: UIViewController {
                 } else {
                     print("Document does not exist, no members to add!")
                 }
-//                TextView.stopSkeletonAnimation()
-//                tableView.stopSkeletonAnimation()
-//                view.hideSkeleton(reloadDataAfter: true, transition: .crossDissolve(0.25))
-//                tableView.reloadData()
             })
         }
         else {
@@ -1362,7 +1404,8 @@ class DaySelectVC: UIViewController {
             currDoc.setData(data)
             DaySelectVC.link.Classes.append(selectedRow)
             DaySelectVC.link.filteredClasses = DaySelectVC.link.Classes
-            
+            DaySelectVC.link.tableView.reloadData()
+            self.dismiss(animated: true, completion: nil)
         }
         
     }

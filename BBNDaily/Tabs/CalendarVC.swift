@@ -481,21 +481,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 }
                 viewcontrollers.append(vc)
                 self.navigationController?.setViewControllers(viewcontrollers, animated: false)
-                
-//                setCurrentday(date: Date(), completion: { [self] result in
-//                    switch result {
-//                    case .success(let todBlocks):
-//                        todaysDate = date
-//                        calendar.select(Date())
-//                        self.currentWeekday = todBlocks
-//                        CalendarVC.todayBlocks = todBlocks
-//                        LoginVC.setNotifications()
-//                        setTimes(recursive: false)
-//                        ScheduleCalendar.reloadData()
-//                    case .failure(_):
-//                        print("failed :(")
-//                    }
-//                })
             }
             else {
                 setCurrentday(date: realCurrentDate, completion: { [self]_ in
@@ -1170,7 +1155,6 @@ class LunchMenuVC: CustomLoader, WKNavigationDelegate {
             }
         })
         view.backgroundColor = UIColor.white
-        
     }
 }
 

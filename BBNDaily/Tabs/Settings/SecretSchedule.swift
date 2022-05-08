@@ -92,7 +92,7 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
                         actionTitle: "Done",
                         cancelTitle: "Cancel",
                         inputPlaceholder: "Snow day",
-                        inputKeyboardType: .numberPad, actionHandler:
+                        inputKeyboardType: .default, actionHandler:
                             { [self] (input:String?) in
             print("The new reason is \(input ?? "")")
             // no more code beyond here except upload

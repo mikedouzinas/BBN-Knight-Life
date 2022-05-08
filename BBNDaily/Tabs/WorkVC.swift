@@ -43,17 +43,13 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         return 100
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let cell = (tableView.cellForRow(at: indexPath) as! TaskCell)
-        if cell.isComplete {
-//            cell.checkBox.image = UIImage(named: "incomplete")
-            cell.isComplete = false
-        }
-        else {
-//            cell.checkBox.image = UIImage(named: "complete")
-            cell.isComplete = true
-        }
-//        (tableView.cellForRow(at: indexPath) as! TaskCell).checkBox.image = UIImage(named: "complete")
+        selectedTask = tasks[indexPath.row]
+        selectedIndex = indexPath.row
+        detailedWorkVC.link = self
+        self.performSegue(withIdentifier: "largeWork", sender: nil)
     }
+    public var selectedIndex = 0
+    public var selectedTask = SchoolTask(title: "", description: "", dueDate: "", isCompleted: false)
     public var tasks = [SchoolTask]()
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -328,5 +324,22 @@ class HomeworkDueDateVC: TextFieldVC, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         datePicker.minimumDate = Date()
+    }
+}
+
+class detailedWorkVC: UIViewController {
+    @IBOutlet var dateLabel: UILabel!
+    @IBOutlet var detailedTextView: UITextView!
+    static var link: WorkVC!
+    @IBAction func removeTask(_ sender: Any) {
+        
+    }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        print("\(detailedWorkVC.link.selectedTask.dueDate)")
+        dateLabel.text = "Due \(detailedWorkVC.link.selectedTask.dueDate.stringDateFromMultipleFormats(preferredFormat: 7) ?? "")"
+
+        detailedTextView.text = "\(detailedWorkVC.link.selectedTask.description)"
+        self.title = "\(detailedWorkVC.link.selectedTask.title)"
     }
 }
