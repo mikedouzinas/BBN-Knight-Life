@@ -15,3 +15,4 @@ To Do List:
 - [ ] Apple watch app showing current class and time left
 - [ ] Maybe make a light/dark mode choice
 - [ ] Make macos app
+- [ ] Make firebase allow through dates for no school (like summer)
