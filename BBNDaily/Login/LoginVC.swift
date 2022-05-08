@@ -114,8 +114,7 @@ class LoginVC: UIViewController {
             }
         }
     }
-    
-    static func setLoginInfo(weakSelf: SetLoginVC?) {
+    static func setLoginInfo(weakSelf: UIViewController?) {
         guard let strongSelf = weakSelf else {
             ProgressHUD.colorAnimation = UIColor(named: "red")!
             ProgressHUD.showFailed("Invalid class")
@@ -134,7 +133,7 @@ class LoginVC: UIViewController {
                 var reasonArray = [String: String]()
                 var newArray2 = [String: [block]]()
                 for document in (snapshot?.documents)! {
-//                            documen
+                    //                            documen
                     let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
                     var blocksl1 = [block]()
                     for x in arrayl1 {
