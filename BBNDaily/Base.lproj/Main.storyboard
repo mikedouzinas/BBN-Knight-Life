@@ -34,6 +34,58 @@
             </objects>
             <point key="canvasLocation" x="538" y="1998"/>
         </scene>
+        <!--English HW-->
+        <scene sceneID="WPM-Sg-w69">
+            <objects>
+                <viewController id="KCG-Zx-NLt" customClass="detailedWorkVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="JhR-uL-Aai">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="Kcw-9c-mar">
+                                <rect key="frame" x="0.0" y="119" width="414" height="645"/>
+                                <color key="backgroundColor" name="background"/>
+                                <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
+                                <color key="textColor" name="inverse"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Due June 17, 2022" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eSR-Oq-hca">
+                                <rect key="frame" x="4" y="88" width="406" height="21"/>
+                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17"/>
+                                <color key="textColor" name="inverse"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="Asz-cb-vlx"/>
+                        <color key="backgroundColor" name="background"/>
+                        <constraints>
+                            <constraint firstItem="eSR-Oq-hca" firstAttribute="top" secondItem="Asz-cb-vlx" secondAttribute="top" id="8qn-Z2-tyI"/>
+                            <constraint firstItem="Asz-cb-vlx" firstAttribute="trailing" secondItem="Kcw-9c-mar" secondAttribute="trailing" id="EiX-kO-J3c"/>
+                            <constraint firstItem="Asz-cb-vlx" firstAttribute="trailing" secondItem="eSR-Oq-hca" secondAttribute="trailing" constant="4" id="GK0-81-msl"/>
+                            <constraint firstItem="Kcw-9c-mar" firstAttribute="top" secondItem="eSR-Oq-hca" secondAttribute="bottom" constant="10" id="HhW-BA-eca"/>
+                            <constraint firstItem="Kcw-9c-mar" firstAttribute="leading" secondItem="Asz-cb-vlx" secondAttribute="leading" id="caa-KX-GEe"/>
+                            <constraint firstItem="Asz-cb-vlx" firstAttribute="bottom" secondItem="Kcw-9c-mar" secondAttribute="bottom" id="kYi-rK-bRo"/>
+                            <constraint firstItem="eSR-Oq-hca" firstAttribute="leading" secondItem="Asz-cb-vlx" secondAttribute="leading" constant="4" id="ywC-y4-BJx"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="English HW" id="hED-3C-nt0">
+                        <barButtonItem key="rightBarButtonItem" title="Item" image="xmark.circle" catalog="system" id="z6V-RY-N6I">
+                            <color key="tintColor" systemColor="systemRedColor"/>
+                            <connections>
+                                <action selector="removeTask:" destination="KCG-Zx-NLt" id="LMh-CF-1CX"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="dateLabel" destination="eSR-Oq-hca" id="eT5-US-aVC"/>
+                        <outlet property="detailedTextView" destination="Kcw-9c-mar" id="wKj-k8-XUi"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="2B2-43-w0H" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1266.6666666666667" y="1997.5446428571427"/>
+        </scene>
         <!--Upcoming-->
         <scene sceneID="eOT-jD-TPJ">
             <objects>
@@ -43,6 +95,9 @@
                         <rect key="frame" x="0.0" y="44" width="414" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="barTintColor" name="background"/>
+                        <textAttributes key="titleTextAttributes">
+                            <color key="textColor" name="inverse"/>
+                        </textAttributes>
                         <textAttributes key="largeTitleTextAttributes">
                             <fontDescription key="fontDescription" type="boldSystem" pointSize="26"/>
                             <color key="textColor" name="inverse"/>
@@ -78,6 +133,7 @@
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
                         <segue destination="KZt-Pz-lTs" kind="presentation" identifier="newhomework" id="Bc5-lz-WpI"/>
+                        <segue destination="KCG-Zx-NLt" kind="show" identifier="largeWork" id="54f-8c-0Ys"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="7FG-QV-BBr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -258,7 +314,7 @@
                                         <color key="value" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </userDefinedRuntimeAttribute>
                                     <userDefinedRuntimeAttribute type="color" keyPath="titleDefaultColor">
-                                        <color key="value" name="lightGray"/>
+                                        <color key="value" name="constant-lightGray"/>
                                     </userDefinedRuntimeAttribute>
                                     <userDefinedRuntimeAttribute type="color" keyPath="titlePlaceholderColor">
                                         <color key="value" name="darkGray"/>
@@ -518,7 +574,7 @@
                                 </constraints>
                                 <color key="textColor" name="inverse"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your class name " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ie3-1l-Ppf">
                                 <rect key="frame" x="50" y="127.5" width="314" height="21"/>
@@ -614,7 +670,7 @@
                             </imageView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fhl-b4-s9d" customClass="GIDSignInButton">
                                 <rect key="frame" x="35" y="737" width="344" height="50"/>
-                                <color key="backgroundColor" name="inverse"/>
+                                <color key="backgroundColor" name="white"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="50" id="gub-2a-6xC"/>
                                     <constraint firstAttribute="width" constant="344" id="seE-Ts-Exu"/>
@@ -625,7 +681,7 @@
                             </view>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="CPd-We-JYf"/>
-                        <color key="backgroundColor" name="loading"/>
+                        <color key="backgroundColor" name="blue"/>
                         <constraints>
                             <constraint firstItem="fhl-b4-s9d" firstAttribute="centerX" secondItem="CPd-We-JYf" secondAttribute="centerX" id="7I7-Dt-zyc"/>
                             <constraint firstItem="4cK-BE-d5J" firstAttribute="top" secondItem="CPd-We-JYf" secondAttribute="top" constant="113" id="7ZT-HS-Goc"/>
@@ -659,7 +715,7 @@
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="r64-NP-y6z"/>
-                        <color key="backgroundColor" name="loading"/>
+                        <color key="backgroundColor" name="blue"/>
                         <constraints>
                             <constraint firstItem="iVy-4B-XOq" firstAttribute="centerX" secondItem="r64-NP-y6z" secondAttribute="centerX" id="3ay-WZ-Xxs"/>
                             <constraint firstItem="iVy-4B-XOq" firstAttribute="centerY" secondItem="r64-NP-y6z" secondAttribute="centerY" constant="-200" id="oqs-ZD-oh0"/>
@@ -691,7 +747,7 @@
                                 </constraints>
                                 <color key="textColor" name="inverse"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your teacher's name " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="yaX-9W-Wc5">
                                 <rect key="frame" x="50" y="127.5" width="314" height="21"/>
@@ -753,7 +809,7 @@
                                 </constraints>
                                 <color key="textColor" name="inverse"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your room number " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hVn-hl-oa3">
                                 <rect key="frame" x="50" y="127.5" width="314" height="21"/>
@@ -1023,7 +1079,7 @@
                                 </constraints>
                                 <color key="textColor" name="inverse"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your task title " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="y4G-lI-p3c">
                                 <rect key="frame" x="50" y="127.5" width="314" height="21"/>
@@ -1094,7 +1150,7 @@
                                 </constraints>
                                 <color key="textColor" name="inverse"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your task in more detail" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kNM-4s-Gal">
                                 <rect key="frame" x="50" y="127.5" width="314" height="21"/>
@@ -1236,7 +1292,7 @@
                                         <color key="value" name="inverse"/>
                                     </userDefinedRuntimeAttribute>
                                     <userDefinedRuntimeAttribute type="color" keyPath="titleDefaultColor">
-                                        <color key="value" name="lightGray"/>
+                                        <color key="value" name="constant-lightGray"/>
                                     </userDefinedRuntimeAttribute>
                                     <userDefinedRuntimeAttribute type="color" keyPath="titlePlaceholderColor">
                                         <color key="value" name="darkGray"/>
@@ -1245,13 +1301,13 @@
                                         <real key="value" value="41"/>
                                     </userDefinedRuntimeAttribute>
                                     <userDefinedRuntimeAttribute type="color" keyPath="borderSelectionColor">
-                                        <color key="value" name="white"/>
+                                        <color key="value" name="inverse"/>
                                     </userDefinedRuntimeAttribute>
                                     <userDefinedRuntimeAttribute type="color" keyPath="selectionColor">
                                         <color key="value" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </userDefinedRuntimeAttribute>
                                     <userDefinedRuntimeAttribute type="color" keyPath="titleSelectionColor">
-                                        <color key="value" name="white"/>
+                                        <color key="value" name="inverse"/>
                                     </userDefinedRuntimeAttribute>
                                     <userDefinedRuntimeAttribute type="color" keyPath="todaySelectionColor">
                                         <color key="value" name="gold-light"/>
@@ -1453,7 +1509,7 @@
                                 </constraints>
                                 <color key="textColor" name="inverse"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your block name" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="a3P-cE-xaZ">
                                 <rect key="frame" x="50" y="127.5" width="314" height="21"/>
@@ -1616,7 +1672,7 @@
     </scenes>
     <inferredMetricsTieBreakers>
         <segue reference="RmR-8h-qio"/>
-        <segue reference="Szw-2S-RWR"/>
+        <segue reference="rpQ-tf-hs5"/>
     </inferredMetricsTieBreakers>
     <resources>
         <image name="bus" catalog="system" width="128" height="122"/>
@@ -1637,10 +1693,13 @@
             <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>
         <namedColor name="background-light">
-            <color red="0.1289999932050705" green="0.20800000429153442" blue="0.39599999785423279" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+            <color red="0.078000001609325409" green="0.15700000524520874" blue="0.34099999070167542" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>
         <namedColor name="blue">
             <color red="0.1289999932050705" green="0.20800000429153442" blue="0.39599999785423279" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+        </namedColor>
+        <namedColor name="constant-lightGray">
+            <color red="0.7839999794960022" green="0.7839999794960022" blue="0.7839999794960022" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="darkGray">
             <color red="0.7839999794960022" green="0.7839999794960022" blue="0.7839999794960022" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -1657,17 +1716,14 @@
         <namedColor name="inverse-low-alpha">
             <color red="0.1289999932050705" green="0.20800000429153442" blue="0.39599999785423279" alpha="0.10000000149011612" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>
-        <namedColor name="lightGray">
-            <color red="0.52899998426437378" green="0.52899998426437378" blue="0.52899998426437378" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </namedColor>
-        <namedColor name="loading">
-            <color red="0.89800000190734863" green="0.89800000190734863" blue="0.9179999828338623" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </namedColor>
         <namedColor name="white">
             <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemRedColor">
+            <color red="1" green="0.23137254901960785" blue="0.18823529411764706" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

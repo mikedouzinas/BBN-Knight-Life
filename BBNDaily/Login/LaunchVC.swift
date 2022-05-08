@@ -92,7 +92,7 @@ class LaunchVC: CustomLoader {
                                                 ((snap?.data()?["monday"] as? Bool) ?? true), ((snap?.data()?["tuesday"] as? Bool) ?? true), ((snap?.data()?["wednesday"] as? Bool) ?? true), ((snap?.data()?["thursday"] as? Bool) ?? true), ((snap?.data()?["friday"] as? Bool) ?? true)]
                                             LoginVC.classMeetingDays["\(x.key)"] = arr
                                             
-                                            print("'\(str)' \(LoginVC.classMeetingDays["\(x.key)"] ?? [Bool]()) at position \(i)")
+                                            print("x.key is '\(x.key)' and '\(str)' \(LoginVC.classMeetingDays["\(x.key)"] ?? [Bool]()) at position \(i)")
                                             i+=1
                                         }
                                         myGroup.leave()

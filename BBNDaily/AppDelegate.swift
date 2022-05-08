@@ -13,8 +13,9 @@ import GoogleDataTransport
 import UserNotifications
 
 @main
-class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, UIWindowSceneDelegate {
     let notificationCenter = UNUserNotificationCenter.current()
+    var window: UIWindow?
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         FirebaseApp.configure()
@@ -25,6 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 //        GIDSignIn.sharedInstance.clientID = FirebaseApp.app()?.options.clientID
         return true
     }
+    
     func requestAuthForLocalNotifications(){
         notificationCenter.delegate = self
         let options: UNAuthorizationOptions = [.alert, .sound, .badge]
@@ -35,7 +37,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         }
     }
     // MARK: UISceneSession Lifecycle
-
+    
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
         // Called when a new scene session is being created.
         // Use this method to select a configuration to create the new scene with.
@@ -53,6 +55,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
       -> Bool {
       return GIDSignIn.sharedInstance.handle(url)
     }
-
+    func changeTheme(themeVal: String) {
+      if #available(iOS 13.0, *) {
+         switch themeVal {
+         case "dark":
+             window?.overrideUserInterfaceStyle = .dark
+             break
+         case "light":
+             window?.overrideUserInterfaceStyle = .light
+             break
+         default:
+             window?.overrideUserInterfaceStyle = .unspecified
+         }
+      }
+    }
 }
 

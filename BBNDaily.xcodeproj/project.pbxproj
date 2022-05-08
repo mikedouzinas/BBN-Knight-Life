@@ -835,7 +835,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.8.8;
+				MARKETING_VERSION = 1.8.10;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -862,7 +862,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.8.8;
+				MARKETING_VERSION = 1.8.10;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

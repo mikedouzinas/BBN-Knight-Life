@@ -147,7 +147,8 @@ extension String {
             "yyyy-MM-dd'T'hh:mm:ss.SS",
             "yyyy-MM-dd'T'hh:mm:ss.S",
             "dd MMM yyyy HH:mm",
-            "MM/dd/yyyy"
+            "MM/dd/yyyy",
+            "MM/dd/20yy"
         ]
         dateformatter.locale = Locale(identifier: "your_loc_id")
         
