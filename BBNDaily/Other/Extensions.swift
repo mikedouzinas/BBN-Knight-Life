@@ -592,3 +592,9 @@ extension UIViewController {
         self.present(alert, animated: true, completion: nil)
     }
 }
+
+struct WatchClass {
+    let Title: String
+    let StartTime: String
+    let EndTime: String
+}

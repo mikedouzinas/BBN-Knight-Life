@@ -128,12 +128,10 @@ class LoginVC: UIViewController {
             if error != nil {
                 ProgressHUD.showFailed("Failed to find 'special-schedules'")
             } else {
-                //                var isCreated = false
                 var newArray = [String: [block]]()
                 var reasonArray = [String: String]()
                 var newArray2 = [String: [block]]()
                 for document in (snapshot?.documents)! {
-                    //                            documen
                     let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
                     var blocksl1 = [block]()
                     for x in arrayl1 {
@@ -191,7 +189,6 @@ class LoginVC: UIViewController {
                                             ((snap?.data()?["monday"] as? Bool) ?? true), ((snap?.data()?["tuesday"] as? Bool) ?? true), ((snap?.data()?["wednesday"] as? Bool) ?? true), ((snap?.data()?["thursday"] as? Bool) ?? true), ((snap?.data()?["friday"] as? Bool) ?? true)]
                                         LoginVC.classMeetingDays["\(x.key)"] = arr
                                         
-                                        print("x.key is '\(x.key)' and '\(str)' \(LoginVC.classMeetingDays["\(x.key)"] ?? [Bool]()) at position \(i)")
                                         i+=1
                                     }
                                     myGroup.leave()
@@ -377,6 +374,8 @@ class LoginVC: UIViewController {
                 }
             }
             content.title = "5 Minutes Until \(tile)"
+            
+            // Write/Set Value
         }
         else {
             content.title = "5 Minutes Until \(x.name)"
@@ -443,11 +442,6 @@ class LoginVC: UIViewController {
             for x in sevenDaysArray.blocks {
                 addNotif(x: x, weekDay: sevenDaysArray.weekday)
             }
-            UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
-                for x in results {
-                    print("title: \(x.content.title)")
-                }
-            })
         }
     }
 }

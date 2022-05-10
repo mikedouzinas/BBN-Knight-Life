@@ -15,6 +15,18 @@
 		8704E97626EEA686001826F8 /* CalendarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97526EEA686001826F8 /* CalendarVC.swift */; };
 		8704E97826EEA6F2001826F8 /* VanguardVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97726EEA6F2001826F8 /* VanguardVC.swift */; };
 		8704E97A26EEA6FC001826F8 /* NewsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97926EEA6FC001826F8 /* NewsVC.swift */; };
+		87244DD12829C24800F997A1 /* Interface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87244DCF2829C24800F997A1 /* Interface.storyboard */; };
+		87244DD32829C24A00F997A1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87244DD22829C24A00F997A1 /* Assets.xcassets */; };
+		87244DD92829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 87244DD82829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		87244DDE2829C24A00F997A1 /* InterfaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87244DDD2829C24A00F997A1 /* InterfaceController.swift */; };
+		87244DE02829C24A00F997A1 /* ExtensionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87244DDF2829C24A00F997A1 /* ExtensionDelegate.swift */; };
+		87244DE22829C24A00F997A1 /* NotificationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87244DE12829C24A00F997A1 /* NotificationController.swift */; };
+		87244DE42829C24A00F997A1 /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87244DE32829C24A00F997A1 /* ComplicationController.swift */; };
+		87244DE62829C24C00F997A1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87244DE52829C24C00F997A1 /* Assets.xcassets */; };
+		87244DF22829C24C00F997A1 /* BBNDailyWatchAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87244DF12829C24C00F997A1 /* BBNDailyWatchAppTests.swift */; };
+		87244DFC2829C24C00F997A1 /* BBNDailyWatchAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87244DFB2829C24C00F997A1 /* BBNDailyWatchAppUITests.swift */; };
+		87244DFE2829C24C00F997A1 /* BBNDailyWatchAppUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87244DFD2829C24C00F997A1 /* BBNDailyWatchAppUITestsLaunchTests.swift */; };
+		87244E012829C24C00F997A1 /* BBNDailyWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 87244DCD2829C24800F997A1 /* BBNDailyWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		8738377727EA48DE00CABF47 /* SecretSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8738377627EA48DE00CABF47 /* SecretSchedule.swift */; };
 		87507FC726E6ADEB005DDFB4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FC626E6ADEB005DDFB4 /* AppDelegate.swift */; };
 		87507FC926E6ADEB005DDFB4 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FC826E6ADEB005DDFB4 /* SceneDelegate.swift */; };
@@ -23,6 +35,13 @@
 		87507FD326E6ADEB005DDFB4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87507FD126E6ADEB005DDFB4 /* LaunchScreen.storyboard */; };
 		87507FDE26E6ADEB005DDFB4 /* BBNDailyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FDD26E6ADEB005DDFB4 /* BBNDailyTests.swift */; };
 		87507FE926E6ADEB005DDFB4 /* BBNDailyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FE826E6ADEB005DDFB4 /* BBNDailyUITests.swift */; };
+		87523CF62828B70400369054 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87523CF52828B70400369054 /* AppDelegate.swift */; };
+		87523CF82828B70400369054 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87523CF72828B70400369054 /* ViewController.swift */; };
+		87523CFA2828B70500369054 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87523CF92828B70500369054 /* Assets.xcassets */; };
+		87523CFD2828B70500369054 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87523CFB2828B70500369054 /* Main.storyboard */; };
+		87523D082828B70500369054 /* BBNDailyMacOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87523D072828B70500369054 /* BBNDailyMacOSTests.swift */; };
+		87523D122828B70500369054 /* BBNDailyMacOSUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87523D112828B70500369054 /* BBNDailyMacOSUITests.swift */; };
+		87523D142828B70500369054 /* BBNDailyMacOSUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87523D132828B70500369054 /* BBNDailyMacOSUITestsLaunchTests.swift */; };
 		8761CA7226F29D3B00CADE56 /* Maps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8761CA7126F29D3B00CADE56 /* Maps.swift */; };
 		877ED46F27093827007FE2E5 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 870CBB1227090AEC00363BF4 /* WidgetKit.framework */; };
 		877ED47027093827007FE2E5 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 870CBB1427090AEC00363BF4 /* SwiftUI.framework */; };
@@ -43,6 +62,34 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		87244DDA2829C24A00F997A1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 87507FBB26E6ADEA005DDFB4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 87244DD72829C24A00F997A1;
+			remoteInfo = "BBNDailyWatchApp WatchKit Extension";
+		};
+		87244DEE2829C24C00F997A1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 87507FBB26E6ADEA005DDFB4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 87244DD72829C24A00F997A1;
+			remoteInfo = "BBNDailyWatchApp WatchKit Extension";
+		};
+		87244DF82829C24C00F997A1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 87507FBB26E6ADEA005DDFB4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 87244DCC2829C24800F997A1;
+			remoteInfo = BBNDailyWatchApp;
+		};
+		87244DFF2829C24C00F997A1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 87507FBB26E6ADEA005DDFB4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 87244DCC2829C24800F997A1;
+			remoteInfo = BBNDailyWatchApp;
+		};
 		87507FDA26E6ADEB005DDFB4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 87507FBB26E6ADEA005DDFB4 /* Project object */;
@@ -56,6 +103,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 87507FC226E6ADEB005DDFB4;
 			remoteInfo = BBNDaily;
+		};
+		87523D042828B70500369054 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 87507FBB26E6ADEA005DDFB4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 87523CF22828B70400369054;
+			remoteInfo = BBNDailyMacOS;
+		};
+		87523D0E2828B70500369054 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 87507FBB26E6ADEA005DDFB4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 87523CF22828B70400369054;
+			remoteInfo = BBNDailyMacOS;
 		};
 		877ED47A27093828007FE2E5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -78,6 +139,28 @@
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		87244E052829C24C00F997A1 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				87244DD92829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87244E092829C24C00F997A1 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				87244E012829C24C00F997A1 /* BBNDailyWatchApp.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -96,6 +179,23 @@
 		87078D2726F0DCC00061E9AF /* BBNDaily.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BBNDaily.entitlements; sourceTree = "<group>"; };
 		870CBB1227090AEC00363BF4 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		870CBB1427090AEC00363BF4 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		87244DCD2829C24800F997A1 /* BBNDailyWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BBNDailyWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		87244DD02829C24800F997A1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Interface.storyboard; sourceTree = "<group>"; };
+		87244DD22829C24A00F997A1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		87244DD82829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "BBNDailyWatchApp WatchKit Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		87244DDD2829C24A00F997A1 /* InterfaceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterfaceController.swift; sourceTree = "<group>"; };
+		87244DDF2829C24A00F997A1 /* ExtensionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionDelegate.swift; sourceTree = "<group>"; };
+		87244DE12829C24A00F997A1 /* NotificationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationController.swift; sourceTree = "<group>"; };
+		87244DE32829C24A00F997A1 /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
+		87244DE52829C24C00F997A1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		87244DE72829C24C00F997A1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		87244DE82829C24C00F997A1 /* PushNotificationPayload.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = PushNotificationPayload.apns; sourceTree = "<group>"; };
+		87244DED2829C24C00F997A1 /* BBNDailyWatchAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BBNDailyWatchAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		87244DF12829C24C00F997A1 /* BBNDailyWatchAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyWatchAppTests.swift; sourceTree = "<group>"; };
+		87244DF72829C24C00F997A1 /* BBNDailyWatchAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BBNDailyWatchAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		87244DFB2829C24C00F997A1 /* BBNDailyWatchAppUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyWatchAppUITests.swift; sourceTree = "<group>"; };
+		87244DFD2829C24C00F997A1 /* BBNDailyWatchAppUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyWatchAppUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		87244E102829C8A500F997A1 /* BBNDailyWatchApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BBNDailyWatchApp.entitlements; sourceTree = "<group>"; };
 		8738377627EA48DE00CABF47 /* SecretSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretSchedule.swift; sourceTree = "<group>"; };
 		87507FC326E6ADEB005DDFB4 /* BBNDaily.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BBNDaily.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		87507FC626E6ADEB005DDFB4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -110,6 +210,17 @@
 		87507FE426E6ADEB005DDFB4 /* BBNDailyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BBNDailyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		87507FE826E6ADEB005DDFB4 /* BBNDailyUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyUITests.swift; sourceTree = "<group>"; };
 		87507FEA26E6ADEB005DDFB4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		87523CF32828B70400369054 /* BBNDailyMacOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BBNDailyMacOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		87523CF52828B70400369054 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		87523CF72828B70400369054 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		87523CF92828B70500369054 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		87523CFC2828B70500369054 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		87523CFE2828B70500369054 /* BBNDailyMacOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BBNDailyMacOS.entitlements; sourceTree = "<group>"; };
+		87523D032828B70500369054 /* BBNDailyMacOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BBNDailyMacOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		87523D072828B70500369054 /* BBNDailyMacOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyMacOSTests.swift; sourceTree = "<group>"; };
+		87523D0D2828B70500369054 /* BBNDailyMacOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BBNDailyMacOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		87523D112828B70500369054 /* BBNDailyMacOSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyMacOSUITests.swift; sourceTree = "<group>"; };
+		87523D132828B70500369054 /* BBNDailyMacOSUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyMacOSUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		8761CA7126F29D3B00CADE56 /* Maps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Maps.swift; sourceTree = "<group>"; };
 		877ED46E27093827007FE2E5 /* BBNDailyWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BBNDailyWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		877ED47227093827007FE2E5 /* BBNDailyWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyWidget.swift; sourceTree = "<group>"; };
@@ -131,6 +242,27 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		87244DD52829C24A00F997A1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87244DEA2829C24C00F997A1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87244DF42829C24C00F997A1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		87507FC026E6ADEB005DDFB4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -152,6 +284,27 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DDE938FA377A520FC51B6FE /* Pods_BBNDaily_BBNDailyUITests.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87523CF02828B70400369054 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87523D002828B70500369054 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87523D0A2828B70500369054 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -222,6 +375,47 @@
 			path = Other;
 			sourceTree = "<group>";
 		};
+		87244DCE2829C24800F997A1 /* BBNDailyWatchApp */ = {
+			isa = PBXGroup;
+			children = (
+				87244E102829C8A500F997A1 /* BBNDailyWatchApp.entitlements */,
+				87244DCF2829C24800F997A1 /* Interface.storyboard */,
+				87244DD22829C24A00F997A1 /* Assets.xcassets */,
+			);
+			path = BBNDailyWatchApp;
+			sourceTree = "<group>";
+		};
+		87244DDC2829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension */ = {
+			isa = PBXGroup;
+			children = (
+				87244DDD2829C24A00F997A1 /* InterfaceController.swift */,
+				87244DDF2829C24A00F997A1 /* ExtensionDelegate.swift */,
+				87244DE12829C24A00F997A1 /* NotificationController.swift */,
+				87244DE32829C24A00F997A1 /* ComplicationController.swift */,
+				87244DE52829C24C00F997A1 /* Assets.xcassets */,
+				87244DE72829C24C00F997A1 /* Info.plist */,
+				87244DE82829C24C00F997A1 /* PushNotificationPayload.apns */,
+			);
+			path = "BBNDailyWatchApp WatchKit Extension";
+			sourceTree = "<group>";
+		};
+		87244DF02829C24C00F997A1 /* BBNDailyWatchAppTests */ = {
+			isa = PBXGroup;
+			children = (
+				87244DF12829C24C00F997A1 /* BBNDailyWatchAppTests.swift */,
+			);
+			path = BBNDailyWatchAppTests;
+			sourceTree = "<group>";
+		};
+		87244DFA2829C24C00F997A1 /* BBNDailyWatchAppUITests */ = {
+			isa = PBXGroup;
+			children = (
+				87244DFB2829C24C00F997A1 /* BBNDailyWatchAppUITests.swift */,
+				87244DFD2829C24C00F997A1 /* BBNDailyWatchAppUITestsLaunchTests.swift */,
+			);
+			path = BBNDailyWatchAppUITests;
+			sourceTree = "<group>";
+		};
 		8738377527EA48CC00CABF47 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -239,6 +433,13 @@
 				87507FDC26E6ADEB005DDFB4 /* BBNDailyTests */,
 				87507FE726E6ADEB005DDFB4 /* BBNDailyUITests */,
 				877ED47127093827007FE2E5 /* BBNDailyWidget */,
+				87523CF42828B70400369054 /* BBNDailyMacOS */,
+				87523D062828B70500369054 /* BBNDailyMacOSTests */,
+				87523D102828B70500369054 /* BBNDailyMacOSUITests */,
+				87244DCE2829C24800F997A1 /* BBNDailyWatchApp */,
+				87244DDC2829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension */,
+				87244DF02829C24C00F997A1 /* BBNDailyWatchAppTests */,
+				87244DFA2829C24C00F997A1 /* BBNDailyWatchAppUITests */,
 				87507FC426E6ADEB005DDFB4 /* Products */,
 				5CCFC48CB358238E1A835200 /* Pods */,
 				11209A40124E46FFFA8F7C60 /* Frameworks */,
@@ -252,6 +453,13 @@
 				87507FD926E6ADEB005DDFB4 /* BBNDailyTests.xctest */,
 				87507FE426E6ADEB005DDFB4 /* BBNDailyUITests.xctest */,
 				877ED46E27093827007FE2E5 /* BBNDailyWidgetExtension.appex */,
+				87523CF32828B70400369054 /* BBNDailyMacOS.app */,
+				87523D032828B70500369054 /* BBNDailyMacOSTests.xctest */,
+				87523D0D2828B70500369054 /* BBNDailyMacOSUITests.xctest */,
+				87244DCD2829C24800F997A1 /* BBNDailyWatchApp.app */,
+				87244DD82829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension.appex */,
+				87244DED2829C24C00F997A1 /* BBNDailyWatchAppTests.xctest */,
+				87244DF72829C24C00F997A1 /* BBNDailyWatchAppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -297,6 +505,35 @@
 			path = BBNDailyUITests;
 			sourceTree = "<group>";
 		};
+		87523CF42828B70400369054 /* BBNDailyMacOS */ = {
+			isa = PBXGroup;
+			children = (
+				87523CF52828B70400369054 /* AppDelegate.swift */,
+				87523CF72828B70400369054 /* ViewController.swift */,
+				87523CF92828B70500369054 /* Assets.xcassets */,
+				87523CFB2828B70500369054 /* Main.storyboard */,
+				87523CFE2828B70500369054 /* BBNDailyMacOS.entitlements */,
+			);
+			path = BBNDailyMacOS;
+			sourceTree = "<group>";
+		};
+		87523D062828B70500369054 /* BBNDailyMacOSTests */ = {
+			isa = PBXGroup;
+			children = (
+				87523D072828B70500369054 /* BBNDailyMacOSTests.swift */,
+			);
+			path = BBNDailyMacOSTests;
+			sourceTree = "<group>";
+		};
+		87523D102828B70500369054 /* BBNDailyMacOSUITests */ = {
+			isa = PBXGroup;
+			children = (
+				87523D112828B70500369054 /* BBNDailyMacOSUITests.swift */,
+				87523D132828B70500369054 /* BBNDailyMacOSUITestsLaunchTests.swift */,
+			);
+			path = BBNDailyMacOSUITests;
+			sourceTree = "<group>";
+		};
 		877ED47127093827007FE2E5 /* BBNDailyWidget */ = {
 			isa = PBXGroup;
 			children = (
@@ -311,6 +548,76 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		87244DCC2829C24800F997A1 /* BBNDailyWatchApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87244E062829C24C00F997A1 /* Build configuration list for PBXNativeTarget "BBNDailyWatchApp" */;
+			buildPhases = (
+				87244DCB2829C24800F997A1 /* Resources */,
+				87244E052829C24C00F997A1 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				87244DDB2829C24A00F997A1 /* PBXTargetDependency */,
+			);
+			name = BBNDailyWatchApp;
+			productName = BBNDailyWatchApp;
+			productReference = 87244DCD2829C24800F997A1 /* BBNDailyWatchApp.app */;
+			productType = "com.apple.product-type.application.watchapp2";
+		};
+		87244DD72829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87244E022829C24C00F997A1 /* Build configuration list for PBXNativeTarget "BBNDailyWatchApp WatchKit Extension" */;
+			buildPhases = (
+				87244DD42829C24A00F997A1 /* Sources */,
+				87244DD52829C24A00F997A1 /* Frameworks */,
+				87244DD62829C24A00F997A1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "BBNDailyWatchApp WatchKit Extension";
+			productName = "BBNDailyWatchApp WatchKit Extension";
+			productReference = 87244DD82829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension.appex */;
+			productType = "com.apple.product-type.watchkit2-extension";
+		};
+		87244DEC2829C24C00F997A1 /* BBNDailyWatchAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87244E0A2829C24C00F997A1 /* Build configuration list for PBXNativeTarget "BBNDailyWatchAppTests" */;
+			buildPhases = (
+				87244DE92829C24C00F997A1 /* Sources */,
+				87244DEA2829C24C00F997A1 /* Frameworks */,
+				87244DEB2829C24C00F997A1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				87244DEF2829C24C00F997A1 /* PBXTargetDependency */,
+			);
+			name = BBNDailyWatchAppTests;
+			productName = BBNDailyWatchAppTests;
+			productReference = 87244DED2829C24C00F997A1 /* BBNDailyWatchAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		87244DF62829C24C00F997A1 /* BBNDailyWatchAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87244E0D2829C24C00F997A1 /* Build configuration list for PBXNativeTarget "BBNDailyWatchAppUITests" */;
+			buildPhases = (
+				87244DF32829C24C00F997A1 /* Sources */,
+				87244DF42829C24C00F997A1 /* Frameworks */,
+				87244DF52829C24C00F997A1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				87244DF92829C24C00F997A1 /* PBXTargetDependency */,
+			);
+			name = BBNDailyWatchAppUITests;
+			productName = BBNDailyWatchAppUITests;
+			productReference = 87244DF72829C24C00F997A1 /* BBNDailyWatchAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		87507FC226E6ADEB005DDFB4 /* BBNDaily */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 87507FED26E6ADEB005DDFB4 /* Build configuration list for PBXNativeTarget "BBNDaily" */;
@@ -322,11 +629,13 @@
 				6C7FE19C05F9440E869FD623 /* [CP] Embed Pods Frameworks */,
 				870CBB2227090AEE00363BF4 /* Embed App Extensions */,
 				0B0CB5608FBEF03DA8F06D5E /* [CP] Copy Pods Resources */,
+				87244E092829C24C00F997A1 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				877ED47B27093828007FE2E5 /* PBXTargetDependency */,
+				87244E002829C24C00F997A1 /* PBXTargetDependency */,
 			);
 			name = BBNDaily;
 			productName = BBNDaily;
@@ -373,6 +682,59 @@
 			productReference = 87507FE426E6ADEB005DDFB4 /* BBNDailyUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		87523CF22828B70400369054 /* BBNDailyMacOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87523D1B2828B70500369054 /* Build configuration list for PBXNativeTarget "BBNDailyMacOS" */;
+			buildPhases = (
+				87523CEF2828B70400369054 /* Sources */,
+				87523CF02828B70400369054 /* Frameworks */,
+				87523CF12828B70400369054 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BBNDailyMacOS;
+			productName = BBNDailyMacOS;
+			productReference = 87523CF32828B70400369054 /* BBNDailyMacOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		87523D022828B70500369054 /* BBNDailyMacOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87523D1C2828B70500369054 /* Build configuration list for PBXNativeTarget "BBNDailyMacOSTests" */;
+			buildPhases = (
+				87523CFF2828B70500369054 /* Sources */,
+				87523D002828B70500369054 /* Frameworks */,
+				87523D012828B70500369054 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				87523D052828B70500369054 /* PBXTargetDependency */,
+			);
+			name = BBNDailyMacOSTests;
+			productName = BBNDailyMacOSTests;
+			productReference = 87523D032828B70500369054 /* BBNDailyMacOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		87523D0C2828B70500369054 /* BBNDailyMacOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87523D1D2828B70500369054 /* Build configuration list for PBXNativeTarget "BBNDailyMacOSUITests" */;
+			buildPhases = (
+				87523D092828B70500369054 /* Sources */,
+				87523D0A2828B70500369054 /* Frameworks */,
+				87523D0B2828B70500369054 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				87523D0F2828B70500369054 /* PBXTargetDependency */,
+			);
+			name = BBNDailyMacOSUITests;
+			productName = BBNDailyMacOSUITests;
+			productReference = 87523D0D2828B70500369054 /* BBNDailyMacOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		877ED46D27093827007FE2E5 /* BBNDailyWidgetExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 877ED47D27093828007FE2E5 /* Build configuration list for PBXNativeTarget "BBNDailyWidgetExtension" */;
@@ -396,9 +758,23 @@
 		87507FBB26E6ADEA005DDFB4 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1300;
+				LastSwiftUpdateCheck = 1330;
 				LastUpgradeCheck = 1250;
 				TargetAttributes = {
+					87244DCC2829C24800F997A1 = {
+						CreatedOnToolsVersion = 13.3.1;
+					};
+					87244DD72829C24A00F997A1 = {
+						CreatedOnToolsVersion = 13.3.1;
+					};
+					87244DEC2829C24C00F997A1 = {
+						CreatedOnToolsVersion = 13.3.1;
+						TestTargetID = 87244DD72829C24A00F997A1;
+					};
+					87244DF62829C24C00F997A1 = {
+						CreatedOnToolsVersion = 13.3.1;
+						TestTargetID = 87244DCC2829C24800F997A1;
+					};
 					87507FC226E6ADEB005DDFB4 = {
 						CreatedOnToolsVersion = 12.5.1;
 					};
@@ -409,6 +785,17 @@
 					87507FE326E6ADEB005DDFB4 = {
 						CreatedOnToolsVersion = 12.5.1;
 						TestTargetID = 87507FC226E6ADEB005DDFB4;
+					};
+					87523CF22828B70400369054 = {
+						CreatedOnToolsVersion = 13.3.1;
+					};
+					87523D022828B70500369054 = {
+						CreatedOnToolsVersion = 13.3.1;
+						TestTargetID = 87523CF22828B70400369054;
+					};
+					87523D0C2828B70500369054 = {
+						CreatedOnToolsVersion = 13.3.1;
+						TestTargetID = 87523CF22828B70400369054;
 					};
 					877ED46D27093827007FE2E5 = {
 						CreatedOnToolsVersion = 13.0;
@@ -432,11 +819,49 @@
 				87507FD826E6ADEB005DDFB4 /* BBNDailyTests */,
 				87507FE326E6ADEB005DDFB4 /* BBNDailyUITests */,
 				877ED46D27093827007FE2E5 /* BBNDailyWidgetExtension */,
+				87523CF22828B70400369054 /* BBNDailyMacOS */,
+				87523D022828B70500369054 /* BBNDailyMacOSTests */,
+				87523D0C2828B70500369054 /* BBNDailyMacOSUITests */,
+				87244DCC2829C24800F997A1 /* BBNDailyWatchApp */,
+				87244DD72829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension */,
+				87244DEC2829C24C00F997A1 /* BBNDailyWatchAppTests */,
+				87244DF62829C24C00F997A1 /* BBNDailyWatchAppUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		87244DCB2829C24800F997A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87244DD32829C24A00F997A1 /* Assets.xcassets in Resources */,
+				87244DD12829C24800F997A1 /* Interface.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87244DD62829C24A00F997A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87244DE62829C24C00F997A1 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87244DEB2829C24C00F997A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87244DF52829C24C00F997A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		87507FC126E6ADEB005DDFB4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -461,6 +886,29 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		87507FE226E6ADEB005DDFB4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87523CF12828B70400369054 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87523CFA2828B70500369054 /* Assets.xcassets in Resources */,
+				87523CFD2828B70500369054 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87523D012828B70500369054 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87523D0B2828B70500369054 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -615,6 +1063,34 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		87244DD42829C24A00F997A1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87244DE22829C24A00F997A1 /* NotificationController.swift in Sources */,
+				87244DE42829C24A00F997A1 /* ComplicationController.swift in Sources */,
+				87244DE02829C24A00F997A1 /* ExtensionDelegate.swift in Sources */,
+				87244DDE2829C24A00F997A1 /* InterfaceController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87244DE92829C24C00F997A1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87244DF22829C24C00F997A1 /* BBNDailyWatchAppTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87244DF32829C24C00F997A1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87244DFC2829C24C00F997A1 /* BBNDailyWatchAppUITests.swift in Sources */,
+				87244DFE2829C24C00F997A1 /* BBNDailyWatchAppUITestsLaunchTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		87507FBF26E6ADEB005DDFB4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -651,6 +1127,32 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		87523CEF2828B70400369054 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87523CF82828B70400369054 /* ViewController.swift in Sources */,
+				87523CF62828B70400369054 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87523CFF2828B70500369054 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87523D082828B70500369054 /* BBNDailyMacOSTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87523D092828B70500369054 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87523D122828B70500369054 /* BBNDailyMacOSUITests.swift in Sources */,
+				87523D142828B70500369054 /* BBNDailyMacOSUITestsLaunchTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		877ED46A27093827007FE2E5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -663,6 +1165,26 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		87244DDB2829C24A00F997A1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 87244DD72829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension */;
+			targetProxy = 87244DDA2829C24A00F997A1 /* PBXContainerItemProxy */;
+		};
+		87244DEF2829C24C00F997A1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 87244DD72829C24A00F997A1 /* BBNDailyWatchApp WatchKit Extension */;
+			targetProxy = 87244DEE2829C24C00F997A1 /* PBXContainerItemProxy */;
+		};
+		87244DF92829C24C00F997A1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 87244DCC2829C24800F997A1 /* BBNDailyWatchApp */;
+			targetProxy = 87244DF82829C24C00F997A1 /* PBXContainerItemProxy */;
+		};
+		87244E002829C24C00F997A1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 87244DCC2829C24800F997A1 /* BBNDailyWatchApp */;
+			targetProxy = 87244DFF2829C24C00F997A1 /* PBXContainerItemProxy */;
+		};
 		87507FDB26E6ADEB005DDFB4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 87507FC226E6ADEB005DDFB4 /* BBNDaily */;
@@ -673,6 +1195,16 @@
 			target = 87507FC226E6ADEB005DDFB4 /* BBNDaily */;
 			targetProxy = 87507FE526E6ADEB005DDFB4 /* PBXContainerItemProxy */;
 		};
+		87523D052828B70500369054 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 87523CF22828B70400369054 /* BBNDailyMacOS */;
+			targetProxy = 87523D042828B70500369054 /* PBXContainerItemProxy */;
+		};
+		87523D0F2828B70500369054 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 87523CF22828B70400369054 /* BBNDailyMacOS */;
+			targetProxy = 87523D0E2828B70500369054 /* PBXContainerItemProxy */;
+		};
 		877ED47B27093828007FE2E5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 877ED46D27093827007FE2E5 /* BBNDailyWidgetExtension */;
@@ -681,6 +1213,14 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		87244DCF2829C24800F997A1 /* Interface.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				87244DD02829C24800F997A1 /* Base */,
+			);
+			name = Interface.storyboard;
+			sourceTree = "<group>";
+		};
 		87507FCC26E6ADEB005DDFB4 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -697,9 +1237,219 @@
 			name = LaunchScreen.storyboard;
 			sourceTree = "<group>";
 		};
+		87523CFB2828B70500369054 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				87523CFC2828B70500369054 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		87244E032829C24C00F997A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "BBNDailyWatchApp WatchKit Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "BBNDailyWatchApp WatchKit Extension";
+				INFOPLIST_KEY_CLKComplicationPrincipalClass = BBNDailyWatchApp_WatchKit_Extension.ComplicationController;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_WKExtensionDelegateClassName = BBNDailyWatchApp_WatchKit_Extension.ExtensionDelegate;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.8.11;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily.watchkitapp.watchkitextension;
+				PRODUCT_NAME = "${TARGET_NAME}";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 8.5;
+			};
+			name = Debug;
+		};
+		87244E042829C24C00F997A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "BBNDailyWatchApp WatchKit Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "BBNDailyWatchApp WatchKit Extension";
+				INFOPLIST_KEY_CLKComplicationPrincipalClass = BBNDailyWatchApp_WatchKit_Extension.ComplicationController;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_WKExtensionDelegateClassName = BBNDailyWatchApp_WatchKit_Extension.ExtensionDelegate;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.8.11;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily.watchkitapp.watchkitextension;
+				PRODUCT_NAME = "${TARGET_NAME}";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 8.5;
+			};
+			name = Release;
+		};
+		87244E072829C24C00F997A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_ENTITLEMENTS = BBNDailyWatchApp/BBNDailyWatchApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				IBSC_MODULE = BBNDailyWatchApp_WatchKit_Extension;
+				INFOPLIST_KEY_CFBundleDisplayName = BBNDailyWatchApp;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = mil.BBNDaily;
+				MARKETING_VERSION = 1.8.11;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 8.5;
+			};
+			name = Debug;
+		};
+		87244E082829C24C00F997A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_ENTITLEMENTS = BBNDailyWatchApp/BBNDailyWatchApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				IBSC_MODULE = BBNDailyWatchApp_WatchKit_Extension;
+				INFOPLIST_KEY_CFBundleDisplayName = BBNDailyWatchApp;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = mil.BBNDaily;
+				MARKETING_VERSION = 1.8.11;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 8.5;
+			};
+			name = Release;
+		};
+		87244E0B2829C24C00F997A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily.BBNDailyWatchAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BBNDailyWatchApp WatchKit Extension.appex/BBNDailyWatchApp WatchKit Extension";
+				WATCHOS_DEPLOYMENT_TARGET = 8.5;
+			};
+			name = Debug;
+		};
+		87244E0C2829C24C00F997A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily.BBNDailyWatchAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BBNDailyWatchApp WatchKit Extension.appex/BBNDailyWatchApp WatchKit Extension";
+				WATCHOS_DEPLOYMENT_TARGET = 8.5;
+			};
+			name = Release;
+		};
+		87244E0E2829C24C00F997A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily.BBNDailyWatchAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = BBNDailyWatchApp;
+				WATCHOS_DEPLOYMENT_TARGET = 8.5;
+			};
+			name = Debug;
+		};
+		87244E0F2829C24C00F997A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily.BBNDailyWatchAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = BBNDailyWatchApp;
+				WATCHOS_DEPLOYMENT_TARGET = 8.5;
+			};
+			name = Release;
+		};
 		87507FEB26E6ADEB005DDFB4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -835,7 +1585,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.8.10;
+				MARKETING_VERSION = 1.8.11;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -862,7 +1612,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.8.10;
+				MARKETING_VERSION = 1.8.11;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -958,6 +1708,148 @@
 			};
 			name = Release;
 		};
+		87523D152828B70500369054 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_ENTITLEMENTS = BBNDailyMacOS/BBNDailyMacOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDailyMacOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		87523D162828B70500369054 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_ENTITLEMENTS = BBNDailyMacOS/BBNDailyMacOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDailyMacOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		87523D172828B70500369054 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDailyMacOSTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BBNDailyMacOS.app/Contents/MacOS/BBNDailyMacOS";
+			};
+			name = Debug;
+		};
+		87523D182828B70500369054 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDailyMacOSTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BBNDailyMacOS.app/Contents/MacOS/BBNDailyMacOS";
+			};
+			name = Release;
+		};
+		87523D192828B70500369054 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDailyMacOSUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = BBNDailyMacOS;
+			};
+			name = Debug;
+		};
+		87523D1A2828B70500369054 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JZUXQ9JH9H;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDailyMacOSUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = BBNDailyMacOS;
+			};
+			name = Release;
+		};
 		877ED47E27093828007FE2E5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1021,6 +1913,42 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		87244E022829C24C00F997A1 /* Build configuration list for PBXNativeTarget "BBNDailyWatchApp WatchKit Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87244E032829C24C00F997A1 /* Debug */,
+				87244E042829C24C00F997A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87244E062829C24C00F997A1 /* Build configuration list for PBXNativeTarget "BBNDailyWatchApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87244E072829C24C00F997A1 /* Debug */,
+				87244E082829C24C00F997A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87244E0A2829C24C00F997A1 /* Build configuration list for PBXNativeTarget "BBNDailyWatchAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87244E0B2829C24C00F997A1 /* Debug */,
+				87244E0C2829C24C00F997A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87244E0D2829C24C00F997A1 /* Build configuration list for PBXNativeTarget "BBNDailyWatchAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87244E0E2829C24C00F997A1 /* Debug */,
+				87244E0F2829C24C00F997A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		87507FBE26E6ADEA005DDFB4 /* Build configuration list for PBXProject "BBNDaily" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1053,6 +1981,33 @@
 			buildConfigurations = (
 				87507FF426E6ADEB005DDFB4 /* Debug */,
 				87507FF526E6ADEB005DDFB4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87523D1B2828B70500369054 /* Build configuration list for PBXNativeTarget "BBNDailyMacOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87523D152828B70500369054 /* Debug */,
+				87523D162828B70500369054 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87523D1C2828B70500369054 /* Build configuration list for PBXNativeTarget "BBNDailyMacOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87523D172828B70500369054 /* Debug */,
+				87523D182828B70500369054 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87523D1D2828B70500369054 /* Build configuration list for PBXNativeTarget "BBNDailyMacOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87523D192828B70500369054 /* Debug */,
+				87523D1A2828B70500369054 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

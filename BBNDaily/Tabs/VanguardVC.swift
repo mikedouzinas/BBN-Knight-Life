@@ -14,7 +14,6 @@ import SafariServices
 import FSCalendar
 import WebKit
 
-
 class VanguardVC: CustomLoader, WKNavigationDelegate {
     private let webView: WKWebView = {
         let webview = WKWebView(frame: .zero)

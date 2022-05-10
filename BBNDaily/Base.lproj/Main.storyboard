@@ -264,6 +264,7 @@
                     <connections>
                         <segue destination="gv1-9q-kN5" kind="relationship" relationship="viewControllers" id="7EM-l1-vhP"/>
                         <segue destination="0K2-P6-IYF" kind="relationship" relationship="viewControllers" id="aTa-xq-hQC"/>
+                        <segue destination="YkL-hu-Gqn" kind="relationship" relationship="viewControllers" id="1gk-FR-1bQ"/>
                         <segue destination="vL4-oO-Q5e" kind="relationship" relationship="viewControllers" id="1Ni-Ev-uXf"/>
                         <segue destination="UrN-4I-wut" kind="relationship" relationship="viewControllers" id="kzn-uC-BsK"/>
                     </connections>
@@ -1671,6 +1672,7 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
+        <segue reference="kzn-uC-BsK"/>
         <segue reference="RmR-8h-qio"/>
         <segue reference="rpQ-tf-hs5"/>
     </inferredMetricsTieBreakers>
@@ -1682,7 +1684,7 @@
         <image name="chevron.up" catalog="system" width="128" height="72"/>
         <image name="doc.plaintext" catalog="system" width="115" height="128"/>
         <image name="gear" catalog="system" width="128" height="119"/>
-        <image name="logo" width="1124" height="1162"/>
+        <image name="logo" width="500" height="500"/>
         <image name="pencil.circle" catalog="system" width="128" height="121"/>
         <image name="phone.circle.fill" catalog="system" width="128" height="121"/>
         <image name="plus" catalog="system" width="128" height="113"/>

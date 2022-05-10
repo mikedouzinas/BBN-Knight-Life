@@ -13,8 +13,23 @@ import SafariServices
 import FSCalendar
 import WebKit
 import SkeletonView
+import WatchConnectivity
 
-class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate {
+class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate, WCSessionDelegate {
+    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        print("complete?")
+        
+        setWatchClasses(todBlocks: CalendarVC.todayBlocks)
+    }
+    
+    func sessionDidBecomeInactive(_ session: WCSession) {
+        print("inactive")
+    }
+    
+    func sessionDidDeactivate(_ session: WCSession) {
+        print("deactivated?")
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return currentDay.count
     }
@@ -167,13 +182,13 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             dayIsOver = true
         }
     }
-    func getReturnDates(indexPath: IndexPath) -> [Date] {
+    func getReturnDates(currBlock: block) -> [Date] {
         
         let calendar = Calendar.current
-        let time2 = currentDay[indexPath.row].endTime.prefix(5)
+        let time2 = currBlock.endTime.prefix(5)
         let m2 = time2.replacingOccurrences(of: time2.prefix(3), with: "")
         var amOrPm2 = 0
-        if currentDay[indexPath.row].endTime.contains("pm") && !time2.prefix(2).contains("12") {
+        if currBlock.endTime.contains("pm") && !time2.prefix(2).contains("12") {
             amOrPm2 = 12
         }
         let t2 = calendar.date(
@@ -182,10 +197,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             second: 0,
             of: Date())!
         
-        let time = currentDay[indexPath.row].reminderTime.prefix(5)
+        let time = currBlock.reminderTime.prefix(5)
         let m = time.replacingOccurrences(of: time.prefix(3), with: "")
         var amOrPm = 0
-        if currentDay[indexPath.row].reminderTime.contains("pm") && !time.prefix(2).contains("12"){
+        if currBlock.reminderTime.contains("pm") && !time.prefix(2).contains("12"){
             amOrPm = 12
         }
         let t = calendar.date(
@@ -194,10 +209,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             second: 0,
             of: Date())!
         
-        let time3 = currentDay[indexPath.row].startTime.prefix(5)
+        let time3 = currBlock.startTime.prefix(5)
         let m3 = time3.replacingOccurrences(of: time3.prefix(3), with: "")
         var amOrPm3 = 0
-        if currentDay[indexPath.row].startTime.contains("pm") && !time3.prefix(2).contains("12"){
+        if currBlock.startTime.contains("pm") && !time3.prefix(2).contains("12"){
             amOrPm3 = 12
         }
         let t3 = calendar.date(
@@ -230,14 +245,13 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         dateformatter.dateFormat = "h:mm a"
         dateformatter.amSymbol = "AM"
         dateformatter.pmSymbol = "PM"
-        let dates = getReturnDates(indexPath: indexPath)
+        let dates = getReturnDates(currBlock: currentDay[indexPath.row])
         let t = dates[0]
         let t2 = dates[1]
         let t3 = dates[2]
 
-        dateformatter.string(from: t)
+        dateformatter.string(from: t) // end is t2 and start is t3
         cell.configure(with: block(name: thisBlock.name, startTime: dateformatter.string(from: t3), endTime: dateformatter.string(from: t2), block: thisBlock.block, reminderTime: dateformatter.string(from: t), length: 0), isLunch: isLunch, selectedDay: selectedDay)
-        
         cell.selectionStyle = .none
         
         if currentDate == stringDate {
@@ -516,6 +530,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     }
     @IBOutlet weak var roundedView: UIView!
     var todaysDate = ""
+    var watchClasses = [WatchClass]()
     override func viewDidLoad() {
         super.viewDidLoad()
         print("view DID load")
@@ -553,6 +568,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 calendar.dataSource = self
                 ScheduleCalendar.delegate = self
                 ScheduleCalendar.dataSource = self
+                self.configureWatchKitSession()
                 LoginVC.setNotifications()
                 ScheduleCalendar.reloadData()
                 setTimes(recursive: true)
@@ -561,6 +577,64 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             }
         })
     }
+    var session: WCSession?
+    func setWatchClasses(todBlocks: [block]) {
+        watchClasses = [WatchClass]()
+        for x in todBlocks {
+            let dateformatter = DateFormatter()
+            dateformatter.dateFormat = "h:mm a"
+            dateformatter.amSymbol = "AM"
+            dateformatter.pmSymbol = "PM"
+            let dates = getReturnDates(currBlock: x)
+            let t2 = dates[1]
+            let t3 = dates[2]
+            
+            var className: String?
+            if x.block != "N/A" {
+                className = LoginVC.blocks[x.block] as? String
+                if className == "" {
+                    className = "[\(x.block) Class]"
+                }
+                if (className ?? "").contains("~") {
+                    let array = (className ?? "").getValues()
+                    className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+                    if !(LoginVC.classMeetingDays["\(x.block.lowercased())"]?[selectedDay] ?? true) {
+                        className = "\(x.name)"
+                    }
+                }
+            }
+            else {
+                className = "\(x.name)"
+            }
+            watchClasses.append(WatchClass(Title: (className ?? ""), StartTime: "\(dateformatter.string(from: t3))", EndTime: "\(dateformatter.string(from: t2))"))
+        }
+//        let data2: [String: Any] = ["classes": watchClasses as Any]
+//        session!.sendMessage(data2, replyHandler: nil, errorHandler: { error in
+//            print("shit don't work \(error)")
+//        })
+        if let validSession = self.session, validSession.isReachable {//5.1
+            print("success!")
+            let data: [String: Any] = ["classes": watchClasses as Any]
+            validSession.sendMessage(data, replyHandler: nil, errorHandler: nil)
+        }
+        else {
+            print("FAILED AGAIn")
+        }
+    }
+    
+    
+    func configureWatchKitSession() {
+        
+        if WCSession.isSupported() {//4.1
+            print("session activated??")
+          session = WCSession.default//4.2
+          session?.delegate = self//4.3
+          session?.activate()//4.4
+        }
+        else {
+            print("SHIT DON WORK")
+        }
+      }
     func setNotif() {
         let hours = 13
         var dateComponents = DateComponents()
@@ -1078,6 +1152,25 @@ class coverTableViewCell: calendarTableViewCell {
         backview.backgroundColor = UIColor(named: "lightGray")
         return backview
     } ()
+    
+    // if viewmodel.block != N/A {
+    //var className = LoginVC.blocks[viewModel.block] as? String
+    //if className == "" {
+    //    className = "[\(viewModel.block) Class]"
+//    }
+//    var text = "Update classes in settings to see details"
+//    if (className ?? "").contains("~") {
+//        let array = (className ?? "").getValues()
+//        className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+//        text = "Press for details"
+//        if !(LoginVC.classMeetingDays["\(viewModel.block.lowercased())"]?[selectedDay] ?? true) {
+//            className = "\(viewModel.name)"
+//        }
+//    }
+    // }
+    // else {
+    //     title.text = "\(viewModel.name)"
+    // }
     override func configure(with viewModel: block, isLunch: Bool, selectedDay: Int) {
         RightLabel.isHidden = false
         BlockLabel.isHidden = false
