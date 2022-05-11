@@ -65,9 +65,14 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         guard tempTasks != nil else {
             return
         }
+        sortTasks(tempTasks: (tempTasks ?? [[String: Any]]()))
+    }
+//    do stuff here
+    func sortTasks (tempTasks: [[String: Any]]) {
         let dateformatter = DateFormatter()
         dateformatter.dateFormat = "MM/dd/yyyy"
-        for x in tempTasks! {
+        tasks.removeAll()
+        for x in tempTasks {
             
             let dueDate = (x["dueDate"] as? String) ?? "N/A"
             let convertedDate = dateformatter.date(from: dueDate) ?? Date()
@@ -82,6 +87,37 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             let convertedDate2 = dateformatter.date(from: second.dueDate) ?? Date()
             return convertedDate1 < convertedDate2
         }
+        tableView.reloadData()
+    }
+    private func handleMarkAsCompleted() {
+//        complete
+        var tempTasks = LoginVC.blocks["tasks"] as? [[String: Any]]
+        tempTasks?.remove(at: 0)// fix to remove the correct one
+        let db = Firestore.firestore()
+        let currDoc = db.collection("users").document((LoginVC.blocks["uid"] as? String) ?? "")
+        currDoc.setData(["tasks": tempTasks], merge: true)
+        sortTasks(tempTasks: (tempTasks ?? [[String: Any]]()))
+    }
+
+    func tableView(_ tableView: UITableView,
+                   editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
+        return .none
+    }
+    func tableView(_ tableView: UITableView,
+                       trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+
+        
+        let complete = UIContextualAction(style: .normal,
+                                       title: "Mark as Complete") { [weak self] (action, view, completionHandler) in
+                                        self?.handleMarkAsCompleted()
+                                        completionHandler(true)
+        }
+        complete.backgroundColor = .systemBlue
+
+        let configuration = UISwipeActionsConfiguration(actions: [complete])
+        
+
+        return configuration
     }
 }
 
@@ -183,7 +219,7 @@ class TaskCell: UITableViewCell {
         backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5).isActive = true
         backView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5).isActive = true
         backView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5).isActive = true
-        
+//swipe motion to check off completing tasks or delete, options
         TitleLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20).isActive = true
 //        checkBox.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20).isActive = true
 //        checkBox.rightAnchor.constraint(equalTo: TitleLabel.leftAnchor, constant: -10).isActive = true
@@ -312,6 +348,7 @@ class HomeworkDueDateVC: TextFieldVC, UITextFieldDelegate {
         var tasks = (LoginVC.blocks["tasks"] as? [[String:Any]]) ?? [[String:Any]]()
         tasks.append(["title":"\(WorkVC.newHomework.title)", "description":"\(WorkVC.newHomework.description)", "dueDate":"\(WorkVC.newHomework.dueDate)", "isCompleted":false])
         currDoc.setData(["tasks": tasks], merge: true)
+        LoginVC.blocks["tasks"] = tasks
         HomeworkDueDateVC.link.tasks.append(WorkVC.newHomework)
         HomeworkDueDateVC.link.tasks = HomeworkDueDateVC.link.tasks.sorted {first, second -> Bool in
             let convertedDate1 = dateformatter.date(from: first.dueDate) ?? Date()

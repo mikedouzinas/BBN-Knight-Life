@@ -32,12 +32,9 @@
 		877ED47927093828007FE2E5 /* BBNDailyWidget.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 877ED47427093827007FE2E5 /* BBNDailyWidget.intentdefinition */; };
 		877ED47C27093828007FE2E5 /* BBNDailyWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 877ED46E27093827007FE2E5 /* BBNDailyWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		878BCCF027A9BA1400D7B30C /* snowfall.gif in Resources */ = {isa = PBXBuildFile; fileRef = 878BCCEF27A9BA1400D7B30C /* snowfall.gif */; };
-		879D263027A87C7500F7540E /* snowfall-old2.gif in Resources */ = {isa = PBXBuildFile; fileRef = 879D262F27A87C7500F7540E /* snowfall-old2.gif */; };
 		87AAFC4327062AC6006AF8DC /* demo.gif in Resources */ = {isa = PBXBuildFile; fileRef = 87AAFC4227062AC6006AF8DC /* demo.gif */; };
 		87D3254526E6BCB5009B28CB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */; };
-		87D3D39027A8512000E3A1E1 /* WorkVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D3D38F27A8512000E3A1E1 /* WorkVC.swift */; };
-		87E7C72E274350A2009DF5B3 /* list.gif in Resources */ = {isa = PBXBuildFile; fileRef = 87E7C72D274350A2009DF5B3 /* list.gif */; };
-		87E7C736274358C3009DF5B3 /* snowfall-old.gif in Resources */ = {isa = PBXBuildFile; fileRef = 87E7C735274358C3009DF5B3 /* snowfall-old.gif */; };
+		87D3D39027A8512000E3A1E1 /* TasksVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D3D38F27A8512000E3A1E1 /* TasksVC.swift */; };
 		87FB9ACEA10E974B53372F10 /* Pods_BBNDaily.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41234358532501BD0AED646E /* Pods_BBNDaily.framework */; };
 		8DDE938FA377A520FC51B6FE /* Pods_BBNDaily_BBNDailyUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AC54026BFC1C4FAC95170AF /* Pods_BBNDaily_BBNDailyUITests.framework */; };
 /* End PBXBuildFile section */
@@ -118,12 +115,9 @@
 		877ED47727093828007FE2E5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		877ED4802709383C007FE2E5 /* BBNDailyWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BBNDailyWidgetExtension.entitlements; sourceTree = "<group>"; };
 		878BCCEF27A9BA1400D7B30C /* snowfall.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = snowfall.gif; sourceTree = "<group>"; };
-		879D262F27A87C7500F7540E /* snowfall-old2.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = "snowfall-old2.gif"; sourceTree = "<group>"; };
 		87AAFC4227062AC6006AF8DC /* demo.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = demo.gif; sourceTree = "<group>"; };
 		87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		87D3D38F27A8512000E3A1E1 /* WorkVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkVC.swift; sourceTree = "<group>"; };
-		87E7C72D274350A2009DF5B3 /* list.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = list.gif; path = ../../../Downloads/list.gif; sourceTree = "<group>"; };
-		87E7C735274358C3009DF5B3 /* snowfall-old.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = "snowfall-old.gif"; path = "../../../Downloads/snowfall-old.gif"; sourceTree = "<group>"; };
+		87D3D38F27A8512000E3A1E1 /* TasksVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksVC.swift; sourceTree = "<group>"; };
 		B905DF855FA87A1BAA72452C /* Pods-BBNDaily.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDaily.release.xcconfig"; path = "Target Support Files/Pods-BBNDaily/Pods-BBNDaily.release.xcconfig"; sourceTree = "<group>"; };
 		BE9032BE1CACD4EE2088EB73 /* Pods-BBNDaily-BBNDailyUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDaily-BBNDailyUITests.release.xcconfig"; path = "Target Support Files/Pods-BBNDaily-BBNDailyUITests/Pods-BBNDaily-BBNDailyUITests.release.xcconfig"; sourceTree = "<group>"; };
 		D631B185C9E1177FC85FDE8A /* Pods-BBNDailyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDailyTests.debug.xcconfig"; path = "Target Support Files/Pods-BBNDailyTests/Pods-BBNDailyTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -198,7 +192,7 @@
 				8704E97726EEA6F2001826F8 /* VanguardVC.swift */,
 				8761CA7126F29D3B00CADE56 /* Maps.swift */,
 				8704E97926EEA6FC001826F8 /* NewsVC.swift */,
-				87D3D38F27A8512000E3A1E1 /* WorkVC.swift */,
+				87D3D38F27A8512000E3A1E1 /* TasksVC.swift */,
 				8738377527EA48CC00CABF47 /* Settings */,
 				8704E97526EEA686001826F8 /* CalendarVC.swift */,
 			);
@@ -266,10 +260,7 @@
 				8704E97B26EEA84B001826F8 /* Tabs */,
 				8704E97C26EEA865001826F8 /* Login */,
 				87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */,
-				87E7C735274358C3009DF5B3 /* snowfall-old.gif */,
 				878BCCEF27A9BA1400D7B30C /* snowfall.gif */,
-				879D262F27A87C7500F7540E /* snowfall-old2.gif */,
-				87E7C72D274350A2009DF5B3 /* list.gif */,
 				87AAFC4227062AC6006AF8DC /* demo.gif */,
 				87507FCC26E6ADEB005DDFB4 /* Main.storyboard */,
 				87507FCF26E6ADEB005DDFB4 /* Assets.xcassets */,
@@ -445,10 +436,7 @@
 				87507FD326E6ADEB005DDFB4 /* LaunchScreen.storyboard in Resources */,
 				87D3254526E6BCB5009B28CB /* GoogleService-Info.plist in Resources */,
 				87AAFC4327062AC6006AF8DC /* demo.gif in Resources */,
-				87E7C736274358C3009DF5B3 /* snowfall-old.gif in Resources */,
-				879D263027A87C7500F7540E /* snowfall-old2.gif in Resources */,
 				87507FD026E6ADEB005DDFB4 /* Assets.xcassets in Resources */,
-				87E7C72E274350A2009DF5B3 /* list.gif in Resources */,
 				87507FCE26E6ADEB005DDFB4 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -631,7 +619,7 @@
 				8704E97226EEA617001826F8 /* Settings.swift in Sources */,
 				8704E97826EEA6F2001826F8 /* VanguardVC.swift in Sources */,
 				8704E97A26EEA6FC001826F8 /* NewsVC.swift in Sources */,
-				87D3D39027A8512000E3A1E1 /* WorkVC.swift in Sources */,
+				87D3D39027A8512000E3A1E1 /* TasksVC.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
