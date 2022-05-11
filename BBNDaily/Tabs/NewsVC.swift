@@ -7,7 +7,6 @@
 
 import UIKit
 import GoogleSignIn
-import Firebase
 import ProgressHUD
 import InitialsImageView
 import SafariServices

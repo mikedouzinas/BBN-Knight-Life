@@ -8,12 +8,35 @@
 import Foundation
 import UIKit
 
+extension UIViewController {
+    func hideKeyboardWhenTappedAround() {
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(UIViewController.dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+    }
+    @objc func dismissKeyboard() {
+        view.unbindToKeyboard()
+        view.endEditing(true)
+    }
+}
+
 extension String {
-    func checkForDomain() -> Bool {
-        if self.contains("bbns.org") {
-            return true
+    func getValues() -> [String]{
+        var fullName = self
+        let subject = String(fullName.prefix(upTo: fullName.firstIndex(of: "~") ?? fullName.startIndex)).setNotAvailable()
+        fullName.removeSubrange(subject.startIndex...(fullName.firstIndex(of: "~") ?? fullName.startIndex))
+        let teacher = String(fullName.prefix(upTo: fullName.firstIndex(of: "~") ?? fullName.startIndex)).setNotAvailable()
+        fullName.removeSubrange(subject.startIndex...(fullName.firstIndex(of: "~") ?? fullName.startIndex))
+        let room = String(fullName.prefix(upTo: fullName.firstIndex(of: "~") ?? fullName.startIndex)).setNotAvailable()
+        fullName.removeSubrange(subject.startIndex...(fullName.firstIndex(of: "~") ?? fullName.startIndex))
+        return [subject, teacher, room, fullName]
+    }
+    
+    func setNotAvailable() -> String {
+        if self.isEmpty || self == "" {
+            return "N/A"
         }
-        return false
+        return self
     }
     func getDayOfWeek() -> Int? {
         let formatter  = DateFormatter()
@@ -22,6 +45,26 @@ extension String {
         let myCalendar = Calendar(identifier: .gregorian)
         let weekDay = myCalendar.component(.weekday, from: todayDate)
         return weekDay
+    }
+}
+extension Int {
+    func switchBlock() -> String {
+        switch self {
+        case 0:
+            return "a"
+        case 1:
+            return "b"
+        case 2:
+            return "c"
+        case 3:
+            return "d"
+        case 4:
+            return "e"
+        case 5:
+            return "f"
+        default:
+            return "g"
+        }
     }
 }
 extension UIView {
@@ -48,7 +91,7 @@ extension UITableView {
     func setEmptyMessage(_ message: String) {
         let messageLabel = UILabel(frame: CGRect(x: 0, y: 0, width: self.bounds.size.width, height: self.bounds.size.height))
         messageLabel.text = message
-        messageLabel.textColor = UIColor(named: "gold")
+        messageLabel.textColor = UIColor(named: "inverse")
         messageLabel.numberOfLines = 0
         messageLabel.textAlignment = .center
         messageLabel.font = .systemFont(ofSize: 18, weight: .medium)
@@ -57,7 +100,6 @@ extension UITableView {
         self.backgroundView = messageLabel
         self.separatorStyle = .none
     }
-    
     func restore() {
         self.backgroundView = nil
         self.separatorStyle = .singleLine
@@ -104,7 +146,9 @@ extension String {
             "yyyy-MM-dd'T'hh:mm:ss.SSS",
             "yyyy-MM-dd'T'hh:mm:ss.SS",
             "yyyy-MM-dd'T'hh:mm:ss.S",
-            "dd MMM yyyy HH:mm"
+            "dd MMM yyyy HH:mm",
+            "MM/dd/yyyy",
+            "MM/dd/20yy"
         ]
         dateformatter.locale = Locale(identifier: "your_loc_id")
         
@@ -125,10 +169,13 @@ extension String {
                     dateformatter.dateFormat = "MMM dd, yyyy"
                 case 5:
                     dateformatter.dateFormat = "yyyy-MM-dd"
+                case 6:
+                    dateformatter.dateFormat = "EE, MMM dd, yyyy"
+                case 7:
+                    dateformatter.dateFormat = "EEEE, MMMM dd, yyyy"
                 default:
                     dateformatter.dateFormat = "yyyy-MM-dd'T'hh:mm:ss"
                 }
-                
                 return dateformatter.string(from: convertedDate)
             }
             
@@ -407,15 +454,57 @@ extension UIImageView {
         downloaded(from: url, contentMode: mode)
     }
 }
+extension UIView {
+    @discardableResult
+    func addBorders(edges: UIRectEdge,
+                    color: UIColor,
+                    inset: CGFloat = 0.0,
+                    thickness: CGFloat = 1.0) -> [UIView] {
 
+        var borders = [UIView]()
+
+        @discardableResult
+        func addBorder(formats: String...) -> UIView {
+            let border = UIView(frame: .zero)
+            border.backgroundColor = color
+            border.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(border)
+            addConstraints(formats.flatMap {
+                NSLayoutConstraint.constraints(withVisualFormat: $0,
+                                               options: [],
+                                               metrics: ["inset": inset, "thickness": thickness],
+                                               views: ["border": border]) })
+            borders.append(border)
+            return border
+        }
+
+
+        if edges.contains(.top) || edges.contains(.all) {
+            addBorder(formats: "V:|-0-[border(==thickness)]", "H:|-inset-[border]-inset-|")
+        }
+
+        if edges.contains(.bottom) || edges.contains(.all) {
+            addBorder(formats: "V:[border(==thickness)]-0-|", "H:|-inset-[border]-inset-|")
+        }
+
+        if edges.contains(.left) || edges.contains(.all) {
+            addBorder(formats: "V:|-inset-[border]-inset-|", "H:|-0-[border(==thickness)]")
+        }
+
+        if edges.contains(.right) || edges.contains(.all) {
+            addBorder(formats: "V:|-inset-[border]-inset-|", "H:[border(==thickness)]-0-|")
+        }
+
+        return borders
+    }
+}
 class CustomLoader: UIViewController {
     var viewColor: UIColor = .black
     var setAlpha: CGFloat = 0
     var gifName: String = "demo"
-    
+    var isLarge = false
     lazy var transparentView: UIView = {
         let transparentView = UIView(frame: UIScreen.main.bounds)
-        
         transparentView.backgroundColor = .clear
         transparentView.isUserInteractionEnabled = false
         return transparentView
@@ -423,13 +512,33 @@ class CustomLoader: UIViewController {
     
     lazy var gifImage: UIImageView = {
         var gifImage = UIImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 60))
-        gifImage.contentMode = .scaleAspectFit
+        if isLarge {
+            gifImage.frame = view.bounds
+            gifImage.contentMode = .scaleAspectFill
+        }
+        else {
+            gifImage.contentMode = .scaleAspectFit
+        }
         gifImage.center = transparentView.center
         gifImage.isUserInteractionEnabled = false
         gifImage.loadGif(name: gifName)
         return gifImage
     }()
+    convenience init() {
+        self.init(name: nil, isLarge: nil)
+    }
     
+    init(name: String?, isLarge: Bool?) {
+        self.gifName = name ?? "demo"
+        self.isLarge = isLarge ?? false
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    // if this view controller is loaded from a storyboard, imageURL will be nil
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
     func showLoaderView() {
         self.view.addSubview(self.transparentView)
         self.transparentView.addSubview(self.gifImage)
@@ -444,7 +553,7 @@ class CustomLoader: UIViewController {
     
 }
 
-extension blockTableViewCell {
+extension calendarTableViewCell {
     func animateView() {
         UIView.animate(withDuration: 0.5, animations: {
             self.backgroundColor = UIColor(named: "gold-bright")?.withAlphaComponent(0.5)
@@ -454,4 +563,38 @@ extension blockTableViewCell {
             self.contentView.backgroundColor = UIColor(named: "background")
         })
     }
+}
+
+extension UIViewController {
+    func showInputDialog(title:String? = nil,
+                         subtitle:String? = nil,
+                         actionTitle:String? = "Add",
+                         cancelTitle:String? = "Cancel",
+                         inputPlaceholder:String? = nil,
+                         inputKeyboardType:UIKeyboardType = UIKeyboardType.default,
+                         cancelHandler: ((UIAlertAction) -> Swift.Void)? = nil,
+                         actionHandler: ((_ text: String?) -> Void)? = nil) {
+        
+        let alert = UIAlertController(title: title, message: subtitle, preferredStyle: .alert)
+        alert.addTextField { (textField:UITextField) in
+            textField.placeholder = inputPlaceholder
+            textField.keyboardType = inputKeyboardType
+        }
+        alert.addAction(UIAlertAction(title: actionTitle, style: .default, handler: { (action:UIAlertAction) in
+            guard let textField =  alert.textFields?.first else {
+                actionHandler?(nil)
+                return
+            }
+            actionHandler?(textField.text)
+        }))
+        alert.addAction(UIAlertAction(title: cancelTitle, style: .cancel, handler: cancelHandler))
+        
+        self.present(alert, animated: true, completion: nil)
+    }
+}
+
+struct WatchClass {
+    let Title: String
+    let StartTime: String
+    let EndTime: String
 }

@@ -15,14 +15,14 @@ import FSCalendar
 import WebKit
 import GoogleMaps
 
-
 class LoginVC: UIViewController {
     static var fullName = ""
     static var email = ""
     static var phoneNum = ""
-    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
+    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
     static var specialSchedules = [String: [block]]()
     static var specialSchedulesL1 = [String: [block]]()
+    static var specialDayReasons = [String: String]()
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
     @IBOutlet weak var SignInButton: GIDSignInButton!
     override func viewDidLoad() {
@@ -39,12 +39,10 @@ class LoginVC: UIViewController {
         }
         let imageUrl = Auth.auth().currentUser?.photoURL?.absoluteString
         if imageUrl == nil {
-//            LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
             LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", gradientColors: (top: UIColor(named: "gold")!, bottom: UIColor(named: "blue")!), circular: false, textAttributes: nil)
             completion(.success(LoginVC.profilePhoto))
         }
         else {
-            //            LoginVC.profilePhoto.downloaded(from: (Auth.auth().currentUser?.photoURL!)!)
             GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
                 if error != nil || user == nil {
                     // Show the app's signed-out state.
@@ -73,10 +71,9 @@ class LoginVC: UIViewController {
                     completion(.success(LoginVC.profilePhoto))
                 }
             }
-            
-            
         }
     }
+    static var isCreated = false
     func callTabBar() {
         self.performSegue(withIdentifier: "SignIn", sender: nil)
     }
@@ -106,103 +103,134 @@ class LoginVC: UIViewController {
             Auth.auth().signIn(with: credential) {
                 [weak self]
                 result, error in
-                guard let strongSelf = self else {
-                    ProgressHUD.colorAnimation = UIColor(named: "red")!
-                    ProgressHUD.showFailed("Invalid class")
-                    return
-                }
+                
                 guard error == nil else {
                     // show failed sign in
                     ProgressHUD.colorAnimation = UIColor(named: "red")!
                     ProgressHUD.showFailed("Invalid credentials")
                     return
                 }
-                LoginVC.fullName = (FirebaseAuth.Auth.auth().currentUser?.displayName ?? "").replacingOccurrences(of: "**", with: "")
-                LoginVC.email = FirebaseAuth.Auth.auth().currentUser?.email ?? ""
-                if !LoginVC.email.checkForDomain() {
-                    ProgressHUD.colorAnimation = .red
-                    ProgressHUD.showFailed("The registered email is not a part of the BB&N domain")
-                    do {
-                        try FirebaseAuth.Auth.auth().signOut()
-                        
+                LoginVC.setLoginInfo(weakSelf: self)
+            }
+        }
+    }
+    static func setLoginInfo(weakSelf: UIViewController?) {
+        guard let strongSelf = weakSelf else {
+            ProgressHUD.colorAnimation = UIColor(named: "red")!
+            ProgressHUD.showFailed("Invalid class")
+            return
+        }
+        LoginVC.fullName = (FirebaseAuth.Auth.auth().currentUser?.displayName ?? "").replacingOccurrences(of: "**", with: "")
+        LoginVC.email = FirebaseAuth.Auth.auth().currentUser?.email ?? ""
+        LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
+        let db = Firestore.firestore()
+        db.collection("special-schedules").getDocuments { (snapshot, error) in
+            if error != nil {
+                ProgressHUD.showFailed("Failed to find 'special-schedules'")
+            } else {
+                var newArray = [String: [block]]()
+                var reasonArray = [String: String]()
+                var newArray2 = [String: [block]]()
+                for document in (snapshot?.documents)! {
+                    let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
+                    var blocksl1 = [block]()
+                    for x in arrayl1 {
+                        blocksl1.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
                     }
-                    catch {
-                        return
+                    
+                    let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
+                    var blocks = [block]()
+                    for x in array {
+                        blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
                     }
-                    return
+                    let date = document.data()["date"] as? String ?? "N/A"
+                    newArray[date] = blocks
+                    newArray2[date] = blocksl1
+                    reasonArray[date] = document.data()["reason"] as? String ?? "N/A"
                 }
-                LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
-                let db = Firestore.firestore()
-                db.collection("special-schedules").getDocuments { (snapshot, error) in
-                    if error != nil {
-                        ProgressHUD.showFailed("Failed to find 'special-schedules'")
-                    } else {
-                        //                var isCreated = false
-                        var newArray = [String: [block]]()
-                        for document in (snapshot?.documents)! {
-//                            documen
-                            let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
-                            var blocks = [block]()
-                            for x in array {
-                                blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
-                            }
-                            newArray[document.data()["date"] as? String ?? ""] = blocks
-                        }
-                        LoginVC.specialSchedules = newArray
-                        var newArray2 = [String: [block]]()
-                        for document in (snapshot?.documents)! {
-//                            documen
-                            let array = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
-                            var blocks = [block]()
-                            for x in array {
-                                blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? "", reminderTime: x["reminderTime"] ?? "", length: 0))
-                            }
-                            newArray2[document.data()["date"] as? String ?? ""] = blocks
-                        }
-                        LoginVC.specialSchedulesL1 = newArray2
-                        for x in LoginVC.specialSchedulesL1 {
-                            if x.value.isEmpty {
-                                LoginVC.specialSchedulesL1[x.key] = LoginVC.specialSchedules[x.key]
-                            }
-                        }
+                LoginVC.specialDayReasons = reasonArray
+                LoginVC.specialSchedules = newArray
+                LoginVC.specialSchedulesL1 = newArray2
+                for x in LoginVC.specialSchedulesL1 {
+                    if x.value.isEmpty {
+                        LoginVC.specialSchedulesL1[x.key] = LoginVC.specialSchedules[x.key]
                     }
                 }
-                db.collection("users").getDocuments { (snapshot, error) in
-                    if error != nil {
-                        ProgressHUD.showFailed("Failed to find 'users'")
-                    } else {
-                        var isCreated = false
-                        for document in (snapshot?.documents)! {
-                            if let id = document.data()["uid"] as? String {
-                                if id == FirebaseAuth.Auth.auth().currentUser?.uid {
-                                    isCreated = true
-                                    LoginVC.blocks = document.data()
-                                    if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
-                                        LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: {_ in
-                                            
-                                        })
+            }
+        }
+        
+        db.collection("users").getDocuments { (snapshot, error) in
+            if error != nil {
+                ProgressHUD.showFailed("Failed to find 'users'")
+            } else {
+                var isCreated = false
+                for document in (snapshot?.documents)! {
+                    if let id = document.data()["uid"] as? String {
+                        if id == FirebaseAuth.Auth.auth().currentUser?.uid {
+                            isCreated = true
+                            LoginVC.blocks = document.data()
+                            let array = ["a":LoginVC.blocks["A"], "b":LoginVC.blocks["B"], "c":LoginVC.blocks["C"], "d":LoginVC.blocks["D"], "e":LoginVC.blocks["E"], "f":LoginVC.blocks["F"], "g":LoginVC.blocks["G"]]
+                            var i = 0
+                            let myGroup = DispatchGroup()
+                            for x in array {
+                                myGroup.enter()
+                                guard let str: String = x.value as? String, str.contains("~"), !str.contains("/") else {
+                                    i+=1
+                                    myGroup.leave()
+                                    continue
+                                }
+                                let dep = db.collection("classes").document("\(str)")
+                                dep.getDocument(completion: { (snap, err)  in
+                                    if error != nil {
+                                        print("Failed to get class")
                                     }
                                     else {
-                                        LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: {_ in
-                                            
-                                        })
+                                        let arr = [
+                                            ((snap?.data()?["monday"] as? Bool) ?? true), ((snap?.data()?["tuesday"] as? Bool) ?? true), ((snap?.data()?["wednesday"] as? Bool) ?? true), ((snap?.data()?["thursday"] as? Bool) ?? true), ((snap?.data()?["friday"] as? Bool) ?? true)]
+                                        LoginVC.classMeetingDays["\(x.key)"] = arr
+                                        
+                                        i+=1
                                     }
-                                    strongSelf.callTabBar()
+                                    myGroup.leave()
+                                })
+                            }
+                            if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
+                                LoginVC.setProfileImage(useGoogle: true, width: UInt(strongSelf.view.frame.width), completion: {_ in
+                                    
+                                })
+                            }
+                            else {
+                                LoginVC.setProfileImage(useGoogle: false, width: UInt(strongSelf.view.frame.width), completion: {_ in
+                                })
+                            }
+                            myGroup.notify(queue: .main) {
+                                print("Finished all requests.")
+                                guard let Login = (strongSelf as? LoginVC) else {
+                                    print("not LoginVC")
+                                    strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
                                     return
                                 }
+                                Login.callTabBar()
                             }
+                            return
                         }
-                        if isCreated == false {
-                            LoginVC.setNotifications()
-                            let db = Firestore.firestore()
-                            let currDoc = db.collection("users").document("\(Auth.auth().currentUser?.uid ?? "")")
-                            LoginVC.blocks["uid"] = Auth.auth().currentUser?.uid ?? ""
-                            currDoc.setData(LoginVC.blocks)
-                        }
-                        strongSelf.callTabBar()
                     }
                 }
-                
+                guard let Login = (strongSelf as? LoginVC) else {
+                    print("not LoginVC")
+                    strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
+                    return
+                }
+                if isCreated == false {
+                    LoginVC.setNotifications()
+                    let db = Firestore.firestore()
+                    let currDoc = db.collection("users").document("\(Auth.auth().currentUser?.uid ?? "")")
+                    LoginVC.blocks["uid"] = Auth.auth().currentUser?.uid ?? ""
+                    ProgressHUD.colorAnimation = .green
+                    ProgressHUD.showSucceed("Welcome to Knight Life!")
+                    currDoc.setData(LoginVC.blocks)
+                }
+                Login.callTabBar()
             }
         }
     }
@@ -250,7 +278,6 @@ class LoginVC: UIViewController {
         formatter1.dateStyle = .full
         let stringDate = formatter1.string(from: date)
         var currentDay = [block]()
-        print(stringDate)
         let bigArray = LoginVC.getLunchDays()
         let monday = bigArray[0]
         let tuesday = bigArray[1]
@@ -273,7 +300,6 @@ class LoginVC: UIViewController {
         default:
             currentDay = [block]()
         }
-        
         for x in CalendarVC.vacationDates {
             if stringDate.lowercased() == x.date.lowercased() {
                 currentDay = [block]()
@@ -334,11 +360,22 @@ class LoginVC: UIViewController {
         let content = UNMutableNotificationContent()
         content.sound = UNNotificationSound.default
         if x.block != "N/A" {
-            var tile = (LoginVC.blocks[x.block] ?? "") as! String
+            var tile = ((LoginVC.blocks[x.block] ?? "") as? String) ?? ""
             if tile == "" {
                 tile = "\(x.block) Block"
             }
+            else if tile.contains("~") {
+                let array = tile.getValues()
+                let num = weekNum - 2
+                
+                tile = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+                if num >= 0 && num <= 4 && !(LoginVC.classMeetingDays["\(x.block.lowercased())"]?[num] ?? true) {
+                    tile = "\(x.block) Block"
+                }
+            }
             content.title = "5 Minutes Until \(tile)"
+            
+            // Write/Set Value
         }
         else {
             content.title = "5 Minutes Until \(x.name)"
@@ -354,6 +391,7 @@ class LoginVC: UIViewController {
             }
         }
     }
+    static var classMeetingDays = ["a":[true, true, true, true, true],"b":[true, true, true, true, true],"c":[true, true, true, true, true],"d":[true, true, true, true, true],"e":[true, true, true, true, true], "f":[true, true, true, true, true], "g":[true, true, true, true, true]]
     static var todayArray: CustomWeekday!
     static var twoDaysArray: CustomWeekday!
     static var threeDaysArray: CustomWeekday!
@@ -364,7 +402,6 @@ class LoginVC: UIViewController {
     static var bigArray = [CustomWeekday]()
     static func setNotifications() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-        
         let calendar = Calendar.current
         let today = Date()
         let twoDays = calendar.date(byAdding: .day, value: 1, to: Date())!
@@ -382,122 +419,30 @@ class LoginVC: UIViewController {
         LoginVC.sixDaysArray = LoginVC.findArray(date: sixDays)
         LoginVC.sevenDaysArray = LoginVC.findArray(date: sevenDays)
         bigArray = [todayArray, twoDaysArray, threeDaysArray, fourDaysArray, fiveDaysArray, sixDaysArray, sevenDaysArray]
-        for x in todayArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(todayArray.weekday)")
-            addNotif(x: x, weekDay: todayArray.weekday)
-        }
-        print("\n")
-        for x in twoDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(twoDaysArray.weekday)")
-            addNotif(x: x, weekDay: twoDaysArray.weekday)
-        }
-        print("\n")
-        for x in threeDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(threeDaysArray.weekday)")
-            addNotif(x: x, weekDay: threeDaysArray.weekday)
-        }
-//        print("\n")
-        for x in fourDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(fourDaysArray.weekday)")
-            addNotif(x: x, weekDay: fourDaysArray.weekday)
-        }
-        print("\n")
-        for x in fiveDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(fiveDaysArray.weekday)")
-            addNotif(x: x, weekDay: fiveDaysArray.weekday)
-        }
-        print("\n")
-        for x in sixDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(sixDaysArray.weekday)")
-            addNotif(x: x, weekDay: sixDaysArray.weekday)
-        }
-        print("\n")
-        for x in sevenDaysArray.blocks {
-//            var title = ""
-//            if x.block != "N/A" {
-//                var tile = (LoginVC.blocks[x.block] ?? "") as! String
-//                if tile == "" {
-//                    tile = "\(x.block) Block"
-//                }
-//                title = "5 Minutes Until \(tile)"
-//            }
-//            else {
-//                title = "5 Minutes Until \(x.name)"
-//            }
-//            print("notifs for \(title) in \(sevenDaysArray.weekday)")
-            addNotif(x: x, weekDay: sevenDaysArray.weekday)
-        }
-        UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { results in
-            for x in results {
-                print("title: \(x.content.title)")
+        
+        if ((LoginVC.blocks["notifs"] as? String) ?? "") == "true" {
+            for x in todayArray.blocks {
+                addNotif(x: x, weekDay: todayArray.weekday)
             }
-        })
+            for x in twoDaysArray.blocks {
+                addNotif(x: x, weekDay: twoDaysArray.weekday)
+            }
+            for x in threeDaysArray.blocks {
+                addNotif(x: x, weekDay: threeDaysArray.weekday)
+            }
+            for x in fourDaysArray.blocks {
+                addNotif(x: x, weekDay: fourDaysArray.weekday)
+            }
+            for x in fiveDaysArray.blocks {
+                addNotif(x: x, weekDay: fiveDaysArray.weekday)
+            }
+            for x in sixDaysArray.blocks {
+                addNotif(x: x, weekDay: sixDaysArray.weekday)
+            }
+            for x in sevenDaysArray.blocks {
+                addNotif(x: x, weekDay: sevenDaysArray.weekday)
+            }
+        }
     }
 }
 

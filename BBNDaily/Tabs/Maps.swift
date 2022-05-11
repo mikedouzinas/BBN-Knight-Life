@@ -9,11 +9,18 @@ import Foundation
 import UIKit
 import GoogleMaps
 import MapKit
+import ProgressHUD
 
 protocol ResultsViewControllerDelegate: AnyObject {
     func didTapPlace(with classroom: Classroom)
 }
-class MapsVC: UIViewController, UISearchResultsUpdating, ResultsViewControllerDelegate, CLLocationManagerDelegate {
+class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManagerDelegate, GMSMapViewDelegate {
+    @IBAction func moreInfo(_ sender: UIBarButtonItem) {
+        guard let number = URL(string: "tel://" + "16175930396") else { return }
+        UIApplication.shared.open(number)
+//        ProgressHUD.colorAnimation = UIColor(named: "gold-bright")!
+//        ProgressHUD.showSucceed("Coming Soon! \n Bus number is (617) 593-0396")
+    }
     var locationManager = CLLocationManager()
     func didTapPlace(with classroom: Classroom) {
         self.searchVC.searchBar.text = classroom.name
@@ -24,108 +31,108 @@ class MapsVC: UIViewController, UISearchResultsUpdating, ResultsViewControllerDe
         let marker = GMSMarker()
         let coord = CLLocationCoordinate2D(latitude: classroom.lat, longitude: classroom.lon)
         marker.position = coord
-//        marker.p
         marker.title = "\(classroom.name)"
-//        marker.iconView = backview
         marker.snippet = "Upper School"
-        marker.icon = UIImage(named: "map-marker")
+        marker.icon = UIImage(named: "map-marker")?.withTintColor(UIColor(named: "blue")!)
         marker.map = mapView
         self.mapView.camera = camera
     }
     
-    func updateSearchResults(for searchController: UISearchController) {
-        guard let query = searchController.searchBar.text, !query.trimmingCharacters(in: .whitespaces).isEmpty, let resultsVC = searchController.searchResultsController as? ResultsVC else {
-            ResultsViewController.configureData(with: [Classroom]())
-            return
-        }
-        
-        resultsVC.delegate = self
-        ResultsViewController.configureData(with: places.filter {c in
-            return c.name.lowercased().contains(query.lowercased())
-        })
-    }
     var ResultsViewController: ResultsVC!
     var searchVC = UISearchController()
     var mapView: GMSMapView!
+    func draw(src: CLLocationCoordinate2D, dst: CLLocationCoordinate2D) {
+        let config = URLSessionConfiguration.default
+        let session = URLSession(configuration: config)
+
+        let url = URL(string: "https://maps.googleapis.com/maps/api/directions/json?origin=\(src.latitude),\(src.longitude)&destination=\(dst.latitude),\(dst.longitude)&sensor=false&mode=driving&key=AIzaSyBY5M_mXpnXwCz5-T889VLtkm22HjY8-rw")!
+
+        let task = session.dataTask(with: url, completionHandler: {
+            (data, response, error) in
+            if error != nil {
+                print(error!.localizedDescription)
+            } else {
+                do {
+                    if let json : [String:Any] = try JSONSerialization.jsonObject(with: data!, options: .allowFragments) as? [String: Any] {
+                        let preRoutes = json["routes"] as! NSArray
+                        let routes = preRoutes[0] as! NSDictionary
+                        let routeOverviewPolyline:NSDictionary = routes.value(forKey: "overview_polyline") as! NSDictionary
+                        let polyString = routeOverviewPolyline.object(forKey: "points") as! String
+                        DispatchQueue.main.async(execute: {
+                            let path = GMSPath(fromEncodedPath: polyString)
+                            let polyline = GMSPolyline(path: path)
+                            polyline.strokeWidth = 6.0
+                            polyline.strokeColor = UIColor(named: "maps-border")!
+                            polyline.map = self.mapView
+                            let innerline = GMSPolyline(path: path)
+                            innerline.strokeWidth = 3.0
+                            innerline.strokeColor = UIColor(named: "maps-blue")!
+                            innerline.map = self.mapView
+                        })
+                    }
+
+                } catch {
+                    print("parsing error")
+                }
+            }
+        })
+        task.resume()
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
-//        let map = MKMapView(frame: .zero)
-//        map.camera = MKMapCamera(lookingAtCenter: CLLocationCoordinate2D(latitude: 0, longitude: 0), fromDistance: 1000, pitch: 0, heading: 0)
-//        map.mapType = .satellite
-//        map.translatesAutoresizingMaskIntoConstraints = false
-//        view.addSubview(map)
-//        map.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-//        map.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-//        map.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
-//        map.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         GMSServices.provideAPIKey("AIzaSyBY5M_mXpnXwCz5-T889VLtkm22HjY8-rw")
-        let camera = GMSCameraPosition.camera(withLatitude: 42.37088697136021, longitude: -71.13551938855346, zoom: 19) // 42.37088697136021, -71.13551938855346
+        // 42.36894453932155, -71.13374727281084
+        addLocations()
+        locationManager.requestWhenInUseAuthorization()
+        self.mapView.isMyLocationEnabled = true
+        self.mapView.delegate = self
+        self.locationManager.delegate = self
+        self.locationManager.startUpdatingLocation()
+        mapView.mapType = .hybrid
+        mapView.settings.scrollGestures = true
+        mapView.settings.zoomGestures = true
+    }
+    func addLocations() {
+        let camera = GMSCameraPosition.camera(withLatitude: 42.36894453932155, longitude: -71.13374727281084, zoom: 15)
         mapView = GMSMapView.map(withFrame: .zero, camera: camera)
         let marker = GMSMarker()
         let coord = CLLocationCoordinate2D(latitude: 42.37088697136021, longitude: -71.13551938855346)
         marker.position = coord
-//        marker.p
         marker.title = "Buckingham Browne & Nichols"
-//        marker.iconView = backview
-        marker.icon = UIImage(named: "map-marker")
+        marker.icon = UIImage(named: "map-marker")?.withTintColor(UIColor(named: "blue")!)
         marker.snippet = "Upper School"
         marker.map = mapView
-//        mapView.show
+        
+        let fourthMarker = GMSMarker()
+        let coord2 = CLLocationCoordinate2D(latitude: 42.365025316906966, longitude: -71.13659662107911)
+        fourthMarker.position = coord2
+        fourthMarker.title = "Fourth Lot"
+        fourthMarker.icon = UIImage(named: "parking")?.withTintColor(UIColor(named: "blue")!)
+        fourthMarker.snippet = "Parking"
+        fourthMarker.map = mapView
+        
+        let harvardMarker = GMSMarker()
+        let coord3 = CLLocationCoordinate2D(latitude: 42.3729343, longitude: -71.1218140)
+        harvardMarker.position = coord3
+        harvardMarker.title = "Harvard Square"
+        harvardMarker.icon = UIImage(named: "harvard")
+        harvardMarker.snippet = "Bus Stop"
+        harvardMarker.map = mapView
+        
         self.view = mapView
-        locationManager.requestWhenInUseAuthorization()
-//        if(CLLocationManager.authorizationStatus() == .authorizedWhenInUse ||
-//        CLLocationManager.authorizationStatus() == .authorizedAlways) {
-//           currentLoc = locationManager.location
-//           print(currentLoc.coordinate.latitude)
-//           print(currentLoc.coordinate.longitude)
-//        }
-        self.mapView.isMyLocationEnabled = true
-        self.locationManager.delegate = self
-        self.locationManager.startUpdatingLocation()
-        ResultsViewController = ResultsVC()
-        createSearchBar()
-        // Creates a marker in the center of the map.
-//        let marker = GMSMarker()
-//        marker.position = CLLocationCoordinate2D(latitude: 0, longitude: 0)
-//
-//        marker.title = "Buckingham Browne & Nichols"
-//        let backview = GMSPanoramaView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
-//        backview.layer.masksToBounds = true
-//        backview.backgroundColor = UIColor.red
-//        backview.layer.cornerRadius = 8
-//        marker.icon = UIImage(named: "vanguardLogo")
-////        marker.iconView = backview
-//        marker.snippet = "Cambridge, MA"
-//        marker.map = mapView
-        mapView.mapType = .satellite
-        mapView.settings.scrollGestures = true
-        mapView.settings.zoomGestures = true
-//        for x in places {
-//            let marker = GMSMarker()
-//            let coord = CLLocationCoordinate2D(latitude: x.lat, longitude: x.lon)
-//            marker.position = coord
-//    //        marker.p
-//            marker.title = "\(x.name)"
-//    //        marker.iconView = backview
-//            marker.snippet = "Upper School"
-//            marker.icon = UIImage(named: "map-marker")
-//            marker.map = mapView
-//        }
+        draw(src: coord, dst: coord2)
+        draw(src: coord, dst: coord3)
     }
     func createSearchBar(){
         searchVC = UISearchController(searchResultsController: ResultsViewController)
         self.navigationItem.searchController = searchVC
-        searchVC.searchResultsUpdater = self
-//        searchVC.searchBar.backgroundColor = UIColor(named: "blue")?.withAlphaComponent(0.5)
         searchVC.hidesNavigationBarDuringPresentation = false
         searchVC.searchBar.searchTextField.layer.cornerRadius = 8
         searchVC.searchBar.searchTextField.layer.masksToBounds = true
-//        searchVC.searchBar.compatibleSearchTextField.textColor = UIColor.XXX
         searchVC.searchBar.compatibleSearchTextField.backgroundColor = UIColor(named: "blue")?.withAlphaComponent(0.5)
         searchVC.searchBar.tintColor = .systemBlue
         searchVC.obscuresBackgroundDuringPresentation = false
         searchVC.searchBar.placeholder = "Search '112'"
-//        searchVC.searchBar.
     }
     var filteredPlaces = [Classroom]()
     private var places = [

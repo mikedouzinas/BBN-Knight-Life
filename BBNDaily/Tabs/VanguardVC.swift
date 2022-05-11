@@ -14,7 +14,6 @@ import SafariServices
 import FSCalendar
 import WebKit
 
-
 class VanguardVC: CustomLoader, WKNavigationDelegate {
     private let webView: WKWebView = {
         let webview = WKWebView(frame: .zero)
@@ -24,7 +23,6 @@ class VanguardVC: CustomLoader, WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         hideLoaderView()
     }
-    //    https://www.bbns.org/news-events/latest-news-from-bbn
     let urlString = "https://vanguard.bbns.org/category/on-campus/"
     override func viewDidLoad() {
         super.viewDidLoad()
