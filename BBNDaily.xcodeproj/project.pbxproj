@@ -10,7 +10,6 @@
 		272BA653282D40E0009BA067 /* Pods_BBNDaily.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41234358532501BD0AED646E /* Pods_BBNDaily.framework */; };
 		272BA654282D40E0009BA067 /* Pods_BBNDaily.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 41234358532501BD0AED646E /* Pods_BBNDaily.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		27B8BCDD285CA60400892509 /* SideMenuVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B8BCDC285CA60400892509 /* SideMenuVC.swift */; };
-		27B8BCE0285CA69700892509 /* SideMenuCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 27B8BCDF285CA69700892509 /* SideMenuCell.xib */; };
 		64F54C87B0FAF6B8DE29C7F4 /* Pods_BBNDailyTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 052A7ACCF0AF9B275D98E9CE /* Pods_BBNDailyTests.framework */; };
 		8704E96E26EEA5B9001826F8 /* LoginVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E96D26EEA5B9001826F8 /* LoginVC.swift */; };
 		8704E97026EEA5E9001826F8 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E96F26EEA5E9001826F8 /* Extensions.swift */; };
@@ -39,6 +38,7 @@
 		87AAFC4327062AC6006AF8DC /* demo.gif in Resources */ = {isa = PBXBuildFile; fileRef = 87AAFC4227062AC6006AF8DC /* demo.gif */; };
 		87D3254526E6BCB5009B28CB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */; };
 		87D3D39027A8512000E3A1E1 /* WorkVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D3D38F27A8512000E3A1E1 /* WorkVC.swift */; };
+		87FDD7BE285E36B300E07ABA /* SideMenuCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 87FDD7BD285E36B300E07ABA /* SideMenuCell.xib */; };
 		8DDE938FA377A520FC51B6FE /* Pods_BBNDaily_BBNDailyUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7AC54026BFC1C4FAC95170AF /* Pods_BBNDaily_BBNDailyUITests.framework */; };
 /* End PBXBuildFile section */
 
@@ -105,7 +105,6 @@
 		052A7ACCF0AF9B275D98E9CE /* Pods_BBNDailyTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BBNDailyTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		08DD6C0CB206C606AC542AF7 /* Pods-BBNDaily-BBNDailyUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDaily-BBNDailyUITests.debug.xcconfig"; path = "Target Support Files/Pods-BBNDaily-BBNDailyUITests/Pods-BBNDaily-BBNDailyUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		27B8BCDC285CA60400892509 /* SideMenuVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideMenuVC.swift; sourceTree = "<group>"; };
-		27B8BCDF285CA69700892509 /* SideMenuCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = SideMenuCell.xib; path = ../../../SideMenuCell.xib; sourceTree = "<group>"; };
 		41234358532501BD0AED646E /* Pods_BBNDaily.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BBNDaily.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		49847246748BA3D748CB8435 /* Pods-BBNDaily.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDaily.debug.xcconfig"; path = "Target Support Files/Pods-BBNDaily/Pods-BBNDaily.debug.xcconfig"; sourceTree = "<group>"; };
 		7AC54026BFC1C4FAC95170AF /* Pods_BBNDaily_BBNDailyUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BBNDaily_BBNDailyUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -144,6 +143,7 @@
 		87AAFC4227062AC6006AF8DC /* demo.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = demo.gif; sourceTree = "<group>"; };
 		87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		87D3D38F27A8512000E3A1E1 /* WorkVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkVC.swift; sourceTree = "<group>"; };
+		87FDD7BD285E36B300E07ABA /* SideMenuCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SideMenuCell.xib; sourceTree = "<group>"; };
 		B905DF855FA87A1BAA72452C /* Pods-BBNDaily.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDaily.release.xcconfig"; path = "Target Support Files/Pods-BBNDaily/Pods-BBNDaily.release.xcconfig"; sourceTree = "<group>"; };
 		BE9032BE1CACD4EE2088EB73 /* Pods-BBNDaily-BBNDailyUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDaily-BBNDailyUITests.release.xcconfig"; path = "Target Support Files/Pods-BBNDaily-BBNDailyUITests/Pods-BBNDaily-BBNDailyUITests.release.xcconfig"; sourceTree = "<group>"; };
 		D631B185C9E1177FC85FDE8A /* Pods-BBNDailyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDailyTests.debug.xcconfig"; path = "Target Support Files/Pods-BBNDailyTests/Pods-BBNDailyTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -202,7 +202,7 @@
 		27B8BCDE285CA67E00892509 /* Side Menu */ = {
 			isa = PBXGroup;
 			children = (
-				27B8BCDF285CA69700892509 /* SideMenuCell.xib */,
+				87FDD7BD285E36B300E07ABA /* SideMenuCell.xib */,
 				27B8BCDC285CA60400892509 /* SideMenuVC.swift */,
 			);
 			path = "Side Menu";
@@ -471,8 +471,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				878BCCF027A9BA1400D7B30C /* snowfall.gif in Resources */,
-				27B8BCE0285CA69700892509 /* SideMenuCell.xib in Resources */,
 				87507FD326E6ADEB005DDFB4 /* LaunchScreen.storyboard in Resources */,
+				87FDD7BE285E36B300E07ABA /* SideMenuCell.xib in Resources */,
 				87D3254526E6BCB5009B28CB /* GoogleService-Info.plist in Resources */,
 				87AAFC4327062AC6006AF8DC /* demo.gif in Resources */,
 				87507FD026E6ADEB005DDFB4 /* Assets.xcassets in Resources */,
@@ -863,7 +863,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.8.12;
+				MARKETING_VERSION = 1.9;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -890,7 +890,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 1.8.12;
+				MARKETING_VERSION = 1.9;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

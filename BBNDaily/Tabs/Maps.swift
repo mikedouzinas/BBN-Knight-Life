@@ -78,10 +78,20 @@ class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManager
         })
         task.resume()
     }
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        GMSServices.provideAPIKey("AIzaSyBY5M_mXpnXwCz5-T889VLtkm22HjY8-rw")
-        // 42.36894453932155, -71.13374727281084
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        mapView.clear()
+        mapView.removeFromSuperview()
+        mapView = nil
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.navigationBar.isTranslucent = true
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        mapView = GMSMapView(frame: view.bounds)
+        view.addSubview(mapView)
         addLocations()
         locationManager.requestWhenInUseAuthorization()
         self.mapView.isMyLocationEnabled = true
@@ -91,6 +101,11 @@ class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManager
         mapView.mapType = .normal
         mapView.settings.scrollGestures = true
         mapView.settings.zoomGestures = true
+    }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        GMSServices.provideAPIKey("AIzaSyBY5M_mXpnXwCz5-T889VLtkm22HjY8-rw")
+        // 42.36894453932155, -71.13374727281084
     }
     func addLocations() {
         let camera = GMSCameraPosition.camera(withLatitude: 42.36894453932155, longitude: -71.13374727281084, zoom: 15)
@@ -239,9 +254,6 @@ class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManager
         Classroom(name: "285", lat: 42.37153612174247, lon: -71.13528496630761),
         Classroom(name: "283", lat: 42.37148856356952, lon: -71.13528898962103)
     ]
-    override func viewWillAppear(_ animated: Bool) {
-        self.navigationController?.navigationBar.isTranslucent = true
-    }
 }
 struct Classroom {
     let name: String

@@ -1730,7 +1730,7 @@
                                     <action selector="signOut" destination="9Iv-Pa-cpR" eventType="touchUpInside" id="Uc1-gl-WoU"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Version 1.0 BETA" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rcT-Oy-Uyy">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Version 1.9 BETA" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rcT-Oy-Uyy">
                                 <rect key="frame" x="10" y="802" width="240" height="15"/>
                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="12"/>
                                 <color key="textColor" name="inverseBackgroundCol"/>
@@ -2053,6 +2053,61 @@
             </objects>
             <point key="canvasLocation" x="-2425" y="-244"/>
         </scene>
+        <!--News-->
+        <scene sceneID="aUn-lT-E0u">
+            <objects>
+                <viewController id="5wB-6E-kBw" customClass="POVVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8Tu-ph-Xpk">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="e4l-oZ-el9"/>
+                        <color key="backgroundColor" name="background"/>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Vanguard" image="vanguardLogo" selectedImage="vanguardLogo" id="WnJ-lL-qsk"/>
+                    <toolbarItems/>
+                    <navigationItem key="navigationItem" title="News" id="kcO-m5-ExO">
+                        <barButtonItem key="leftBarButtonItem" title="Menu" image="menu" id="k85-zf-ghx">
+                            <color key="tintColor" name="white"/>
+                        </barButtonItem>
+                    </navigationItem>
+                    <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
+                    <connections>
+                        <outlet property="sideMenuBtn" destination="k85-zf-ghx" id="M9J-Se-q6J"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="l9B-p3-lPF" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-2932" y="1296"/>
+        </scene>
+        <!--Schedule-->
+        <scene sceneID="239-8M-X1E">
+            <objects>
+                <navigationController storyboardIdentifier="POVNavID" id="P5N-l8-CPT" sceneMemberID="viewController">
+                    <tabBarItem key="tabBarItem" title="Schedule" image="calendar" catalog="system" selectedImage="calendar" id="mqI-yj-aH4"/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="ZqS-zh-gvk">
+                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <color key="backgroundColor" name="background-light"/>
+                        <color key="tintColor" name="white"/>
+                        <textAttributes key="titleTextAttributes">
+                            <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        </textAttributes>
+                        <textAttributes key="largeTitleTextAttributes">
+                            <color key="textColor" name="white"/>
+                        </textAttributes>
+                        <navigationBarAppearance key="scrollEdgeAppearance">
+                            <color key="backgroundColor" name="background-light"/>
+                            <color key="shadowColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        </navigationBarAppearance>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="5wB-6E-kBw" kind="relationship" relationship="rootViewController" id="YQx-rO-Hem"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="NAm-is-Ejg" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-2932" y="574"/>
+        </scene>
     </scenes>
     <inferredMetricsTieBreakers>
         <segue reference="az4-St-gvp"/>
@@ -2060,22 +2115,22 @@
     </inferredMetricsTieBreakers>
     <resources>
         <image name="announcement" width="21.333333969116211" height="21.333333969116211"/>
-        <image name="bus" catalog="system" width="32" height="32"/>
-        <image name="calendar" catalog="system" width="32" height="32"/>
-        <image name="checkmark.circle" catalog="system" width="32" height="32"/>
-        <image name="chevron.down" catalog="system" width="32" height="32"/>
-        <image name="chevron.up" catalog="system" width="32" height="32"/>
-        <image name="doc.plaintext" catalog="system" width="32" height="32"/>
-        <image name="gear" catalog="system" width="32" height="32"/>
+        <image name="bus" catalog="system" width="128" height="122"/>
+        <image name="calendar" catalog="system" width="128" height="106"/>
+        <image name="checkmark.circle" catalog="system" width="128" height="121"/>
+        <image name="chevron.down" catalog="system" width="128" height="72"/>
+        <image name="chevron.up" catalog="system" width="128" height="72"/>
+        <image name="doc.plaintext" catalog="system" width="115" height="128"/>
+        <image name="gear" catalog="system" width="128" height="119"/>
         <image name="google.png" width="18" height="18"/>
         <image name="logo" width="500" height="500"/>
         <image name="menu" width="25" height="25"/>
-        <image name="pencil.circle" catalog="system" width="32" height="32"/>
-        <image name="phone.circle.fill" catalog="system" width="32" height="32"/>
-        <image name="plus" catalog="system" width="32" height="32"/>
-        <image name="plus.circle" catalog="system" width="32" height="32"/>
+        <image name="pencil.circle" catalog="system" width="128" height="121"/>
+        <image name="phone.circle.fill" catalog="system" width="128" height="121"/>
+        <image name="plus" catalog="system" width="128" height="113"/>
+        <image name="plus.circle" catalog="system" width="128" height="121"/>
         <image name="vanguardLogo" width="27.666666030883789" height="29"/>
-        <image name="xmark.circle" catalog="system" width="32" height="32"/>
+        <image name="xmark.circle" catalog="system" width="128" height="121"/>
         <namedColor name="background">
             <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>

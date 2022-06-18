@@ -85,3 +85,14 @@ class CHASMVC: PublicationVC {
         sideMenuBtn.action = #selector(revealViewController()?.revealSideMenu)
     }
 }
+
+class POVVC: PublicationVC {
+    @IBOutlet weak var sideMenuBtn: UIBarButtonItem!
+    override func viewDidLoad() {
+        self.urlString =  "https://pov.bbns.org/"
+        super.viewDidLoad()
+        self.title = "POV"
+        sideMenuBtn.target = revealViewController()
+        sideMenuBtn.action = #selector(revealViewController()?.revealSideMenu)
+    }
+}
