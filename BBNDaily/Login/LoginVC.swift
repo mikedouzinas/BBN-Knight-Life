@@ -24,6 +24,8 @@ class LoginVC: UIViewController {
     static var specialSchedulesL1 = [String: [block]]()
     static var specialDayReasons = [String: String]()
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
+    static var benchwarmerLogo = UIImageView(image: UIImage(named: "logo")!)
+    static var spectatorLogo = UIImageView(image: UIImage(named: "logo")!)
     @IBOutlet weak var SignInButton: GIDSignInButton!
     override func viewDidLoad() {
         super.viewDidLoad()

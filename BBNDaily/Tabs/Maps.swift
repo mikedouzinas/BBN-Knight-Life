@@ -88,7 +88,7 @@ class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManager
         self.mapView.delegate = self
         self.locationManager.delegate = self
         self.locationManager.startUpdatingLocation()
-        mapView.mapType = .hybrid
+        mapView.mapType = .normal
         mapView.settings.scrollGestures = true
         mapView.settings.zoomGestures = true
     }
@@ -102,7 +102,7 @@ class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManager
         marker.icon = UIImage(named: "map-marker")?.withTintColor(UIColor(named: "blue")!)
         marker.snippet = "Upper School"
         marker.map = mapView
-        
+
         let fourthMarker = GMSMarker()
         let coord2 = CLLocationCoordinate2D(latitude: 42.365025316906966, longitude: -71.13659662107911)
         fourthMarker.position = coord2
@@ -110,7 +110,7 @@ class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManager
         fourthMarker.icon = UIImage(named: "parking")?.withTintColor(UIColor(named: "blue")!)
         fourthMarker.snippet = "Parking"
         fourthMarker.map = mapView
-        
+
         let harvardMarker = GMSMarker()
         let coord3 = CLLocationCoordinate2D(latitude: 42.3729343, longitude: -71.1218140)
         harvardMarker.position = coord3

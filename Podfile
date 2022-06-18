@@ -7,6 +7,7 @@ target 'BBNDaily' do
 
   # Pods for BBNDaily
 	pod 'FSCalendar'
+	pod 'Firebase'
 	pod 'InitialsImageView'
 	pod 'ProgressHUD'
 	pod 'BubbleTabBar'
@@ -18,6 +19,7 @@ target 'BBNDaily' do
 	pod 'GoogleSignIn'
 	pod 'GoogleMaps'
 	pod 'SkeletonView'
+	pod 'SideMenu'
   target 'BBNDailyTests' do
     inherit! :search_paths
     # Pods for testing

@@ -209,6 +209,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             currDoc.setData(LoginVC.blocks)
             LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: { [self]_ in
                 setHeader()
+                SettingsVC.ProfileLink.headerImageView.image = LoginVC.profilePhoto.image
             })
         }
         else {
@@ -218,6 +219,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             currDoc.setData(LoginVC.blocks)
             LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: { [self]_ in
                 setHeader()
+                SettingsVC.ProfileLink.headerImageView.image = LoginVC.profilePhoto.image
             })
         }
     }
@@ -451,7 +453,7 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     private var blocks = [settingsBlock]()
     private var preferenceBlocks = [settingsBlock]()
     private var lunchBlocks = [settingsBlock]()
-    
+    static var ProfileLink: SideMenuViewController!
     private var profileCells = [ProfileCell]()
     private var tableView = UITableView()
     @objc func signOut() {
@@ -523,6 +525,20 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         }
         shareSheetVC = UIActivityViewController(activityItems: ["\(LoginVC.fullName.trimmingCharacters(in: .whitespacesAndNewlines))'s Classes\nA: \(a.prefix(a.count-2))\nB: \(b.prefix(b.count-2))\nC: \(c.prefix(c.count-2))\nD: \(d.prefix(d.count-2))\nE: \(e.prefix(e.count-2))\nF: \(f.prefix(f.count-2))\nG: \(g.prefix(g.count-2))"], applicationActivities: nil)
     }
+    public let closeButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("", for: .normal)
+        button.setImage(UIImage(named: "x-mark"), for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.tintColor = .white
+        button.dropShadow()
+        button.backgroundColor = .clear
+        return button
+    } ()
+    @objc func close(_ sender: Any) {
+        print("made it?")
+        dismiss(animated: true, completion: nil)
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(named: "background")
@@ -593,7 +609,17 @@ class SettingsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             i+=1
         }
         self.tableView.reloadData()
+//        closeButton.addTarget(self, action: #selector(close(_:)), for: .touchUpInside)
+//        view.addSubview(closeButton)
+//        closeButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 10).isActive = true
+//        closeButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 10).isActive = true
+//        closeButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
+//        closeButton.widthAnchor.constraint(equalTo: closeButton.heightAnchor).isActive = true
         setHeader()
+    }
+    @IBAction func closeClass(_ sender: Any) {
+        print("made it?")
+        dismiss(animated: true, completion: nil)
     }
     @objc func openSecretSchedule() {
         if LoginVC.email.contains("mveson") {

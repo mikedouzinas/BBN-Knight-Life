@@ -16,9 +16,10 @@ import SkeletonView
 import WatchConnectivity
 
 class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate, WCSessionDelegate {
+    @IBOutlet var sideMenuBtn: UIBarButtonItem!
+    static var hasPressedSideMenu = false
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         print("complete?")
-        
         setWatchClasses(todBlocks: CalendarVC.todayBlocks)
     }
     
@@ -29,7 +30,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     func sessionDidDeactivate(_ session: WCSession) {
         print("deactivated?")
     }
-    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return currentDay.count
     }
@@ -535,6 +535,8 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         super.viewDidLoad()
         print("view DID load")
         NotificationCenter.default.addObserver(self, selector: #selector(screenReopened), name: UIApplication.didBecomeActiveNotification, object: nil)
+        sideMenuBtn.target = revealViewController()
+        sideMenuBtn.action = #selector(revealViewController()?.revealSideMenu)
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
         self.navigationItem.backBarButtonItem?.tintColor = .white
@@ -730,10 +732,10 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
                 return
             }
         }
-        if date.isBetweenTimeFrame(date1: "18 Dec 2021 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Jan 2022 04:00".dateFromMultipleFormats() ?? Date()) || date.isBetweenTimeFrame(date1: "12 Mar 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "27 Mar 2022 04:00".dateFromMultipleFormats() ?? Date()) {
+        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Sep 2022 04:00".dateFromMultipleFormats() ?? Date()) {
             currentDay = [block]()
             ScheduleCalendar.restore()
-            ScheduleCalendar.setEmptyMessage("No Class - Enjoy Break!")
+            ScheduleCalendar.setEmptyMessage("No Class - Summer Break!")
             completion(.success(currentDay))
             return
         }
@@ -1418,4 +1420,92 @@ class PersonPopupVC: UIViewController {
         textView.textColor = UIColor(named: "inverse")
         textView.backgroundColor = UIColor(named: "background")
     }
+}
+
+class RoundTabBarController: UITabBarController {
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        let layer = CAShapeLayer()
+        layer.path = UIBezierPath(roundedRect: CGRect(x: 30, y: tabBar.bounds.minY + 5, width: tabBar.bounds.width - 60, height: tabBar.bounds.height + 10), cornerRadius: 18).cgPath
+        layer.shadowColor = UIColor.lightGray.cgColor
+        layer.shadowOffset = CGSize(width: 5.0, height: 5.0)
+        layer.shadowRadius = 10
+        layer.shadowOpacity = 0.3
+        layer.borderWidth = 1.0
+        layer.opacity = 1.0
+        layer.isHidden = false
+        layer.masksToBounds = false
+        layer.fillColor = UIColor(named: "blue")?.cgColor
+        
+        tabBar.layer.insertSublayer(layer, at: 0)
+        
+        if let items = tabBar.items {
+            items.forEach { item in
+                item.title = nil
+                item.imageInsets = UIEdgeInsets(top: 6, left: 0, bottom: -6, right: 0)
+                item.badgeColor = UIColor.white
+            }
+        }
+        tabBar.itemWidth = 30.0
+        tabBar.itemPositioning = .centered
+  }
+}
+
+@IBDesignable class TabBarWithCorners: UITabBar {
+    @IBInspectable var color: UIColor?
+    @IBInspectable var radii: CGFloat = 15.0
+
+    private var shapeLayer: CALayer?
+
+    override func draw(_ rect: CGRect) {
+        addShape()
+    }
+
+    private func addShape() {
+        let shapeLayer = CAShapeLayer()
+
+        shapeLayer.path = createPath()
+        shapeLayer.strokeColor = UIColor.gray.withAlphaComponent(0.1).cgColor
+        shapeLayer.fillColor = color?.cgColor ?? UIColor.white.cgColor
+        shapeLayer.lineWidth = 2
+        shapeLayer.shadowColor = UIColor.black.cgColor
+        shapeLayer.shadowOffset = CGSize(width: 0   , height: -3);
+        shapeLayer.shadowOpacity = 0.2
+        shapeLayer.shadowPath =  UIBezierPath(roundedRect: bounds, cornerRadius: radii).cgPath
+        
+
+        if let oldShapeLayer = self.shapeLayer {
+            layer.replaceSublayer(oldShapeLayer, with: shapeLayer)
+        } else {
+            layer.insertSublayer(shapeLayer, at: 0)
+        }
+
+        self.shapeLayer = shapeLayer
+    }
+
+    private func createPath() -> CGPath {
+        let path = UIBezierPath(
+            roundedRect: bounds,
+            byRoundingCorners: [.topLeft, .topRight],
+            cornerRadii: CGSize(width: radii, height: 0.0))
+
+        return path.cgPath
+    }
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        self.isTranslucent = true
+        var tabFrame            = self.frame
+        tabFrame.size.height    = 65 + (UIApplication.shared.keyWindow?.safeAreaInsets.bottom ?? CGFloat.zero)
+        tabFrame.origin.y       = self.frame.origin.y +   ( self.frame.height - 65 - (UIApplication.shared.keyWindow?.safeAreaInsets.bottom ?? CGFloat.zero))
+        self.layer.cornerRadius = 20
+        self.frame            = tabFrame
+
+
+
+        self.items?.forEach({ $0.titlePositionAdjustment = UIOffset(horizontal: 0.0, vertical: -5.0) })
+
+
+    }
+
 }
