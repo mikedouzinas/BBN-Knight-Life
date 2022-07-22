@@ -38,10 +38,10 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Please allow use of your location if you would like to see where you are in comparison to rooms. You may change this later in Settings if you wish.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Please allow use of camera to add schedules</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Please allow use of your location if you would like to see where you are live on the map.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Please allow use of photos to add schedules</string>
 	<key>NSUserActivityTypes</key>
