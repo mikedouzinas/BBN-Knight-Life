@@ -16,3 +16,4 @@ To Do List:
 - [ ] Maybe make a light/dark mode choice
 - [ ] Make macos app
 - [ ] Make firebase allow through dates for no school (like summer)
+- [ ] BRING VESON SIDE MENU INTO KNIGHT LIFE WITH PROFILE PAGE & DIFF SETTINGS PAGE
