@@ -54,7 +54,7 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
     @IBAction func removeAll(_ sender: Any) {
         let refreshAlert = UIAlertController(title: "Remove All Blocks", message: "Are you sure? This action cannot be undone.", preferredStyle: UIAlertController.Style.alert)
         refreshAlert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { [self] (action: UIAlertAction!) in
-              print("Handle Ok logic here")
+//              print("Handle Ok logic here")
             currentDay.specialSchedulesL1 = [block]()
             currentDay.specialSchedules = [block]()
             ScheduleCalendar.reloadData()
@@ -92,7 +92,7 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
                         inputPlaceholder: "Snow day",
                         inputKeyboardType: .default, actionHandler:
                             { [self] (input:String?) in
-            print("The new reason is \(input ?? "")")
+//            print("The new reason is \(input ?? "")")
             // no more code beyond here except upload
             currentDay.reason = (input ?? "")
             uploadData()
@@ -128,7 +128,7 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
     func uploadData() {
         // get the date, access the data, upload the data *cool emoji*
         // set it locally as well
-        print("made it to upload zone")
+//        print("made it to upload zone")
         let formatter2 = DateFormatter()
         formatter2.dateStyle = .full
         let todaysDate = formatter2.string(from: realCurrentDate)
@@ -251,14 +251,10 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
         else {
             ScheduleCalendar.restore()
         }
-        for x in CalendarVC.vacationDates {
-            if stringDate.lowercased() == x.date.lowercased() {
-                currentDay = SpecialSchedule(specialSchedules: [block](), specialSchedulesL1: [block](), reason: "\(x.reason)", date: "", imageUrl: nil, image: nil)
-                ScheduleCalendar.restore()
-                ScheduleCalendar.setEmptyMessage("No Class - \(x.reason)")
-                completion(.success(currentDay))
-                return
-            }
+        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Sep 2022 04:00".dateFromMultipleFormats() ?? Date()) {
+            currentDay = SpecialSchedule(specialSchedules: [block](), specialSchedulesL1: [block]())
+            completion(.success(currentDay))
+            return
         }
         
         for x in LoginVC.specialSchedules {

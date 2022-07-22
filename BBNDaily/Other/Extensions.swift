@@ -648,34 +648,7 @@ extension UIViewController {
         var currentDay = [block]()
         let lunchDays = getLunchDays(weekDay: weekday)
         currentDay = lunchDays.blocks
-//        let monday = bigArray[0]
-//        let tuesday = bigArray[1]
-//        let wednesday = bigArray[2]
-//        let thursday = bigArray[3]
-//        let friday = bigArray[4]
-//
-//
-//        switch weekday {
-//        case "monday":
-//            currentDay = monday
-//        case "tuesday":
-//            currentDay = tuesday
-//        case "wednesday":
-//            currentDay = wednesday
-//        case "thursday":
-//            currentDay = thursday
-//        case "friday":
-//            currentDay = friday
-//        default:
-//            currentDay = [block]()
-//        }
-        for x in CalendarVC.vacationDates {
-            if stringDate.lowercased() == x.date.lowercased() {
-                currentDay = [block]()
-                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
-            }
-        }
-        if date.isBetweenTimeFrame(date1: "18 Dec 2021 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Jan 2022 04:00".dateFromMultipleFormats() ?? Date()) || date.isBetweenTimeFrame(date1: "12 Mar 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "27 Mar 2022 04:00".dateFromMultipleFormats() ?? Date()) {
+        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Sep 2022 04:00".dateFromMultipleFormats() ?? Date()) {
             currentDay = [block]()
             return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
         }
@@ -695,8 +668,8 @@ extension UIViewController {
     func getLunchDays(weekDay: String) -> (blocks: [block], selectedDay: Int) {
         var weekdayBlocks = [block]()
         var selectedDay = 0
-        print("weekday: \(weekDay)")
-        var lowercaseWeekday = weekDay.lowercased()
+//        print("weekday: \(weekDay)")
+        let lowercaseWeekday = weekDay.lowercased()
         switch lowercaseWeekday {
         case "monday":
             if ((LoginVC.blocks["l-monday"] as? String) ?? "").lowercased().contains("2") {
@@ -771,11 +744,11 @@ extension UIViewController {
             }
         }
 //        UNUserNotificationCenter.current().get
-        UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { notifs in
-            for x in notifs {
-                print("identifier: \(x.identifier) \n date: \(dateFormatter.string(from: calendar.date(from:(x.trigger as! UNCalendarNotificationTrigger).dateComponents) ?? Date()))")
-            }
-        })
+//        UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { notifs in
+//            for x in notifs {
+//                print("identifier: \(x.identifier) \n date: \(dateFormatter.string(from: calendar.date(from:(x.trigger as! UNCalendarNotificationTrigger).dateComponents) ?? Date()))")
+//            }
+//        })
     }
     func addNotif(x: block, weekDay: String, date: Date) {
         let calendar = Calendar.current
@@ -815,7 +788,7 @@ extension UIViewController {
         dateFormatter.timeZone = TimeZone(abbreviation: "EST")
         dateFormatter.dateFormat = "MM-dd-yyyy hh:mm a Z"
         
-        print("Final Date: \(dateFormatter.string(from: calendar.date(from: dateComponents) ?? Date()))")
+//        print("Final Date: \(dateFormatter.string(from: calendar.date(from: dateComponents) ?? Date()))")
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         
@@ -851,7 +824,7 @@ extension UIViewController {
         
         let randomIdentifier = UUID().uuidString
         let request = UNNotificationRequest(identifier: randomIdentifier, content: content, trigger: trigger)
-        print("identifier: \(randomIdentifier)")
+//        print("identifier: \(randomIdentifier)")
         // 3
         UNUserNotificationCenter.current().add(request) { error in
             if error != nil {

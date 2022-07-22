@@ -62,7 +62,7 @@ class editClassTableViewCell: coverTableViewCell {
         return editButton
     } ()
     @objc func editCell () {
-        print("pressed edit local")
+//        print("pressed edit local")
         link.editCell(viewModel: classModel, indexPath: indexPath)
     }
     func configure(with viewModel: ClassModel, indexPath: IndexPath) {

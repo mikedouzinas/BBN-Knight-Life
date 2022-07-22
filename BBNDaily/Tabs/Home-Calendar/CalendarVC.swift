@@ -87,7 +87,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             let currTitle = self.navigationItem.title
             for x in LoginVC.upcomingDays {
                 if z != 0 {
-                    print("\(x.date) and \(x.blocks)")
+//                    print("\(x.date) and \(x.blocks)")
                     currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
                     let currVal = "Next Day of Classes: \(x.weekday.capitalized)"
                     if !x.blocks.isEmpty {
@@ -369,7 +369,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     var watchClasses = [WatchClass]()
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("view DID load")
+//        print("view DID load")
         if AuthVC.isFirstTime {
             NotificationCenter.default.addObserver(self, selector: #selector(screenReopened), name: UIApplication.didBecomeActiveNotification, object: nil)
             AuthVC.isFirstTime = false
@@ -451,7 +451,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
 //        }
 ////        let data2: [String: Any] = ["classes": watchClasses as Any]
 ////        session!.sendMessage(data2, replyHandler: nil, errorHandler: { error in
-////            print("shit don't work \(error)")
+////            print("on't work \(error)")
 ////        })
 //        if let validSession = self.session, validSession.isReachable {//5.1
 //            print("success!")
@@ -517,22 +517,13 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         else {
             ScheduleCalendar.restore()
         }
-        for x in CalendarVC.vacationDates {
-            if stringDate.lowercased() == x.date.lowercased() {
-                currentDay = [block]()
-                ScheduleCalendar.restore()
-                ScheduleCalendar.setEmptyMessage("No Class - \(x.reason)")
-                completion(.success(currentDay))
-                return
-            }
+        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Sep 2022 04:00".dateFromMultipleFormats() ?? Date()) {
+            currentDay = [block]()
+            ScheduleCalendar.restore()
+            ScheduleCalendar.setEmptyMessage("No Class - Summer Break!")
+            completion(.success(currentDay))
+            return
         }
-//        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Sep 2022 04:00".dateFromMultipleFormats() ?? Date()) {
-//            currentDay = [block]()
-//            ScheduleCalendar.restore()
-//            ScheduleCalendar.setEmptyMessage("No Class - Summer Break!")
-//            completion(.success(currentDay))
-//            return
-//        }
         	
         for x in LoginVC.specialSchedules {
             if x.key.lowercased() == stringDate.lowercased() {

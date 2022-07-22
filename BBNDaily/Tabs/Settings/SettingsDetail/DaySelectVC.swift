@@ -33,7 +33,7 @@ class DaySelectVC: UIViewController {
         finalString = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)"
         
         let db = Firestore.firestore()
-        print("IsEditing: \(DaySelectVC.isEditing)")
+//        print("IsEditing: \(DaySelectVC.isEditing)")
         if DaySelectVC.isEditing {
             let oldRow = ClassesOptionsPopupVC.editedClass
             let oldString = "\(oldRow.Subject)~\(oldRow.Teacher)~\(oldRow.Room)~\(oldRow.Block)"

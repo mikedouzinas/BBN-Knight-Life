@@ -118,9 +118,9 @@ class AuthVC: CustomLoader {
             } else {
 //                var isCreated = false
                 if (snapshot?.documents)!.isEmpty {
-                    print("no uid!")
+//                    print("no uid!")
                     guard let Login = (strongSelf as? LoginVC) else {
-                        print("not LoginVC")
+//                        print("not LoginVC")
                         self.hideLoader(completion: {
                             strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
                         })
@@ -138,7 +138,7 @@ class AuthVC: CustomLoader {
                     })
                 }
                 for document in (snapshot?.documents)! {
-                    print("in documents")
+//                    print("in documents")
                     if let id = document.data()["uid"] as? String {
                         if id == FirebaseAuth.Auth.auth().currentUser?.uid {
 //                            isCreated = true
@@ -181,7 +181,7 @@ class AuthVC: CustomLoader {
                                 print("Finished all requests.")
                                 weakSelf?.hideLoader(completion: {
                                     guard let Login = (strongSelf as? LoginVC) else {
-                                        print("not LoginVC")
+//                                        print("not LoginVC")
                                         strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
                                         return
                                     }
@@ -194,7 +194,7 @@ class AuthVC: CustomLoader {
                 }
                 weakSelf?.hideLoader(completion: {
                     guard let Login = (strongSelf as? LoginVC) else {
-                        print("not LoginVC")
+//                        print("not LoginVC")
                         strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
                         return
                     }

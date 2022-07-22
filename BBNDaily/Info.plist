@@ -40,6 +40,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Please allow use of camera to add schedules</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Please allow use of your location if you would like to see your live location on the map.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Please allow use of photos to add schedules</string>
 	<key>NSUserActivityTypes</key>

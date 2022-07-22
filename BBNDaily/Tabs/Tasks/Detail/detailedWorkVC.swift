@@ -17,7 +17,7 @@ class detailedWorkVC: UIViewController {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("\(detailedWorkVC.link.selectedTask.dueDate)")
+//        print("\(detailedWorkVC.link.selectedTask.dueDate)")
         dateLabel.text = "Due \(detailedWorkVC.link.selectedTask.dueDate.stringDateFromMultipleFormats(preferredFormat: 7) ?? "")"
 
         detailedTextView.text = "\(detailedWorkVC.link.selectedTask.description)"

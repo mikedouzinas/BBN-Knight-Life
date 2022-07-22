@@ -130,7 +130,7 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
             } else {
                 Classes = [ClassModel]()
                 for document in (snapshot?.documents)! {
-                    print("docs")
+//                    print("docs")
                     let fullName = document.data()["name"] as? String ?? ""
                     let array = fullName.getValues()
                     Classes.append(ClassModel(Subject: array[0], Teacher: array[1], Room: array[2], Block: array[3]))

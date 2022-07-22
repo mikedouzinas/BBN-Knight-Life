@@ -329,7 +329,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 present(alertController, animated: true, completion: nil)
             }
             else if indexPath.row == 6 {
-                print("selected")
+//                print("selected")
                 let alertController = UIAlertController(title: "Appearance", message: "Please select your preferred appearance", preferredStyle: .actionSheet)
                 guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
                    return
@@ -531,7 +531,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         return button
     } ()
     @objc func close(_ sender: Any) {
-        print("made it?")
+//        print("made it?")
         dismiss(animated: true, completion: nil)
     }
     override func viewDidLoad() {
@@ -613,7 +613,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         setHeader()
     }
     @IBAction func closeClass(_ sender: Any) {
-        print("made it?")
+//        print("made it?")
         dismiss(animated: true, completion: nil)
     }
     @objc func openSecretSchedule() {
