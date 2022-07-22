@@ -21,6 +21,21 @@ extension UIViewController {
 }
 
 extension String {
+//    func getDateValue() -> Date {
+//        let calendar = Calendar.current
+//        let time2 = self.prefix(5)
+//        let m2 = time2.replacingOccurrences(of: time2.prefix(3), with: "")
+//        var amOrPm2 = 0
+//        if self.contains("pm") && !time2.prefix(2).contains("12") {
+//            amOrPm2 = 12
+//        }
+//        let t2 = calendar.date(
+//            bySettingHour: ((Int(time2.prefix(2)) ?? 0)+amOrPm2),
+//            minute: (Int(m2) ?? 0),
+//            second: 0,
+//            of: Date())!
+//        return t2
+//    }
     func getValues() -> [String]{
         var fullName = self
         let subject = String(fullName.prefix(upTo: fullName.firstIndex(of: "~") ?? fullName.startIndex)).setNotAvailable()
@@ -106,6 +121,16 @@ extension UITableView {
     }
 }
 extension Date {
+    mutating func addEventsToToday() {
+        let calendar = Calendar.current
+        var dateComponents = DateComponents()
+        dateComponents.hour = calendar.component(.hour, from: self)
+        dateComponents.minute = calendar.component(.minute, from: self)
+        dateComponents.day = calendar.component(.day, from: Date())
+        dateComponents.month = calendar.component(.month, from: Date())
+        dateComponents.year = calendar.component(.year, from: Date())
+        self = calendar.date(from: dateComponents) ?? Date()
+    }
     func isBetweenTimeFrame(date1: Date, date2: Date) -> Bool {
         if self > date1 && self < date2
         {
@@ -148,6 +173,7 @@ extension String {
             "yyyy-MM-dd'T'hh:mm:ss.S",
             "dd MMM yyyy HH:mm",
             "MM/dd/yyyy",
+            "MM/dd/yy",
             "MM/dd/20yy"
         ]
         dateformatter.locale = Locale(identifier: "your_loc_id")
@@ -155,7 +181,7 @@ extension String {
         for format in formats {
             dateformatter.dateFormat = format
             if let convertedDate = dateformatter.date(from: self) {
-                dateformatter.timeZone = TimeZone.current
+                dateformatter.timeZone = TimeZone(abbreviation: "EST")
                 switch preferredFormat {
                 case 0:
                     dateformatter.dateFormat = "dd MMM yyyy HH:mm"
@@ -173,6 +199,8 @@ extension String {
                     dateformatter.dateFormat = "EE, MMM dd, yyyy"
                 case 7:
                     dateformatter.dateFormat = "EEEE, MMMM dd, yyyy"
+                case 8:
+                    dateformatter.dateFormat = "MM-dd-yyyy"
                 default:
                     dateformatter.dateFormat = "yyyy-MM-dd'T'hh:mm:ss"
                 }
@@ -184,8 +212,8 @@ extension String {
     }
     func dateFromMultipleFormats() -> Date? {
         let dateFormatter = DateFormatter()
+        
         let formats: [String] = [
-            "",
             "yyyy-MM-dd'T'hh:mm:ss",
             "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
             "yyyy-MM-dd'T'HH:mm:ssZ",
@@ -203,17 +231,19 @@ extension String {
             "yyyy-MM-dd'T'hh:mm:ss.SS",
             "yyyy-MM-dd'T'hh:mm:ss.S",
             "dd MMM yyyy HH:mm",
-            "MMM dd yyyy"
+            "MMM dd yyyy",
+            "hh:mma"
         ]
-        dateFormatter.locale = Locale(identifier: "your_loc_id")
-        
+//        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.amSymbol = "am"
+        dateFormatter.pmSymbol = "pm"
         for format in formats {
+            dateFormatter.timeZone = TimeZone(abbreviation: "EST")
             dateFormatter.dateFormat = format
-            dateFormatter.timeZone = TimeZone.current
             if let convertedDate = dateFormatter.date(from: self) {
+//                convertedDate
                 return convertedDate
             }
-            
         }
         return nil
     }
@@ -591,10 +621,408 @@ extension UIViewController {
         
         self.present(alert, animated: true, completion: nil)
     }
+    func showLoader(text: String) {
+        let alert = UIAlertController(title: nil, message: "\(text)", preferredStyle: .alert)
+        
+        let loadingIndicator = UIActivityIndicatorView(frame: CGRect(x: 10, y: 5, width: 50, height: 50))
+        loadingIndicator.hidesWhenStopped = true
+        loadingIndicator.style = UIActivityIndicatorView.Style.medium
+        loadingIndicator.startAnimating();
+        
+        alert.view.addSubview(loadingIndicator)
+        present(alert, animated: true, completion: {
+        })
+    }
+    func hideLoader(completion: (() -> Void)?) {
+        dismiss(animated: true, completion: {
+            completion!()
+        })
+    }
+    func getScheduleFor(date: Date) -> CustomWeekday {
+        let formatter1 = DateFormatter()
+        formatter1.dateFormat = "yyyy-MM-dd"
+        formatter1.dateStyle = .full
+        let stringDate = formatter1.string(from: date)
+        let index = stringDate.firstIndex(of: ",")
+        let weekday = stringDate.prefix(upTo: index!).lowercased()
+        var currentDay = [block]()
+        let lunchDays = getLunchDays(weekDay: weekday)
+        currentDay = lunchDays.blocks
+//        let monday = bigArray[0]
+//        let tuesday = bigArray[1]
+//        let wednesday = bigArray[2]
+//        let thursday = bigArray[3]
+//        let friday = bigArray[4]
+//
+//
+//        switch weekday {
+//        case "monday":
+//            currentDay = monday
+//        case "tuesday":
+//            currentDay = tuesday
+//        case "wednesday":
+//            currentDay = wednesday
+//        case "thursday":
+//            currentDay = thursday
+//        case "friday":
+//            currentDay = friday
+//        default:
+//            currentDay = [block]()
+//        }
+        for x in CalendarVC.vacationDates {
+            if stringDate.lowercased() == x.date.lowercased() {
+                currentDay = [block]()
+                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
+            }
+        }
+        if date.isBetweenTimeFrame(date1: "18 Dec 2021 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Jan 2022 04:00".dateFromMultipleFormats() ?? Date()) || date.isBetweenTimeFrame(date1: "12 Mar 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "27 Mar 2022 04:00".dateFromMultipleFormats() ?? Date()) {
+            currentDay = [block]()
+            return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
+        }
+        for x in LoginVC.specialSchedules {
+            if x.key.lowercased() == stringDate.lowercased() {
+                if !((LoginVC.blocks["l-\(weekday)"] as? String) ?? "").lowercased().contains("2") {
+                    currentDay = x.value.specialSchedulesL1
+                }
+                else {
+                    currentDay = x.value.specialSchedules
+                }
+                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
+            }
+        }
+        return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
+    }
+    func getLunchDays(weekDay: String) -> (blocks: [block], selectedDay: Int) {
+        var weekdayBlocks = [block]()
+        var selectedDay = 0
+        print("weekday: \(weekDay)")
+        var lowercaseWeekday = weekDay.lowercased()
+        switch lowercaseWeekday {
+        case "monday":
+            if ((LoginVC.blocks["l-monday"] as? String) ?? "").lowercased().contains("2") {
+                weekdayBlocks = defaultSchedules["monday"]?.L2 ?? [block]()
+            }
+            else {
+                weekdayBlocks = defaultSchedules["monday"]?.L1 ?? [block]()
+            }
+            selectedDay = 0
+            
+        case "tuesday":
+            if ((LoginVC.blocks["l-tuesday"] as? String) ?? "").lowercased().contains("2") {
+                weekdayBlocks = defaultSchedules["tuesday"]?.L2 ?? [block]()
+            }
+            else {
+                weekdayBlocks = defaultSchedules["tuesday"]?.L1 ?? [block]()
+            }
+            selectedDay = 1
+        case "wednesday":
+            if ((LoginVC.blocks["l-wednesday"] as? String) ?? "").lowercased().contains("2") {
+                weekdayBlocks = defaultSchedules["wednesday"]?.L2 ?? [block]()
+            }
+            else {
+                weekdayBlocks = defaultSchedules["wednesday"]?.L1 ?? [block]()
+            }
+            selectedDay = 2
+        case "thursday":
+            if ((LoginVC.blocks["l-thursday"] as? String) ?? "").lowercased().contains("2") {
+                weekdayBlocks = defaultSchedules["thursday"]?.L2 ?? [block]()
+            }
+            else {
+                weekdayBlocks = defaultSchedules["thursday"]?.L1 ?? [block]()
+            }
+            selectedDay = 3
+        case "friday":
+            if ((LoginVC.blocks["l-friday"] as? String) ?? "").lowercased().contains("2") {
+                weekdayBlocks = defaultSchedules["friday"]?.L2 ?? [block]()
+            }
+            else {
+                weekdayBlocks = defaultSchedules["friday"]?.L1 ?? [block]()
+            }
+            selectedDay = 4
+        default:
+            weekdayBlocks = [block]()
+            selectedDay = 10
+        }
+        return (weekdayBlocks, selectedDay)
+    }
+    func setNotifications() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        let calendar = Calendar.current
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeZone = .current
+        dateFormatter.dateFormat = "MM-dd-yyyy hh:mm a Z"
+        LoginVC.upcomingDays = [CustomWeekday]()
+        var z = 0
+        for i in 0...13 {
+            let tempDate = calendar.date(byAdding: .day, value: i, to: Date())!
+            let tempWeekday = getScheduleFor(date: tempDate)
+            LoginVC.upcomingDays.append(tempWeekday)
+            if ((LoginVC.blocks["notifs"] as? String) ?? "") == "true" {
+                for x in tempWeekday.blocks {
+                    if z < 64 {
+                        addNotif(x: x, weekDay: tempWeekday.weekday, date: tempWeekday.date)
+                        z+=1
+                    }
+                    else {
+                        break
+                    }
+                    
+                }
+            }
+        }
+//        UNUserNotificationCenter.current().get
+        UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { notifs in
+            for x in notifs {
+                print("identifier: \(x.identifier) \n date: \(dateFormatter.string(from: calendar.date(from:(x.trigger as! UNCalendarNotificationTrigger).dateComponents) ?? Date()))")
+            }
+        })
+    }
+    func addNotif(x: block, weekDay: String, date: Date) {
+        let calendar = Calendar.current
+        let startTime = x.startTime.dateFromMultipleFormats() ?? Date()
+        var reminderTime = startTime
+        if !x.name.lowercased().contains("passing") {
+            reminderTime = calendar.date(byAdding: .minute, value: -5, to: startTime)!
+        }
+        
+        var dateComponents = DateComponents()
+        dateComponents.hour = calendar.component(.hour, from: reminderTime)
+        dateComponents.minute = calendar.component(.minute, from: reminderTime)
+        dateComponents.day = calendar.component(.day, from: date)
+        dateComponents.month = calendar.component(.month, from: date)
+        dateComponents.year = calendar.component(.year, from: date)
+        dateComponents.timeZone = .current
+//        dateComponents.day
+        var weekNum = 1
+        switch weekDay {
+        case "sunday":
+            weekNum = 1
+        case "monday":
+            weekNum = 2
+        case "tuesday":
+            weekNum = 3
+        case "wednesday":
+            weekNum = 4
+        case "thursday":
+            weekNum = 5
+        case "friday":
+            weekNum = 6
+        default:
+            weekNum = 7
+        }
+//        dateComponents.weekday = weekNum
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeZone = TimeZone(abbreviation: "EST")
+        dateFormatter.dateFormat = "MM-dd-yyyy hh:mm a Z"
+        
+        print("Final Date: \(dateFormatter.string(from: calendar.date(from: dateComponents) ?? Date()))")
+        
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+        
+        // 2
+        let content = UNMutableNotificationContent()
+        content.sound = UNNotificationSound.default
+        if x.block != "N/A" {
+            var tile = ((LoginVC.blocks[x.block] ?? "") as? String) ?? ""
+            if tile == "" {
+                tile = "\(x.block) Block"
+            }
+            else if tile.contains("~") {
+                let array = tile.getValues()
+                let num = weekNum - 2
+                
+                tile = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+                if num >= 0 && num <= 4 && !(LoginVC.classMeetingDays["\(x.block.lowercased())"]?[num] ?? true) {
+                    tile = "\(x.block) Block"
+                }
+            }
+            content.title = "5 Minutes Until \(tile)"
+            // Write/Set Value
+        }
+        else {
+            if x.name.lowercased().contains("passing") {
+                content.title = "No Class - \(x.name)"
+            }
+            else {
+                content.title = "5 Minutes Until \(x.name)"
+            }
+            
+        }
+        
+        let randomIdentifier = UUID().uuidString
+        let request = UNNotificationRequest(identifier: randomIdentifier, content: content, trigger: trigger)
+        print("identifier: \(randomIdentifier)")
+        // 3
+        UNUserNotificationCenter.current().add(request) { error in
+            if error != nil {
+                print("something went wrong")
+            }
+//            print("Error?: \(error)")
+        }
+    }
 }
 
-struct WatchClass {
-    let Title: String
-    let StartTime: String
-    let EndTime: String
+
+let imageCache = NSCache<NSString, UIImage>()
+extension UIImageView {
+    var activityIndicator: UIActivityIndicatorView {
+         let activityIndicator = UIActivityIndicatorView()
+         activityIndicator.hidesWhenStopped = true
+         activityIndicator.color = UIColor.black
+         self.addSubview(activityIndicator)
+
+         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+
+         let centerX = NSLayoutConstraint(item: self,
+                                          attribute: .centerX,
+                                          relatedBy: .equal,
+                                          toItem: activityIndicator,
+                                          attribute: .centerX,
+                                          multiplier: 1,
+                                          constant: 0)
+         let centerY = NSLayoutConstraint(item: self,
+                                          attribute: .centerY,
+                                          relatedBy: .equal,
+                                          toItem: activityIndicator,
+                                          attribute: .centerY,
+                                          multiplier: 1,
+                                          constant: 0)
+         self.addConstraints([centerX, centerY])
+         return activityIndicator
+     }
+    func loadImageUsingCacheWithUrlString(urlstring: String, completion: @escaping (Swift.Result<UIImage?, Error>) -> Void) {
+        guard let url = URL(string: urlstring) else {
+            print("url err")
+            self.image = UIImage(named: "parking")
+            completion(.success(self.image))
+            return
+        }
+        self.image = nil
+        let activityIndicator = self.activityIndicator
+        activityIndicator.startAnimating()
+        // check for cache first
+        if let cachedImage = imageCache.object(forKey: NSString(string: urlstring)) {
+            print("already cached :)")
+            DispatchQueue.main.async {
+                activityIndicator.stopAnimating()
+                activityIndicator.removeFromSuperview()
+            }
+            self.image = cachedImage
+            completion(.success(self.image))
+            return
+        }
+        let task = URLSession.shared.dataTask(with: url, completionHandler: { data, _, error in
+            guard let data = data, error == nil else {
+                print("failed, error is \(String(describing: error?.localizedDescription))")
+                DispatchQueue.main.async {
+                    activityIndicator.stopAnimating()
+                    activityIndicator.removeFromSuperview()
+                }
+                completion(.failure(error!))
+                return
+            }
+
+            DispatchQueue.main.async {
+                if let image = UIImage(data: data) {
+//                    print("correctly set cache data")
+                    imageCache.setObject(image, forKey: NSString(string: urlstring))
+                    DispatchQueue.main.async {
+                        activityIndicator.stopAnimating()
+                        activityIndicator.removeFromSuperview()
+                    }
+                    self.image = image
+                    completion(.success(self.image))
+                }
+
+            }
+        })
+        task.resume()
+    }
+}
+
+class PaddingLabel: UILabel {
+    
+    var insets = UIEdgeInsets.zero
+    
+    func padding(_ top: CGFloat, _ bottom: CGFloat, _ left: CGFloat, _ right: CGFloat) {
+        self.frame = CGRect(x: 0, y: 0, width: self.frame.width + left + right, height: self.frame.height + top + bottom)
+        insets = UIEdgeInsets(top: top, left: left, bottom: bottom, right: right)
+    }
+    
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: rect.inset(by: insets))
+    }
+    
+    override var intrinsicContentSize: CGSize {
+        get {
+            var contentSize = super.intrinsicContentSize
+            contentSize.height += insets.top + insets.bottom
+            contentSize.width += insets.left + insets.right
+            return contentSize
+        }
+    }
+}
+
+final class StretchyTableHeaderView: UIView {
+    public let imageview: UIImageView = {
+        let image = UIImageView()
+        image.clipsToBounds = true
+        return image
+    } ()
+    public let nameLabel: PaddingLabel = {
+        let label = PaddingLabel()
+        label.font = .systemFont(ofSize: 22, weight: .bold)
+        label.textColor = UIColor.white
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        label.dropShadow(scale: true, radius: 50)
+        label.layer.masksToBounds = true
+        label.layer.cornerRadius = 8
+        label.padding(2, 2, 8, 8)
+        return label
+    } ()
+    private var imageViewHeight = NSLayoutConstraint()
+    private var imageViewBottom = NSLayoutConstraint()
+    private var containerView = UIView()
+    private var containerViewHeight = NSLayoutConstraint()
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        createViews()
+        setViewConstraints()
+    }
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+    private func createViews() {
+        addSubview(containerView)
+        containerView.addSubview(imageview)
+        addSubview(nameLabel)
+    }
+    func setViewConstraints() {
+        NSLayoutConstraint.activate([
+            widthAnchor.constraint(equalTo: containerView.widthAnchor),
+            centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            heightAnchor.constraint(equalTo: containerView.heightAnchor)
+        ])
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.widthAnchor.constraint(equalTo: imageview.widthAnchor).isActive = true
+        containerViewHeight = containerView.heightAnchor.constraint(equalTo: self.heightAnchor)
+        containerViewHeight.isActive = true
+        
+        imageview.translatesAutoresizingMaskIntoConstraints = false
+        imageViewBottom = imageview.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+        imageViewBottom.isActive = true
+        imageViewHeight = imageview.heightAnchor.constraint(equalTo: containerView.heightAnchor)
+        imageViewHeight.isActive = true
+        
+        nameLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -20).isActive = true
+        nameLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: 20).isActive = true
+    }
+    public func scrollViewDidScroll(scrollView: UIScrollView) {
+        containerViewHeight.constant = scrollView.contentInset.top
+        let offsetY = -(scrollView.contentOffset.y + scrollView.contentInset.top)
+        containerView.clipsToBounds = offsetY <= 0
+        imageViewBottom.constant = offsetY >= 0 ? 0 : -offsetY / 2
+        imageViewHeight.constant = max(offsetY + scrollView.contentInset.top, scrollView.contentInset.top)
+    }
 }

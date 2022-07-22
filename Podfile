@@ -16,6 +16,7 @@ target 'BBNDaily' do
 	pod 'Firebase/Core'
 	pod 'Firebase/Firestore'
 	pod 'Firebase/Storage'
+	pod 'Firebase/Messaging'
 	pod 'GoogleSignIn'
 	pod 'GoogleMaps'
 	pod 'SkeletonView'

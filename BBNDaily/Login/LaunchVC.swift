@@ -15,13 +15,14 @@ import FSCalendar
 import WebKit
 
 
-class LaunchVC: CustomLoader {
+class LaunchVC: AuthVC {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if FirebaseAuth.Auth.auth().currentUser != nil {
             self.gifName = "snowfall"
             self.isLarge = true
-            LoginVC.setLoginInfo(weakSelf: self)
+            showLoader(text: "Signing you in...")
+            setLoginInfo(weakSelf: self)
         }
         else {
             self.performSegue(withIdentifier: "NotSignedIn", sender: nil)

@@ -73,13 +73,6 @@ class AnnouncementsVC: UIViewController, UITableViewDelegate, UITableViewDataSou
         configureTableView()
     }
 }
-struct Announcement {
-    let Title: String
-    let Date: String
-    let timeframe: String?
-    let location: String?
-    let rightIndicator: Bool
-}
 
 class AnnouncementTableViewCell: UITableViewCell {
     static let identifier = "AnnouncementTableViewCell"

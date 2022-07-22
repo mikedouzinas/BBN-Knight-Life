@@ -16,6 +16,16 @@ import SkeletonView
 import WebKit
 
 class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UITableViewDataSource, UITableViewDelegate {
+    @IBAction func openImage(_ sender: Any) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "ImageVC") as? UINavigationController
+        let vc2 = vc?.children[0] as? ImageVC
+        vc2?.link = self
+        guard let vc = vc else {
+            return
+        }
+        present(vc, animated: true)
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         ScheduleCalendar.register(EditableCell.self, forCellReuseIdentifier: EditableCell.identifier)
@@ -25,7 +35,7 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
         }
         addButton.setTitle("", for: .normal)
         editReasonButton.setTitle("", for: .normal)
-        setCurrentday(date: Date(), completion: { [self]result in
+        setCurrentday(date: Date(), completion: { [self] result in
             switch result {
             case .success(let todBlocks):
                 self.currentDay = todBlocks
@@ -45,8 +55,8 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
         let refreshAlert = UIAlertController(title: "Remove All Blocks", message: "Are you sure? This action cannot be undone.", preferredStyle: UIAlertController.Style.alert)
         refreshAlert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { [self] (action: UIAlertAction!) in
               print("Handle Ok logic here")
-            currentDay.lunch1Schedule = [block]()
-            currentDay.lunch2Schedule = [block]()
+            currentDay.specialSchedulesL1 = [block]()
+            currentDay.specialSchedules = [block]()
             ScheduleCalendar.reloadData()
             uploadData()
         }))
@@ -60,18 +70,6 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
     @IBAction func addClass(_ sender: Any) {
         TimesVC.link = self
         self.performSegue(withIdentifier: "addBlock", sender: nil)
-//        let blk = block(name: blockName ?? "", startTime: startTime ?? "", endTime: endTime ?? "", block: blockType ?? "", reminderTime: reminderTime ?? "", length: 0)
-//        var place = 0
-//        if (lunchPref ?? "").uppercased() == "L2" {
-//            for x in currentDay.lunch2Schedule {
-//
-//                place += 1
-//            }
-//        }
-//        else {
-//
-//        }
-//        uploadData()
     }
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return "Lunch \(section + 1)"
@@ -105,9 +103,9 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if section == 0 {
-            return currentDay.lunch1Schedule.count
+            return currentDay.specialSchedulesL1.count
         }
-        return currentDay.lunch2Schedule.count
+        return currentDay.specialSchedules.count
     }
     func numberOfSections(in tableView: UITableView) -> Int {
         return 2
@@ -118,10 +116,10 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             if indexPath.section == 0 {
-                currentDay.lunch1Schedule.remove(at: indexPath.row)
+                currentDay.specialSchedulesL1.remove(at: indexPath.row)
             }
             else {
-                currentDay.lunch2Schedule.remove(at: indexPath.row)
+                currentDay.specialSchedules.remove(at: indexPath.row)
             }
             tableView.reloadData()
             uploadData()
@@ -134,30 +132,67 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
         let formatter2 = DateFormatter()
         formatter2.dateStyle = .full
         let todaysDate = formatter2.string(from: realCurrentDate)
-        LoginVC.specialSchedules["\(todaysDate)"] = currentDay.lunch2Schedule
-        LoginVC.specialSchedulesL1["\(todaysDate)"] = currentDay.lunch1Schedule
-        LoginVC.specialDayReasons["\(todaysDate)"] = currentDay.reason
+
+        LoginVC.specialSchedules["\(todaysDate)"] = currentDay
         var lunch1 = [[String:String]]()
         var lunch2 = [[String:String]]()
-        for x in currentDay.lunch2Schedule {
-            lunch2.append(["block":"\(x.block)","endTime":"\(x.endTime)","name":"\(x.name)","reminderTime":"\(x.reminderTime)","startTime":"\(x.startTime)"])
+        for x in currentDay.specialSchedules {
+            lunch2.append(["block":"\(x.block)","endTime":"\(x.endTime)","name":"\(x.name)","startTime":"\(x.startTime)"])
         }
-        for x in currentDay.lunch1Schedule {
-            lunch1.append(["block":"\(x.block)","endTime":"\(x.endTime)","name":"\(x.name)","reminderTime":"\(x.reminderTime)","startTime":"\(x.startTime)"])
+        for x in currentDay.specialSchedulesL1 {
+            lunch1.append(["block":"\(x.block)","endTime":"\(x.endTime)","name":"\(x.name)","startTime":"\(x.startTime)"])
         }
         let db = Firestore.firestore()
         let currDoc = db.collection("special-schedules").document("\(todaysDate)")
-        currDoc.setData(["date":"\(todaysDate)", "reason":"\(currentDay.reason)", "blocks":lunch2,"blocks-l1":lunch1])
+        currDoc.setData(["date":"\(todaysDate)", "reason":"\(currentDay.reason ?? "No Reason")", "blocks":lunch2,"blocks-l1":lunch1, "imageUrl":"\(currentDay.imageUrl ?? "")"])
     }
+//    func uploadData() {
+//        // FAKE UPLOAD DATA
+////        print("made it to upload zone")
+////        let formatter2 = DateFormatter()
+////        formatter2.dateStyle = .full
+////        let todaysDate = formatter2.string(from: realCurrentDate)
+//        let weekNum = Calendar.current.component(.weekday, from: realCurrentDate)
+////        print("\(weekNum)")
+//        var day = ""
+//        switch weekNum {
+//        case 1:
+//            day = "sunday"
+//        case 2:
+//            day = "monday"
+//        case 3:
+//            day = "tuesday"
+//        case 4:
+//            day = "wednesday"
+//        case 5:
+//            day = "thursday"
+//        case 6:
+//            day = "friday"
+//        default:
+//            day = "saturday"
+//        }
+////        LoginVC.specialSchedules["\(todaysDate)"] = currentDay
+//        var lunch1 = [[String:String]]()
+//        var lunch2 = [[String:String]]()
+//        for x in currentDay.specialSchedules {
+//            lunch2.append(["block":"\(x.block)","endTime":"\(x.endTime)","name":"\(x.name)","startTime":"\(x.startTime)"])
+//        }
+//        for x in currentDay.specialSchedulesL1 {
+//            lunch1.append(["block":"\(x.block)","endTime":"\(x.endTime)","name":"\(x.name)","startTime":"\(x.startTime)"])
+//        }
+//        let db = Firestore.firestore()
+//        let currDoc = db.collection("default-schedules").document("\(day)")
+//        currDoc.setData(["L2":lunch2, "L1":lunch1])
+//    }
     @IBOutlet weak var addButton: UIButton!
-    var currentDay = fullDay(lunch1Schedule: [block](), lunch2Schedule: [block](), reason: "")
+    var currentDay = SpecialSchedule(specialSchedules: [block](), specialSchedulesL1: [block](), reason: "", date: "", imageUrl: nil, image: nil)
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: EditableCell.identifier, for: indexPath) as? EditableCell else {
             fatalError()
         }
-        var currentDayLunch = currentDay.lunch2Schedule
+        var currentDayLunch = currentDay.specialSchedules
         if indexPath.section == 0 {
-            currentDayLunch = currentDay.lunch1Schedule
+            currentDayLunch = currentDay.specialSchedulesL1
         }
         let thisBlock = currentDayLunch[indexPath.row]
         var isLunch = false
@@ -177,7 +212,7 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
     var realCurrentDate = Date()
     var currentDate = ""
     var selectedDay = 0
-    func setCurrentday(date: Date, completion: @escaping (Swift.Result<fullDay, Error>) -> Void) {
+    func setCurrentday(date: Date, completion: @escaping (Swift.Result<SpecialSchedule, Error>) -> Void) {
         realCurrentDate = date
         let formatter2 = DateFormatter()
         formatter2.dateFormat = "yyyy-MM-dd"
@@ -192,25 +227,25 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
         
         switch weekDay {
         case "Monday":
-            currentDay = fullDay(lunch1Schedule: CalendarVC.mondayL1, lunch2Schedule: CalendarVC.monday, reason: "")
+            currentDay = SpecialSchedule(specialSchedules: defaultSchedules["monday"]?.L2 ?? [block](), specialSchedulesL1: defaultSchedules["monday"]?.L1 ?? [block](), reason: "", date: "", imageUrl: nil, image: nil)
             selectedDay = 0
         case "Tuesday":
-            currentDay = fullDay(lunch1Schedule: CalendarVC.tuesdayL1, lunch2Schedule: CalendarVC.tuesday, reason: "")
+            currentDay = SpecialSchedule(specialSchedules: defaultSchedules["tuesday"]?.L2 ?? [block](), specialSchedulesL1: defaultSchedules["tuesday"]?.L1 ?? [block](), reason: "", date: "", imageUrl: nil, image: nil)
             selectedDay = 1
         case "Wednesday":
-            currentDay = fullDay(lunch1Schedule: CalendarVC.wednesdayL1, lunch2Schedule: CalendarVC.wednesday, reason: "")
+            currentDay = SpecialSchedule(specialSchedules: defaultSchedules["wednesday"]?.L2 ?? [block](), specialSchedulesL1: defaultSchedules["wednesday"]?.L1 ?? [block](), reason: "", date: "", imageUrl: nil, image: nil)
             selectedDay = 2
         case "Thursday":
-            currentDay = fullDay(lunch1Schedule: CalendarVC.thursdayL1, lunch2Schedule: CalendarVC.thursday, reason: "")
+            currentDay = SpecialSchedule(specialSchedules: defaultSchedules["thursday"]?.L2 ?? [block](), specialSchedulesL1: defaultSchedules["thursday"]?.L1 ?? [block](), reason: "", date: "", imageUrl: nil, image: nil)
             selectedDay = 3
         case "Friday":
-            currentDay = fullDay(lunch1Schedule: CalendarVC.fridayL1, lunch2Schedule: CalendarVC.friday, reason: "")
+            currentDay = SpecialSchedule(specialSchedules: defaultSchedules["friday"]?.L2 ?? [block](), specialSchedulesL1: defaultSchedules["friday"]?.L1 ?? [block](), reason: "", date: "", imageUrl: nil, image: nil)
             selectedDay = 4
         default:
-            currentDay = fullDay(lunch1Schedule: [block](), lunch2Schedule: [block](), reason: "")
+            currentDay = SpecialSchedule(specialSchedules: [block](), specialSchedulesL1: [block](), reason: "", date: "", imageUrl: nil, image: nil)
             selectedDay = 10
         }
-        if currentDay.lunch1Schedule.isEmpty && currentDay.lunch2Schedule.isEmpty {
+        if currentDay.specialSchedulesL1.isEmpty && currentDay.specialSchedules.isEmpty {
             ScheduleCalendar.setEmptyMessage("No Class - Enjoy your Weekend")
         }
         else {
@@ -218,30 +253,28 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
         }
         for x in CalendarVC.vacationDates {
             if stringDate.lowercased() == x.date.lowercased() {
-                currentDay = fullDay(lunch1Schedule: [block](), lunch2Schedule: [block](), reason: "\(x.reason)")
+                currentDay = SpecialSchedule(specialSchedules: [block](), specialSchedulesL1: [block](), reason: "\(x.reason)", date: "", imageUrl: nil, image: nil)
                 ScheduleCalendar.restore()
                 ScheduleCalendar.setEmptyMessage("No Class - \(x.reason)")
                 completion(.success(currentDay))
                 return
             }
         }
-        if date.isBetweenTimeFrame(date1: "18 Dec 2021 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Jan 2022 04:00".dateFromMultipleFormats() ?? Date()) || date.isBetweenTimeFrame(date1: "12 Mar 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "27 Mar 2022 04:00".dateFromMultipleFormats() ?? Date()) {
-            currentDay = fullDay(lunch1Schedule: [block](), lunch2Schedule: [block](), reason: "Enjoy Break!")
-            ScheduleCalendar.restore()
-            ScheduleCalendar.setEmptyMessage("No Class - Enjoy Break!")
-            completion(.success(currentDay))
-            return
-        }
         
         for x in LoginVC.specialSchedules {
             if x.key.lowercased() == stringDate.lowercased() {
-                let obj = LoginVC.specialSchedulesL1[x.key]
-                self.currentDay.lunch2Schedule = x.value
-                self.currentDay.lunch1Schedule = obj ?? [block]()
-                self.currentDay.reason = "\(LoginVC.specialDayReasons[x.key] ?? "No Reason")"
-                if self.currentDay.lunch2Schedule.isEmpty && self.currentDay.lunch1Schedule.isEmpty {
-                    ScheduleCalendar.restore()
-                    ScheduleCalendar.setEmptyMessage("No Class - \(LoginVC.specialDayReasons[x.key] ?? "No Reason")")
+                self.currentDay.specialSchedules = x.value.specialSchedules
+                self.currentDay.specialSchedulesL1 = x.value.specialSchedulesL1
+                self.currentDay.reason = x.value.reason ?? "No Reason"
+                if self.currentDay.specialSchedules.isEmpty && self.currentDay.specialSchedulesL1.isEmpty {
+                    if let z = x.value.imageUrl, z != "" {
+                        // check for image
+                        
+                    }
+                    else {
+                        ScheduleCalendar.restore()
+                        ScheduleCalendar.setEmptyMessage("No Class - \(self.currentDay.reason ?? "No Reason")")
+                    }
                 }
                 completion(.success(self.currentDay))
                 return
@@ -252,7 +285,7 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
     }
     @IBOutlet weak var ScheduleCalendar: UITableView!
     @IBOutlet weak var calendar: FSCalendar!
-    static var newBlock = customBlock(isFirstLunch: false, fullBlock: block(name: "", startTime: "", endTime: "", block: "", reminderTime: "", length: 0))
+    static var newBlock = customBlock(isFirstLunch: false, fullBlock: block(name: "", startTime: "", endTime: "", block: ""))
 }
 
 class EditableCell: coverTableViewCell {
@@ -268,24 +301,15 @@ class EditableCell: coverTableViewCell {
     }
 }
 
-struct fullDay {
-    var lunch1Schedule: [block]
-    var lunch2Schedule: [block]
-    var reason: String
-}
 
-struct customBlock {
-    var isFirstLunch: Bool
-    var fullBlock: block
-}
-class BlockAndLunchVC: TextFieldVC, UITextFieldDelegate {
+class BlockAndLunchVC: TextFieldVC {
     @IBOutlet weak var isFirstLunch: UISwitch!
     @IBOutlet weak var blockChoice: UIButton!
     @IBAction func pressed(_ sender: Any) {
         if blockPref == "" {
             return
         }
-        SecretScheduleVC.newBlock = customBlock(isFirstLunch: isFirstLunch.isOn, fullBlock: block(name: "", startTime: "", endTime: "", block: blockPref, reminderTime: "", length: 0))
+        SecretScheduleVC.newBlock = customBlock(isFirstLunch: isFirstLunch.isOn, fullBlock: block(name: "", startTime: "", endTime: "", block: blockPref))
         
         self.performSegue(withIdentifier: "teacher", sender: nil)
     }
@@ -358,7 +382,7 @@ class BlockAndLunchVC: TextFieldVC, UITextFieldDelegate {
     @IBOutlet weak var TextField: UITextField!
     
 }
-class BlockNameVC: TextFieldVC, UITextFieldDelegate {
+class BlockNameVC: TextFieldVC {
     @IBAction func pressed(_ sender: Any) {
         guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~"), !text.contains("/") else {
             ProgressHUD.colorAnimation = .red
@@ -395,7 +419,7 @@ class BlockNameVC: TextFieldVC, UITextFieldDelegate {
     @IBOutlet weak var TextField: UITextField!
 }
 
-class TimesVC: TextFieldVC, UITextFieldDelegate {
+class TimesVC: TextFieldVC {
     @IBOutlet weak var datePicker: UIDatePicker!
     @IBOutlet weak var reminderPicker: UIDatePicker!
     @IBOutlet weak var startPicker: UIDatePicker!
@@ -417,15 +441,14 @@ class TimesVC: TextFieldVC, UITextFieldDelegate {
             endTime = "0\(endTime)"
         }
         
-        SecretScheduleVC.newBlock.fullBlock.reminderTime = reminderTime
         SecretScheduleVC.newBlock.fullBlock.startTime = startTime
         SecretScheduleVC.newBlock.fullBlock.endTime = endTime
         let blk = SecretScheduleVC.newBlock
         if blk.isFirstLunch {
-            TimesVC.link.currentDay.lunch1Schedule.append(blk.fullBlock)
+            TimesVC.link.currentDay.specialSchedulesL1.append(blk.fullBlock)
         }
         else {
-            TimesVC.link.currentDay.lunch2Schedule.append(blk.fullBlock)
+            TimesVC.link.currentDay.specialSchedules.append(blk.fullBlock)
         }
         TimesVC.link.ScheduleCalendar.restore()
         TimesVC.link.ScheduleCalendar.reloadData()
@@ -434,5 +457,88 @@ class TimesVC: TextFieldVC, UITextFieldDelegate {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
+    }
+}
+
+
+class ImageVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    @IBOutlet var imageButton: UIButton!
+    @IBOutlet var tempImageView: UIImageView!
+    @IBOutlet var finishButton: UIButton!
+    var link: SecretScheduleVC!
+    @IBAction func pressedFinish() {
+        guard let image = tempImageView.image else {
+            ProgressHUD.colorAnimation = .red
+            ProgressHUD.showFailed("You need to select an image!")
+            return
+        }
+        let currDate = link.currentDate.replacingOccurrences(of: "/", with: "-")
+        link.currentDay.image = image
+        guard let imageData = image.pngData() else {
+            return
+        }
+        finishButton.isEnabled = false
+        let storageRef = Storage.storage().reference()
+        storageRef.child("schedules/\(currDate).png").putData(imageData, metadata: nil, completion: { _, error in
+            guard error == nil else {
+                print("failed to upload \(String(describing: error))")
+                ProgressHUD.showFailed("Failed to upload photo :(")
+                return
+            }
+            DispatchQueue.main.async { [self] in
+                let storage = FirebaseStorage.Storage.storage()
+                let reference = storage.reference(withPath: "schedules/\(currDate).png")
+                reference.downloadURL(completion: { [self] (url, error) in
+                    if let error = error {
+                        print(error)
+                    }
+                    else {
+                        let urlstring = url!.absoluteString
+                        guard let url = URL(string: urlstring) else {
+                            return
+                        }
+                        DispatchQueue.main.async {[self] in
+                            imageCache.setObject(image, forKey: NSString(string: urlstring))
+                            dismiss(animated: true)
+                            link.currentDay.imageUrl = "\(url)"
+                            link.uploadData()
+                        }
+                    }
+                })
+            }
+        })
+        
+    }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        tempImageView.image = link.currentDay.image
+    }
+    @IBAction func choosePhoto() {
+        let picker = UIImagePickerController()
+        picker.sourceType = .photoLibrary
+        picker.delegate = self
+        picker.allowsEditing = true
+        present(picker, animated: true)
+    }
+    @IBAction func takePhoto() {
+        // fyi i could use the same method with a received button but im lazy
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = self
+        picker.allowsEditing = true
+        present(picker, animated: true)
+    }
+    @IBAction func cancel () {
+        dismiss(animated: true)
+    }
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true, completion: nil)
+    }
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true, completion: nil)
+        guard let image = info[UIImagePickerController.InfoKey.editedImage] as? UIImage else {
+            return
+        }
+        tempImageView.image = image
     }
 }

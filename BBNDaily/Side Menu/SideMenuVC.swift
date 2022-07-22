@@ -52,8 +52,6 @@ class MainViewController: UIViewController {
         tapGestureRecognizer.numberOfTapsRequired = 1
         tapGestureRecognizer.delegate = self
         tapGestureRecognizer.cancelsTouchesInView = false
-        LoginVC.benchwarmerLogo.setImageForName("Wes", backgroundColor: UIColor.cyan, circular: true, textAttributes: nil, gradient: true)
-        LoginVC.spectatorLogo.setImageForName("Spectator", backgroundColor: UIColor.lightGray, circular: true, textAttributes: nil, gradient: true)
         view.addGestureRecognizer(tapGestureRecognizer)
         if self.revealSideMenuOnTop {
             view.insertSubview(self.sideMenuShadowView, at: 1)
@@ -315,11 +313,8 @@ extension UIViewController {
 protocol SideMenuViewControllerDelegate {
     func selectedCell(_ row: Int)
 }
-struct SideMenuModel {
-    var icon: UIImage
-    var title: String
-}
-class SideMenuViewController: UIViewController {
+
+class SideMenuViewController: AuthVC {
     @IBOutlet weak var backview: UIView!
     @IBOutlet var userEmail: UILabel!
     @IBOutlet var userName: UILabel!
@@ -332,11 +327,11 @@ class SideMenuViewController: UIViewController {
     var defaultHighlightedCell: Int = 0
     var menu: [SideMenuModel] = [
         SideMenuModel(icon: UIImage(systemName: "calendar")!, title: "Schedule"),
-        SideMenuModel(icon: UIImage(named: "vanguardLogo")!, title: "The Vanguard"),
-        SideMenuModel(icon: LoginVC.spectatorLogo.image!, title: "The Spectator"),
-        SideMenuModel(icon: LoginVC.benchwarmerLogo.image!, title: "The Benchwarmer"),
+        SideMenuModel(icon: UIImage(named: "vanguardLogo")!, title: "The Vanguard", textImage: UIImage(named: "vanguardTextLogo")),
+        SideMenuModel(icon: UIImage(named: "spectatorLogo")!, title: "The Spectator", textImage: UIImage(named: "spectatorTextLogo")),
+        SideMenuModel(icon: UIImage(named: "benchwarmerLogo")!, title: "The Benchwarmer", textImage: UIImage(named: "benchwarmerTextLogo")),
         SideMenuModel(icon: UIImage(systemName: "bonjour")!, title: "CHASM"),
-        SideMenuModel(icon: UIImage(named: "POVLogo")!, title: "POV")
+        SideMenuModel(icon: UIImage(named: "POVLogo")!, title: "POV", textImage: UIImage(named: "povTextLogo"))
     ]
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -369,8 +364,6 @@ class SideMenuViewController: UIViewController {
         signOutButton.dropShadow()
         self.headerImageView.layer.cornerRadius = 10
         self.headerImageView.layer.masksToBounds = true
-//        HomeViewController.name = "Mike Veson" // new name
-//        HomeViewController.profilePhoto.setImageForName(HomeViewController.name, backgroundColor: UIColor(named: "orange"), circular: false, textAttributes: nil, gradient: true)
         if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
             LoginVC.setProfileImage(useGoogle: true, width: UInt(self.view.frame.width), completion: {_ in
                 self.headerImageView.image = LoginVC.profilePhoto.image
@@ -390,7 +383,13 @@ class SideMenuViewController: UIViewController {
     }
     @objc func profilePressed(_ sender: Any) {
         SettingsVC.ProfileLink = self
-        self.performSegue(withIdentifier: "Profile", sender: nil)
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "SettingsNavID") as? UINavigationController
+        guard let vc = vc else {
+            return
+        }
+        present(vc, animated: true)
+//        self.performSegue(withIdentifier: "Profile", sender: nil)
         UIView.animate(withDuration: 0.2, delay: 0, options: UIView.AnimationOptions.curveEaseOut, animations: {
             self.backview.alpha = 0.2
         }) { (_) in
@@ -417,19 +416,7 @@ class SideMenuViewController: UIViewController {
         }
         return data.map { String($0) }.joined(separator: "&")
     }
-    func signOutToken() {
-        do {
-            try FirebaseAuth.Auth.auth().signOut()
-            LoginVC.blocks = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"true","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
-            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-            ProgressHUD.colorAnimation = .green
-            ProgressHUD.showSucceed("Successfully signed out")
-            self.performSegue(withIdentifier: "logOut", sender: nil)
-        }
-        catch {
-            ProgressHUD.showFailed("Failed to Sign Out")
-        }
-    }
+    
 }
 
 extension SideMenuViewController: UITableViewDelegate {
@@ -448,20 +435,25 @@ extension SideMenuViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: SideMenuCell.identifier, for: indexPath) as? SideMenuCell else { fatalError("xib doesn't exist") }
         cell.iconImageView.image = self.menu[indexPath.row].icon
-        cell.titleLabel.text = self.menu[indexPath.row].title
-        //        cell.titleLabel.textColor = UIColor.systemGray
-        //        cell.iconImageView.tintColor = UIColor.systemGray
+        if let textImg = self.menu[indexPath.row].textImage {
+            cell.textImageView.image = textImg
+            cell.titleLabel.text = ""
+        }
+        else {
+            cell.titleLabel.text = self.menu[indexPath.row].title
+            cell.textImageView.image = nil
+        }
         cell.backgroundColor = UIColor(named: "background")
         cell.background.dropShadow()
         cell.titleLabel.textColor = UIColor(named: "inverse")
         cell.iconImageView.tintColor = UIColor(named: "inverse")
+        cell.textImageView.tintColor = UIColor(named: "inverse")
         let myCustomSelectionColorView = UIView()
         if indexPath.row == 0 {
             cell.background.backgroundColor = UIColor(named: "inverse-light")
             cell.titleLabel.textColor = UIColor(named: "background")
             cell.iconImageView.tintColor = UIColor(named: "background")
         }
-        
         cell.selectedBackgroundView = myCustomSelectionColorView
         return cell
     }
@@ -477,12 +469,13 @@ extension SideMenuViewController: UITableViewDataSource {
 //        cell.background.removeGradientBackground()
         cell.titleLabel.textColor = UIColor(named: "inverse")
         cell.iconImageView.tintColor = UIColor(named: "inverse")
+        cell.textImageView.tintColor = UIColor(named: "inverse")
     }
     func select(cell: SideMenuCell) {
         cell.background.backgroundColor = UIColor(named: "inverse-light")
         cell.titleLabel.textColor = UIColor(named: "background")
         cell.iconImageView.tintColor = UIColor(named: "background")
-        
+        cell.textImageView.tintColor = UIColor(named: "background")
     }
 }
 
@@ -492,6 +485,7 @@ class SideMenuCell: UITableViewCell {
     @IBOutlet weak var background: UIView!
     @IBOutlet var iconImageView: UIImageView!
     @IBOutlet var titleLabel: UILabel!
+    @IBOutlet var textImageView: UIImageView!
     override func awakeFromNib() {
         super.awakeFromNib()
         self.backgroundColor = UIColor(named: "backgroundCol-low-alpha")
@@ -499,6 +493,7 @@ class SideMenuCell: UITableViewCell {
         self.background.layer.masksToBounds = true
         self.background.layer.cornerRadius = 5
         self.iconImageView.tintColor = UIColor(named: "inverseBackgroundCol")
+        self.textImageView.tintColor = UIColor(named: "inverseBackgroundCol")
         self.titleLabel.textColor = UIColor(named: "inverseBackgroundCol")
     }
 }

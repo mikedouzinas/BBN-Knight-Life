@@ -14,6 +14,53 @@ import ProgressHUD
 protocol ResultsViewControllerDelegate: AnyObject {
     func didTapPlace(with classroom: Classroom)
 }
+
+class ComingSoonView: UIView {
+    private let TextLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = UIColor(named: "background")
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.layer.masksToBounds = true
+        label.layer.cornerRadius = 8
+//        label.padding(2, 2, 8, 8)
+        label.font = .systemFont(ofSize: 18, weight: .regular)
+        label.numberOfLines = 2
+        label.text = "Coming Soon! For now, press the button below to call the bus."
+        return label
+    } ()
+    public let phoneButton: UIButton = {
+        let editButton = UIButton()
+        editButton.translatesAutoresizingMaskIntoConstraints = false
+        editButton.setTitle("", for: .normal)
+        editButton.setImage(UIImage(systemName: "phone.fill"), for: .normal)
+        editButton.addTarget(self, action: #selector(callBus), for: .touchUpInside)
+        editButton.tintColor = UIColor(named: "background")
+        return editButton
+    } ()
+    @objc func callBus() {
+        guard let number = URL(string: "tel://" + "16175930396") else { return }
+        UIApplication.shared.open(number)
+    }
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        self.layer.masksToBounds = true
+        self.layer.cornerRadius = 8
+        self.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.8)
+        self.addSubview(TextLabel)
+        self.addSubview(phoneButton)
+        TextLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor).isActive = true
+        TextLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor, constant: -10).isActive = true
+        TextLabel.leftAnchor.constraint(equalTo: self.leftAnchor, constant: 1).isActive = true
+        TextLabel.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -1).isActive = true
+        phoneButton.centerXAnchor.constraint(equalTo: self.centerXAnchor).isActive = true
+        phoneButton.topAnchor.constraint(equalTo: TextLabel.bottomAnchor, constant: 5).isActive = true
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
 class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManagerDelegate, GMSMapViewDelegate {
     @IBAction func moreInfo(_ sender: UIBarButtonItem) {
         guard let number = URL(string: "tel://" + "16175930396") else { return }
@@ -78,11 +125,13 @@ class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManager
         })
         task.resume()
     }
+    private var comingSoonView: ComingSoonView!
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         mapView.clear()
         mapView.removeFromSuperview()
         mapView = nil
+        comingSoonView.removeFromSuperview()
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -101,11 +150,17 @@ class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManager
         mapView.mapType = .normal
         mapView.settings.scrollGestures = true
         mapView.settings.zoomGestures = true
+        view.addSubview(comingSoonView)
     }
     override func viewDidLoad() {
         super.viewDidLoad()
+        comingSoonView = ComingSoonView(frame: CGRect(x: (view.frame.width-(view.frame.width-100))/2, y: (view.frame.height-120)/2, width: view.frame.width-100, height: 120))
+//        view.addSubview(comingSoonView)
         GMSServices.provideAPIKey("AIzaSyBY5M_mXpnXwCz5-T889VLtkm22HjY8-rw")
         // 42.36894453932155, -71.13374727281084
+    }
+    func mapViewDidFinishTileRendering(_ mapView: GMSMapView) {
+        view.bringSubviewToFront(comingSoonView)
     }
     func addLocations() {
         let camera = GMSCameraPosition.camera(withLatitude: 42.36894453932155, longitude: -71.13374727281084, zoom: 15)
@@ -255,11 +310,7 @@ class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManager
         Classroom(name: "283", lat: 42.37148856356952, lon: -71.13528898962103)
     ]
 }
-struct Classroom {
-    let name: String
-    let lat: Double
-    let lon: Double
-}
+
 class ResultsVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     weak var delegate: ResultsViewControllerDelegate?
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
