@@ -34,6 +34,28 @@ class AuthVC: CustomLoader {
             ProgressHUD.showFailed("Failed to Sign Out")
         }
     }
+    
+    func setAppearance(input: String?) {
+        let userDefaults = UserDefaults.standard
+        var preference = ""
+        if let input = input {
+            preference = input
+            userDefaults.setValue(preference, forKey: "appearance")
+        }
+        else {
+            preference = userDefaults.object(forKey: "appearance") as? String ?? "Match System"
+        }
+        let window = UIApplication.shared.keyWindow
+        LoginVC.appearance = preference
+        switch preference {
+        case "Match System":
+            window?.overrideUserInterfaceStyle = .unspecified
+        case "Dark Mode":
+            window?.overrideUserInterfaceStyle = .dark
+        default:
+            window?.overrideUserInterfaceStyle = .light
+        }
+    }
     func setLoginInfo(weakSelf: UIViewController?) {
         guard let strongSelf = weakSelf else {
             ProgressHUD.colorAnimation = UIColor(named: "red")!

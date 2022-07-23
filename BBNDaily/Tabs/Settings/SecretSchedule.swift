@@ -35,6 +35,8 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
         }
         addButton.setTitle("", for: .normal)
         editReasonButton.setTitle("", for: .normal)
+        throughDateButton.setTitle("", for: .normal)
+        
         setCurrentday(date: Date(), completion: { [self] result in
             switch result {
             case .success(let todBlocks):
@@ -49,6 +51,7 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
             }
         })
     }
+    @IBOutlet weak var throughDateButton: UIButton!
     @IBOutlet weak var editReasonButton: UIButton!
     @IBOutlet weak var editButton: UIButton!
     @IBAction func removeAll(_ sender: Any) {
@@ -66,6 +69,16 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
         }))
 
         present(refreshAlert, animated: true, completion: nil)
+    }
+    @IBAction func addThroughDate(_ sender: Any) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "ThroughDateVC") as? UINavigationController
+        let vc2 = vc?.children[0] as? ThroughDateVC
+        vc2?.link = self
+        guard let vc = vc else {
+            return
+        }
+        present(vc, animated: true)
     }
     @IBAction func addClass(_ sender: Any) {
         TimesVC.link = self
@@ -251,13 +264,22 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
         else {
             ScheduleCalendar.restore()
         }
-        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Sep 2022 04:00".dateFromMultipleFormats() ?? Date()) {
-            currentDay = SpecialSchedule(specialSchedules: [block](), specialSchedulesL1: [block]())
-            completion(.success(currentDay))
-            return
-        }
-        
+//        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".startOrEndDate(isStart: true) ?? Date(), date2: "02 Sep 2022 04:00".startOrEndDate(isStart: false) ?? Date()) {
+//            currentDay = SpecialSchedule(specialSchedules: [block](), specialSchedulesL1: [block]())
+//            ScheduleCalendar.restore()
+//            ScheduleCalendar.setEmptyMessage("No Class - Summer Break")
+//            completion(.success(currentDay))
+//            return
+//        }
         for x in LoginVC.specialSchedules {
+            
+            if x.key.isInThroughDate(date: date) {
+                currentDay = SpecialSchedule(specialSchedules: [block](), specialSchedulesL1: [block]())
+                ScheduleCalendar.restore()
+                ScheduleCalendar.setEmptyMessage("No Class - \(x.value.reason ?? "Break")")
+                completion(.success(currentDay))
+                return
+            }
             if x.key.lowercased() == stringDate.lowercased() {
                 self.currentDay.specialSchedules = x.value.specialSchedules
                 self.currentDay.specialSchedulesL1 = x.value.specialSchedulesL1
@@ -457,84 +479,3 @@ class TimesVC: TextFieldVC {
 }
 
 
-class ImageVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    @IBOutlet var imageButton: UIButton!
-    @IBOutlet var tempImageView: UIImageView!
-    @IBOutlet var finishButton: UIButton!
-    var link: SecretScheduleVC!
-    @IBAction func pressedFinish() {
-        guard let image = tempImageView.image else {
-            ProgressHUD.colorAnimation = .red
-            ProgressHUD.showFailed("You need to select an image!")
-            return
-        }
-        let currDate = link.currentDate.replacingOccurrences(of: "/", with: "-")
-        link.currentDay.image = image
-        guard let imageData = image.pngData() else {
-            return
-        }
-        finishButton.isEnabled = false
-        let storageRef = Storage.storage().reference()
-        storageRef.child("schedules/\(currDate).png").putData(imageData, metadata: nil, completion: { _, error in
-            guard error == nil else {
-                print("failed to upload \(String(describing: error))")
-                ProgressHUD.showFailed("Failed to upload photo :(")
-                return
-            }
-            DispatchQueue.main.async { [self] in
-                let storage = FirebaseStorage.Storage.storage()
-                let reference = storage.reference(withPath: "schedules/\(currDate).png")
-                reference.downloadURL(completion: { [self] (url, error) in
-                    if let error = error {
-                        print(error)
-                    }
-                    else {
-                        let urlstring = url!.absoluteString
-                        guard let url = URL(string: urlstring) else {
-                            return
-                        }
-                        DispatchQueue.main.async {[self] in
-                            imageCache.setObject(image, forKey: NSString(string: urlstring))
-                            dismiss(animated: true)
-                            link.currentDay.imageUrl = "\(url)"
-                            link.uploadData()
-                        }
-                    }
-                })
-            }
-        })
-        
-    }
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        tempImageView.image = link.currentDay.image
-    }
-    @IBAction func choosePhoto() {
-        let picker = UIImagePickerController()
-        picker.sourceType = .photoLibrary
-        picker.delegate = self
-        picker.allowsEditing = true
-        present(picker, animated: true)
-    }
-    @IBAction func takePhoto() {
-        // fyi i could use the same method with a received button but im lazy
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.delegate = self
-        picker.allowsEditing = true
-        present(picker, animated: true)
-    }
-    @IBAction func cancel () {
-        dismiss(animated: true)
-    }
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        picker.dismiss(animated: true, completion: nil)
-    }
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        picker.dismiss(animated: true, completion: nil)
-        guard let image = info[UIImagePickerController.InfoKey.editedImage] as? UIImage else {
-            return
-        }
-        tempImageView.image = image
-    }
-}

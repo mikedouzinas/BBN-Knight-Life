@@ -517,15 +517,22 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         else {
             ScheduleCalendar.restore()
         }
-        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Sep 2022 04:00".dateFromMultipleFormats() ?? Date()) {
-            currentDay = [block]()
-            ScheduleCalendar.restore()
-            ScheduleCalendar.setEmptyMessage("No Class - Summer Break!")
-            completion(.success(currentDay))
-            return
-        }
+//        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".startOrEndDate(isStart: true) ?? Date(), date2: "02 Sep 2022 04:00".startOrEndDate(isStart: false) ?? Date()) {
+//            currentDay = [block]()
+//            ScheduleCalendar.restore()
+//            ScheduleCalendar.setEmptyMessage("No Class - Summer Break!")
+//            completion(.success(currentDay))
+//            return
+//        }
         	
         for x in LoginVC.specialSchedules {
+            if x.key.isInThroughDate(date: date) {
+                currentDay = [block]()
+                ScheduleCalendar.restore()
+                ScheduleCalendar.setEmptyMessage("No Class - \(x.value.reason ?? "Break")")
+                completion(.success(currentDay))
+                return
+            }
             if x.key.lowercased() == stringDate.lowercased() {
                 if !((LoginVC.blocks["l-\(weekDay.lowercased())"] as? String) ?? "").lowercased().contains("2") {
                     self.currentDay = x.value.specialSchedulesL1 

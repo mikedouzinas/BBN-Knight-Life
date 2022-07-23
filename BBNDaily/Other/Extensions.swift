@@ -36,6 +36,19 @@ extension String {
 //            of: Date())!
 //        return t2
 //    }
+    func isInThroughDate(date: Date) -> Bool {
+        let index = self.distance(of: "-")
+        guard let ind = index else {
+            return false
+        }
+        
+        let date1 = self.prefix(ind)
+        let date2 = self.suffix(self.count-(ind+1))
+        if date.isBetweenTimeFrame(date1: "\(date1)".startOrEndDate(isStart: true) ?? Date(), date2: "\(date2)".startOrEndDate(isStart: false) ?? Date()) {
+            return true
+        }
+        return false
+    }
     func getValues() -> [String]{
         var fullName = self
         let subject = String(fullName.prefix(upTo: fullName.firstIndex(of: "~") ?? fullName.startIndex)).setNotAvailable()
@@ -132,7 +145,9 @@ extension Date {
         self = calendar.date(from: dateComponents) ?? Date()
     }
     func isBetweenTimeFrame(date1: Date, date2: Date) -> Bool {
-        if self > date1 && self < date2
+        
+        print("OG: \(self) start: \(date1) end: \(date2)")
+        if self >= date1 && self <= date2
         {
             return true
         }
@@ -217,6 +232,7 @@ extension String {
             "yyyy-MM-dd'T'hh:mm:ss",
             "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
             "yyyy-MM-dd'T'HH:mm:ssZ",
+            "EEEE, MMMM dd, yyyy",
             "yyyy-MM-dd'T'hh:mm:ss.SSSSSSSSSZ",
             "yyyy-MM-dd'T'hh:mm:ss.SSSSSSSSZ",
             "yyyy-MM-dd'T'hh:mm:ss.SSSSSSSZ",
@@ -247,7 +263,58 @@ extension String {
         }
         return nil
     }
-    
+    func startOrEndDate(isStart: Bool) -> Date? {
+        let dateFormatter = DateFormatter()
+        
+        let formats: [String] = [
+            "EEEE, MMMM dd, yyyy",
+            "dd MMM yyyy HH:mm"
+        ]
+//        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.amSymbol = "am"
+        dateFormatter.pmSymbol = "pm"
+        for format in formats {
+            dateFormatter.dateFormat = format
+            if let convertedDate = dateFormatter.date(from: self) {
+                let calendar = Calendar.current
+                var dateComponents = DateComponents()
+                dateComponents.weekday = calendar.component(.weekday, from: convertedDate)
+                dateComponents.year = calendar.component(.year, from: convertedDate)
+                dateComponents.month = calendar.component(.month, from: convertedDate)
+                dateComponents.day = calendar.component(.day, from: convertedDate)
+                if isStart {
+                    dateComponents.hour = 0
+                    dateComponents.minute = 0
+                }
+                else {
+                    dateComponents.hour = 23
+                    dateComponents.minute = 59
+                    dateComponents.second = 59
+                }
+//                convertedDate
+                return calendar.date(from: dateComponents)
+            }
+        }
+        return nil
+    }
+    func startDate() -> Date? {
+        let dateFormatter = DateFormatter()
+        
+        let formats: [String] = [
+            "EEEE, MMMM dd, yyyy"
+        ]
+//        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.amSymbol = "am"
+        dateFormatter.pmSymbol = "pm"
+        for format in formats {
+            dateFormatter.dateFormat = format
+            if let convertedDate = dateFormatter.date(from: self) {
+//                convertedDate
+                return convertedDate
+            }
+        }
+        return nil
+    }
 }
 
 extension UIImageView {
@@ -648,11 +715,15 @@ extension UIViewController {
         var currentDay = [block]()
         let lunchDays = getLunchDays(weekDay: weekday)
         currentDay = lunchDays.blocks
-        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".dateFromMultipleFormats() ?? Date(), date2: "02 Sep 2022 04:00".dateFromMultipleFormats() ?? Date()) {
-            currentDay = [block]()
-            return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
-        }
+//        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".startOrEndDate(isStart: true) ?? Date(), date2: "02 Sep 2022 04:00".startOrEndDate(isStart: false) ?? Date()) {
+//            currentDay = [block]()
+//            return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
+//        }
         for x in LoginVC.specialSchedules {
+            if x.key.isInThroughDate(date: date) {
+                currentDay = [block]()
+                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
+            }
             if x.key.lowercased() == stringDate.lowercased() {
                 if !((LoginVC.blocks["l-\(weekday)"] as? String) ?? "").lowercased().contains("2") {
                     currentDay = x.value.specialSchedulesL1
@@ -998,4 +1069,14 @@ final class StretchyTableHeaderView: UIView {
         imageViewBottom.constant = offsetY >= 0 ? 0 : -offsetY / 2
         imageViewHeight.constant = max(offsetY + scrollView.contentInset.top, scrollView.contentInset.top)
     }
+}
+extension StringProtocol {
+    func distance(of element: Element) -> Int? { firstIndex(of: element)?.distance(in: self) }
+    func distance<S: StringProtocol>(of string: S) -> Int? { range(of: string)?.lowerBound.distance(in: self) }
+}
+extension String.Index {
+    func distance<S: StringProtocol>(in string: S) -> Int { string.distance(to: self) }
+}
+extension Collection {
+    func distance(to index: Index) -> Int { distance(from: startIndex, to: index) }
 }

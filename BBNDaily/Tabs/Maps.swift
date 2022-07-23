@@ -141,12 +141,12 @@ class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManager
         super.viewDidAppear(animated)
         mapView = GMSMapView(frame: view.bounds)
         view.addSubview(mapView)
-        addLocations()
-        locationManager.requestWhenInUseAuthorization()
-        self.mapView.isMyLocationEnabled = true
+//        addLocations()
+//        locationManager.requestWhenInUseAuthorization()
+//        self.mapView.isMyLocationEnabled = true
         self.mapView.delegate = self
-        self.locationManager.delegate = self
-        self.locationManager.startUpdatingLocation()
+//        self.locationManager.delegate = self
+//        self.locationManager.startUpdatingLocation()
         mapView.mapType = .normal
         mapView.settings.scrollGestures = true
         mapView.settings.zoomGestures = true

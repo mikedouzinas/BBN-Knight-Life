@@ -20,6 +20,7 @@ class LoginVC: AuthVC {
     static var email = ""
     static var phoneNum = ""
     static var defaultBlocks = [String: [String: [block]]]()
+    static var appearance = ""
     static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"false","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
     static var specialSchedules = [String: SpecialSchedule]()
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)

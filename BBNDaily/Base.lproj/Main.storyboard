@@ -1433,14 +1433,27 @@
                                     <action selector="openImage:" destination="gOG-kt-Ec8" eventType="touchUpInside" id="wH2-EA-hM8"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="US8-Yk-SU5">
+                                <rect key="frame" x="248" y="259" width="23" height="23"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="US8-Yk-SU5" secondAttribute="height" multiplier="1:1" id="a9K-qc-nwz"/>
+                                </constraints>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="plain" image="arrow.left.and.right.square" catalog="system"/>
+                                <connections>
+                                    <action selector="addThroughDate:" destination="gOG-kt-Ec8" eventType="touchUpInside" id="h1q-xg-GDI"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="twj-eQ-d87"/>
                         <color key="backgroundColor" name="background"/>
                         <constraints>
+                            <constraint firstItem="US8-Yk-SU5" firstAttribute="top" secondItem="lfN-GU-EX2" secondAttribute="bottom" constant="8" id="1Px-yw-8AL"/>
                             <constraint firstItem="oG3-B6-VWv" firstAttribute="top" secondItem="lfN-GU-EX2" secondAttribute="bottom" constant="8" id="4PK-Al-O9G"/>
                             <constraint firstItem="tJ3-rf-B09" firstAttribute="top" secondItem="lfN-GU-EX2" secondAttribute="bottom" constant="8" id="5ET-2I-2S9"/>
                             <constraint firstItem="NZC-WO-s44" firstAttribute="top" secondItem="lfN-GU-EX2" secondAttribute="bottom" constant="8" id="6f1-vE-haS"/>
                             <constraint firstItem="LrN-JG-H47" firstAttribute="leading" secondItem="NZC-WO-s44" secondAttribute="trailing" constant="8" id="8wl-i3-6rU"/>
+                            <constraint firstItem="Cck-FK-nSM" firstAttribute="leading" secondItem="US8-Yk-SU5" secondAttribute="trailing" constant="8" id="AYm-Ng-OqT"/>
                             <constraint firstItem="NZC-WO-s44" firstAttribute="leading" secondItem="tJ3-rf-B09" secondAttribute="trailing" constant="8" id="Ho0-0b-660"/>
                             <constraint firstItem="twj-eQ-d87" firstAttribute="bottom" secondItem="5rB-MV-ZKN" secondAttribute="bottom" id="I0w-qc-WBY"/>
                             <constraint firstItem="LrN-JG-H47" firstAttribute="top" secondItem="lfN-GU-EX2" secondAttribute="bottom" constant="8" id="KLa-Wj-LPO"/>
@@ -1457,6 +1470,7 @@
                             <constraint firstItem="5rB-MV-ZKN" firstAttribute="top" secondItem="Cck-FK-nSM" secondAttribute="bottom" constant="8" id="ppo-IY-sRL"/>
                             <constraint firstItem="twj-eQ-d87" firstAttribute="trailing" secondItem="oG3-B6-VWv" secondAttribute="trailing" constant="8" id="r4r-nT-Jso"/>
                             <constraint firstItem="twj-eQ-d87" firstAttribute="trailing" secondItem="5rB-MV-ZKN" secondAttribute="trailing" id="rDp-eL-N4t"/>
+                            <constraint firstItem="5rB-MV-ZKN" firstAttribute="top" secondItem="US8-Yk-SU5" secondAttribute="bottom" constant="8" id="rN0-3t-AK2"/>
                             <constraint firstItem="oG3-B6-VWv" firstAttribute="leading" secondItem="Cck-FK-nSM" secondAttribute="trailing" constant="8" id="spX-im-m3k"/>
                         </constraints>
                     </view>
@@ -1473,6 +1487,7 @@
                         <outlet property="calendar" destination="lfN-GU-EX2" id="FNu-rs-QUQ"/>
                         <outlet property="editButton" destination="tJ3-rf-B09" id="Zb9-rB-Fly"/>
                         <outlet property="editReasonButton" destination="Cck-FK-nSM" id="WPI-Ly-QY5"/>
+                        <outlet property="throughDateButton" destination="US8-Yk-SU5" id="Xf0-8O-275"/>
                         <segue destination="Z0Y-Pt-EBQ" kind="presentation" identifier="addBlock" id="WzR-gd-YGI"/>
                     </connections>
                 </viewController>
@@ -1562,7 +1577,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="31w-0D-gIl" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3528" y="1559"/>
+            <point key="canvasLocation" x="3581" y="1559"/>
         </scene>
         <!--Block NameVC-->
         <scene sceneID="O3W-Z0-UOD">
@@ -2260,6 +2275,102 @@
             </objects>
             <point key="canvasLocation" x="4786" y="-473"/>
         </scene>
+        <!--Time Period Without School-->
+        <scene sceneID="nYm-CC-Mfu">
+            <objects>
+                <viewController id="Rma-Tr-rYr" customClass="ThroughDateVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="4TV-0Q-mry">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="yYa-Ws-6cT">
+                                <rect key="frame" x="165.5" y="767" width="83" height="31"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Continue"/>
+                                <connections>
+                                    <action selector="continueTask" destination="Rma-Tr-rYr" eventType="touchUpInside" id="HnE-CK-a0f"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please choose the end date " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="7eb-Gc-96l">
+                                <rect key="frame" x="99.5" y="261.5" width="215" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" name="inverse"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <datePicker contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="date" style="compact" translatesAutoresizingMaskIntoConstraints="NO" id="1d6-Up-MA4">
+                                <rect key="frame" x="126" y="291" width="119" height="31"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="7PW-0x-dcx"/>
+                                </constraints>
+                            </datePicker>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please choose the start date " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="Zub-Rx-KVU">
+                                <rect key="frame" x="96" y="183" width="222" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" name="inverse"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <datePicker contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="date" style="compact" translatesAutoresizingMaskIntoConstraints="NO" id="bic-QG-lEw">
+                                <rect key="frame" x="126" y="212.5" width="119" height="31"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="XQb-aV-SJX"/>
+                                </constraints>
+                            </datePicker>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="fC3-D0-fnw"/>
+                        <color key="backgroundColor" name="background"/>
+                        <constraints>
+                            <constraint firstItem="yYa-Ws-6cT" firstAttribute="centerX" secondItem="fC3-D0-fnw" secondAttribute="centerX" id="3j4-cj-wzD"/>
+                            <constraint firstItem="7eb-Gc-96l" firstAttribute="centerX" secondItem="fC3-D0-fnw" secondAttribute="centerX" id="7gZ-Gh-Qbo"/>
+                            <constraint firstItem="bic-QG-lEw" firstAttribute="centerX" secondItem="fC3-D0-fnw" secondAttribute="centerX" id="7jc-pP-eFb"/>
+                            <constraint firstItem="1d6-Up-MA4" firstAttribute="centerX" secondItem="fC3-D0-fnw" secondAttribute="centerX" id="EPB-g0-WAO"/>
+                            <constraint firstItem="Zub-Rx-KVU" firstAttribute="top" secondItem="fC3-D0-fnw" secondAttribute="top" constant="95" id="X2O-9h-Lc6"/>
+                            <constraint firstItem="7eb-Gc-96l" firstAttribute="top" secondItem="bic-QG-lEw" secondAttribute="bottom" constant="18" id="Z8L-qY-95I"/>
+                            <constraint firstItem="yYa-Ws-6cT" firstAttribute="bottom" secondItem="fC3-D0-fnw" secondAttribute="bottom" constant="-15" id="b2E-r1-PXQ"/>
+                            <constraint firstItem="Zub-Rx-KVU" firstAttribute="centerX" secondItem="fC3-D0-fnw" secondAttribute="centerX" id="gh7-sS-ZeL"/>
+                            <constraint firstItem="1d6-Up-MA4" firstAttribute="top" secondItem="7eb-Gc-96l" secondAttribute="bottom" constant="8.5" id="hBq-5W-tKd"/>
+                            <constraint firstItem="bic-QG-lEw" firstAttribute="top" secondItem="Zub-Rx-KVU" secondAttribute="bottom" constant="8.5" id="ugo-Gw-sEO"/>
+                        </constraints>
+                    </view>
+                    <toolbarItems/>
+                    <navigationItem key="navigationItem" title="Time Period Without School" id="zKb-Eb-pB3">
+                        <barButtonItem key="leftBarButtonItem" title="Item" image="xmark.circle" catalog="system" id="8uI-Ov-WQj">
+                            <color key="tintColor" name="inverse"/>
+                            <connections>
+                                <action selector="close" destination="Rma-Tr-rYr" id="Fgg-cb-mkp"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
+                    <connections>
+                        <outlet property="endDatePicker" destination="1d6-Up-MA4" id="Ic0-aQ-JoG"/>
+                        <outlet property="startDatePicker" destination="bic-QG-lEw" id="o1q-Cr-9X9"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="HKx-co-vtJ" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="5684" y="238"/>
+        </scene>
+        <!--Settings-->
+        <scene sceneID="DRl-Gf-Mfn">
+            <objects>
+                <navigationController storyboardIdentifier="ThroughDateVC" id="fiu-fF-gTs" sceneMemberID="viewController">
+                    <tabBarItem key="tabBarItem" title="Settings" image="gear" catalog="system" selectedImage="gear" id="Zx8-lG-5bL"/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="6dI-1t-NEP">
+                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textAttributes key="titleTextAttributes">
+                            <fontDescription key="fontDescription" name="HelveticaNeue-Medium" family="Helvetica Neue" pointSize="20"/>
+                            <color key="textColor" name="inverse"/>
+                        </textAttributes>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="Rma-Tr-rYr" kind="relationship" relationship="rootViewController" id="sCk-Lu-CHc"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="HIo-fk-vS6" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="5684" y="-473"/>
+        </scene>
     </scenes>
     <inferredMetricsTieBreakers>
         <segue reference="az4-St-gvp"/>
@@ -2267,6 +2378,7 @@
     </inferredMetricsTieBreakers>
     <resources>
         <image name="announcement" width="21.333333969116211" height="21.333333969116211"/>
+        <image name="arrow.left.and.right.square" catalog="system" width="128" height="114"/>
         <image name="bus" catalog="system" width="128" height="122"/>
         <image name="calendar" catalog="system" width="128" height="106"/>
         <image name="camera" catalog="system" width="128" height="94"/>

@@ -330,26 +330,20 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             }
             else if indexPath.row == 6 {
 //                print("selected")
+                tableView.deselectRow(at: indexPath, animated: true)
                 let alertController = UIAlertController(title: "Appearance", message: "Please select your preferred appearance", preferredStyle: .actionSheet)
-                guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-                   return
-                }
                 
                 // add the buttons/actions to the view controller
                 let lightMode = UIAlertAction(title: "Light Mode", style: .default) { _ in
-                    appDelegate.changeTheme(themeVal: "light")
-                    tableView.deselectRow(at: indexPath, animated: true)
+                    self.setAppearance(input: "Light Mode", indexPath: indexPath)
                 }
                 let darkMode = UIAlertAction(title: "Dark Mode", style: .default) { _ in
-                    appDelegate.changeTheme(themeVal: "dark")
-                    tableView.deselectRow(at: indexPath, animated: true)
+                    self.setAppearance(input: "Dark Mode", indexPath: indexPath)
                 }
                 let system = UIAlertAction(title: "Match System", style: .default) { _ in
-                    appDelegate.changeTheme(themeVal: "default")
-                    tableView.deselectRow(at: indexPath, animated: true)
+                    self.setAppearance(input: "Match System", indexPath: indexPath)
                 }
                 let cancel = UIAlertAction(title: "Cancel", style: .cancel) { _ in
-                    tableView.deselectRow(at: indexPath, animated: true)
                 }
                 alertController.addAction(lightMode)
                 alertController.addAction(darkMode)
@@ -453,6 +447,11 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             }
         }
     }
+    func setAppearance(input: String?, indexPath: IndexPath) {
+        self.setAppearance(input: input)
+        self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "Appearance", className: "\(LoginVC.appearance)")
+        tableView.reloadRows(at: [indexPath], with: .fade)
+    }
     private var blocks = [settingsBlock]()
     private var preferenceBlocks = [settingsBlock]()
     private var lunchBlocks = [settingsBlock]()
@@ -549,7 +548,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             settingsBlock(blockName: "Grade", className: "\(LoginVC.blocks["grade"] as? String ?? "")"),
             settingsBlock(blockName: "Locker #", className: "\(LoginVC.blocks["lockerNum"] as? String ?? "")"),
             settingsBlock(blockName: "Advisory Room", className: "\(LoginVC.blocks["room-advisory"] as? String ?? "")"),
-            settingsBlock(blockName: "Appearance", className: "Match System")
+            settingsBlock(blockName: "Appearance", className: "\(LoginVC.appearance)")
         ]
         
         lunchBlocks = [

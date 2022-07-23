@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		272BA654282D40E0009BA067 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		278AFAF9288C1C2800E64F23 /* ThroughDateVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */; };
+		278AFAFB288C1F1400E64F23 /* ImageVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAFA288C1F1400E64F23 /* ImageVC.swift */; };
 		27AEED53288B32C600C6176C /* defaultVariables.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED52288B32C600C6176C /* defaultVariables.swift */; };
 		27AEED55288B32E400C6176C /* TextEditVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED54288B32E400C6176C /* TextEditVC.swift */; };
 		27AEED58288B334B00C6176C /* PersonPopupVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED57288B334B00C6176C /* PersonPopupVC.swift */; };
@@ -129,6 +131,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThroughDateVC.swift; sourceTree = "<group>"; };
+		278AFAFA288C1F1400E64F23 /* ImageVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVC.swift; sourceTree = "<group>"; };
 		27AEED52288B32C600C6176C /* defaultVariables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = defaultVariables.swift; sourceTree = "<group>"; };
 		27AEED54288B32E400C6176C /* TextEditVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextEditVC.swift; sourceTree = "<group>"; };
 		27AEED57288B334B00C6176C /* PersonPopupVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonPopupVC.swift; sourceTree = "<group>"; };
@@ -304,6 +308,8 @@
 		27AEED68288B34D500C6176C /* SecretScheduleDetail */ = {
 			isa = PBXGroup;
 			children = (
+				278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */,
+				278AFAFA288C1F1400E64F23 /* ImageVC.swift */,
 			);
 			path = SecretScheduleDetail;
 			sourceTree = "<group>";
@@ -783,7 +789,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				278AFAF9288C1C2800E64F23 /* ThroughDateVC.swift in Sources */,
 				27B0DB81288B0DBD009C32B8 /* Structs.swift in Sources */,
+				278AFAFB288C1F1400E64F23 /* ImageVC.swift in Sources */,
 				27B0DB7F288B025D009C32B8 /* AuthVC.swift in Sources */,
 				8704E97026EEA5E9001826F8 /* Extensions.swift in Sources */,
 				27AEED74288B35B500C6176C /* TextFieldVC.swift in Sources */,

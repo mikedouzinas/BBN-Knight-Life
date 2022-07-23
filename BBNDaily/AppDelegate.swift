@@ -21,7 +21,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Override point for customization after application launch.
         FirebaseApp.configure()
         Messaging.messaging().delegate = self
-        
+//        setAppeara
         requestAuthForNotifications()
         application.registerForRemoteNotifications()
         let attributes = [NSAttributedString.Key.font:UIFont(name: "TimesNewRomanPSMT", size: 10)]
