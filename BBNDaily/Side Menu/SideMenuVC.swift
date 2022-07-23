@@ -451,8 +451,8 @@ extension SideMenuViewController: UITableViewDataSource {
         let myCustomSelectionColorView = UIView()
         if indexPath.row == 0 {
             cell.background.backgroundColor = UIColor(named: "inverse-light")
-            cell.titleLabel.textColor = UIColor(named: "background")
-            cell.iconImageView.tintColor = UIColor(named: "background")
+            cell.titleLabel.textColor = UIColor(named: "inverse")
+            cell.iconImageView.tintColor = UIColor(named: "inverse")
         }
         cell.selectedBackgroundView = myCustomSelectionColorView
         return cell
@@ -473,9 +473,9 @@ extension SideMenuViewController: UITableViewDataSource {
     }
     func select(cell: SideMenuCell) {
         cell.background.backgroundColor = UIColor(named: "inverse-light")
-        cell.titleLabel.textColor = UIColor(named: "background")
-        cell.iconImageView.tintColor = UIColor(named: "background")
-        cell.textImageView.tintColor = UIColor(named: "background")
+        cell.titleLabel.textColor = UIColor(named: "inverse")
+        cell.iconImageView.tintColor = UIColor(named: "inverse")
+        cell.textImageView.tintColor = UIColor(named: "inverse")
     }
 }
 

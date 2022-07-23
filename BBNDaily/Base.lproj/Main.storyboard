@@ -69,14 +69,7 @@
                             <constraint firstItem="eSR-Oq-hca" firstAttribute="leading" secondItem="Asz-cb-vlx" secondAttribute="leading" constant="4" id="ywC-y4-BJx"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="English HW" id="hED-3C-nt0">
-                        <barButtonItem key="rightBarButtonItem" title="Item" image="xmark.circle" catalog="system" id="z6V-RY-N6I">
-                            <color key="tintColor" systemColor="systemRedColor"/>
-                            <connections>
-                                <action selector="removeTask:" destination="KCG-Zx-NLt" id="LMh-CF-1CX"/>
-                            </connections>
-                        </barButtonItem>
-                    </navigationItem>
+                    <navigationItem key="navigationItem" title="English HW" id="hED-3C-nt0"/>
                     <connections>
                         <outlet property="dateLabel" destination="eSR-Oq-hca" id="eT5-US-aVC"/>
                         <outlet property="detailedTextView" destination="Kcw-9c-mar" id="wKj-k8-XUi"/>
@@ -272,7 +265,7 @@
             </objects>
             <point key="canvasLocation" x="842" y="-273"/>
         </scene>
-        <!--News-->
+        <!--Newsdewd-->
         <scene sceneID="vE4-ow-dol">
             <objects>
                 <viewController id="YkL-hu-Gqn" customClass="VanguardVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
@@ -280,11 +273,11 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="Ici-O6-sUS"/>
-                        <color key="backgroundColor" name="background"/>
+                        <color key="backgroundColor" name="blue"/>
                     </view>
                     <tabBarItem key="tabBarItem" title="Vanguard" image="vanguardLogo" selectedImage="vanguardLogo" id="ZsQ-fQ-1jJ"/>
                     <toolbarItems/>
-                    <navigationItem key="navigationItem" title="News" id="xqp-td-wRJ">
+                    <navigationItem key="navigationItem" title="Newsdewd" id="xqp-td-wRJ">
                         <barButtonItem key="leftBarButtonItem" title="Menu" image="menu" id="CJa-u9-Tbc">
                             <color key="tintColor" name="white"/>
                         </barButtonItem>
@@ -1878,9 +1871,7 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="backgroundColor" name="background-light"/>
                         <color key="tintColor" name="white"/>
-                        <textAttributes key="titleTextAttributes">
-                            <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        </textAttributes>
+                        <color key="barTintColor" name="white"/>
                         <textAttributes key="largeTitleTextAttributes">
                             <color key="textColor" name="white"/>
                         </textAttributes>
@@ -1934,7 +1925,7 @@
                         <color key="backgroundColor" name="background-light"/>
                         <color key="tintColor" name="white"/>
                         <textAttributes key="titleTextAttributes">
-                            <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <color key="textColor" name="white"/>
                         </textAttributes>
                         <textAttributes key="largeTitleTextAttributes">
                             <color key="textColor" name="white"/>
@@ -2442,9 +2433,6 @@
         </namedColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemRedColor">
-            <color red="1" green="0.23137254901960785" blue="0.18823529411764706" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>
