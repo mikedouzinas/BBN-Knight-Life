@@ -39,7 +39,7 @@ class ComingSoonView: UIView {
         return editButton
     } ()
     @objc func callBus() {
-        guard let number = URL(string: "tel://" + "16175930396") else { return }
+        guard let number = URL(string: "tel://" + "\(LoginVC.busNumber)") else { return }
         UIApplication.shared.open(number)
     }
     override init(frame: CGRect) {
@@ -63,7 +63,7 @@ class ComingSoonView: UIView {
 }
 class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManagerDelegate, GMSMapViewDelegate {
     @IBAction func moreInfo(_ sender: UIBarButtonItem) {
-        guard let number = URL(string: "tel://" + "16175930396") else { return }
+        guard let number = URL(string: "tel://" + "\(LoginVC.busNumber)") else { return }
         UIApplication.shared.open(number)
 //        ProgressHUD.colorAnimation = UIColor(named: "gold-bright")!
 //        ProgressHUD.showSucceed("Coming Soon! \n Bus number is (617) 593-0396")

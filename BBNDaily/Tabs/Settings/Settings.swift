@@ -207,7 +207,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
             LoginVC.blocks["googlePhoto"] = "true"
             currDoc.setData(LoginVC.blocks)
-            LoginVC.setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: { [self]_ in
+            setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: { [self]_ in
                 setHeader()
                 SettingsVC.ProfileLink.headerImageView.image = LoginVC.profilePhoto.image
             })
@@ -217,7 +217,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
             LoginVC.blocks["googlePhoto"] = "false"
             currDoc.setData(LoginVC.blocks)
-            LoginVC.setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: { [self]_ in
+            setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: { [self]_ in
                 setHeader()
                 SettingsVC.ProfileLink.headerImageView.image = LoginVC.profilePhoto.image
             })
@@ -519,20 +519,20 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         }
         shareSheetVC = UIActivityViewController(activityItems: ["\(LoginVC.fullName.trimmingCharacters(in: .whitespacesAndNewlines))'s Classes\nA: \(a.prefix(a.count-2))\nB: \(b.prefix(b.count-2))\nC: \(c.prefix(c.count-2))\nD: \(d.prefix(d.count-2))\nE: \(e.prefix(e.count-2))\nF: \(f.prefix(f.count-2))\nG: \(g.prefix(g.count-2))"], applicationActivities: nil)
     }
-    public let closeButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("", for: .normal)
-        button.setImage(UIImage(named: "x-mark"), for: .normal)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.tintColor = .white
-        button.dropShadow()
-        button.backgroundColor = .clear
-        return button
-    } ()
-    @objc func close(_ sender: Any) {
-//        print("made it?")
-        dismiss(animated: true, completion: nil)
-    }
+//    public let closeButton: UIButton = {
+//        let button = UIButton()
+//        button.setTitle("", for: .normal)
+//        button.setImage(UIImage(named: "x-mark"), for: .normal)
+//        button.translatesAutoresizingMaskIntoConstraints = false
+//        button.tintColor = .white
+//        button.dropShadow()
+//        button.backgroundColor = .clear
+//        return button
+//    } ()
+//    @objc func close(_ sender: Any) {
+////        print("made it?")
+//        dismiss(animated: true, completion: nil)
+//    }
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(named: "background")

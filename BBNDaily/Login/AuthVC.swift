@@ -56,6 +56,48 @@ class AuthVC: CustomLoader {
             window?.overrideUserInterfaceStyle = .light
         }
     }
+    func setProfileImage(useGoogle: Bool, width: UInt, completion: @escaping (Swift.Result<UIImageView, Error>) -> Void) {
+        if !useGoogle {
+            LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+            completion(.success(LoginVC.profilePhoto))
+            return
+        }
+        let imageUrl = Auth.auth().currentUser?.photoURL?.absoluteString
+        if imageUrl == nil {
+            LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", gradientColors: (top: UIColor(named: "gold")!, bottom: UIColor(named: "blue")!), circular: false, textAttributes: nil)
+            completion(.success(LoginVC.profilePhoto))
+        }
+        else {
+            GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
+                if error != nil || user == nil {
+                    // Show the app's signed-out state.
+                    let imgUrl = (Auth.auth().currentUser?.photoURL!)!
+                    let data = NSData(contentsOf: imgUrl)
+                    if data != nil {
+                        LoginVC.profilePhoto.image = UIImage(data: data! as Data)
+                    }
+                    else {
+                        LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+                    }
+                    print("failed to get user photo")
+                    completion(.success(LoginVC.profilePhoto))
+                } else {
+                    // Show the app's signed-in state.
+                    print("GOT IMAGE")
+                    
+                    let newurl = (user!.profile?.imageURL(withDimension: width)!)!
+                    let data = NSData(contentsOf: newurl)
+                    if data != nil {
+                        LoginVC.profilePhoto.image = UIImage(data: data! as Data)
+                    }
+                    else {
+                        LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+                    }
+                    completion(.success(LoginVC.profilePhoto))
+                }
+            }
+        }
+    }
     func setLoginInfo(weakSelf: UIViewController?) {
         guard let strongSelf = weakSelf else {
             ProgressHUD.colorAnimation = UIColor(named: "red")!
@@ -66,19 +108,20 @@ class AuthVC: CustomLoader {
         LoginVC.email = FirebaseAuth.Auth.auth().currentUser?.email ?? ""
         LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
         let db = Firestore.firestore()
-//         check if statement to use online classes or not
-        db.collection("ifstatements").whereField("shouldUseOnlineClasses", isEqualTo: true).getDocuments(completion: {(snapshot, error) in
+        //         check if statement to use online classes or not
+        db.collection("ifstatements").document("ifstatements").getDocument(completion: {(snapshot, error) in
             if error != nil {
                 ProgressHUD.showFailed("Failed to find 'ifstatements'")
+                print("failed to find \(error)")
             } else {
-                if !(snapshot?.documents)!.isEmpty {
+                if ((snapshot?.data()?["shouldUseOnlineClasses"] as? Bool) ?? false) {
                     db.collection("default-schedules").getDocuments(completion: {(snap, err) in
                         if err != nil {
                             ProgressHUD.showFailed("Failed to find 'default schedules'")
                         }
                         else {
                             for document in (snap?.documents)! {
-//                                document.documentID
+                                //                                document.documentID
                                 let arrayl1 = document.data()["L1"] as? [[String: String]] ?? [[String: String]]()
                                 var blocksl1 = [block]()
                                 for x in arrayl1 {
@@ -100,6 +143,9 @@ class AuthVC: CustomLoader {
                 else {
                     print("false!")
                 }
+                if let busNumber = snapshot?.data()?["busNumber"] as? Int, busNumber != 0 {
+                    LoginVC.busNumber = busNumber
+                }
             }
         })
         db.collection("special-schedules").getDocuments { (snapshot, error) in
@@ -107,9 +153,9 @@ class AuthVC: CustomLoader {
                 ProgressHUD.showFailed("Failed to find 'special-schedules'")
             } else {
                 var tempArray = [String: SpecialSchedule]()
-//                var newArray = [String: [block]]()
-//                var reasonArray = [String: String]()
-//                var newArray2 = [String: [block]]()
+                //                var newArray = [String: [block]]()
+                //                var reasonArray = [String: String]()
+                //                var newArray2 = [String: [block]]()
                 for document in (snapshot?.documents)! {
                     let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
                     var blocksl1 = [block]()
@@ -134,15 +180,15 @@ class AuthVC: CustomLoader {
             }
         }
         // change here to filter for the users id
-        db.collection("users").whereField("uid", isEqualTo: "\(FirebaseAuth.Auth.auth().currentUser?.uid ?? "--")").getDocuments { (snapshot, error) in
+        db.collection("users").document("\(FirebaseAuth.Auth.auth().currentUser?.uid ?? "--")").getDocument { (document, error) in
             if error != nil {
                 ProgressHUD.showFailed("Failed to find 'users'")
             } else {
-//                var isCreated = false
-                if (snapshot?.documents)!.isEmpty {
-//                    print("no uid!")
+                //                var isCreated = false
+                if !(document?.exists ?? false) {
+                    //                    print("no uid!")
                     guard let Login = (strongSelf as? LoginVC) else {
-//                        print("not LoginVC")
+                        //                        print("not LoginVC")
                         self.hideLoader(completion: {
                             strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
                         })
@@ -159,70 +205,63 @@ class AuthVC: CustomLoader {
                         Login.callTabBar()
                     })
                 }
-                for document in (snapshot?.documents)! {
-//                    print("in documents")
-                    if let id = document.data()["uid"] as? String {
-                        if id == FirebaseAuth.Auth.auth().currentUser?.uid {
-//                            isCreated = true
-                            LoginVC.blocks = document.data()
-                            let array = ["a":LoginVC.blocks["A"], "b":LoginVC.blocks["B"], "c":LoginVC.blocks["C"], "d":LoginVC.blocks["D"], "e":LoginVC.blocks["E"], "f":LoginVC.blocks["F"], "g":LoginVC.blocks["G"]]
-                            var i = 0
-                            let myGroup = DispatchGroup()
-                            for x in array {
-                                myGroup.enter()
-                                guard let str: String = x.value as? String, str.contains("~"), !str.contains("/") else {
-                                    i+=1
-                                    myGroup.leave()
-                                    continue
-                                }
-                                let dep = db.collection("classes").document("\(str)")
-                                dep.getDocument(completion: { (snap, err)  in
-                                    if error != nil {
-                                        print("Failed to get class")
-                                    }
-                                    else {
-                                        let arr = [
-                                            ((snap?.data()?["monday"] as? Bool) ?? true), ((snap?.data()?["tuesday"] as? Bool) ?? true), ((snap?.data()?["wednesday"] as? Bool) ?? true), ((snap?.data()?["thursday"] as? Bool) ?? true), ((snap?.data()?["friday"] as? Bool) ?? true)]
-                                        LoginVC.classMeetingDays["\(x.key)"] = arr
-                                        
-                                        i+=1
-                                    }
-                                    myGroup.leave()
-                                })
-                            }
-                            if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
-                                LoginVC.setProfileImage(useGoogle: true, width: UInt(strongSelf.view.frame.width), completion: {_ in
-                                    
-                                })
-                            }
-                            else {
-                                LoginVC.setProfileImage(useGoogle: false, width: UInt(strongSelf.view.frame.width), completion: {_ in
-                                })
-                            }
-                            myGroup.notify(queue: .main) {
-                                print("Finished all requests.")
-                                weakSelf?.hideLoader(completion: {
-                                    guard let Login = (strongSelf as? LoginVC) else {
-//                                        print("not LoginVC")
-                                        strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
-                                        return
-                                    }
-                                    Login.callTabBar()
-                                })
-                            }
+                //                            isCreated = true
+                LoginVC.blocks = document?.data() ?? [String: Any]()
+                let array = ["a":LoginVC.blocks["A"], "b":LoginVC.blocks["B"], "c":LoginVC.blocks["C"], "d":LoginVC.blocks["D"], "e":LoginVC.blocks["E"], "f":LoginVC.blocks["F"], "g":LoginVC.blocks["G"]]
+                var i = 0
+                let myGroup = DispatchGroup()
+                for x in array {
+                    myGroup.enter()
+                    guard let str: String = x.value as? String, str.contains("~"), !str.contains("/") else {
+                        i+=1
+                        myGroup.leave()
+                        continue
+                    }
+                    let dep = db.collection("classes").document("\(str)")
+                    dep.getDocument(completion: { (snap, err)  in
+                        if error != nil {
+                            print("Failed to get class")
+                        }
+                        else {
+                            let arr = [
+                                ((snap?.data()?["monday"] as? Bool) ?? true), ((snap?.data()?["tuesday"] as? Bool) ?? true), ((snap?.data()?["wednesday"] as? Bool) ?? true), ((snap?.data()?["thursday"] as? Bool) ?? true), ((snap?.data()?["friday"] as? Bool) ?? true)]
+                            LoginVC.classMeetingDays["\(x.key)"] = arr
+                            
+                            i+=1
+                        }
+                        myGroup.leave()
+                    })
+                }
+                if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
+                    self.setProfileImage(useGoogle: true, width: UInt(strongSelf.view.frame.width), completion: {_ in
+                        
+                    })
+                }
+                else {
+                    self.setProfileImage(useGoogle: false, width: UInt(strongSelf.view.frame.width), completion: {_ in
+                    })
+                }
+                myGroup.notify(queue: .main) {
+                    print("Finished all requests.")
+                    weakSelf?.hideLoader(completion: {
+                        guard let Login = (strongSelf as? LoginVC) else {
+                            //                                        print("not LoginVC")
+                            strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
                             return
                         }
-                    }
+                        Login.callTabBar()
+                    })
                 }
-                weakSelf?.hideLoader(completion: {
-                    guard let Login = (strongSelf as? LoginVC) else {
-//                        print("not LoginVC")
-                        strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
-                        return
-                    }
-                    Login.callTabBar()
-                })
+                return
             }
+            weakSelf?.hideLoader(completion: {
+                guard let Login = (strongSelf as? LoginVC) else {
+                    //                        print("not LoginVC")
+                    strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
+                    return
+                }
+                Login.callTabBar()
+            })
         }
     }
 }

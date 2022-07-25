@@ -35,92 +35,100 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     }
     var xc = 0
     func setTimes(recursive: Bool) {
-        xc+=1
-        var i = 0
-        for x in CalendarVC.todayBlocks {
-            let big = getReturnDates(currBlock: x)
-            let now = big[0]
-            var t = big[1]
-            if i == 0 {
-                t = Calendar.current.date(byAdding: .hour, value: -12, to: t) ?? t
-            }
-            let t1 = big[2]
-            i+=1
-            let t2 = big[3]
-            if now.isBetweenTimeFrame(date1: t, date2: t2) {
-                currentBlock = x
-                var name = ""
-                if currentBlock.block != "N/A" {
-                    var className = (LoginVC.blocks[currentBlock.block] as? String) ?? ""
-                    if className == "" {
-                        className = "[\(currentBlock.block) Class]"
-                    }
-                    else if className.contains("~") {
-                        let array = className.getValues()
-                        className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
-                    }
-                    name = className
+        if isActive {
+            xc+=1
+            var i = 0
+            for x in CalendarVC.todayBlocks {
+                let big = getReturnDates(currBlock: x)
+                let now = big[0]
+                var t = big[1]
+                if i == 0 {
+                    t = Calendar.current.date(byAdding: .hour, value: -12, to: t) ?? t
                 }
-                else {
-                    name = "\(currentBlock.name)"
-                }
-                let formatter = DateComponentsFormatter()
-                formatter.unitsStyle = .abbreviated
-                formatter.zeroFormattingBehavior = .dropAll
-                formatter.allowedUnits = [.day, .hour, .minute, .second]
-                formatter.maximumUnitCount = 2
-                if now.isBetweenTimeFrame(date1: t, date2: t1) {
-                    let interval = Date().getTimeBetween(to: t1)
-                    self.navigationItem.title = "\(formatter.string(from: interval)!) Until \(name)"
-                }
-                else {
-                    let interval = Date().getTimeBetween(to: t2)
-                    self.navigationItem.title = "\(formatter.string(from: interval)!) left in \(name)"
-                }
-            }
-            i+=1
-        }
-        setOld()
-        if currentWeekday.isEmpty {
-            var z = 0
-            var currDate = Date()
-            let currTitle = self.navigationItem.title
-            for x in LoginVC.upcomingDays {
-                if z != 0 {
-//                    print("\(x.date) and \(x.blocks)")
-                    currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
-                    let currVal = "Next Day of Classes: \(x.weekday.capitalized)"
-                    if !x.blocks.isEmpty {
-                        if currTitle != currVal {
-                            currentWeekday = x.blocks
-                            dayOverBlocks = x.blocks
-                            calendar.select(currDate)
-                            setCurrentday(date: currDate, completion: { _ in
-                                self.ScheduleCalendar.reloadData()
-                            })
-                            self.navigationItem.title = "Next Day of Classes: \(x.weekday.capitalized)"
-                            z-=1
+                let t1 = big[2]
+                i+=1
+                let t2 = big[3]
+                if now.isBetweenTimeFrame(date1: t, date2: t2) {
+                    currentBlock = x
+                    var name = ""
+                    if currentBlock.block != "N/A" {
+                        var className = (LoginVC.blocks[currentBlock.block] as? String) ?? ""
+                        if className == "" {
+                            className = "[\(currentBlock.block) Class]"
                         }
-                        break
+                        else if className.contains("~") {
+                            let array = className.getValues()
+                            className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+                        }
+                        name = className
+                    }
+                    else {
+                        name = "\(currentBlock.name)"
+                    }
+                    let formatter = DateComponentsFormatter()
+                    formatter.unitsStyle = .abbreviated
+                    formatter.zeroFormattingBehavior = .dropAll
+                    formatter.allowedUnits = [.day, .hour, .minute, .second]
+                    formatter.maximumUnitCount = 2
+                    if now.isBetweenTimeFrame(date1: t, date2: t1) {
+                        let interval = Date().getTimeBetween(to: t1)
+                        self.navigationItem.title = "\(formatter.string(from: interval)!) Until \(name)"
+                    }
+                    else {
+                        let interval = Date().getTimeBetween(to: t2)
+                        self.navigationItem.title = "\(formatter.string(from: interval)!) left in \(name)"
                     }
                 }
-                z+=1
+                i+=1
             }
-            if z == LoginVC.upcomingDays.count {
-                self.navigationItem.title = "My Schedule"
+            setOld()
+            if currentWeekday.isEmpty {
+                var z = 0
+                var currDate = Date()
+                let currTitle = self.navigationItem.title
+                for x in LoginVC.upcomingDays {
+                    if z != 0 {
+                        currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
+                        let currVal = "Next Day of Classes: \(x.weekday.capitalized)"
+                        if !x.blocks.isEmpty {
+                            if currTitle != currVal {
+                                currentWeekday = x.blocks
+                                dayOverBlocks = x.blocks
+                                calendar.select(currDate)
+                                setCurrentday(date: currDate, completion: { _ in
+                                    self.ScheduleCalendar.reloadData()
+                                })
+                                self.navigationItem.title = "Next Day of Classes: \(x.weekday.capitalized)"
+                                z-=1
+                            }
+                            break
+                        }
+                    }
+                    z+=1
+                }
+                if z == LoginVC.upcomingDays.count {
+                    self.navigationItem.title = "My Schedule"
+                }
             }
+            ScheduleCalendar.refreshControl?.endRefreshing()
         }
-        ScheduleCalendar.refreshControl?.endRefreshing()
         if recursive && (LoginVC.blocks["uid"] as? String) != "" {
             Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [self] timer in
                 setTimes(recursive: true)
-                ScheduleCalendar.reloadData()
+                if isActive {
+                    ScheduleCalendar.reloadData()
+                }
             }
         }
         else {
             ScheduleCalendar.reloadData()
         }
     }
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        isActive = false
+    }
+    var isActive = true
     var dayOverBlocks = [block]()
     var dayIsOver = false
     func setOld() {
@@ -149,7 +157,6 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         }
     }
     func getReturnDates(currBlock: block) -> [Date] {
-        
         // end time
         let currDate = Date()
         // not during today
@@ -307,6 +314,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     var v = 1
     override func viewWillAppear(_ animated: Bool) {
         print("view WILL appear -> reloading the page")
+        isActive = true
         reloadPage()
         v+=1
     }

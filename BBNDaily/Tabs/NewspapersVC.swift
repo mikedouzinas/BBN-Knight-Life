@@ -3,7 +3,6 @@
 //  BBNDaily
 //
 //  Created by Mike Veson on 9/12/21.
-//
 
 import UIKit
 import GoogleSignIn
@@ -13,7 +12,6 @@ import InitialsImageView
 import SafariServices
 import FSCalendar
 import WebKit
-
 
 class PublicationVC: CustomLoader, WKNavigationDelegate {
     private let webView: WKWebView = {

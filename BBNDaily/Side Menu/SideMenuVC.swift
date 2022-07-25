@@ -365,12 +365,12 @@ class SideMenuViewController: AuthVC {
         self.headerImageView.layer.cornerRadius = 10
         self.headerImageView.layer.masksToBounds = true
         if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
-            LoginVC.setProfileImage(useGoogle: true, width: UInt(self.view.frame.width), completion: {_ in
+            setProfileImage(useGoogle: true, width: UInt(self.view.frame.width), completion: {_ in
                 self.headerImageView.image = LoginVC.profilePhoto.image
             })
         }
         else {
-            LoginVC.setProfileImage(useGoogle: false, width: UInt(self.view.frame.width), completion: {_ in
+            setProfileImage(useGoogle: false, width: UInt(self.view.frame.width), completion: {_ in
                 self.headerImageView.image = LoginVC.profilePhoto.image
             })
         }
@@ -388,6 +388,7 @@ class SideMenuViewController: AuthVC {
         guard let vc = vc else {
             return
         }
+        vc.modalPresentationStyle = .fullScreen
         present(vc, animated: true)
 //        self.performSegue(withIdentifier: "Profile", sender: nil)
         UIView.animate(withDuration: 0.2, delay: 0, options: UIView.AnimationOptions.curveEaseOut, animations: {

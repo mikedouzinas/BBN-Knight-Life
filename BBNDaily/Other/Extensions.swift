@@ -146,7 +146,6 @@ extension Date {
     }
     func isBetweenTimeFrame(date1: Date, date2: Date) -> Bool {
         
-        print("OG: \(self) start: \(date1) end: \(date2)")
         if self >= date1 && self <= date2
         {
             return true

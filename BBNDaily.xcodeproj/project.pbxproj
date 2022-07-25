@@ -54,7 +54,7 @@
 		87507FD326E6ADEB005DDFB4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87507FD126E6ADEB005DDFB4 /* LaunchScreen.storyboard */; };
 		87507FDE26E6ADEB005DDFB4 /* BBNDailyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FDD26E6ADEB005DDFB4 /* BBNDailyTests.swift */; };
 		87507FE926E6ADEB005DDFB4 /* BBNDailyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FE826E6ADEB005DDFB4 /* BBNDailyUITests.swift */; };
-		8761CA7226F29D3B00CADE56 /* Maps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8761CA7126F29D3B00CADE56 /* Maps.swift */; };
+		8761CA7226F29D3B00CADE56 /* MapsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8761CA7126F29D3B00CADE56 /* MapsVC.swift */; };
 		877ED46F27093827007FE2E5 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 870CBB1227090AEC00363BF4 /* WidgetKit.framework */; };
 		877ED47027093827007FE2E5 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 870CBB1427090AEC00363BF4 /* SwiftUI.framework */; };
 		877ED47327093827007FE2E5 /* BBNDailyWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 877ED47227093827007FE2E5 /* BBNDailyWidget.swift */; };
@@ -189,7 +189,7 @@
 		87507FE426E6ADEB005DDFB4 /* BBNDailyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BBNDailyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		87507FE826E6ADEB005DDFB4 /* BBNDailyUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyUITests.swift; sourceTree = "<group>"; };
 		87507FEA26E6ADEB005DDFB4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		8761CA7126F29D3B00CADE56 /* Maps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Maps.swift; sourceTree = "<group>"; };
+		8761CA7126F29D3B00CADE56 /* MapsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapsVC.swift; sourceTree = "<group>"; };
 		877ED46E27093827007FE2E5 /* BBNDailyWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BBNDailyWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		877ED47227093827007FE2E5 /* BBNDailyWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyWidget.swift; sourceTree = "<group>"; };
 		877ED47427093827007FE2E5 /* BBNDailyWidget.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = BBNDailyWidget.intentdefinition; sourceTree = "<group>"; };
@@ -360,7 +360,7 @@
 			isa = PBXGroup;
 			children = (
 				8704E97726EEA6F2001826F8 /* NewspapersVC.swift */,
-				8761CA7126F29D3B00CADE56 /* Maps.swift */,
+				8761CA7126F29D3B00CADE56 /* MapsVC.swift */,
 				8704E97926EEA6FC001826F8 /* NewsVC.swift */,
 				27AEED7F288B373400C6176C /* Tasks */,
 				8738377527EA48CC00CABF47 /* Settings */,
@@ -803,7 +803,7 @@
 				8704E96E26EEA5B9001826F8 /* LoginVC.swift in Sources */,
 				877ED47927093828007FE2E5 /* BBNDailyWidget.intentdefinition in Sources */,
 				27AEED78288B360900C6176C /* AboutUsVC.swift in Sources */,
-				8761CA7226F29D3B00CADE56 /* Maps.swift in Sources */,
+				8761CA7226F29D3B00CADE56 /* MapsVC.swift in Sources */,
 				87507FC926E6ADEB005DDFB4 /* SceneDelegate.swift in Sources */,
 				27AEED6C288B352100C6176C /* ClassNameVC.swift in Sources */,
 				27AEED81288B374A00C6176C /* detailedWorkVC.swift in Sources */,

@@ -214,8 +214,7 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Credits &amp; Feedback" id="HBA-Az-p85">
-                        <barButtonItem key="leftBarButtonItem" image="xmark.circle" catalog="system" id="zrg-Cq-9SD">
-                            <color key="tintColor" name="gold-text"/>
+                        <barButtonItem key="leftBarButtonItem" image="close" id="zrg-Cq-9SD">
                             <connections>
                                 <action selector="close:" destination="BXH-42-24G" id="WoB-PE-v6T"/>
                             </connections>
@@ -536,7 +535,7 @@
                 <navigationController storyboardIdentifier="SettingsNavID" id="UrN-4I-wut" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Settings" image="gear" catalog="system" selectedImage="gear" id="3c6-T8-kRE"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="9CH-cw-zth">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="56"/>
+                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textAttributes key="titleTextAttributes">
                             <color key="textColor" name="inverse"/>
@@ -555,7 +554,7 @@
             <objects>
                 <viewController id="kxO-Rs-nNQ" customClass="SettingsVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="3y9-eq-9Xx">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="YPC-kj-SMj"/>
                         <color key="backgroundColor" name="background"/>
@@ -564,8 +563,7 @@
                     <toolbarItems/>
                     <navigationItem key="navigationItem" id="kHJ-Ee-gYr">
                         <barButtonItem key="backBarButtonItem" title="Settings" id="ewi-yf-vJv"/>
-                        <barButtonItem key="leftBarButtonItem" title="Item" image="xmark.circle" catalog="system" id="3MW-sk-s9p">
-                            <color key="tintColor" name="inverse"/>
+                        <barButtonItem key="leftBarButtonItem" title="Item" image="close" id="3MW-sk-s9p">
                             <connections>
                                 <action selector="closeClass:" destination="kxO-Rs-nNQ" id="e53-x8-YeA"/>
                             </connections>
@@ -588,7 +586,7 @@
             <objects>
                 <viewController id="WOZ-ce-9n1" customClass="ClassesOptionsPopupVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="z8D-wq-Fdn">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="yiP-ck-FJo"/>
                         <color key="backgroundColor" name="background"/>
@@ -663,8 +661,7 @@
                     </view>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" id="8bX-qi-H3N">
-                        <barButtonItem key="leftBarButtonItem" image="xmark.circle" catalog="system" id="MrL-wS-H3h">
-                            <color key="tintColor" name="gold-text"/>
+                        <barButtonItem key="leftBarButtonItem" image="close" id="MrL-wS-H3h">
                             <connections>
                                 <action selector="cancel:" destination="emB-eC-sKQ" id="XzO-Oe-K7C"/>
                             </connections>
@@ -1168,8 +1165,7 @@
                     </view>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" id="HPY-7Y-pOd">
-                        <barButtonItem key="leftBarButtonItem" image="xmark.circle" catalog="system" id="em6-iC-f7E">
-                            <color key="tintColor" name="gold-text"/>
+                        <barButtonItem key="leftBarButtonItem" image="close" id="em6-iC-f7E">
                             <connections>
                                 <action selector="cancel:" destination="lCV-5w-Dda" id="1Ve-to-CS7"/>
                             </connections>
@@ -1323,11 +1319,11 @@
             <objects>
                 <viewController id="gOG-kt-Ec8" customClass="SecretScheduleVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="fUx-4r-NAx">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lfN-GU-EX2" customClass="FSCalendar">
-                                <rect key="frame" x="0.0" y="56" width="414" height="195"/>
+                                <rect key="frame" x="0.0" y="88" width="414" height="195"/>
                                 <color key="backgroundColor" name="background"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="195" id="0C5-Zt-EYk"/>
@@ -1366,10 +1362,10 @@
                                 </userDefinedRuntimeAttributes>
                             </view>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="5rB-MV-ZKN">
-                                <rect key="frame" x="0.0" y="290" width="414" height="503"/>
+                                <rect key="frame" x="0.0" y="322" width="414" height="491"/>
                             </tableView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tJ3-rf-B09">
-                                <rect key="frame" x="8" y="259" width="49" height="23"/>
+                                <rect key="frame" x="8" y="291" width="49" height="23"/>
                                 <color key="backgroundColor" name="constant-lightGray"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="23" id="TkG-P9-3ri"/>
@@ -1381,7 +1377,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="oG3-B6-VWv">
-                                <rect key="frame" x="310" y="259" width="96" height="23"/>
+                                <rect key="frame" x="310" y="291" width="96" height="23"/>
                                 <color key="backgroundColor" name="constant-lightGray"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="23" id="isM-G2-Wvf"/>
@@ -1394,7 +1390,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="NZC-WO-s44">
-                                <rect key="frame" x="65" y="259" width="23" height="23"/>
+                                <rect key="frame" x="65" y="291" width="23" height="23"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="NZC-WO-s44" secondAttribute="height" multiplier="1:1" id="xJa-Na-ceQ"/>
                                 </constraints>
@@ -1405,7 +1401,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Cck-FK-nSM">
-                                <rect key="frame" x="279" y="259" width="23" height="23"/>
+                                <rect key="frame" x="279" y="291" width="23" height="23"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="Cck-FK-nSM" secondAttribute="height" multiplier="1:1" id="lFV-Az-Kmr"/>
                                 </constraints>
@@ -1416,7 +1412,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="LrN-JG-H47">
-                                <rect key="frame" x="96" y="259" width="23" height="23"/>
+                                <rect key="frame" x="96" y="291" width="23" height="23"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="LrN-JG-H47" secondAttribute="height" multiplier="1:1" id="MSe-Fs-XyJ"/>
                                 </constraints>
@@ -1427,7 +1423,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="US8-Yk-SU5">
-                                <rect key="frame" x="248" y="259" width="23" height="23"/>
+                                <rect key="frame" x="248" y="291" width="23" height="23"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="US8-Yk-SU5" secondAttribute="height" multiplier="1:1" id="a9K-qc-nwz"/>
                                 </constraints>
@@ -1554,8 +1550,7 @@
                     </view>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" id="o6F-9e-N2L">
-                        <barButtonItem key="leftBarButtonItem" image="xmark.circle" catalog="system" id="m4u-ev-dl6">
-                            <color key="tintColor" name="gold-text"/>
+                        <barButtonItem key="leftBarButtonItem" image="close" id="m4u-ev-dl6">
                             <connections>
                                 <action selector="cancel:" destination="0n2-2e-sxC" id="nTB-i5-umI"/>
                             </connections>
@@ -1853,7 +1848,7 @@
                         <outlet property="signOutButton" destination="zYw-OZ-tvx" id="PiC-49-0v7"/>
                         <outlet property="userEmail" destination="lDG-Dy-0lh" id="l4n-3Y-bl7"/>
                         <outlet property="userName" destination="5ch-UU-9bL" id="WCH-7a-Wd8"/>
-                        <segue destination="UrN-4I-wut" kind="presentation" identifier="Profile" id="iYO-oY-N7M"/>
+                        <segue destination="UrN-4I-wut" kind="presentation" identifier="Profile" modalPresentationStyle="fullScreen" id="iYO-oY-N7M"/>
                         <segue destination="D97-9g-UUh" kind="presentation" identifier="logOut" modalPresentationStyle="fullScreen" modalTransitionStyle="crossDissolve" id="az4-St-gvp"/>
                     </connections>
                 </viewController>
@@ -2070,7 +2065,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="eMC-hj-ehw" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-2426" y="574"/>
+            <point key="canvasLocation" x="-2255" y="574"/>
         </scene>
         <!--Announcements-->
         <scene sceneID="nQW-TU-oE0">
@@ -2228,8 +2223,7 @@
                     </view>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" id="W2N-GF-21Q">
-                        <barButtonItem key="leftBarButtonItem" title="Item" image="xmark.circle" catalog="system" id="MCx-B8-7Sx">
-                            <color key="tintColor" name="blue"/>
+                        <barButtonItem key="leftBarButtonItem" title="Item" image="close" id="MCx-B8-7Sx">
                             <connections>
                                 <action selector="cancel" destination="vkS-Vu-c3i" id="9He-H6-YxJ"/>
                             </connections>
@@ -2324,8 +2318,7 @@
                     </view>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" title="Time Period Without School" id="zKb-Eb-pB3">
-                        <barButtonItem key="leftBarButtonItem" title="Item" image="xmark.circle" catalog="system" id="8uI-Ov-WQj">
-                            <color key="tintColor" name="inverse"/>
+                        <barButtonItem key="leftBarButtonItem" title="Item" image="close" id="8uI-Ov-WQj">
                             <connections>
                                 <action selector="close" destination="Rma-Tr-rYr" id="Fgg-cb-mkp"/>
                             </connections>
@@ -2364,7 +2357,7 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="az4-St-gvp"/>
+        <segue reference="RmR-8h-qio"/>
         <segue reference="Szw-2S-RWR"/>
     </inferredMetricsTieBreakers>
     <resources>
@@ -2376,6 +2369,7 @@
         <image name="checkmark.circle" catalog="system" width="128" height="121"/>
         <image name="chevron.down" catalog="system" width="128" height="72"/>
         <image name="chevron.up" catalog="system" width="128" height="72"/>
+        <image name="close" width="32" height="32"/>
         <image name="doc.plaintext" catalog="system" width="115" height="128"/>
         <image name="gear" catalog="system" width="128" height="119"/>
         <image name="google.png" width="18" height="18"/>
@@ -2388,7 +2382,6 @@
         <image name="plus" catalog="system" width="128" height="113"/>
         <image name="plus.circle" catalog="system" width="128" height="121"/>
         <image name="vanguardLogo" width="27.666666030883789" height="29"/>
-        <image name="xmark.circle" catalog="system" width="128" height="121"/>
         <namedColor name="background">
             <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>

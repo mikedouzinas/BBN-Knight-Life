@@ -21,6 +21,7 @@ class LoginVC: AuthVC {
     static var phoneNum = ""
     static var defaultBlocks = [String: [String: [block]]]()
     static var appearance = ""
+    static var busNumber = 16175930396
     static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"false","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
     static var specialSchedules = [String: SpecialSchedule]()
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
@@ -30,48 +31,6 @@ class LoginVC: AuthVC {
         SignInButton.layer.masksToBounds = true
         SignInButton.layer.cornerRadius = 8
         SignInButton.dropShadow(scale: true, radius: 15)
-    }
-    static func setProfileImage(useGoogle: Bool, width: UInt, completion: @escaping (Swift.Result<UIImageView, Error>) -> Void) {
-        if !useGoogle {
-            LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
-            completion(.success(LoginVC.profilePhoto))
-            return
-        }
-        let imageUrl = Auth.auth().currentUser?.photoURL?.absoluteString
-        if imageUrl == nil {
-            LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", gradientColors: (top: UIColor(named: "gold")!, bottom: UIColor(named: "blue")!), circular: false, textAttributes: nil)
-            completion(.success(LoginVC.profilePhoto))
-        }
-        else {
-            GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
-                if error != nil || user == nil {
-                    // Show the app's signed-out state.
-                    let imgUrl = (Auth.auth().currentUser?.photoURL!)!
-                    let data = NSData(contentsOf: imgUrl)
-                    if data != nil {
-                        LoginVC.profilePhoto.image = UIImage(data: data! as Data)
-                    }
-                    else {
-                        LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
-                    }
-                    print("failed to get user")
-                    completion(.success(LoginVC.profilePhoto))
-                } else {
-                    // Show the app's signed-in state.
-                    print("GOT IMAGE")
-                    
-                    let newurl = (user!.profile?.imageURL(withDimension: width)!)!
-                    let data = NSData(contentsOf: newurl)
-                    if data != nil {
-                        LoginVC.profilePhoto.image = UIImage(data: data! as Data)
-                    }
-                    else {
-                        LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
-                    }
-                    completion(.success(LoginVC.profilePhoto))
-                }
-            }
-        }
     }
 //    static var isCreated = false
     func callTabBar() {
