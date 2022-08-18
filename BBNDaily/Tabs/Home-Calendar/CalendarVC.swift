@@ -116,6 +116,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [self] timer in
                 setTimes(recursive: true)
                 if isActive {
+                    print("reloading...")
                     ScheduleCalendar.reloadData()
                 }
             }
@@ -126,6 +127,11 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     }
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+        print("isActive = false")
+        isActive = false
+    }
+    @objc func leaveApp() {
+        print("isActive = false")
         isActive = false
     }
     var isActive = true
@@ -319,6 +325,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         v+=1
     }
     @objc func screenReopened() {
+        isActive = true
         print("screen has reopened -> reloading the page")
         reloadPage()
     }
@@ -328,6 +335,7 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             formatter2.dateFormat = "yyyy-MM-dd"
             formatter2.dateStyle = .short
             let date = formatter2.string(from: Date())
+            print("\(date) vs \(todaysDate)")
             if date != todaysDate {
                 NotificationCenter.default.removeObserver(self)
                 todaysDate = date
@@ -374,13 +382,17 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
     }
     @IBOutlet weak var roundedView: UIView!
     var todaysDate = ""
+    var viewIsNew = false
     var watchClasses = [WatchClass]()
     override func viewDidLoad() {
         super.viewDidLoad()
+        viewIsNew = true
 //        print("view DID load")
-        if AuthVC.isFirstTime {
-            NotificationCenter.default.addObserver(self, selector: #selector(screenReopened), name: UIApplication.didBecomeActiveNotification, object: nil)
+        if AuthVC.isFirstTime || viewIsNew {
             AuthVC.isFirstTime = false
+            viewIsNew = false
+            NotificationCenter.default.addObserver(self, selector: #selector(screenReopened), name: UIApplication.didBecomeActiveNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(leaveApp), name: UIApplication.willResignActiveNotification, object: nil)
         }
         sideMenuBtn.target = revealViewController()
         sideMenuBtn.action = #selector(revealViewController()?.revealSideMenu)

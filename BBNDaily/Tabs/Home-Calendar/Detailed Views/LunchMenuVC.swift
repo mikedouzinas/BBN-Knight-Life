@@ -17,10 +17,9 @@ class LunchMenuVC: CustomLoader, WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         hideLoaderView()
     }
+    var urlstring = "http://docs.google.com/document/d/1QL-uIHSCOC5oZV3tOthRAuGEjmDjGIl-hlMdzcrpwIk/edit?usp=sharing"
     override func viewDidLoad() {
         super.viewDidLoad()
-        let urlstring = "http://docs.google.com/document/d/1QL-uIHSCOC5oZV3tOthRAuGEjmDjGIl-hlMdzcrpwIk/edit?usp=sharing"
-//                webView.load
         webView.backgroundColor = UIColor.white
         view.addSubview(webView)
         webView.frame = view.bounds

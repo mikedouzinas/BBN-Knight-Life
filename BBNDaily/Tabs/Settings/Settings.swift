@@ -578,8 +578,10 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         secretButton.tintColor = UIColor(named: "inverse")
         secretButton.addTarget(self, action: #selector(openSecretSchedule), for: .touchUpInside)
         let button = UIButton(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 20))
-        button.setTitle("Credits & Feedback", for: .normal)
-        button.setTitleColor(UIColor(named: "gold"), for: .normal)
+        button.setTitle(" About", for: .normal)
+        button.setTitleColor(UIColor(named: "inverse"), for: .normal)
+        button.setImage(UIImage(systemName: "info.circle"), for: .normal)
+        button.tintColor = UIColor(named: "inverse")
         button.addTarget(self, action: #selector(openCredits), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         secretButton.translatesAutoresizingMaskIntoConstraints = false

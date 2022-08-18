@@ -20,4 +20,13 @@ class CreditsVC: UIViewController {
     @IBAction func openLibraries(_ sender: Any) {
         self.performSegue(withIdentifier: "OpenSource", sender: nil)
     }
+    @IBAction func openPrivacy(_ sender: Any) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "LunchMenuVC") as? LunchMenuVC
+        guard let vc = vc else {
+            return
+        }
+        vc.urlstring = "http://www.termsfeed.com/live/7f2346ad-40d8-4b3c-8764-6e02aae213be"
+        show(vc, sender: nil)
+    }
 }

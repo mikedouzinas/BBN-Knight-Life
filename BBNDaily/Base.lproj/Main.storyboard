@@ -152,7 +152,7 @@
             </objects>
             <point key="canvasLocation" x="1970" y="1296"/>
         </scene>
-        <!--Credits & Feedback-->
+        <!--About-->
         <scene sceneID="tBR-ga-XQu">
             <objects>
                 <viewController id="BXH-42-24G" customClass="CreditsVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
@@ -192,10 +192,18 @@
                                     <action selector="openLibraries:" destination="BXH-42-24G" eventType="touchUpInside" id="ngu-ww-xu8"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1GJ-pG-MGM">
+                                <rect key="frame" x="20" y="689" width="374" height="30"/>
+                                <state key="normal" title="Privacy"/>
+                                <connections>
+                                    <action selector="openPrivacy:" destination="BXH-42-24G" eventType="touchUpInside" id="7z3-1z-SDE"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="hVM-Xd-afk"/>
                         <color key="backgroundColor" name="background"/>
                         <constraints>
+                            <constraint firstItem="woo-l8-7cl" firstAttribute="top" secondItem="1GJ-pG-MGM" secondAttribute="bottom" constant="10" id="E0k-br-ppZ"/>
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="74q-Az-6yr" secondAttribute="trailing" constant="20" id="Eh8-e8-82V"/>
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="Kuh-ZS-DNW" secondAttribute="trailing" constant="20" id="GeL-oa-iZw"/>
                             <constraint firstItem="TE1-GW-q0e" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="Mlk-c7-r6j"/>
@@ -203,7 +211,9 @@
                             <constraint firstItem="woo-l8-7cl" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="T6u-GX-lBP"/>
                             <constraint firstItem="fzX-Ny-tnU" firstAttribute="top" secondItem="74q-Az-6yr" secondAttribute="bottom" constant="15" id="U2Z-8a-8af"/>
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="fzX-Ny-tnU" secondAttribute="trailing" constant="20" id="WOV-P0-XtH"/>
+                            <constraint firstItem="1GJ-pG-MGM" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="YGW-7D-Irg"/>
                             <constraint firstItem="fzX-Ny-tnU" firstAttribute="leading" secondItem="hVM-Xd-afk" secondAttribute="leading" constant="20" id="eQj-OO-HgM"/>
+                            <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="1GJ-pG-MGM" secondAttribute="trailing" constant="20" id="oeK-Cr-ASH"/>
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="woo-l8-7cl" secondAttribute="trailing" constant="20" id="pDz-9h-7G8"/>
                             <constraint firstItem="Kuh-ZS-DNW" firstAttribute="top" secondItem="hVM-Xd-afk" secondAttribute="top" constant="35" id="qPZ-J4-dfU"/>
                             <constraint firstItem="74q-Az-6yr" firstAttribute="top" secondItem="Kuh-ZS-DNW" secondAttribute="bottom" constant="35" id="rdX-Nk-mrR"/>
@@ -213,7 +223,7 @@
                             <constraint firstItem="hVM-Xd-afk" firstAttribute="trailing" secondItem="TE1-GW-q0e" secondAttribute="trailing" constant="20" id="zVo-Ya-BfJ"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Credits &amp; Feedback" id="HBA-Az-p85">
+                    <navigationItem key="navigationItem" title="About" id="HBA-Az-p85">
                         <barButtonItem key="leftBarButtonItem" image="close" id="zrg-Cq-9SD">
                             <connections>
                                 <action selector="close:" destination="BXH-42-24G" id="WoB-PE-v6T"/>
@@ -471,7 +481,7 @@
         <!--Lunch MenuVC-->
         <scene sceneID="Ysh-5P-jBf">
             <objects>
-                <viewController id="MnO-c5-Moa" customClass="LunchMenuVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="LunchMenuVC" id="MnO-c5-Moa" customClass="LunchMenuVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="ArM-5L-yj5">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1765,7 +1775,7 @@
                                     <action selector="signOut" destination="9Iv-Pa-cpR" eventType="touchUpInside" id="Uc1-gl-WoU"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Version 1.0" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rcT-Oy-Uyy">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Version 1.0.1" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rcT-Oy-Uyy">
                                 <rect key="frame" x="10" y="802" width="240" height="15"/>
                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="12"/>
                                 <color key="textColor" name="inverseBackgroundCol"/>
@@ -2357,7 +2367,7 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="RmR-8h-qio"/>
+        <segue reference="az4-St-gvp"/>
         <segue reference="Szw-2S-RWR"/>
     </inferredMetricsTieBreakers>
     <resources>

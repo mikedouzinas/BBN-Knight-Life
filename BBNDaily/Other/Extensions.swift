@@ -305,6 +305,7 @@ extension String {
 //        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.amSymbol = "am"
         dateFormatter.pmSymbol = "pm"
+        
         for format in formats {
             dateFormatter.dateFormat = format
             if let convertedDate = dateFormatter.date(from: self) {
