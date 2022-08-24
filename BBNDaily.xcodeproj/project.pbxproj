@@ -10,6 +10,7 @@
 		272BA654282D40E0009BA067 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		278AFAF9288C1C2800E64F23 /* ThroughDateVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */; };
 		278AFAFB288C1F1400E64F23 /* ImageVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAFA288C1F1400E64F23 /* ImageVC.swift */; };
+		2792D7C128B4562800DBA403 /* MapScheduleVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2792D7C028B4562800DBA403 /* MapScheduleVC.swift */; };
 		27AEED53288B32C600C6176C /* defaultVariables.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED52288B32C600C6176C /* defaultVariables.swift */; };
 		27AEED55288B32E400C6176C /* TextEditVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED54288B32E400C6176C /* TextEditVC.swift */; };
 		27AEED58288B334B00C6176C /* PersonPopupVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED57288B334B00C6176C /* PersonPopupVC.swift */; };
@@ -133,6 +134,7 @@
 /* Begin PBXFileReference section */
 		278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThroughDateVC.swift; sourceTree = "<group>"; };
 		278AFAFA288C1F1400E64F23 /* ImageVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVC.swift; sourceTree = "<group>"; };
+		2792D7C028B4562800DBA403 /* MapScheduleVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapScheduleVC.swift; sourceTree = "<group>"; };
 		27AEED52288B32C600C6176C /* defaultVariables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = defaultVariables.swift; sourceTree = "<group>"; };
 		27AEED54288B32E400C6176C /* TextEditVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextEditVC.swift; sourceTree = "<group>"; };
 		27AEED57288B334B00C6176C /* PersonPopupVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonPopupVC.swift; sourceTree = "<group>"; };
@@ -361,6 +363,7 @@
 			children = (
 				8704E97726EEA6F2001826F8 /* NewspapersVC.swift */,
 				8761CA7126F29D3B00CADE56 /* MapsVC.swift */,
+				2792D7C028B4562800DBA403 /* MapScheduleVC.swift */,
 				8704E97926EEA6FC001826F8 /* NewsVC.swift */,
 				27AEED7F288B373400C6176C /* Tasks */,
 				8738377527EA48CC00CABF47 /* Settings */,
@@ -823,6 +826,7 @@
 				27AEED6E288B353D00C6176C /* TeacherNameVC.swift in Sources */,
 				27AEED62288B341100C6176C /* CalendarTableViewCell.swift in Sources */,
 				27AEED58288B334B00C6176C /* PersonPopupVC.swift in Sources */,
+				2792D7C128B4562800DBA403 /* MapScheduleVC.swift in Sources */,
 				27AEED88288B37B700C6176C /* HomeworkTitleVC.swift in Sources */,
 				27AEED70288B355900C6176C /* RoomNumVC.swift in Sources */,
 				27AEED5B288B338500C6176C /* ClassPopupVC.swift in Sources */,
@@ -1035,7 +1039,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1062,7 +1066,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

@@ -266,7 +266,7 @@
                     <connections>
                         <segue destination="Ld7-PJ-krP" kind="relationship" relationship="viewControllers" id="Ncm-Q9-VG0"/>
                         <segue destination="0K2-P6-IYF" kind="relationship" relationship="viewControllers" id="aTa-xq-hQC"/>
-                        <segue destination="vL4-oO-Q5e" kind="relationship" relationship="viewControllers" id="1Ni-Ev-uXf"/>
+                        <segue destination="fic-Eb-SPT" kind="relationship" relationship="viewControllers" id="uYx-cD-d9W"/>
                         <segue destination="b1h-oR-fhC" kind="relationship" relationship="viewControllers" id="qqr-gm-V5M"/>
                     </connections>
                 </tabBarController>
@@ -2365,6 +2365,92 @@
             </objects>
             <point key="canvasLocation" x="5684" y="-473"/>
         </scene>
+        <!--Bus Schedule-->
+        <scene sceneID="BrO-q9-Xnc">
+            <objects>
+                <viewController id="9av-zj-sam" customClass="MapScheduleVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Wjj-I5-aHW">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Yp8-Gm-emS">
+                                <rect key="frame" x="0.0" y="88" width="414" height="32"/>
+                                <color key="backgroundColor" name="background"/>
+                                <segments>
+                                    <segment title="Fourth Lot"/>
+                                    <segment title="Harvard Square"/>
+                                </segments>
+                                <color key="tintColor" name="inverse"/>
+                                <color key="selectedSegmentTintColor" name="inverse-light"/>
+                                <connections>
+                                    <action selector="segmentedControlDidChange:" destination="9av-zj-sam" eventType="valueChanged" id="M7l-as-Msc"/>
+                                </connections>
+                            </segmentedControl>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" estimatedSectionHeaderHeight="-1" sectionFooterHeight="28" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Ymc-wB-Seo">
+                                <rect key="frame" x="0.0" y="119" width="414" height="694"/>
+                            </tableView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="3zW-nW-pS2"/>
+                        <color key="backgroundColor" name="background"/>
+                        <constraints>
+                            <constraint firstItem="Yp8-Gm-emS" firstAttribute="top" secondItem="3zW-nW-pS2" secondAttribute="top" id="5xF-jZ-5XC"/>
+                            <constraint firstItem="Yp8-Gm-emS" firstAttribute="leading" secondItem="3zW-nW-pS2" secondAttribute="leading" id="Bkb-Ec-Hge"/>
+                            <constraint firstItem="Ymc-wB-Seo" firstAttribute="top" secondItem="Yp8-Gm-emS" secondAttribute="bottom" id="DzB-yE-UlX"/>
+                            <constraint firstItem="Ymc-wB-Seo" firstAttribute="leading" secondItem="3zW-nW-pS2" secondAttribute="leading" id="La8-9V-liI"/>
+                            <constraint firstItem="3zW-nW-pS2" firstAttribute="trailing" secondItem="Yp8-Gm-emS" secondAttribute="trailing" id="Lhg-fx-Abz"/>
+                            <constraint firstItem="3zW-nW-pS2" firstAttribute="trailing" secondItem="Ymc-wB-Seo" secondAttribute="trailing" id="hE1-Sj-der"/>
+                            <constraint firstItem="3zW-nW-pS2" firstAttribute="bottom" secondItem="Ymc-wB-Seo" secondAttribute="bottom" id="zxO-09-0Ui"/>
+                        </constraints>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Bus Schedule" image="bus" catalog="system" selectedImage="bus" id="8N9-7H-l1z"/>
+                    <navigationItem key="navigationItem" title="Bus Schedule" id="ox3-fG-zQu">
+                        <barButtonItem key="leftBarButtonItem" image="info.circle" catalog="system" id="PSp-Uu-WE1">
+                            <color key="tintColor" name="inverse"/>
+                            <connections>
+                                <action selector="comingSoon:" destination="9av-zj-sam" id="Gun-yf-8FA"/>
+                            </connections>
+                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" image="phone.circle" catalog="system" id="5fR-sn-7x6">
+                            <color key="tintColor" name="inverse"/>
+                            <connections>
+                                <action selector="callBus:" destination="9av-zj-sam" id="9Hb-f9-o4Y"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <connections>
+                        <outlet property="segmentedControl" destination="Yp8-Gm-emS" id="qY0-Cm-nMD"/>
+                        <outlet property="tableView" destination="Ymc-wB-Seo" id="B9K-Jf-dR7"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ENw-ay-grK" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-470" y="3519"/>
+        </scene>
+        <!--Bus Schedule-->
+        <scene sceneID="MPT-s9-8EN">
+            <objects>
+                <navigationController id="fic-Eb-SPT" sceneMemberID="viewController">
+                    <tabBarItem key="tabBarItem" title="Bus Schedule" image="bus" catalog="system" selectedImage="bus" id="TXR-5n-HZ4"/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="BFS-Ow-HBf">
+                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <color key="barTintColor" name="background"/>
+                        <textAttributes key="titleTextAttributes">
+                            <color key="textColor" name="inverse"/>
+                        </textAttributes>
+                        <textAttributes key="largeTitleTextAttributes">
+                            <fontDescription key="fontDescription" type="boldSystem" pointSize="26"/>
+                            <color key="textColor" name="inverse"/>
+                        </textAttributes>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="9av-zj-sam" kind="relationship" relationship="rootViewController" id="SYH-uH-BMd"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Pqz-Rh-ymY" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-470" y="2817"/>
+        </scene>
     </scenes>
     <inferredMetricsTieBreakers>
         <segue reference="az4-St-gvp"/>
@@ -2383,10 +2469,12 @@
         <image name="doc.plaintext" catalog="system" width="115" height="128"/>
         <image name="gear" catalog="system" width="128" height="119"/>
         <image name="google.png" width="18" height="18"/>
+        <image name="info.circle" catalog="system" width="128" height="121"/>
         <image name="keyboard.chevron.compact.down" catalog="system" width="128" height="102"/>
         <image name="logo" width="500" height="500"/>
         <image name="menu" width="25" height="25"/>
         <image name="pencil.circle" catalog="system" width="128" height="121"/>
+        <image name="phone.circle" catalog="system" width="128" height="121"/>
         <image name="phone.circle.fill" catalog="system" width="128" height="121"/>
         <image name="photo" catalog="system" width="128" height="93"/>
         <image name="plus" catalog="system" width="128" height="113"/>
@@ -2415,6 +2503,9 @@
         </namedColor>
         <namedColor name="inverse">
             <color red="0.1289999932050705" green="0.20800000429153442" blue="0.39599999785423279" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+        </namedColor>
+        <namedColor name="inverse-light">
+            <color red="0.1289999932050705" green="0.20800000429153442" blue="0.39599999785423279" alpha="0.25" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>
         <namedColor name="inverse-low-alpha">
             <color red="0.1289999932050705" green="0.20800000429153442" blue="0.39599999785423279" alpha="0.10000000149011612" colorSpace="custom" customColorSpace="displayP3"/>

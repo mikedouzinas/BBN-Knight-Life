@@ -431,6 +431,7 @@ class BlockNameVC: TextFieldVC {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
+        maxLength = 150
         hideKeyboardWhenTappedAbove()
         TextField.delegate = self
     }
@@ -475,6 +476,7 @@ class TimesVC: TextFieldVC {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
+        maxLength = 100
     }
 }
 
