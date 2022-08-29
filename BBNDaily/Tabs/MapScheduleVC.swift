@@ -134,9 +134,7 @@ class MapScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
                                                             Time(departure: "5:15 PM", arrival: "5:20 PM"),
                                                             Time(departure: "5:30 PM", arrival: "5:35 PM"),
                                                             Time(departure: "6:15 PM", arrival: "6:20 PM"),
-                                                        ]
-                                                   )])
-    ]
+                                                        ])])]
     var harvardSquareSchedule = [BusSection(title: "AM Shuttle", buses: [Bus(title: "Harvard Square to Upper School", times: [Time(departure: "6:40 AM", arrival: "6:48 AM", weekDays: "M/W/Th/F"), Time(departure: "7:00 AM", arrival: "7:08 AM"), Time(departure: "7:20 AM", arrival: "7:28 AM"), Time(departure: "7:40 AM", arrival: "7:48 AM", arrivalTwo: "7:56 AM"), Time(departure: "8:05 AM", arrival: "8:13 AM", weekDays: "Tuesday", arrivalTwo: "8:21 AM"), Time(departure: "8:30 AM", arrival: "8:38 AM", weekDays: "Tuesday", arrivalTwo: "8:46 AM")])]), BusSection(title: "PM Shuttle", buses: [Bus(title: "Upper School to Harvard Square", times: [Time(departure: "2:00 PM", arrival: "2:08 PM"), Time(departure: "2:20 PM", arrival: "2:28 PM"), Time(departure: "3:30 PM", arrival: "3:38 PM"), Time(departure: "3:50 PM", arrival: "3:58 PM"), Time(departure: "4:10 PM", arrival: "4:18 PM"), Time(departure: "4:30 PM", arrival: "4:38 PM"), Time(departure: "4:50 PM", arrival: "4:58 PM"), Time(departure: "5:10 PM", arrival: "5:18 PM")])])]
     override func viewDidLoad() {
         super.viewDidLoad()

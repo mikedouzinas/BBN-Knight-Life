@@ -1760,7 +1760,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="uSB-h4-vQb">
-                                <rect key="frame" x="0.0" y="160" width="260" height="642"/>
+                                <rect key="frame" x="0.0" y="160" width="260" height="662"/>
                                 <color key="backgroundColor" name="veson-og"/>
                                 <color key="tintColor" name="veson-og"/>
                             </tableView>
@@ -1775,12 +1775,6 @@
                                     <action selector="signOut" destination="9Iv-Pa-cpR" eventType="touchUpInside" id="Uc1-gl-WoU"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Version 1.0.1" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rcT-Oy-Uyy">
-                                <rect key="frame" x="10" y="802" width="240" height="15"/>
-                                <fontDescription key="fontDescription" type="boldSystem" pointSize="12"/>
-                                <color key="textColor" name="inverseBackgroundCol"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="kGI-Pp-iNv">
                                 <rect key="frame" x="16" y="62" width="228" height="80"/>
                                 <subviews>
@@ -1792,14 +1786,14 @@
                                             <constraint firstAttribute="width" constant="64" id="tve-Ej-mfr"/>
                                         </constraints>
                                     </imageView>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="BB&amp;N User" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5ch-UU-9bL">
-                                        <rect key="frame" x="80" y="20" width="144" height="14.5"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="BB&amp;N User" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5ch-UU-9bL">
+                                        <rect key="frame" x="80" y="20" width="114" height="14.5"/>
                                         <fontDescription key="fontDescription" style="UICTFontTextStyleSubhead"/>
                                         <color key="textColor" name="inverse"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="johnappleseed@bbns.org" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lDG-Dy-0lh">
-                                        <rect key="frame" x="80" y="42.5" width="107" height="14"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="johnappleseed@bbns.org" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lDG-Dy-0lh">
+                                        <rect key="frame" x="80" y="42.5" width="114" height="14"/>
                                         <fontDescription key="fontDescription" style="UICTFontTextStyleCaption2"/>
                                         <color key="textColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <nil key="highlightedColor"/>
@@ -1816,9 +1810,9 @@
                                 <color key="backgroundColor" name="slightlyDarker"/>
                                 <color key="tintColor" name="slightlyDarker"/>
                                 <constraints>
-                                    <constraint firstItem="FaN-Cz-3ap" firstAttribute="leading" secondItem="lDG-Dy-0lh" secondAttribute="trailing" constant="8" id="2dM-pc-WQR"/>
+                                    <constraint firstItem="FaN-Cz-3ap" firstAttribute="leading" secondItem="lDG-Dy-0lh" secondAttribute="trailing" constant="1" id="2dM-pc-WQR"/>
                                     <constraint firstItem="FaN-Cz-3ap" firstAttribute="centerY" secondItem="kGI-Pp-iNv" secondAttribute="centerY" id="DPN-18-6id"/>
-                                    <constraint firstAttribute="trailing" secondItem="5ch-UU-9bL" secondAttribute="trailing" constant="4" id="EnO-UC-J4G"/>
+                                    <constraint firstItem="FaN-Cz-3ap" firstAttribute="leading" secondItem="5ch-UU-9bL" secondAttribute="trailing" constant="1" id="EnO-UC-J4G"/>
                                     <constraint firstItem="5ch-UU-9bL" firstAttribute="top" secondItem="kGI-Pp-iNv" secondAttribute="top" constant="20" id="I7N-fJ-9H9"/>
                                     <constraint firstItem="Jr4-EM-5KH" firstAttribute="leading" secondItem="kGI-Pp-iNv" secondAttribute="leading" constant="8" id="SjV-yF-k7S"/>
                                     <constraint firstAttribute="bottom" secondItem="Jr4-EM-5KH" secondAttribute="bottom" constant="8" id="bRU-HO-B6Q"/>
@@ -1833,26 +1827,22 @@
                         <viewLayoutGuide key="safeArea" id="QsK-0x-Kjc"/>
                         <color key="backgroundColor" name="background"/>
                         <constraints>
-                            <constraint firstAttribute="trailing" secondItem="rcT-Oy-Uyy" secondAttribute="trailing" constant="10" id="2Yl-hi-4ba"/>
                             <constraint firstItem="zYw-OZ-tvx" firstAttribute="leading" secondItem="QsK-0x-Kjc" secondAttribute="leading" constant="10" id="4nk-bT-NwP"/>
                             <constraint firstItem="uSB-h4-vQb" firstAttribute="leading" secondItem="QsK-0x-Kjc" secondAttribute="leading" id="9Pb-cD-h5i"/>
-                            <constraint firstItem="zYw-OZ-tvx" firstAttribute="top" secondItem="rcT-Oy-Uyy" secondAttribute="bottom" constant="5" id="IIE-hV-o8o"/>
                             <constraint firstItem="uSB-h4-vQb" firstAttribute="trailing" secondItem="QsK-0x-Kjc" secondAttribute="trailing" id="c2s-ce-4jc"/>
                             <constraint firstItem="kGI-Pp-iNv" firstAttribute="leading" secondItem="QsK-0x-Kjc" secondAttribute="leading" constant="16" id="cXf-R0-TeB"/>
                             <constraint firstItem="QsK-0x-Kjc" firstAttribute="trailing" secondItem="zYw-OZ-tvx" secondAttribute="trailing" constant="10" id="fgB-Ld-ylI"/>
                             <constraint firstItem="uSB-h4-vQb" firstAttribute="top" secondItem="kGI-Pp-iNv" secondAttribute="bottom" constant="18" id="igl-xI-nch"/>
                             <constraint firstItem="QsK-0x-Kjc" firstAttribute="trailing" secondItem="kGI-Pp-iNv" secondAttribute="trailing" constant="16" id="mwO-8O-azS"/>
                             <constraint firstItem="kGI-Pp-iNv" firstAttribute="top" secondItem="QsK-0x-Kjc" secondAttribute="top" constant="18" id="pdO-ek-NeV"/>
-                            <constraint firstItem="rcT-Oy-Uyy" firstAttribute="top" secondItem="uSB-h4-vQb" secondAttribute="bottom" id="v2H-Sb-cKJ"/>
                             <constraint firstItem="QsK-0x-Kjc" firstAttribute="bottom" secondItem="zYw-OZ-tvx" secondAttribute="bottom" constant="10" id="wrz-Cw-vNh"/>
-                            <constraint firstItem="rcT-Oy-Uyy" firstAttribute="leading" secondItem="QsK-0x-Kjc" secondAttribute="leading" constant="10" id="xAG-P2-lj5"/>
+                            <constraint firstItem="zYw-OZ-tvx" firstAttribute="top" secondItem="uSB-h4-vQb" secondAttribute="bottom" id="yyu-vX-TOj"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="s43-QX-8xa"/>
                     <size key="freeformSize" width="260" height="896"/>
                     <connections>
                         <outlet property="backview" destination="kGI-Pp-iNv" id="9u1-VH-8oC"/>
-                        <outlet property="footerLabel" destination="rcT-Oy-Uyy" id="5cy-ju-Ulh"/>
                         <outlet property="headerImageView" destination="Jr4-EM-5KH" id="8nu-90-M9D"/>
                         <outlet property="sideMenuTableView" destination="uSB-h4-vQb" id="ava-K8-fSs"/>
                         <outlet property="signOutButton" destination="zYw-OZ-tvx" id="PiC-49-0v7"/>
@@ -2509,9 +2499,6 @@
         </namedColor>
         <namedColor name="inverse-low-alpha">
             <color red="0.1289999932050705" green="0.20800000429153442" blue="0.39599999785423279" alpha="0.10000000149011612" colorSpace="custom" customColorSpace="displayP3"/>
-        </namedColor>
-        <namedColor name="inverseBackgroundCol">
-            <color red="0.36100000143051147" green="0.43900001049041748" blue="0.50199997425079346" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
         </namedColor>
         <namedColor name="orange">
             <color red="0.32899999618530273" green="0.32400000095367432" blue="0.4779999852180481" alpha="0.33000001311302185" colorSpace="custom" customColorSpace="sRGB"/>
