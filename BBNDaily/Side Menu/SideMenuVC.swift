@@ -374,7 +374,12 @@ class SideMenuViewController: AuthVC {
                 self.headerImageView.image = LoginVC.profilePhoto.image
             })
         }
-        self.userName.text = "\(LoginVC.fullName.capitalized)"
+        var userNameText = "\(LoginVC.fullName.capitalized)"
+        if let index = userNameText.firstIndex(of: " ") {
+            userNameText = "\(userNameText.prefix(upTo: index))"
+        }
+        
+        self.userName.text = userNameText
         self.userEmail.text = "\(LoginVC.email)"
         // Register TableView Cell
         self.sideMenuTableView.register(SideMenuCell.nib, forCellReuseIdentifier: SideMenuCell.identifier)
