@@ -426,7 +426,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="oGB-Ei-O8o" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-246.37681159420291" y="1295.7589285714284"/>
+            <point key="canvasLocation" x="-246" y="1296"/>
         </scene>
         <!--Text EditVC-->
         <scene sceneID="T5E-ng-03q">
@@ -589,7 +589,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="vKE-LF-2z3" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1970" y="574"/>
+            <point key="canvasLocation" x="1970" y="521"/>
         </scene>
         <!--Classes Options PopupVC-->
         <scene sceneID="IM1-aQ-AWA">
@@ -1854,7 +1854,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="NOG-Na-nnc" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-675.36231884057975" y="-455.35714285714283"/>
+            <point key="canvasLocation" x="-1004" y="-858"/>
         </scene>
         <!--Schedule-->
         <scene sceneID="F7Y-pH-XXF">
@@ -2443,7 +2443,7 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="az4-St-gvp"/>
+        <segue reference="RmR-8h-qio"/>
         <segue reference="Szw-2S-RWR"/>
     </inferredMetricsTieBreakers>
     <resources>

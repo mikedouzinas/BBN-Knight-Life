@@ -458,26 +458,26 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     static var ProfileLink: SideMenuViewController!
     private var profileCells = [ProfileCell]()
     private var tableView = UITableView()
-    @objc func signOut() {
-        let refreshAlert = UIAlertController(title: "Sign Out?", message: "Are you sure you want to sign out?", preferredStyle: UIAlertController.Style.alert)
-        refreshAlert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction!) in
-            self.signOutToken()
-        }))
-        refreshAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction!) in
-        }))
-        present(refreshAlert, animated: true, completion: nil)
-    }
-    var SignOutButton: UIButton = {
-        let b = UIButton()
-        b.translatesAutoresizingMaskIntoConstraints = false
-        b.backgroundColor = UIColor(named: "gold")
-        b.setTitle("Sign Out", for: .normal)
-        b.setTitleColor(UIColor.white, for: .normal)
-        b.layer.masksToBounds = true
-        b.layer.cornerRadius = 8
-        b.dropShadow()
-        return b
-    }()
+//    @objc func signOut() {
+//        let refreshAlert = UIAlertController(title: "Sign Out?", message: "Are you sure you want to sign out?", preferredStyle: UIAlertController.Style.alert)
+//        refreshAlert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction!) in
+//            self.signOutToken()
+//        }))
+//        refreshAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction!) in
+//        }))
+//        present(refreshAlert, animated: true, completion: nil)
+//    }
+//    var SignOutButton: UIButton = {
+//        let b = UIButton()
+//        b.translatesAutoresizingMaskIntoConstraints = false
+//        b.backgroundColor = UIColor(named: "gold")
+//        b.setTitle("Sign Out", for: .normal)
+//        b.setTitleColor(UIColor.white, for: .normal)
+//        b.layer.masksToBounds = true
+//        b.layer.cornerRadius = 8
+//        b.dropShadow()
+//        return b
+//    }()
     var shareSheetVC: UIActivityViewController?
     func setBlocks() {
         blocks = [
@@ -536,12 +536,16 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(named: "background")
-        view.addSubview(SignOutButton)
-        SignOutButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 15).isActive = true
-        SignOutButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -15).isActive = true
-        SignOutButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -15).isActive = true
-        SignOutButton.heightAnchor.constraint(equalToConstant: 45).isActive = true
-        SignOutButton.addTarget(self, action: #selector(signOut), for: .touchUpInside)
+        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default) //UIImage.init(named: "transparent.png")
+        self.navigationController?.navigationBar.shadowImage = UIImage()
+        self.navigationController?.navigationBar.isTranslucent = true
+        self.navigationController?.view.backgroundColor = .clear
+//        view.addSubview(SignOutButton)
+//        SignOutButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 15).isActive = true
+//        SignOutButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -15).isActive = true
+//        SignOutButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -15).isActive = true
+//        SignOutButton.heightAnchor.constraint(equalToConstant: 45).isActive = true
+//        SignOutButton.addTarget(self, action: #selector(signOut), for: .touchUpInside)
         setBlocks()
         
         preferenceBlocks = [
@@ -566,7 +570,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         tableView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
-        tableView.bottomAnchor.constraint(equalTo: SignOutButton.topAnchor).isActive = true
+        tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         tableView.backgroundColor = UIColor(named: "background")
         tableView.showsVerticalScrollIndicator = false
@@ -622,8 +626,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             self.performSegue(withIdentifier: "secretSchedule", sender: nil)
         }
         else {
-            ProgressHUD.colorAnimation = .red
-            ProgressHUD.showFailed("Oh no! Looks like you just got rejected.")
+            showMessage(title: "You found the secret button!", subTitle: "On the calendar page, press on the top right corner for a cool trick...")
         }
     }
     func setHeader() {

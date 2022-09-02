@@ -589,6 +589,5 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
         setCurrentday(date: date, completion: { _ in
             self.ScheduleCalendar.reloadData()
         })
-        
     }
 }

@@ -663,6 +663,16 @@ extension calendarTableViewCell {
 }
 
 extension UIViewController {
+    func showMessage(title: String, subTitle: String) {
+        let alertController = UIAlertController(title: "\(title)", message: "\(subTitle)", preferredStyle: .alert)
+
+        // add the buttons/actions to the view controller
+        let cancelAction = UIAlertAction(title: "Ok", style: .cancel, handler: nil)
+
+        alertController.addAction(cancelAction)
+
+        present(alertController, animated: true, completion: nil)
+    }
     func showInputDialog(title:String? = nil,
                          subtitle:String? = nil,
                          actionTitle:String? = "Add",
