@@ -298,9 +298,7 @@
 			children = (
 				27AEED69288B34E400C6176C /* ClassesOptionsPopupVC.swift */,
 				27AEED6B288B352100C6176C /* ClassNameVC.swift */,
-				27AEED79288B363300C6176C /* CreditsVC.swift */,
 				27AEED6D288B353D00C6176C /* TeacherNameVC.swift */,
-				27AEED77288B360900C6176C /* AboutUsVC.swift */,
 				27AEED6F288B355900C6176C /* RoomNumVC.swift */,
 				27AEED71288B359100C6176C /* DaySelectVC.swift */,
 			);
@@ -398,6 +396,8 @@
 			isa = PBXGroup;
 			children = (
 				8704E97126EEA617001826F8 /* Settings.swift */,
+				27AEED77288B360900C6176C /* AboutUsVC.swift */,
+				27AEED79288B363300C6176C /* CreditsVC.swift */,
 				8738377627EA48DE00CABF47 /* SecretSchedule.swift */,
 				27AEED67288B34CC00C6176C /* SettingsDetail */,
 				27AEED68288B34D500C6176C /* SecretScheduleDetail */,
@@ -1039,7 +1039,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 2.2.0;
+				MARKETING_VERSION = 2.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1066,7 +1066,7 @@
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 2.2.0;
+				MARKETING_VERSION = 2.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

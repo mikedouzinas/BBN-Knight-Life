@@ -25,6 +25,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         requestAuthForNotifications()
         application.registerForRemoteNotifications()
         let attributes = [NSAttributedString.Key.font:UIFont(name: "TimesNewRomanPSMT", size: 10)]
+        UILabel.appearance(whenContainedInInstancesOf: [UINavigationBar.self]).adjustsFontSizeToFitWidth = true
         UITabBarItem.appearance().setTitleTextAttributes(attributes as [NSAttributedString.Key : Any], for: .normal)
         UITabBarItem.appearance().setTitleTextAttributes(attributes as [NSAttributedString.Key : Any], for: .selected)
 //        GIDSignIn.sharedInstance.clientID = FirebaseApp.app()?.options.clientID

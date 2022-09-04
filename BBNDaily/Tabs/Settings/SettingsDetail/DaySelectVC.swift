@@ -16,11 +16,11 @@ class DaySelectVC: UIViewController {
     @IBOutlet weak var WednesdaySwitch: UISwitch!
     @IBOutlet weak var ThursdaySwitch: UISwitch!
     @IBOutlet weak var FridaySwitch: UISwitch!
-    static var link: ClassesOptionsPopupVC!
-    static var isEditing = false
+    var link: ClassesOptionsPopupVC!
+    var isEditingClass = false
     var finalString = ""
     func alreadyExists(word: String) -> Bool {
-        for selectedRow in DaySelectVC.link.Classes {
+        for selectedRow in link.Classes {
             if word == "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)" {
                 return true
             }
@@ -33,8 +33,8 @@ class DaySelectVC: UIViewController {
         finalString = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)"
         
         let db = Firestore.firestore()
-//        print("IsEditing: \(DaySelectVC.isEditing)")
-        if DaySelectVC.isEditing {
+//        print("daysIsEditing: \(DaySelectVC.daysIsEditing)")
+        if isEditingClass {
             let oldRow = ClassesOptionsPopupVC.editedClass
             let oldString = "\(oldRow.Subject)~\(oldRow.Teacher)~\(oldRow.Room)~\(oldRow.Block)"
             if finalString != oldString && alreadyExists(word: finalString) {
@@ -42,16 +42,27 @@ class DaySelectVC: UIViewController {
                 ProgressHUD.showFailed("Class already exists!")
                 return
             }
+            showLoader(text: "Changing class...")
             let oldDoc = db.collection("classes")
             let doc = oldDoc.document(oldString)
             doc.getDocument(completion: { [self] (document, error) in
                 if let document = document, document.exists {
+                    
                     let array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
                     let homeworkText = (document.data()?["homework"] as? String) ?? ""
+                    let isEditable = (document.data()?["isEditable"] as? Bool) ?? true
                     
                     let data2 = ["monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
                     let data = ["name":"\(finalString)", "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn, "members":array, "homework":homeworkText, "block":"\(oldRow.Block.uppercased())"] as [String : Any]
-                    
+                    print("\(isEditable) IS EDITABLE!!!??")
+                    if !isEditable {
+                        hideLoader(completion: {
+                            ProgressHUD.colorAnimation = .red
+                            ProgressHUD.showFailed("Sorry, you cannot edit this class.")
+                            self.dismiss(animated: true, completion: nil)
+                            return
+                        })
+                    }
                     // delete old one and change all of people's data to this one
                     for x in array {
                         let uid = (x["uid"] ?? "1234")
@@ -63,11 +74,33 @@ class DaySelectVC: UIViewController {
                         }
                     }
                     if finalString == oldString {
-                        doc.setData(data2, merge: true)
+                        doc.setData(data2, merge: true, completion: { [self] err in
+                            hideLoader(completion: { [self] in
+                                if let err = err {
+                                    ProgressHUD.colorAnimation = .red
+                                    ProgressHUD.showFailed("Failed to change class, please exit and try again.")
+                                    print(err)
+                                }
+                                else {
+                                    completeEdit(selectedRow: selectedRow)
+                                }
+                            })
+                        })
                     }
                     else {
                         let currDoc = db.collection("classes").document(finalString)
-                        currDoc.setData(data, merge: true)
+                        currDoc.setData(data, merge: true, completion: { [self] err in
+                            hideLoader(completion: { [self] in
+                                if let err = err {
+                                    ProgressHUD.colorAnimation = .red
+                                    ProgressHUD.showFailed("Failed to change class, please exit and try again.")
+                                    print(err)
+                                }
+                                else {
+                                    completeEdit(selectedRow: selectedRow)
+                                }
+                            })
+                        })
                         doc.delete() { err in
                             if let err = err {
                                 print("Error removing document: \(err)")
@@ -77,13 +110,15 @@ class DaySelectVC: UIViewController {
                         }
                     }
                     
-                    DaySelectVC.link.Classes.remove(at: ClassesOptionsPopupVC.indexPath.row)
-                    DaySelectVC.link.Classes.append(selectedRow)
-                    DaySelectVC.link.filteredClasses = DaySelectVC.link.Classes
-                    DaySelectVC.link.tableView.reloadData()
-                    self.dismiss(animated: true, completion: nil)
+                    
                 } else {
                     print("Document does not exist, no members to add!")
+                    hideLoader(completion: {
+                        ProgressHUD.colorAnimation = .red
+                        ProgressHUD.showFailed("Sorry, you cannot edit this class.")
+                        self.dismiss(animated: true, completion: nil)
+                        return
+                    })
                 }
             })
         }
@@ -93,14 +128,35 @@ class DaySelectVC: UIViewController {
                 ProgressHUD.showFailed("Class already exists!")
                 return
             }
+            showLoader(text: "Adding class...")
             let currDoc = db.collection("classes").document(finalString)
             let data = ["name":"\(finalString)", "block":"\(selectedRow.Block.uppercased())","monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
-            currDoc.setData(data)
-            DaySelectVC.link.Classes.append(selectedRow)
-            DaySelectVC.link.filteredClasses = DaySelectVC.link.Classes
-            DaySelectVC.link.tableView.reloadData()
-            self.dismiss(animated: true, completion: nil)
+            currDoc.setData(data, completion: { [self] err in
+                hideLoader(completion: { [self] in
+                    if let err = err {
+                        ProgressHUD.colorAnimation = .red
+                        ProgressHUD.showFailed("Failed to add class, please exit and try again.")
+                        print(err)
+                    }
+                    else {
+                        completeAdd(selectedRow: selectedRow)
+                    }
+                })
+            })
         }
         
+    }
+    func completeAdd(selectedRow: ClassModel) {
+        link.Classes.append(selectedRow)
+        link.filteredClasses = link.Classes
+        link.tableView.reloadData()
+        self.dismiss(animated: true, completion: nil)
+    }
+    func completeEdit(selectedRow: ClassModel) {
+        link.Classes.remove(at: ClassesOptionsPopupVC.indexPath.row)
+        link.Classes.append(selectedRow)
+        link.filteredClasses = link.Classes
+        link.tableView.reloadData()
+        self.dismiss(animated: true, completion: nil)
     }
 }

@@ -10,7 +10,7 @@ import UIKit
 import ProgressHUD
 
 class ClassNameVC: TextFieldVC {
-    static var link: ClassesOptionsPopupVC!
+    var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
         guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~"), !text.contains("/") else {
             ProgressHUD.colorAnimation = .red
@@ -19,7 +19,16 @@ class ClassNameVC: TextFieldVC {
         }
         text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         ClassesOptionsPopupVC.newClass.Subject = text
-        self.performSegue(withIdentifier: "teacher", sender: nil)
+        presentNext()
+    }
+    func presentNext() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "Teacher") as? TeacherNameVC
+        guard let vc = vc else {
+            return
+        }
+        vc.link = link
+        show(vc, sender: nil)
     }
     @IBAction func cancel(_ sender: Any) {
         self.dismiss(animated: true, completion: nil)

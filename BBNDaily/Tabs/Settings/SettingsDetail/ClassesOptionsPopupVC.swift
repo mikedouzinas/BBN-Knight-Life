@@ -18,27 +18,32 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
     func collectionSkeletonView(_ skeletonView: UITableView, cellIdentifierForRowAt indexPath: IndexPath) -> ReusableCellIdentifier {
         return editClassTableViewCell.identifier
     }
+    var classIsEditing = false
     @IBAction func addClass(_ sender: UIBarButtonItem) {
         ClassesOptionsPopupVC.newClass = ClassModel(Subject: "", Teacher: "", Room: "", Block: ClassesOptionsPopupVC.newClass.Block)
-        DaySelectVC.isEditing = false
-        ClassNameVC.link = self
-        TeacherNameVC.link = self
-        RoomNumVC.link = self
-        DaySelectVC.link = self
-        self.performSegue(withIdentifier: "textfield", sender: nil)
+        classIsEditing = false
+        presentTextfield()
+        
+    }
+    func presentTextfield() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "TextfieldNav") as? UINavigationController
+        let vc2 = vc?.children[0] as? ClassNameVC
+        vc2?.link = self
+        
+        guard let vc = vc else {
+            return
+        }
+        present(vc, animated: true)
     }
     static var indexPath = IndexPath(row: 0, section: 0)
     public func editCell(viewModel: ClassModel, indexPath: IndexPath) {
+        classIsEditing = true
         ClassesOptionsPopupVC.editedClass = viewModel
         ClassesOptionsPopupVC.newClass = viewModel
-        DaySelectVC.isEditing = true
         ClassesOptionsPopupVC.indexPath = indexPath
         
-        ClassNameVC.link = self
-        TeacherNameVC.link = self
-        RoomNumVC.link = self
-        DaySelectVC.link = self
-        self.performSegue(withIdentifier: "textfield", sender: nil)
+        presentTextfield()
     }
     static var newClass = ClassModel(Subject: "TOADS", Teacher: "MR MIKE", Room: "300", Block: "G")
     static var editedClass = ClassModel(Subject: "TOADS", Teacher: "MR MIKE", Room: "300", Block: "G")

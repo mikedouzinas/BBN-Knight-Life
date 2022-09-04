@@ -11,7 +11,7 @@ import ProgressHUD
 
 class RoomNumVC: TextFieldVC {
     @IBOutlet weak var TextField: UITextField!
-    static var link: ClassesOptionsPopupVC!
+    var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
         guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~"), !text.contains("/") else {
             ProgressHUD.colorAnimation = .red
@@ -20,7 +20,17 @@ class RoomNumVC: TextFieldVC {
         }
         text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         ClassesOptionsPopupVC.newClass.Room = text
-        self.performSegue(withIdentifier: "days", sender: nil)
+        presentNext()
+    }
+    func presentNext() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "DaySelect") as? DaySelectVC
+        guard let vc = vc else {
+            return
+        }
+        vc.link = link
+        vc.isEditingClass = link.classIsEditing
+        show(vc, sender: nil)
     }
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         TextField.resignFirstResponder()

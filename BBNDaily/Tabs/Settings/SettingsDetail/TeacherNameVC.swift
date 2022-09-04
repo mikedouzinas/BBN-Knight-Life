@@ -10,7 +10,7 @@ import UIKit
 import ProgressHUD
 
 class TeacherNameVC: TextFieldVC {
-    static var link: ClassesOptionsPopupVC!
+    var link: ClassesOptionsPopupVC!
     @IBAction func pressed(_ sender: Any) {
         guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~"), !text.contains("/") else {
             ProgressHUD.colorAnimation = .red
@@ -19,7 +19,16 @@ class TeacherNameVC: TextFieldVC {
         }
         text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         ClassesOptionsPopupVC.newClass.Teacher = text
-        self.performSegue(withIdentifier: "room", sender: nil)
+        presentNext()
+    }
+    func presentNext() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "Room") as? RoomNumVC
+        guard let vc = vc else {
+            return
+        }
+        vc.link = link
+        show(vc, sender: nil)
     }
     func hideKeyboardWhenTappedAbove() {
         tap.cancelsTouchesInView = false

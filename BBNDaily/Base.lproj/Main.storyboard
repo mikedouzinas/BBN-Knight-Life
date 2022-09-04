@@ -792,7 +792,7 @@
         <!--Teacher NameVC-->
         <scene sceneID="L8q-1R-pdb">
             <objects>
-                <viewController id="PWt-sj-CHH" customClass="TeacherNameVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="Teacher" id="PWt-sj-CHH" customClass="TeacherNameVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="UUj-wp-yd4">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -854,7 +854,7 @@
         <!--Room NumVC-->
         <scene sceneID="x3f-Zg-SKf">
             <objects>
-                <viewController id="d18-3t-Us6" customClass="RoomNumVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="Room" id="d18-3t-Us6" customClass="RoomNumVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="rdi-8w-2KD">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -916,7 +916,7 @@
         <!--Day SelectVC-->
         <scene sceneID="DGS-bC-5Xj">
             <objects>
-                <viewController id="msB-pF-Vy9" customClass="DaySelectVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="DaySelect" id="msB-pF-Vy9" customClass="DaySelectVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="uCw-T8-bdP">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -978,8 +978,8 @@
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please select the days this class meets" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="V8p-1u-QP7">
-                                <rect key="frame" x="50" y="118" width="314" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please select the days this class meets (no need to uncheck if block does not happen that day)" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="V8p-1u-QP7">
+                                <rect key="frame" x="50" y="78" width="314" height="61"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
@@ -1033,7 +1033,7 @@
         <!--Navigation Controller-->
         <scene sceneID="9uG-Fn-MmC">
             <objects>
-                <navigationController id="ma8-wP-MF1" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="TextfieldNav" id="ma8-wP-MF1" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="xJo-cG-tVG">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="56"/>
                         <autoresizingMask key="autoresizingMask"/>
