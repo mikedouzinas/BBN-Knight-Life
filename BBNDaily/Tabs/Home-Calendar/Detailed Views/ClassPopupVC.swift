@@ -26,6 +26,7 @@ class ClassPopupVC: UIViewController, UITableViewDelegate, SkeletonTableViewData
         cell.configure(with: members[indexPath.row])
         return cell
     }
+    @IBOutlet weak var classAdminLabel: UILabel!
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return "Members"
     }
@@ -105,14 +106,22 @@ class ClassPopupVC: UIViewController, UITableViewDelegate, SkeletonTableViewData
         let memberDocs = db.collection("classes")
         let blockName = (LoginVC.blocks["\(ClassPopupVC.block)"] as? String) ?? "N/A"
         let arr = blockName.getValues()
-        self.navigationItem.title = "\(arr[0]) \(arr[1].replacingOccurrences(of: "N/A", with: ""))"
+        self.navigationItem.title = "\(arr[0]) \(arr[1].replacingOccurrences(of: "N/A", with: "")) - \(ClassPopupVC.block)"
         let doc = memberDocs.document(blockName)
         doc.getDocument(completion: { [self] (document, error) in
             members = [Person]()
             if let document = document, document.exists {
                 let array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
+                let creator = (document.data()?["owner"] as? String) ?? "N/A"
+                
                 let homeworkText = (document.data()?["homework"] as? String) ?? ""
                 TextView.text = homeworkText
+                if creator != "N/A" {
+                    classAdminLabel.text = "Class Admin: \(creator)"
+                }
+                else {
+                    classAdminLabel.text = "Default Class"
+                }
                 for x in array {
                     members.append(Person(name: (x["name"] ?? ""), email: (x["email"] ?? ""), uid: x["uid"] ?? "N/A"))
                 }
@@ -123,6 +132,7 @@ class ClassPopupVC: UIViewController, UITableViewDelegate, SkeletonTableViewData
                 ProgressHUD.showFailed("This class no longer exists! Please change your class in settings.")
             }
             TextView.stopSkeletonAnimation()
+            classAdminLabel.stopSkeletonAnimation()
             tableView.stopSkeletonAnimation()
             view.hideSkeleton(reloadDataAfter: true, transition: .crossDissolve(0.25))
             tableView.reloadData()
@@ -134,15 +144,23 @@ class ClassPopupVC: UIViewController, UITableViewDelegate, SkeletonTableViewData
         view.layoutIfNeeded()
         tableView.register(blockTableViewCell.self, forCellReuseIdentifier: blockTableViewCell.identifier)
         tableView.backgroundColor = UIColor(named: "background")
+        if #available(iOS 15.0, *) {
+            tableView.sectionHeaderTopPadding = 0
+        }
         tableView.delegate = self
         tableView.dataSource = self
         tableView.isSkeletonable = true
         tableView.showAnimatedGradientSkeleton()
         tableView.estimatedRowHeight = 50
         tableView.rowHeight = 50
+        
         TextView.isSkeletonable = true
         TextView.showAnimatedGradientSkeleton()
         TextView.skeletonCornerRadius = 4
+        
+        classAdminLabel.isSkeletonable = true
+        classAdminLabel.showAnimatedGradientSkeleton()
+        classAdminLabel.skeletonCornerRadius = 4
     }
     @IBAction func editText(_ sender: UIButton) {
         TextEditVC.link = self

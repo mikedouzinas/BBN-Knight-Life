@@ -536,16 +536,10 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(named: "background")
-        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default) //UIImage.init(named: "transparent.png")
-        self.navigationController?.navigationBar.shadowImage = UIImage()
-        self.navigationController?.navigationBar.isTranslucent = true
-        self.navigationController?.view.backgroundColor = .clear
-//        view.addSubview(SignOutButton)
-//        SignOutButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 15).isActive = true
-//        SignOutButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -15).isActive = true
-//        SignOutButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -15).isActive = true
-//        SignOutButton.heightAnchor.constraint(equalToConstant: 45).isActive = true
-//        SignOutButton.addTarget(self, action: #selector(signOut), for: .touchUpInside)
+//        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default) //UIImage.init(named: "transparent.png")
+//        self.navigationController?.navigationBar.shadowImage = UIImage()
+//        self.navigationController?.navigationBar.isTranslucent = true
+//        self.navigationController?.view.backgroundColor = .clear
         setBlocks()
         
         preferenceBlocks = [
@@ -609,16 +603,9 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             i+=1
         }
         self.tableView.reloadData()
-//        closeButton.addTarget(self, action: #selector(close(_:)), for: .touchUpInside)
-//        view.addSubview(closeButton)
-//        closeButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 10).isActive = true
-//        closeButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 10).isActive = true
-//        closeButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
-//        closeButton.widthAnchor.constraint(equalTo: closeButton.heightAnchor).isActive = true
         setHeader()
     }
     @IBAction func closeClass(_ sender: Any) {
-//        print("made it?")
         dismiss(animated: true, completion: nil)
     }
     @objc func openSecretSchedule() {
@@ -645,4 +632,3 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         header.scrollViewDidScroll(scrollView: tableView)
     }
 }
-

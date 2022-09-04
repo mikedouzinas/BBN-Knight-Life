@@ -1087,9 +1087,15 @@
                                 </connections>
                             </button>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="7Vl-Eb-81Q">
-                                <rect key="frame" x="0.0" y="88" width="414" height="528"/>
+                                <rect key="frame" x="0.0" y="106.5" width="414" height="509.5"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                             </tableView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Class Admin: mveson@bbns.org" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lSH-lB-Lsv">
+                                <rect key="frame" x="10" y="90" width="394" height="14.5"/>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleSubhead"/>
+                                <color key="textColor" name="inverse"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="HTA-RD-oRf"/>
                         <color key="backgroundColor" name="background"/>
@@ -1097,21 +1103,25 @@
                             <constraint firstItem="HTA-RD-oRf" firstAttribute="bottom" secondItem="7LK-Mt-MBw" secondAttribute="bottom" id="0zf-f1-SEE"/>
                             <constraint firstItem="7Vl-Eb-81Q" firstAttribute="leading" secondItem="HTA-RD-oRf" secondAttribute="leading" id="4V3-Xt-B0D"/>
                             <constraint firstItem="2Ie-HN-odb" firstAttribute="leading" secondItem="HTA-RD-oRf" secondAttribute="leading" constant="10" id="6Xa-9g-ONu"/>
+                            <constraint firstItem="HTA-RD-oRf" firstAttribute="trailing" secondItem="lSH-lB-Lsv" secondAttribute="trailing" constant="10" id="98v-0k-Pv7"/>
                             <constraint firstItem="HTA-RD-oRf" firstAttribute="trailing" secondItem="7LK-Mt-MBw" secondAttribute="trailing" id="9pf-ke-8wc"/>
+                            <constraint firstItem="lSH-lB-Lsv" firstAttribute="leading" secondItem="HTA-RD-oRf" secondAttribute="leading" constant="10" id="FC1-ZX-Dla"/>
                             <constraint firstItem="HTA-RD-oRf" firstAttribute="trailing" secondItem="aPo-sO-RtH" secondAttribute="trailing" constant="4" id="Fs5-Dx-8Iy"/>
                             <constraint firstItem="aPo-sO-RtH" firstAttribute="leading" secondItem="2Ie-HN-odb" secondAttribute="trailing" id="Mfz-hD-rlH"/>
                             <constraint firstItem="aPo-sO-RtH" firstAttribute="centerY" secondItem="2Ie-HN-odb" secondAttribute="centerY" id="QPA-9R-5jy"/>
                             <constraint firstItem="HTA-RD-oRf" firstAttribute="trailing" secondItem="7Vl-Eb-81Q" secondAttribute="trailing" id="Qe5-BK-YWA"/>
-                            <constraint firstItem="7Vl-Eb-81Q" firstAttribute="top" secondItem="HTA-RD-oRf" secondAttribute="top" id="ScI-aM-ypu"/>
                             <constraint firstItem="7LK-Mt-MBw" firstAttribute="top" secondItem="2Ie-HN-odb" secondAttribute="bottom" constant="10" id="Y8s-ga-KEF"/>
                             <constraint firstItem="2Ie-HN-odb" firstAttribute="top" secondItem="7Vl-Eb-81Q" secondAttribute="bottom" constant="15" id="kRJ-PZ-H41"/>
                             <constraint firstItem="7LK-Mt-MBw" firstAttribute="leading" secondItem="HTA-RD-oRf" secondAttribute="leading" id="rE2-tX-3Gk"/>
+                            <constraint firstItem="7Vl-Eb-81Q" firstAttribute="top" secondItem="lSH-lB-Lsv" secondAttribute="bottom" constant="2" id="sBh-KF-KF4"/>
+                            <constraint firstItem="lSH-lB-Lsv" firstAttribute="top" secondItem="HTA-RD-oRf" secondAttribute="top" constant="2" id="zZy-Rd-gxE"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="tUk-pe-j2x"/>
                     <connections>
                         <outlet property="HeightConstraint" destination="qUX-S7-w6v" id="2IA-i6-nYr"/>
                         <outlet property="TextView" destination="7LK-Mt-MBw" id="nLP-WL-SxY"/>
+                        <outlet property="classAdminLabel" destination="lSH-lB-Lsv" id="ZUk-F0-WbH"/>
                         <outlet property="editButton" destination="aPo-sO-RtH" id="0xn-AI-nX4"/>
                         <outlet property="tableView" destination="7Vl-Eb-81Q" id="zWr-jL-X8z"/>
                         <segue destination="SqQ-5L-qg3" kind="show" identifier="edit" id="DRU-Tb-3ZD"/>
@@ -1119,7 +1129,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="eK1-bO-Xlr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-1754" y="1998"/>
+            <point key="canvasLocation" x="-1755.072463768116" y="1997.5446428571427"/>
         </scene>
         <!--Homework TitleVC-->
         <scene sceneID="RRP-NN-zL1">

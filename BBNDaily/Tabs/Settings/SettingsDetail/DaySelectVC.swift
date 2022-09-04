@@ -33,7 +33,7 @@ class DaySelectVC: UIViewController {
         finalString = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)"
         
         let db = Firestore.firestore()
-//        print("daysIsEditing: \(DaySelectVC.daysIsEditing)")
+        //        print("daysIsEditing: \(DaySelectVC.daysIsEditing)")
         if isEditingClass {
             let oldRow = ClassesOptionsPopupVC.editedClass
             let oldString = "\(oldRow.Subject)~\(oldRow.Teacher)~\(oldRow.Room)~\(oldRow.Block)"
@@ -51,66 +51,68 @@ class DaySelectVC: UIViewController {
                     let array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
                     let homeworkText = (document.data()?["homework"] as? String) ?? ""
                     let isEditable = (document.data()?["isEditable"] as? Bool) ?? true
+                    let creator = (document.data()?["owner"] as? String) ?? "mveson@bbns.org"
                     
                     let data2 = ["monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
-                    let data = ["name":"\(finalString)", "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn, "members":array, "homework":homeworkText, "block":"\(oldRow.Block.uppercased())"] as [String : Any]
-                    print("\(isEditable) IS EDITABLE!!!??")
-                    if !isEditable {
+                    let data = ["name":"\(finalString)", "owner":"\(creator)", "isEditable":isEditable, "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn, "members":array, "homework":homeworkText, "block":"\(oldRow.Block.uppercased())"] as [String : Any]
+                    print("creator is \(creator) and isEditable is \(isEditable)")
+                    if !isEditable || LoginVC.email.lowercased() != creator.lowercased() && LoginVC.email.lowercased() != "mveson@bbns.org" {
                         hideLoader(completion: {
                             ProgressHUD.colorAnimation = .red
-                            ProgressHUD.showFailed("Sorry, you cannot edit this class.")
+                            ProgressHUD.showFailed("Sorry, you do not have permission to edit this class.")
                             self.dismiss(animated: true, completion: nil)
                             return
                         })
                     }
-                    // delete old one and change all of people's data to this one
-                    for x in array {
-                        let uid = (x["uid"] ?? "1234")
-                        let personDoc = db.collection("users").document("\((uid))")
-                        personDoc.setData(["\(oldRow.Block.replacingOccurrences(of: " Block", with: ""))":"\(finalString)"], merge: true)
-                        if uid == ((LoginVC.blocks["uid"] as? String) ?? "") {
-                            LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = finalString
-                            LoginVC.classMeetingDays["\(ClassesOptionsPopupVC.currentBlock.lowercased())"] = [MondaySwitch.isOn, TuesdaySwitch.isOn, WednesdaySwitch.isOn, ThursdaySwitch.isOn, FridaySwitch.isOn]
-                        }
-                    }
-                    if finalString == oldString {
-                        doc.setData(data2, merge: true, completion: { [self] err in
-                            hideLoader(completion: { [self] in
-                                if let err = err {
-                                    ProgressHUD.colorAnimation = .red
-                                    ProgressHUD.showFailed("Failed to change class, please exit and try again.")
-                                    print(err)
-                                }
-                                else {
-                                    completeEdit(selectedRow: selectedRow)
-                                }
-                            })
-                        })
-                    }
                     else {
-                        let currDoc = db.collection("classes").document(finalString)
-                        currDoc.setData(data, merge: true, completion: { [self] err in
-                            hideLoader(completion: { [self] in
-                                if let err = err {
-                                    ProgressHUD.colorAnimation = .red
-                                    ProgressHUD.showFailed("Failed to change class, please exit and try again.")
-                                    print(err)
-                                }
-                                else {
-                                    completeEdit(selectedRow: selectedRow)
-                                }
-                            })
-                        })
-                        doc.delete() { err in
-                            if let err = err {
-                                print("Error removing document: \(err)")
-                            } else {
-                                print("Document successfully removed!")
+                        // delete old one and change all of people's data to this one
+                        for x in array {
+                            let uid = (x["uid"] ?? "1234")
+                            let personDoc = db.collection("users").document("\((uid))")
+                            personDoc.setData(["\(oldRow.Block.replacingOccurrences(of: " Block", with: ""))":"\(finalString)"], merge: true)
+                            if uid == ((LoginVC.blocks["uid"] as? String) ?? "") {
+                                LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = finalString
+                                LoginVC.classMeetingDays["\(ClassesOptionsPopupVC.currentBlock.lowercased())"] = [MondaySwitch.isOn, TuesdaySwitch.isOn, WednesdaySwitch.isOn, ThursdaySwitch.isOn, FridaySwitch.isOn]
                             }
                         }
+                        if finalString == oldString {
+                            doc.setData(data2, merge: true, completion: { [self] err in
+                                hideLoader(completion: { [self] in
+                                    if let err = err {
+                                        ProgressHUD.colorAnimation = .red
+                                        ProgressHUD.showFailed("Failed to change class, please exit and try again.")
+                                        print(err)
+                                    }
+                                    else {
+                                        completeEdit(selectedRow: selectedRow)
+                                    }
+                                })
+                            })
+                        }
+                        else {
+                            let currDoc = db.collection("classes").document(finalString)
+                            currDoc.setData(data, merge: true, completion: { [self] err in
+                                hideLoader(completion: { [self] in
+                                    if let err = err {
+                                        ProgressHUD.colorAnimation = .red
+                                        ProgressHUD.showFailed("Failed to change class, please exit and try again.")
+                                        print(err)
+                                    }
+                                    else {
+                                        completeEdit(selectedRow: selectedRow)
+                                    }
+                                })
+                            })
+                            doc.delete() { err in
+                                if let err = err {
+                                    print("Error removing document: \(err)")
+                                } else {
+                                    print("Document successfully removed!")
+                                }
+                            }
+                        }
+                        
                     }
-                    
-                    
                 } else {
                     print("Document does not exist, no members to add!")
                     hideLoader(completion: {
@@ -120,6 +122,7 @@ class DaySelectVC: UIViewController {
                         return
                     })
                 }
+                
             })
         }
         else {
@@ -130,7 +133,7 @@ class DaySelectVC: UIViewController {
             }
             showLoader(text: "Adding class...")
             let currDoc = db.collection("classes").document(finalString)
-            let data = ["name":"\(finalString)", "block":"\(selectedRow.Block.uppercased())","monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
+            let data = ["name":"\(finalString)", "owner":"\(LoginVC.email)", "block":"\(selectedRow.Block.uppercased())","monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
             currDoc.setData(data, completion: { [self] err in
                 hideLoader(completion: { [self] in
                     if let err = err {
