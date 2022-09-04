@@ -12,9 +12,9 @@ import SafariServices
 import SkeletonView
 
 
-class MapScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     @IBAction func comingSoon(_ sender: Any) {
-        let alert = UIAlertController(title: "Bus Tracking", message: "Bus Tracking will come soon to a future update! (AKA once someone actually puts a tracker on the bus) First person to put a tracker on the bus gets Knight Life credit!", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Bus Tracking", message: "Bus Tracking will come soon to a future update! (AKA once someone actually puts trackers on the buses!)", preferredStyle: .alert)
 
                // add an action (button)
                alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
@@ -28,11 +28,18 @@ class MapScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
     }
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     @IBAction func segmentedControlDidChange(_ sender: UISegmentedControl) {
-        if segmentedControl.selectedSegmentIndex == 0 {
+        let index = segmentedControl.selectedSegmentIndex
+        switch index {
+        case 0:
             busSchedule = fourthLotSchedule
-        }
-        else {
+        case 1:
             busSchedule = harvardSquareSchedule
+        case 2:
+            busSchedule = athleticsSchedule
+        case 3:
+            busSchedule = homeSchedule
+        default:
+            busSchedule = [BusSection]()
         }
         tableView.reloadData()
     }
@@ -109,6 +116,7 @@ class MapScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
                                                        ),
                                                     Bus(title: "4th Lot to Upper School", times:
                                                             [
+                                                                Time(departure: "11:35 AM", arrival: "11:40 AM"),
                                                                 Time(departure: "11:50 AM", arrival: "11:55 AM"),
                                                                 Time(departure: "12:05 PM", arrival: "12:10 PM"),
                                                                 Time(departure: "12:25 PM", arrival: "12:30 PM"),
@@ -135,7 +143,45 @@ class MapScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
                                                             Time(departure: "5:30 PM", arrival: "5:35 PM"),
                                                             Time(departure: "6:15 PM", arrival: "6:20 PM"),
                                                         ])])]
-    var harvardSquareSchedule = [BusSection(title: "AM Shuttle", buses: [Bus(title: "Harvard Square to Upper School", times: [Time(departure: "6:40 AM", arrival: "6:48 AM", weekDays: "M/W/Th/F"), Time(departure: "7:00 AM", arrival: "7:08 AM"), Time(departure: "7:20 AM", arrival: "7:28 AM"), Time(departure: "7:40 AM", arrival: "7:48 AM", arrivalTwo: "7:56 AM"), Time(departure: "8:05 AM", arrival: "8:13 AM", weekDays: "Tuesday", arrivalTwo: "8:21 AM"), Time(departure: "8:30 AM", arrival: "8:38 AM", weekDays: "Tuesday", arrivalTwo: "8:46 AM")])]), BusSection(title: "PM Shuttle", buses: [Bus(title: "Upper School to Harvard Square", times: [Time(departure: "2:00 PM", arrival: "2:08 PM"), Time(departure: "2:20 PM", arrival: "2:28 PM"), Time(departure: "3:30 PM", arrival: "3:38 PM"), Time(departure: "3:50 PM", arrival: "3:58 PM"), Time(departure: "4:10 PM", arrival: "4:18 PM"), Time(departure: "4:30 PM", arrival: "4:38 PM"), Time(departure: "4:50 PM", arrival: "4:58 PM"), Time(departure: "5:10 PM", arrival: "5:18 PM")])])]
+    var harvardSquareSchedule = [
+        BusSection(title: "AM Shuttle", buses:
+                    [
+                        Bus(title: "Harvard Square to Upper School", times: [
+                            Time(departure: "6:40 AM", arrival: "6:48 AM", weekDays: "M/W/Th/F"),
+                            Time(departure: "7:00 AM", arrival: "7:08 AM"),
+                            Time(departure: "7:20 AM", arrival: "7:28 AM"),
+                            Time(departure: "7:40 AM", departureSpot: nil, arrival: "7:48 AM", arrivalSpot: "Middle School", arrivalTwo: "7:56 AM", arrivalTwoSpot: "Upper School"),
+                            Time(departure: "8:05 AM", arrival: "8:15 AM"),
+                            Time(departure: "8:05 AM", departureSpot: nil, arrival: "8:13 AM", arrivalSpot: "Middle School", arrivalTwo: "8:21 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday"),
+                            Time(departure: "8:30 AM", departureSpot: nil, arrival: "8:38 AM", arrivalSpot: "Middle School", arrivalTwo: "8:46 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday")
+                        ])]),
+        BusSection(title: "PM Shuttle", buses:
+                    [
+                        Bus(title: "Upper School to Harvard Square", times: [
+                            Time(departure: "2:00 PM", arrival: "2:08 PM"),
+                            Time(departure: "2:20 PM", arrival: "2:28 PM"),
+                            Time(departure: "3:30 PM", arrival: "3:38 PM"),
+                            Time(departure: "3:50 PM", arrival: "3:58 PM"),
+                            Time(departure: "4:10 PM", arrival: "4:18 PM"),
+                            Time(departure: "4:30 PM", arrival: "4:38 PM"),
+                            Time(departure: "4:50 PM", arrival: "4:58 PM"),
+                            Time(departure: "5:10 PM", arrival: "5:18 PM"),
+                            Time(departure: "6:15 PM", arrival: "6:23 PM")
+                        ])])]
+    var athleticsSchedule = [BusSection(title: "PM Shuttle", buses: [
+        Bus(title: "Bus to Upper School", times: [
+            Time(departure: "5:50 PM", departureSpot: "Filippello Park", arrival: "6:00 PM", arrivalSpot: "Upper School"),
+            Time(departure: "5:50 PM", departureSpot: "Fresh Pond Pkway", arrival: "6:00 PM", arrivalSpot: "Upper School")
+        ])
+    ])]
+    var homeSchedule = [BusSection(title: "PM Shuttle", buses: [
+        Bus(title: "Upper School to Boston", times: [
+            Time(departure: "6:15 PM", departureSpot: "Upper School", arrival: "6:45 PM", arrivalSpot: "Charles St. @ Beacon St.")
+        ]),
+        Bus(title: "Upper School to Newton", times: [
+            Time(departure: "6:15 PM", departureSpot: "Upper School", arrival: "6:40 PM", arrivalSpot: "Riverside, Newton")
+        ])
+    ])]
     override func viewDidLoad() {
         super.viewDidLoad()
         busSchedule = fourthLotSchedule
@@ -165,17 +211,33 @@ struct Bus {
 
 class Time: NSObject {
     var departure: String
+    var departureSpot: String?
     var arrival: String
+    var arrivalSpot: String?
     var weekDays: String?
     var arrivalTwo: String?
+    var arrivalTwoSpot: String?
+    init(departure: String, arrival: String) {
+        self.departure = departure
+        self.arrival = arrival
+    }
     init(departure: String, arrival: String, weekDays: String) {
         self.departure = departure
         self.arrival = arrival
         self.weekDays = weekDays
     }
-    init(departure: String, arrival: String) {
+    init(departure: String, departureSpot: String?, arrival: String, arrivalSpot: String) {
         self.departure = departure
+        self.departureSpot = departureSpot
         self.arrival = arrival
+        self.arrivalSpot = arrivalSpot
+    }
+    init(departure: String, departureSpot: String?, arrival: String, arrivalSpot: String, weekDays: String) {
+        self.departure = departure
+        self.departureSpot = departureSpot
+        self.arrival = arrival
+        self.arrivalSpot = arrivalSpot
+        self.weekDays = weekDays
     }
     init(departure: String, arrival: String, arrivalTwo: String) {
         self.departure = departure
@@ -188,6 +250,23 @@ class Time: NSObject {
         self.arrivalTwo = arrivalTwo
         self.weekDays = weekDays
     }
+    init(departure: String, departureSpot: String?, arrival: String, arrivalSpot: String, arrivalTwo: String, arrivalTwoSpot: String) {
+        self.departure = departure
+        self.departureSpot = departureSpot
+        self.arrival = arrival
+        self.arrivalSpot = arrivalSpot
+        self.arrivalTwo = arrivalTwo
+        self.arrivalTwoSpot = arrivalTwoSpot
+    }
+    init(departure: String, departureSpot: String?, arrival: String, arrivalSpot: String, arrivalTwo: String, arrivalTwoSpot: String, weekDays: String) {
+        self.departure = departure
+        self.departureSpot = departureSpot
+        self.arrival = arrival
+        self.arrivalSpot = arrivalSpot
+        self.arrivalTwo = arrivalTwo
+        self.arrivalTwoSpot = arrivalTwoSpot
+        self.weekDays = weekDays
+    }
 }
 
 class busTimesTableViewCell: UITableViewCell {
@@ -195,10 +274,11 @@ class busTimesTableViewCell: UITableViewCell {
     
     let TitleLabel: UILabel = {
         let label = UILabel ()
-        label.numberOfLines = 0
+        label.numberOfLines = 1
         label.textColor = UIColor(named: "inverse")
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 14, weight: .semibold)
+        label.adjustsFontSizeToFitWidth = true
         label.minimumScaleFactor = 0.5
         label.text = "Departs: "
         label.skeletonCornerRadius = 4
@@ -207,11 +287,12 @@ class busTimesTableViewCell: UITableViewCell {
     } ()
     let BlockLabel: UILabel = {
         let label = UILabel ()
-        label.numberOfLines = 0
+        label.numberOfLines = 1
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 13, weight: .regular)
         label.textColor = UIColor(named: "lightGray")
         label.minimumScaleFactor = 0.8
+        label.adjustsFontSizeToFitWidth = true
         label.text = "Arrival: "
         label.skeletonCornerRadius = 4
         label.isSkeletonable = true
@@ -219,12 +300,13 @@ class busTimesTableViewCell: UITableViewCell {
     } ()
     let RightLabel: UILabel = {
         let label = UILabel ()
-        label.numberOfLines = 0
+        label.numberOfLines = 1
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textColor = UIColor(named: "inverse")
         label.minimumScaleFactor = 0.8
         label.textAlignment = .right
+        label.adjustsFontSizeToFitWidth = true
         label.text = ""
         label.skeletonCornerRadius = 4
         label.isSkeletonable = true
@@ -232,11 +314,12 @@ class busTimesTableViewCell: UITableViewCell {
     } ()
     let BottomRightLabel: UILabel = {
         let label = UILabel ()
-        label.numberOfLines = 0
+        label.numberOfLines = 1
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 13, weight: .regular)
         label.textColor = UIColor(named: "lightGray")
         label.minimumScaleFactor = 0.8
+        label.adjustsFontSizeToFitWidth = true
         label.text = ""
         label.skeletonCornerRadius = 4
         label.isSkeletonable = true
@@ -244,11 +327,12 @@ class busTimesTableViewCell: UITableViewCell {
     } ()
     let arrivalTwoLabel: UILabel = {
         let label = UILabel ()
-        label.numberOfLines = 0
+        label.numberOfLines = 1
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 13, weight: .regular)
         label.textColor = UIColor(named: "lightGray")
         label.minimumScaleFactor = 0.8
+        label.adjustsFontSizeToFitWidth = true
         label.text = ""
         label.skeletonCornerRadius = 4
         label.isSkeletonable = true
@@ -324,20 +408,25 @@ class busTimesTableViewCell: UITableViewCell {
     }
     func configure(with viewModel: Time) {
         TitleLabel.text?.append(viewModel.departure)
+        if let departureSpot = viewModel.departureSpot {
+            TitleLabel.text = "\(departureSpot) Departure: \(viewModel.departure)"
+        }
+        if let arrivalSpot = viewModel.arrivalSpot {
+            BlockLabel.text = "\(arrivalSpot) Arrival: "
+        }
+        BlockLabel.text?.append(contentsOf: "\(viewModel.arrival)")
+        if let arrivalTwoSpot = viewModel.arrivalTwoSpot, let arrivalTwo = viewModel.arrivalTwo {
+            arrivalTwoLabel.text = BlockLabel.text
+            BlockLabel.text = "\(arrivalTwoSpot) Arrival: \(arrivalTwo)"
+        }
+        else {
+            arrivalTwoLabel.isHidden = true
+        }
         if let weekdays = viewModel.weekDays {
             RightLabel.text = weekdays
         }
         else {
             RightLabel.text = "All Weekdays"
-        }
-        if let arrivalTwo = viewModel.arrivalTwo {
-            
-            BlockLabel.text = "Upper School Arrival: \(arrivalTwo)"
-            arrivalTwoLabel.text = "Middle School Arrival: \(viewModel.arrival)"
-        }
-        else {
-            arrivalTwoLabel.isHidden = true
-            BlockLabel.text?.append(viewModel.arrival)
         }
     }
 }

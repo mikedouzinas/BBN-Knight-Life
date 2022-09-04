@@ -18,6 +18,7 @@ class blockTableViewCell: UITableViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.minimumScaleFactor = 0.5
+        label.adjustsFontSizeToFitWidth = true
         label.text = "ndiewniedneddeewjd"
         label.skeletonCornerRadius = 4
         label.isSkeletonable = true
@@ -30,6 +31,7 @@ class blockTableViewCell: UITableViewCell {
         label.font = .systemFont(ofSize: 12, weight: .regular)
         label.textColor = UIColor(named: "lightGray")
         label.minimumScaleFactor = 0.8
+        label.adjustsFontSizeToFitWidth = true
         label.text = "ndiewniedneddeewjd"
         label.skeletonCornerRadius = 4
         label.isSkeletonable = true
@@ -42,6 +44,7 @@ class blockTableViewCell: UITableViewCell {
         label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textColor = UIColor(named: "gold-text")
         label.minimumScaleFactor = 0.8
+        label.adjustsFontSizeToFitWidth = true
         label.textAlignment = .right
         label.text = "ndiewniedneddeewjd"
         label.skeletonCornerRadius = 4
@@ -54,6 +57,7 @@ class blockTableViewCell: UITableViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 12, weight: .regular)
         label.minimumScaleFactor = 0.8
+        label.adjustsFontSizeToFitWidth = true
         label.textColor = UIColor(named: "lightGray")
         label.text = "ndiewniedneddeewjd"
         label.skeletonCornerRadius = 4

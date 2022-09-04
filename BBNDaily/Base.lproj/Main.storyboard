@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="20037" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="N5K-iL-P9Q">
-    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <device id="retina6_0" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="20020"/>
@@ -15,7 +15,7 @@
             <objects>
                 <viewController id="2dN-Hz-XAt" customClass="MapsVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="X2T-lI-1tl">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="DdK-CF-p6S"/>
                         <color key="backgroundColor" name="background"/>
@@ -39,11 +39,11 @@
             <objects>
                 <viewController id="KCG-Zx-NLt" customClass="detailedWorkVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="JhR-uL-Aai">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="Kcw-9c-mar">
-                                <rect key="frame" x="0.0" y="119" width="414" height="645"/>
+                                <rect key="frame" x="0.0" y="119" width="390" height="593"/>
                                 <color key="backgroundColor" name="background"/>
                                 <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
                                 <color key="textColor" name="inverse"/>
@@ -51,7 +51,7 @@
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Due June 17, 2022" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eSR-Oq-hca">
-                                <rect key="frame" x="4" y="88" width="406" height="21"/>
+                                <rect key="frame" x="4" y="88" width="382" height="21"/>
                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
@@ -92,7 +92,7 @@
                 <navigationController id="0K2-P6-IYF" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Upcoming" image="doc.plaintext" catalog="system" selectedImage="doc.plaintext" id="tfR-Pv-2Ni"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="4og-SP-GhF">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="barTintColor" name="background"/>
                         <textAttributes key="titleTextAttributes">
@@ -116,7 +116,7 @@
             <objects>
                 <viewController id="DBw-qo-JOl" customClass="WorkVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="S6v-iv-3j2">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="DPg-Sl-344"/>
                         <color key="backgroundColor" name="background"/>
@@ -145,7 +145,7 @@
             <objects>
                 <navigationController id="Dc1-co-hSk" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="FSG-QZ-F5N">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="56"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="56"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textAttributes key="titleTextAttributes">
                             <color key="textColor" name="inverse"/>
@@ -164,43 +164,43 @@
             <objects>
                 <viewController id="BXH-42-24G" customClass="CreditsVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="PiN-iw-cZ7">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Made &amp; Designed by Mike Veson with inspiration from the original Knight Life" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Kuh-ZS-DNW">
-                                <rect key="frame" x="20" y="91" width="374" height="41"/>
+                                <rect key="frame" x="20" y="91" width="350" height="40.666666666666657"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="darkGray"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Feedback" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="74q-Az-6yr">
-                                <rect key="frame" x="20" y="167" width="374" height="21"/>
+                                <rect key="frame" x="20" y="166.66666666666666" width="350" height="21"/>
                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fzX-Ny-tnU">
-                                <rect key="frame" x="20" y="203" width="374" height="30"/>
+                                <rect key="frame" x="20" y="202.66666666666666" width="350" height="30"/>
                                 <state key="normal" title="Press here to go to the feedback sheet"/>
                                 <connections>
                                     <action selector="openSheet:" destination="BXH-42-24G" eventType="touchUpInside" id="G2H-Qe-hD5"/>
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="For any further questions, feel free to email mveson@bbns.org" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TE1-GW-q0e">
-                                <rect key="frame" x="20" y="769" width="374" height="41"/>
+                                <rect key="frame" x="20" y="717.33333333333337" width="350" height="40.666666666666629"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="darkGray"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="woo-l8-7cl">
-                                <rect key="frame" x="20" y="729" width="374" height="30"/>
+                                <rect key="frame" x="20" y="677.33333333333337" width="350" height="30"/>
                                 <state key="normal" title="Open Source Libraries"/>
                                 <connections>
                                     <action selector="openLibraries:" destination="BXH-42-24G" eventType="touchUpInside" id="ngu-ww-xu8"/>
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1GJ-pG-MGM">
-                                <rect key="frame" x="20" y="689" width="374" height="30"/>
+                                <rect key="frame" x="20" y="637.33333333333337" width="350" height="30"/>
                                 <state key="normal" title="Privacy"/>
                                 <connections>
                                     <action selector="openPrivacy:" destination="BXH-42-24G" eventType="touchUpInside" id="7z3-1z-SDE"/>
@@ -250,7 +250,7 @@
             <objects>
                 <viewController id="D9e-iO-L9k" customClass="AboutUsVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="G0C-AY-8Ge">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="Mnw-Ra-y3d"/>
                         <color key="backgroundColor" name="background"/>
@@ -286,7 +286,7 @@
             <objects>
                 <viewController id="YkL-hu-Gqn" customClass="VanguardVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="qVw-Kg-RnH">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="Ici-O6-sUS"/>
                         <color key="backgroundColor" name="blue"/>
@@ -312,11 +312,11 @@
             <objects>
                 <viewController storyboardIdentifier="CalendarVC" id="E7k-Su-12S" customClass="CalendarVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="3Mg-fM-LmI">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="CJc-BH-m1q" customClass="FSCalendar">
-                                <rect key="frame" x="0.0" y="88" width="414" height="195"/>
+                                <rect key="frame" x="0.0" y="88" width="390" height="195"/>
                                 <color key="backgroundColor" name="background-light"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="195" id="FBx-fJ-B4a"/>
@@ -355,10 +355,10 @@
                                 </userDefinedRuntimeAttributes>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9tx-KV-A07">
-                                <rect key="frame" x="0.0" y="275" width="414" height="18"/>
+                                <rect key="frame" x="0.0" y="275" width="390" height="18"/>
                                 <subviews>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="77U-UV-vpd">
-                                        <rect key="frame" x="187" y="8" width="40" height="4"/>
+                                        <rect key="frame" x="175" y="8" width="40" height="4"/>
                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <constraints>
                                             <constraint firstAttribute="width" constant="40" id="Fry-XB-3Y7"/>
@@ -374,7 +374,7 @@
                                 </constraints>
                             </view>
                             <wkWebView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hpq-UB-EQL">
-                                <rect key="frame" x="0.0" y="293" width="414" height="569"/>
+                                <rect key="frame" x="0.0" y="293" width="390" height="517"/>
                                 <color key="backgroundColor" red="0.36078431370000003" green="0.38823529410000002" blue="0.4039215686" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <wkWebViewConfiguration key="configuration">
                                     <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
@@ -440,11 +440,11 @@
             <objects>
                 <viewController id="SqQ-5L-qg3" customClass="TextEditVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="WGS-rE-Ei6">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="OUO-nw-f09">
-                                <rect key="frame" x="4" y="88" width="406" height="631"/>
+                                <rect key="frame" x="4" y="88" width="382" height="579"/>
                                 <color key="backgroundColor" name="background"/>
                                 <string key="text">Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.</string>
                                 <color key="textColor" name="inverse"/>
@@ -490,7 +490,7 @@
             <objects>
                 <viewController storyboardIdentifier="LunchMenuVC" id="MnO-c5-Moa" customClass="LunchMenuVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="ArM-5L-yj5">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="wXa-Dv-zx1"/>
                         <color key="backgroundColor" name="background"/>
@@ -506,7 +506,7 @@
             <objects>
                 <viewController extendedLayoutIncludesOpaqueBars="YES" id="Ld7-PJ-krP" customClass="MainViewController" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" opaque="NO" contentMode="scaleToFill" id="6h3-Q5-Kqn">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="rHx-9k-tNf"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -523,7 +523,7 @@
                 <navigationController storyboardIdentifier="ScheduleNavID" id="gv1-9q-kN5" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Schedule" image="calendar" catalog="system" selectedImage="calendar" id="JyA-7v-ReN"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="7Qv-FQ-uGL">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="backgroundColor" name="background-light"/>
                         <color key="tintColor" name="white"/>
@@ -552,7 +552,7 @@
                 <navigationController storyboardIdentifier="SettingsNavID" id="UrN-4I-wut" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Settings" image="gear" catalog="system" selectedImage="gear" id="3c6-T8-kRE"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="9CH-cw-zth">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textAttributes key="titleTextAttributes">
                             <color key="textColor" name="inverse"/>
@@ -571,7 +571,7 @@
             <objects>
                 <viewController id="kxO-Rs-nNQ" customClass="SettingsVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="3y9-eq-9Xx">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="YPC-kj-SMj"/>
                         <color key="backgroundColor" name="background"/>
@@ -603,7 +603,7 @@
             <objects>
                 <viewController id="WOZ-ce-9n1" customClass="ClassesOptionsPopupVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="z8D-wq-Fdn">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="yiP-ck-FJo"/>
                         <color key="backgroundColor" name="background"/>
@@ -629,11 +629,11 @@
             <objects>
                 <viewController id="emB-eC-sKQ" customClass="ClassNameVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="tCb-ci-pkZ">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="ex. AP Comp Gov" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="QJw-gI-Uwi">
-                                <rect key="frame" x="50" y="157" width="314" height="35"/>
+                                <rect key="frame" x="50" y="131" width="290" height="35"/>
                                 <color key="backgroundColor" name="inverse-low-alpha"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="35" id="Vfo-nw-Ebn"/>
@@ -643,13 +643,13 @@
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your class name " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="Ie3-1l-Ppf">
-                                <rect key="frame" x="50" y="127.5" width="314" height="21"/>
+                                <rect key="frame" x="50" y="101.66666666666667" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Akl-gQ-dBQ">
-                                <rect key="frame" x="157" y="722" width="100" height="31"/>
+                                <rect key="frame" x="145" y="670" width="100" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="31" id="B6U-xJ-OgO"/>
                                     <constraint firstAttribute="width" constant="100" id="Gxc-q8-Hl2"/>
@@ -700,7 +700,7 @@
                 <navigationController id="vL4-oO-Q5e" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Bus Tracking" image="bus" catalog="system" selectedImage="bus" id="vQU-2T-l5c"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="PIP-fo-TbM">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="barTintColor" name="blue"/>
                         <textAttributes key="titleTextAttributes">
@@ -724,18 +724,18 @@
             <objects>
                 <viewController id="D97-9g-UUh" customClass="LoginVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="X7N-a2-nt1">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logo" translatesAutoresizingMaskIntoConstraints="NO" id="4cK-BE-d5J">
-                                <rect key="frame" x="87" y="157" width="240" height="240"/>
+                                <rect key="frame" x="75" y="157" width="240" height="240"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="240" id="OWr-uI-KD6"/>
                                     <constraint firstAttribute="width" constant="240" id="oJt-fO-GOC"/>
                                 </constraints>
                             </imageView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fhl-b4-s9d" customClass="GIDSignInButton">
-                                <rect key="frame" x="35" y="737" width="344" height="50"/>
+                                <rect key="frame" x="23" y="685" width="344" height="50"/>
                                 <color key="backgroundColor" name="white"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="50" id="gub-2a-6xC"/>
@@ -769,11 +769,11 @@
             <objects>
                 <viewController id="N5K-iL-P9Q" customClass="LaunchVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="tFZ-bH-gOx">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logo" translatesAutoresizingMaskIntoConstraints="NO" id="iVy-4B-XOq">
-                                <rect key="frame" x="87" y="133" width="240" height="240"/>
+                                <rect key="frame" x="75" y="107" width="240" height="240"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="240" id="Six-Vp-uW3"/>
                                     <constraint firstAttribute="height" constant="240" id="iRX-rE-IiS"/>
@@ -801,11 +801,11 @@
             <objects>
                 <viewController storyboardIdentifier="Teacher" id="PWt-sj-CHH" customClass="TeacherNameVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="UUj-wp-yd4">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="ex. Mr. Rogers" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="KP3-r9-AVR">
-                                <rect key="frame" x="50" y="157" width="314" height="35"/>
+                                <rect key="frame" x="50" y="131" width="290" height="35"/>
                                 <color key="backgroundColor" name="inverse-low-alpha"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="35" id="dd9-jU-gWK"/>
@@ -815,13 +815,13 @@
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your teacher's name " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="yaX-9W-Wc5">
-                                <rect key="frame" x="50" y="127.5" width="314" height="21"/>
+                                <rect key="frame" x="50" y="101.66666666666667" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="h3y-gw-Ut8">
-                                <rect key="frame" x="157" y="722" width="100" height="31"/>
+                                <rect key="frame" x="145" y="670" width="100" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="100" id="Uce-Fj-kOL"/>
                                     <constraint firstAttribute="height" constant="31" id="fij-ST-O0J"/>
@@ -863,11 +863,11 @@
             <objects>
                 <viewController storyboardIdentifier="Room" id="d18-3t-Us6" customClass="RoomNumVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="rdi-8w-2KD">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="ex. 273" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="ZrW-mP-3kk">
-                                <rect key="frame" x="50" y="157" width="314" height="35"/>
+                                <rect key="frame" x="50" y="131" width="290" height="35"/>
                                 <color key="backgroundColor" name="inverse-low-alpha"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="35" id="sPu-Is-KLo"/>
@@ -877,13 +877,13 @@
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your room number " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="hVn-hl-oa3">
-                                <rect key="frame" x="50" y="127.5" width="314" height="21"/>
+                                <rect key="frame" x="50" y="101.66666666666667" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="lG6-WR-wAe">
-                                <rect key="frame" x="157" y="722" width="100" height="31"/>
+                                <rect key="frame" x="145" y="670" width="100" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="31" id="WWB-NY-CvM"/>
                                     <constraint firstAttribute="width" constant="100" id="hce-Xi-ScV"/>
@@ -925,11 +925,11 @@
             <objects>
                 <viewController storyboardIdentifier="DaySelect" id="msB-pF-Vy9" customClass="DaySelectVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="uCw-T8-bdP">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="g91-Ft-8TQ">
-                                <rect key="frame" x="157" y="722" width="100" height="31"/>
+                                <rect key="frame" x="360.33333333333331" y="670" width="100" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="100" id="dh6-98-gZC"/>
                                     <constraint firstAttribute="height" constant="31" id="kKf-6R-Dfv"/>
@@ -941,52 +941,52 @@
                                 </connections>
                             </button>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kky-y0-Z2M">
-                                <rect key="frame" x="315" y="159" width="51" height="31"/>
+                                <rect key="frame" x="721.66666666666663" y="133" width="51" height="31"/>
                             </switch>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Monday" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MRk-wP-HfD">
-                                <rect key="frame" x="50" y="164" width="61" height="21"/>
+                                <rect key="frame" x="50" y="138" width="61" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8M0-F7-11O">
-                                <rect key="frame" x="315" y="205" width="51" height="31"/>
+                                <rect key="frame" x="721.66666666666663" y="179" width="51" height="31"/>
                             </switch>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Tuesday" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WZH-kK-Dkz">
-                                <rect key="frame" x="50" y="210" width="64" height="21"/>
+                                <rect key="frame" x="50" y="184" width="64" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8ar-0r-u57">
-                                <rect key="frame" x="315" y="251" width="51" height="31"/>
+                                <rect key="frame" x="721.66666666666663" y="225" width="51" height="31"/>
                             </switch>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Wednesday" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="m1o-Zf-8lO">
-                                <rect key="frame" x="50" y="256" width="90" height="21"/>
+                                <rect key="frame" x="50" y="230" width="90" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="eS4-Et-K3m">
-                                <rect key="frame" x="315" y="297" width="51" height="31"/>
+                                <rect key="frame" x="721.66666666666663" y="271" width="51" height="31"/>
                             </switch>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Thursday" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hrE-yn-L9Q">
-                                <rect key="frame" x="50" y="302" width="72" height="21"/>
+                                <rect key="frame" x="50" y="276" width="72" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="RwI-H9-xOL">
-                                <rect key="frame" x="315" y="343" width="51" height="31"/>
+                                <rect key="frame" x="721.66666666666663" y="317" width="51" height="31"/>
                             </switch>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Friday" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5To-aY-BhV">
-                                <rect key="frame" x="50" y="348" width="47" height="21"/>
+                                <rect key="frame" x="50" y="322" width="47" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please select the days this class meets (no need to uncheck if block does not happen that day)" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="V8p-1u-QP7">
-                                <rect key="frame" x="50" y="78" width="314" height="61"/>
+                                <rect key="frame" x="50" y="92.666666666666671" width="720.66666666666663" height="20.333333333333329"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
@@ -1042,7 +1042,7 @@
             <objects>
                 <navigationController storyboardIdentifier="TextfieldNav" id="ma8-wP-MF1" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="xJo-cG-tVG">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="56"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="56"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textAttributes key="titleTextAttributes">
                             <color key="textColor" name="inverse"/>
@@ -1061,11 +1061,11 @@
             <objects>
                 <viewController id="s4w-ik-a74" customClass="ClassPopupVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="LUW-gh-DQY">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" keyboardDismissMode="interactive" editable="NO" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="7LK-Mt-MBw">
-                                <rect key="frame" x="0.0" y="662" width="414" height="200"/>
+                                <rect key="frame" x="0.0" y="610" width="390" height="200"/>
                                 <color key="backgroundColor" name="inverse-low-alpha"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="200" id="qUX-S7-w6v"/>
@@ -1075,13 +1075,13 @@
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Most Recent Homework" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2Ie-HN-odb">
-                                <rect key="frame" x="10" y="631" width="360" height="21"/>
+                                <rect key="frame" x="10" y="579" width="336" height="21"/>
                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aPo-sO-RtH">
-                                <rect key="frame" x="370" y="621.5" width="40" height="40"/>
+                                <rect key="frame" x="346" y="569.66666666666663" width="40" height="40"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="RAF-5C-cWv"/>
                                     <constraint firstAttribute="width" constant="40" id="iut-8f-cVd"/>
@@ -1094,11 +1094,11 @@
                                 </connections>
                             </button>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="7Vl-Eb-81Q">
-                                <rect key="frame" x="0.0" y="106.5" width="414" height="509.5"/>
+                                <rect key="frame" x="0.0" y="106.66666666666666" width="390" height="457.33333333333337"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                             </tableView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Class Admin: mveson@bbns.org" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lSH-lB-Lsv">
-                                <rect key="frame" x="10" y="90" width="394" height="14.5"/>
+                                <rect key="frame" x="10" y="90" width="370" height="14.666666666666671"/>
                                 <fontDescription key="fontDescription" style="UICTFontTextStyleSubhead"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
@@ -1143,11 +1143,11 @@
             <objects>
                 <viewController id="lCV-5w-Dda" customClass="HomeworkTitleVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="SyW-U2-zCu">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="ex. History HW" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="VqT-cG-w7s">
-                                <rect key="frame" x="50" y="157" width="314" height="35"/>
+                                <rect key="frame" x="50" y="131" width="290" height="35"/>
                                 <color key="backgroundColor" name="inverse-low-alpha"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="35" id="vq5-Ar-LUi"/>
@@ -1157,13 +1157,13 @@
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your task title " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="y4G-lI-p3c">
-                                <rect key="frame" x="50" y="127.5" width="314" height="21"/>
+                                <rect key="frame" x="50" y="101.66666666666667" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Bnf-WA-es8">
-                                <rect key="frame" x="157" y="722" width="100" height="31"/>
+                                <rect key="frame" x="145" y="670" width="100" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="31" id="fnk-wF-zy2"/>
                                     <constraint firstAttribute="width" constant="100" id="m5l-6V-8rA"/>
@@ -1213,11 +1213,11 @@
             <objects>
                 <viewController id="hbj-Js-9aJ" customClass="HomeworkInfoVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ixa-az-Vhu">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="ex. Complete History Paper Outline" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="uVg-V4-Fxb">
-                                <rect key="frame" x="50" y="157" width="314" height="35"/>
+                                <rect key="frame" x="50" y="131" width="290" height="35"/>
                                 <color key="backgroundColor" name="inverse-low-alpha"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="35" id="InD-jH-Hxm"/>
@@ -1227,13 +1227,13 @@
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your task in more detail" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="kNM-4s-Gal">
-                                <rect key="frame" x="50" y="127.5" width="314" height="21"/>
+                                <rect key="frame" x="50" y="101.66666666666667" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hKs-9W-fUs">
-                                <rect key="frame" x="157" y="722" width="100" height="31"/>
+                                <rect key="frame" x="145" y="670" width="100" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="31" id="ePT-vl-xGF"/>
                                     <constraint firstAttribute="width" constant="100" id="mRd-xB-uuF"/>
@@ -1275,17 +1275,17 @@
             <objects>
                 <viewController id="KHJ-X6-e9k" customClass="HomeworkDueDateVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="vBc-XG-coz">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter the due date " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="vKu-bg-zOM">
-                                <rect key="frame" x="50" y="254.5" width="314" height="21"/>
+                                <rect key="frame" x="50" y="228.66666666666666" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Amc-EE-B8g">
-                                <rect key="frame" x="157" y="722" width="100" height="31"/>
+                                <rect key="frame" x="145" y="670" width="100" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="31" id="XBJ-Q2-FJJ"/>
                                     <constraint firstAttribute="width" constant="100" id="tZD-9Q-OJv"/>
@@ -1327,7 +1327,7 @@
             <objects>
                 <navigationController id="KZt-Pz-lTs" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="L6Y-k8-0PZ">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="56"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="56"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textAttributes key="titleTextAttributes">
                             <color key="textColor" name="inverse"/>
@@ -1346,11 +1346,11 @@
             <objects>
                 <viewController id="gOG-kt-Ec8" customClass="SecretScheduleVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="fUx-4r-NAx">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lfN-GU-EX2" customClass="FSCalendar">
-                                <rect key="frame" x="0.0" y="88" width="414" height="195"/>
+                                <rect key="frame" x="0.0" y="88" width="390" height="195"/>
                                 <color key="backgroundColor" name="background"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="195" id="0C5-Zt-EYk"/>
@@ -1389,7 +1389,7 @@
                                 </userDefinedRuntimeAttributes>
                             </view>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="5rB-MV-ZKN">
-                                <rect key="frame" x="0.0" y="322" width="414" height="491"/>
+                                <rect key="frame" x="0.0" y="322" width="390" height="439"/>
                             </tableView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tJ3-rf-B09">
                                 <rect key="frame" x="8" y="291" width="49" height="23"/>
@@ -1404,7 +1404,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="oG3-B6-VWv">
-                                <rect key="frame" x="310" y="291" width="96" height="23"/>
+                                <rect key="frame" x="286" y="291" width="96" height="23"/>
                                 <color key="backgroundColor" name="constant-lightGray"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="23" id="isM-G2-Wvf"/>
@@ -1428,7 +1428,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Cck-FK-nSM">
-                                <rect key="frame" x="279" y="291" width="23" height="23"/>
+                                <rect key="frame" x="255" y="291" width="23" height="23"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="Cck-FK-nSM" secondAttribute="height" multiplier="1:1" id="lFV-Az-Kmr"/>
                                 </constraints>
@@ -1450,7 +1450,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="US8-Yk-SU5">
-                                <rect key="frame" x="248" y="291" width="23" height="23"/>
+                                <rect key="frame" x="224" y="291" width="23" height="23"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="US8-Yk-SU5" secondAttribute="height" multiplier="1:1" id="a9K-qc-nwz"/>
                                 </constraints>
@@ -1516,17 +1516,17 @@
             <objects>
                 <viewController id="0n2-2e-sxC" customClass="BlockAndLunchVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Med-q8-Mo7">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter the block" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="LaM-m3-4j5">
-                                <rect key="frame" x="50" y="230.5" width="314" height="21"/>
+                                <rect key="frame" x="50" y="204.33333333333334" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fIV-wA-0Hf">
-                                <rect key="frame" x="157" y="722" width="100" height="31"/>
+                                <rect key="frame" x="145" y="670" width="100" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="31" id="1BF-ha-7gE"/>
                                     <constraint firstAttribute="width" constant="100" id="6Jd-Yj-ftf"/>
@@ -1538,16 +1538,16 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="First Lunch" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="YqY-V5-ThT">
-                                <rect key="frame" x="50" y="146" width="314" height="21"/>
+                                <rect key="frame" x="50" y="119.66666666666669" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="FaM-gx-pJA">
-                                <rect key="frame" x="182.5" y="175.5" width="51" height="31"/>
+                                <rect key="frame" x="170.66666666666666" y="149.33333333333334" width="51" height="31"/>
                             </switch>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pn2-DQ-Cxc">
-                                <rect key="frame" x="143" y="259.5" width="128.5" height="30"/>
+                                <rect key="frame" x="131" y="233.66666666666666" width="128.33333333333337" height="29.999999999999972"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="30" id="nmF-uk-pMf"/>
                                 </constraints>
@@ -1599,11 +1599,11 @@
             <objects>
                 <viewController id="9k7-3h-OOO" customClass="BlockNameVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="GPi-Fn-Bi7">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="ex. CAB or A1" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="F25-uE-oMR">
-                                <rect key="frame" x="50" y="157" width="314" height="35"/>
+                                <rect key="frame" x="50" y="131" width="290" height="35"/>
                                 <color key="backgroundColor" name="inverse-low-alpha"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="35" id="FP6-Wr-n51"/>
@@ -1613,13 +1613,13 @@
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter your block name" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="a3P-cE-xaZ">
-                                <rect key="frame" x="50" y="127.5" width="314" height="21"/>
+                                <rect key="frame" x="50" y="101.66666666666667" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0tm-i8-IWr">
-                                <rect key="frame" x="157" y="722" width="100" height="31"/>
+                                <rect key="frame" x="145" y="670" width="100" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="31" id="6Pe-Jq-uSz"/>
                                     <constraint firstAttribute="width" constant="100" id="RMI-JU-X9A"/>
@@ -1661,17 +1661,17 @@
             <objects>
                 <viewController id="CuO-90-kjo" customClass="TimesVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="KkZ-FY-rHc">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="790"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter the end time " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="jdd-ha-rIX">
-                                <rect key="frame" x="50" y="279.5" width="314" height="21"/>
+                                <rect key="frame" x="50" y="253.66666666666663" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="xbv-GJ-Iw1">
-                                <rect key="frame" x="157" y="722" width="100" height="31"/>
+                                <rect key="frame" x="145" y="670" width="100" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="31" id="hla-0E-40c"/>
                                     <constraint firstAttribute="width" constant="100" id="r5s-jy-5R6"/>
@@ -1683,31 +1683,31 @@
                                 </connections>
                             </button>
                             <datePicker contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="time" style="compact" translatesAutoresizingMaskIntoConstraints="NO" id="UGz-R7-RFa">
-                                <rect key="frame" x="167" y="309" width="99" height="31"/>
+                                <rect key="frame" x="167" y="283" width="99" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="Zy4-xD-oRH"/>
                                 </constraints>
                             </datePicker>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter the start time " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="38J-9Z-o4K">
-                                <rect key="frame" x="50" y="201" width="314" height="21"/>
+                                <rect key="frame" x="50" y="175" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <datePicker contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="time" style="compact" translatesAutoresizingMaskIntoConstraints="NO" id="q0m-nd-6Gg">
-                                <rect key="frame" x="167" y="230.5" width="99" height="31"/>
+                                <rect key="frame" x="167" y="204.66666666666666" width="99" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="X8s-08-2H6"/>
                                 </constraints>
                             </datePicker>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please enter the reminder time " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="UDC-qt-97p">
-                                <rect key="frame" x="50" y="122.5" width="314" height="21"/>
+                                <rect key="frame" x="50" y="96.666666666666671" width="290" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <datePicker contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="time" style="compact" translatesAutoresizingMaskIntoConstraints="NO" id="WdR-fI-cZ0">
-                                <rect key="frame" x="167" y="152" width="99" height="31"/>
+                                <rect key="frame" x="167" y="126" width="99" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="bMu-yf-pdo"/>
                                 </constraints>
@@ -1754,7 +1754,7 @@
             <objects>
                 <navigationController id="Z0Y-Pt-EBQ" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="te7-Rt-pbt">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="56"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="56"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textAttributes key="titleTextAttributes">
                             <color key="textColor" name="inverse"/>
@@ -1804,19 +1804,19 @@
                                         </constraints>
                                     </imageView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="BB&amp;N User" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5ch-UU-9bL">
-                                        <rect key="frame" x="80" y="20" width="114" height="14.5"/>
+                                        <rect key="frame" x="80" y="20" width="114" height="14.666666666666664"/>
                                         <fontDescription key="fontDescription" style="UICTFontTextStyleSubhead"/>
                                         <color key="textColor" name="inverse"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="johnappleseed@bbns.org" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lDG-Dy-0lh">
-                                        <rect key="frame" x="80" y="42.5" width="114" height="14"/>
+                                        <rect key="frame" x="80" y="42.666666666666671" width="114" height="14"/>
                                         <fontDescription key="fontDescription" style="UICTFontTextStyleCaption2"/>
                                         <color key="textColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="gear" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="FaN-Cz-3ap">
-                                        <rect key="frame" x="195" y="27.5" width="25" height="25.5"/>
+                                        <rect key="frame" x="195" y="27.666666666666668" width="25" height="25.333333333333332"/>
                                         <color key="tintColor" name="inverse"/>
                                         <constraints>
                                             <constraint firstAttribute="width" constant="25" id="BpR-wq-1DY"/>
@@ -1879,7 +1879,7 @@
                 <navigationController storyboardIdentifier="VanguardNavID" id="qqx-z1-7gy" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Schedule" image="calendar" catalog="system" selectedImage="calendar" id="ftO-nd-4sY"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="XDp-rL-5dO">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="backgroundColor" name="background-light"/>
                         <color key="tintColor" name="white"/>
@@ -1905,7 +1905,7 @@
             <objects>
                 <viewController id="Wg5-gG-eWD" customClass="SpectatorVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="FEw-Qw-ew1">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="w8h-Tb-J2W"/>
                         <color key="backgroundColor" name="background"/>
@@ -1932,7 +1932,7 @@
                 <navigationController storyboardIdentifier="SpectatorNavID" id="d8s-6R-5Hf" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Schedule" image="calendar" catalog="system" selectedImage="calendar" id="uRj-qh-4HT"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="wES-of-jST">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="backgroundColor" name="background-light"/>
                         <color key="tintColor" name="white"/>
@@ -1960,7 +1960,7 @@
             <objects>
                 <viewController id="LGa-jN-DTI" customClass="BenchwarmerVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8hq-Ip-Uwb">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="dc5-mm-qTi"/>
                         <color key="backgroundColor" name="background"/>
@@ -1987,7 +1987,7 @@
                 <navigationController storyboardIdentifier="BenchwarmerNavID" id="Oxs-XO-XXK" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Schedule" image="calendar" catalog="system" selectedImage="calendar" id="Cvf-jR-DJG"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="RTt-c9-Vmq">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="backgroundColor" name="background-light"/>
                         <color key="tintColor" name="white"/>
@@ -2015,7 +2015,7 @@
             <objects>
                 <viewController id="hdJ-pV-bhN" customClass="CHASMVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="1vl-Vv-W4A">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="O2q-UT-5r3"/>
                         <color key="backgroundColor" name="background"/>
@@ -2042,7 +2042,7 @@
                 <navigationController storyboardIdentifier="CHASMNavID" id="QWk-3G-A7K" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Schedule" image="calendar" catalog="system" selectedImage="calendar" id="cfM-mI-hsr"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="fod-7J-I59">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="backgroundColor" name="background-light"/>
                         <color key="tintColor" name="white"/>
@@ -2070,7 +2070,7 @@
             <objects>
                 <viewController id="OIZ-uk-k0a" customClass="LatestNewsVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="af6-OJ-ibT">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="r4U-sU-yc0"/>
                         <color key="backgroundColor" name="background"/>
@@ -2090,7 +2090,7 @@
                 <navigationController id="b1h-oR-fhC" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Announcements" image="announcement" selectedImage="announcement" id="FuN-xs-zml"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="uiI-f8-ODF">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="backgroundColor" name="background-light"/>
                         <color key="tintColor" name="white"/>
@@ -2118,7 +2118,7 @@
             <objects>
                 <viewController id="5wB-6E-kBw" customClass="POVVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8Tu-ph-Xpk">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <viewLayoutGuide key="safeArea" id="e4l-oZ-el9"/>
                         <color key="backgroundColor" name="background"/>
@@ -2145,7 +2145,7 @@
                 <navigationController storyboardIdentifier="POVNavID" id="P5N-l8-CPT" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Schedule" image="calendar" catalog="system" selectedImage="calendar" id="mqI-yj-aH4"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="ZqS-zh-gvk">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="backgroundColor" name="background-light"/>
                         <color key="tintColor" name="white"/>
@@ -2173,11 +2173,11 @@
             <objects>
                 <viewController id="vkS-Vu-c3i" customClass="ImageVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="D7w-oO-DY4">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please choose a photo to post" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="XHe-yQ-zs9">
-                                <rect key="frame" x="50" y="128" width="314" height="21"/>
+                                <rect key="frame" x="38" y="128" width="314" height="21"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="314" id="wvN-8x-CeS"/>
                                 </constraints>
@@ -2186,7 +2186,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Wm0-52-o3G">
-                                <rect key="frame" x="132" y="169" width="150" height="31"/>
+                                <rect key="frame" x="120" y="169" width="150" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="150" id="WiG-Fa-KX0"/>
                                 </constraints>
@@ -2197,14 +2197,14 @@
                                 </connections>
                             </button>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="T8Y-Jd-10W">
-                                <rect key="frame" x="107" y="256" width="200" height="200"/>
+                                <rect key="frame" x="95" y="256" width="200" height="200"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="200" id="TSA-Wa-3qu"/>
                                     <constraint firstAttribute="height" constant="200" id="aF1-ty-egG"/>
                                 </constraints>
                             </imageView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="joX-CX-lt1">
-                                <rect key="frame" x="176" y="767" width="62" height="31"/>
+                                <rect key="frame" x="164" y="715" width="62" height="31"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="filled" title="Finish"/>
                                 <connections>
@@ -2212,7 +2212,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="YvX-as-Gdh">
-                                <rect key="frame" x="132" y="205" width="150" height="31"/>
+                                <rect key="frame" x="120" y="205" width="150" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="150" id="aXc-ok-Vmo"/>
                                 </constraints>
@@ -2263,7 +2263,7 @@
                 <navigationController storyboardIdentifier="ImageVC" id="DsQ-Qb-2AP" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Settings" image="gear" catalog="system" selectedImage="gear" id="DiT-Ay-MHD"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="tl9-Uf-sLs">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textAttributes key="titleTextAttributes">
                             <color key="textColor" name="blue"/>
@@ -2282,11 +2282,11 @@
             <objects>
                 <viewController id="Rma-Tr-rYr" customClass="ThroughDateVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="4TV-0Q-mry">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="yYa-Ws-6cT">
-                                <rect key="frame" x="165.5" y="767" width="83" height="31"/>
+                                <rect key="frame" x="153.66666666666666" y="715" width="83" height="31"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="filled" title="Continue"/>
                                 <connections>
@@ -2294,7 +2294,7 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please choose the end date " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="7eb-Gc-96l">
-                                <rect key="frame" x="99.5" y="261.5" width="215" height="21"/>
+                                <rect key="frame" x="87.666666666666686" y="261.66666666666669" width="215" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
@@ -2306,13 +2306,13 @@
                                 </constraints>
                             </datePicker>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please choose the start date " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.75" translatesAutoresizingMaskIntoConstraints="NO" id="Zub-Rx-KVU">
-                                <rect key="frame" x="96" y="183" width="222" height="21"/>
+                                <rect key="frame" x="84" y="183" width="222" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" name="inverse"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <datePicker contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="date" style="compact" translatesAutoresizingMaskIntoConstraints="NO" id="bic-QG-lEw">
-                                <rect key="frame" x="126" y="212.5" width="119" height="31"/>
+                                <rect key="frame" x="126" y="212.66666666666666" width="119" height="31"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="XQb-aV-SJX"/>
                                 </constraints>
@@ -2357,7 +2357,7 @@
                 <navigationController storyboardIdentifier="ThroughDateVC" id="fiu-fF-gTs" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Settings" image="gear" catalog="system" selectedImage="gear" id="Zx8-lG-5bL"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="6dI-1t-NEP">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textAttributes key="titleTextAttributes">
                             <fontDescription key="fontDescription" name="HelveticaNeue-Medium" family="Helvetica Neue" pointSize="20"/>
@@ -2375,17 +2375,19 @@
         <!--Bus Schedule-->
         <scene sceneID="BrO-q9-Xnc">
             <objects>
-                <viewController id="9av-zj-sam" customClass="MapScheduleVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="9av-zj-sam" customClass="BusScheduleVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Wjj-I5-aHW">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Yp8-Gm-emS">
-                                <rect key="frame" x="0.0" y="88" width="414" height="32"/>
+                                <rect key="frame" x="4" y="88" width="382" height="32"/>
                                 <color key="backgroundColor" name="background"/>
                                 <segments>
-                                    <segment title="Fourth Lot"/>
-                                    <segment title="Harvard Square"/>
+                                    <segment title="4th Lot"/>
+                                    <segment title="Harvard Sq."/>
+                                    <segment title="Athletics"/>
+                                    <segment title="Home"/>
                                 </segments>
                                 <color key="tintColor" name="inverse"/>
                                 <color key="selectedSegmentTintColor" name="inverse-light"/>
@@ -2394,17 +2396,17 @@
                                 </connections>
                             </segmentedControl>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" estimatedSectionHeaderHeight="-1" sectionFooterHeight="28" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="Ymc-wB-Seo">
-                                <rect key="frame" x="0.0" y="119" width="414" height="694"/>
+                                <rect key="frame" x="0.0" y="119" width="390" height="642"/>
                             </tableView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="3zW-nW-pS2"/>
                         <color key="backgroundColor" name="background"/>
                         <constraints>
                             <constraint firstItem="Yp8-Gm-emS" firstAttribute="top" secondItem="3zW-nW-pS2" secondAttribute="top" id="5xF-jZ-5XC"/>
-                            <constraint firstItem="Yp8-Gm-emS" firstAttribute="leading" secondItem="3zW-nW-pS2" secondAttribute="leading" id="Bkb-Ec-Hge"/>
+                            <constraint firstItem="Yp8-Gm-emS" firstAttribute="leading" secondItem="3zW-nW-pS2" secondAttribute="leading" constant="4" id="Bkb-Ec-Hge"/>
                             <constraint firstItem="Ymc-wB-Seo" firstAttribute="top" secondItem="Yp8-Gm-emS" secondAttribute="bottom" id="DzB-yE-UlX"/>
                             <constraint firstItem="Ymc-wB-Seo" firstAttribute="leading" secondItem="3zW-nW-pS2" secondAttribute="leading" id="La8-9V-liI"/>
-                            <constraint firstItem="3zW-nW-pS2" firstAttribute="trailing" secondItem="Yp8-Gm-emS" secondAttribute="trailing" id="Lhg-fx-Abz"/>
+                            <constraint firstItem="3zW-nW-pS2" firstAttribute="trailing" secondItem="Yp8-Gm-emS" secondAttribute="trailing" constant="4" id="Lhg-fx-Abz"/>
                             <constraint firstItem="3zW-nW-pS2" firstAttribute="trailing" secondItem="Ymc-wB-Seo" secondAttribute="trailing" id="hE1-Sj-der"/>
                             <constraint firstItem="3zW-nW-pS2" firstAttribute="bottom" secondItem="Ymc-wB-Seo" secondAttribute="bottom" id="zxO-09-0Ui"/>
                         </constraints>
@@ -2439,7 +2441,7 @@
                 <navigationController id="fic-Eb-SPT" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Bus Schedule" image="bus" catalog="system" selectedImage="bus" id="TXR-5n-HZ4"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="BFS-Ow-HBf">
-                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <rect key="frame" x="0.0" y="44" width="390" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="barTintColor" name="background"/>
                         <textAttributes key="titleTextAttributes">

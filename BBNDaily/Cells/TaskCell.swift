@@ -18,6 +18,7 @@ class TaskCell: UITableViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 14, weight: .bold)
         label.minimumScaleFactor = 0.5
+        label.adjustsFontSizeToFitWidth = true
         label.text = "ndiewniedneddeewjd"
         label.textAlignment = .left
         label.skeletonCornerRadius = 4
@@ -31,6 +32,7 @@ class TaskCell: UITableViewCell {
         label.font = .systemFont(ofSize: 12, weight: .regular)
         label.textColor = UIColor(named: "inverse")
         label.minimumScaleFactor = 0.8
+        label.adjustsFontSizeToFitWidth = true
         label.textAlignment = .left
         label.text = "ndiewniedneddeewjd"
         label.skeletonCornerRadius = 4
