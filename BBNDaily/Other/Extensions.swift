@@ -710,6 +710,9 @@ extension UIViewController {
         present(alert, animated: true, completion: {
         })
     }
+    func showConfirmation(title: String, message: String) {
+        
+    }
     func hideLoader(completion: (() -> Void)?) {
         dismiss(animated: true, completion: {
             completion!()

@@ -33,6 +33,7 @@ struct SchoolTask {
     var description: String
     var dueDate: String
     let isCompleted: Bool
+    var index: Int
 }
 
 struct settingsBlock {

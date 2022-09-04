@@ -21,13 +21,16 @@ class HomeworkDueDateVC: TextFieldVC {
         let currDoc = db.collection("users").document((LoginVC.blocks["uid"] as? String) ?? "")
         var tasks = (LoginVC.blocks["tasks"] as? [[String:Any]]) ?? [[String:Any]]()
         tasks.append(["title":"\(WorkVC.newHomework.title)", "description":"\(WorkVC.newHomework.description)", "dueDate":"\(WorkVC.newHomework.dueDate)", "isCompleted":false])
+        WorkVC.newHomework.index = tasks.count - 1
         currDoc.setData(["tasks": tasks], merge: true)
+        LoginVC.blocks["tasks"] = tasks
         HomeworkDueDateVC.link.tasks.append(WorkVC.newHomework)
         HomeworkDueDateVC.link.tasks = HomeworkDueDateVC.link.tasks.sorted {first, second -> Bool in
             let convertedDate1 = dateformatter.date(from: first.dueDate) ?? Date()
             let convertedDate2 = dateformatter.date(from: second.dueDate) ?? Date()
             return convertedDate1 < convertedDate2
         }
+        HomeworkDueDateVC.link.checkIfEmpty()
         HomeworkDueDateVC.link.tableView.reloadData()
         self.dismiss(animated: true, completion: nil)
     }
