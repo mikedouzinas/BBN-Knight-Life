@@ -18,6 +18,7 @@ import WebKit
 class LaunchVC: AuthVC {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+//        getTotalKnightLifeUsers()
         setAppearance(input: nil)
         if FirebaseAuth.Auth.auth().currentUser != nil {
             self.gifName = "snowfall"
@@ -29,4 +30,5 @@ class LaunchVC: AuthVC {
             self.performSegue(withIdentifier: "NotSignedIn", sender: nil)
         }
     }
+    
 }

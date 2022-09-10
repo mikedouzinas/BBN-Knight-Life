@@ -14,7 +14,7 @@ import FSCalendar
 import WebKit
 import SkeletonView
 
-class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate, WKNavigationDelegate {
+class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate, WKNavigationDelegate {
     @IBOutlet var sideMenuBtn: UIBarButtonItem!
     @IBOutlet var webView: WKWebView!
     static var hasPressedSideMenu = false
@@ -339,14 +339,21 @@ class CalendarVC: UIViewController, FSCalendarDelegate, FSCalendarDataSource, UI
             if date != todaysDate {
                 NotificationCenter.default.removeObserver(self)
                 todaysDate = date
-                let storyboard = UIStoryboard(name: "Main", bundle: nil)
-                let vc = storyboard.instantiateViewController(withIdentifier: "CalendarVC")
-                var viewcontrollers = self.navigationController?.viewControllers ?? [UIViewController]()
-                if !viewcontrollers.isEmpty {
-                    viewcontrollers.removeAll()
-                }
-                viewcontrollers.append(vc)
-                self.navigationController?.setViewControllers(viewcontrollers, animated: false)
+                updateSpecialSchedules(completion: { [self] result in
+                    switch result {
+                    case .success(_):
+                        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+                        let vc = storyboard.instantiateViewController(withIdentifier: "CalendarVC")
+                        var viewcontrollers = self.navigationController?.viewControllers ?? [UIViewController]()
+                        if !viewcontrollers.isEmpty {
+                            viewcontrollers.removeAll()
+                        }
+                        viewcontrollers.append(vc)
+                        self.navigationController?.setViewControllers(viewcontrollers, animated: false)
+                    case .failure(let err):
+                        print("failed to get sched \(err)")
+                    }
+                })
             }
             else {
                 setCurrentday(date: realCurrentDate, completion: { [self]_ in

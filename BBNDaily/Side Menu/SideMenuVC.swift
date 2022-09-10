@@ -343,9 +343,9 @@ class SideMenuViewController: AuthVC {
         self.sideMenuTableView.isScrollEnabled = false
         self.sideMenuTableView.delaysContentTouches = false
         
-        backview.isUserInteractionEnabled = true
-        let guestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(profilePressed(_:)))
-        backview.addGestureRecognizer(guestureRecognizer)
+//        backview.isUserInteractionEnabled = true
+//        let guestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(profilePressed(_:)))
+//        backview.addGestureRecognizer(guestureRecognizer)
         backview.layer.masksToBounds = true
         backview.layer.cornerRadius = 10
         backview.backgroundColor = UIColor(named: "inverse")?.withAlphaComponent(0.1)
@@ -387,7 +387,7 @@ class SideMenuViewController: AuthVC {
         self.sideMenuTableView.reloadData()
     }
     @objc func profilePressed(_ sender: Any) {
-        SettingsVC.ProfileLink = self
+//        SettingsVC.ProfileLink = self
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let vc = storyboard.instantiateViewController(withIdentifier: "SettingsNavID") as? UINavigationController
         guard let vc = vc else {
@@ -434,6 +434,7 @@ extension SideMenuViewController: UITableViewDataSource {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.revealViewController()?.gestureEnabled = true
+        headerImageView.image = LoginVC.profilePhoto.image
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return self.menu.count

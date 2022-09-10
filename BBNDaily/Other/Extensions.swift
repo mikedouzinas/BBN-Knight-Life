@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import Firebase
 
 extension UIViewController {
     func hideKeyboardWhenTappedAround() {
@@ -663,6 +664,18 @@ extension calendarTableViewCell {
 }
 
 extension UIViewController {
+    func getTotalKnightLifeUsers() {
+        let db = Firestore.firestore()
+        db.collection("users").getDocuments(completion: { [self] (snapshot, error) in
+            if error != nil {
+                showMessage(title: "Error :(", subTitle: "Sorry, couldn't get the total Knight Life Users.")
+            }
+            else {
+                let count = snapshot?.documents.count ?? 0
+                showMessage(title: "New Knight Life Users Alert!", subTitle: "Knight Life now has \(count) users! Congrats!")
+            }
+        })
+    }
     func showMessage(title: String, subTitle: String) {
         let alertController = UIAlertController(title: "\(title)", message: "\(subTitle)", preferredStyle: .alert)
 

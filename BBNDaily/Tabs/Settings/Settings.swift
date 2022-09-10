@@ -209,7 +209,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             currDoc.setData(LoginVC.blocks)
             setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: { [self]_ in
                 setHeader()
-                SettingsVC.ProfileLink.headerImageView.image = LoginVC.profilePhoto.image
+//                SettingsVC.ProfileLink.headerImageView.image = LoginVC.profilePhoto.image
             })
         }
         else {
@@ -219,7 +219,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             currDoc.setData(LoginVC.blocks)
             setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: { [self]_ in
                 setHeader()
-                SettingsVC.ProfileLink.headerImageView.image = LoginVC.profilePhoto.image
+//                SettingsVC.ProfileLink.headerImageView.image = LoginVC.profilePhoto.image
             })
         }
     }
@@ -260,7 +260,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         setNotifications()
     }
     // remove all cases of user when joining class too
-    override func viewWillAppear(_ animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         setBlocks()
         tableView.reloadData()
     }
@@ -328,7 +329,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 
                 present(alertController, animated: true, completion: nil)
             }
-            else if indexPath.row == 6 {
+            else if indexPath.row == 7 {
 //                print("selected")
                 tableView.deselectRow(at: indexPath, animated: true)
                 let alertController = UIAlertController(title: "Appearance", message: "Please select your preferred appearance", preferredStyle: .actionSheet)
@@ -355,11 +356,18 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             else if indexPath.row > 3 {
                 tableView.deselectRow(at: indexPath, animated: true)
                 let alertController = UIAlertController(title: "\(preferenceBlocks[indexPath.row-3].blockName)", message: "Please enter your locker number", preferredStyle: .alert)
-                var isLocker = true
-                if preferenceBlocks[indexPath.row-3].blockName.lowercased().contains("advisory") {
+                var isLockerNum = true
+                var isCode = false
+                let prefName = "\(preferenceBlocks[indexPath.row-3].blockName.lowercased())"
+                if prefName.contains("advisory") {
                     alertController.message = "Please enter your advisory room number"
-                    isLocker = false
+                    isLockerNum = false
                 }
+                else if prefName.contains("code") {
+                    alertController.message = "Please enter your locker code"
+                    isCode = true
+                }
+                
                 alertController.addTextField { (textField) in
                     // configure the properties of the text field
                     textField.placeholder = "e.g. 123"
@@ -373,18 +381,25 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                     // this code runs when the user hits the "save" button
                     
                     let inputName = alertController.textFields![0].text
-                    var name = ""
-                    if isLocker {
-                        name = "lockerNum"
+                    if !isCode {
+                        var name = ""
+                        if isLockerNum {
+                            name = "lockerNum"
+                        }
+                        else {
+                            name = "room-advisory"
+                        }
+                        LoginVC.blocks["\(name)"] = inputName
+                        self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: inputName!)
+                        let db = Firestore.firestore()
+                        let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
+                        currDoc.setData(LoginVC.blocks)
                     }
                     else {
-                        name = "room-advisory"
+                        let userDefaults = UserDefaults.standard
+                        userDefaults.setValue(inputName, forKey: "lockerCode")
+                        self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: inputName!)
                     }
-                    LoginVC.blocks["\(name)"] = inputName
-                    self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: inputName!)
-                    let db = Firestore.firestore()
-                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                    currDoc.setData(LoginVC.blocks)
                     tableView.reloadRows(at: [indexPath], with: .fade)
                 }
                 alertController.addAction(cancelAction)
@@ -455,7 +470,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     private var blocks = [settingsBlock]()
     private var preferenceBlocks = [settingsBlock]()
     private var lunchBlocks = [settingsBlock]()
-    static var ProfileLink: SideMenuViewController!
+//    static var ProfileLink: SideMenuViewController!
     private var profileCells = [ProfileCell]()
     private var tableView = UITableView()
 //    @objc func signOut() {
@@ -533,6 +548,14 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
 ////        print("made it?")
 //        dismiss(animated: true, completion: nil)
 //    }
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.navigationController?.isNavigationBarHidden = false
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.isNavigationBarHidden = true
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(named: "background")
@@ -541,10 +564,12 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
 //        self.navigationController?.navigationBar.isTranslucent = true
 //        self.navigationController?.view.backgroundColor = .clear
         setBlocks()
-        
+        let userDefaults = UserDefaults.standard
+        let lockerCode = userDefaults.object(forKey: "lockerCode") as? String ?? ""
         preferenceBlocks = [
             settingsBlock(blockName: "Grade", className: "\(LoginVC.blocks["grade"] as? String ?? "")"),
-            settingsBlock(blockName: "Locker #", className: "\(LoginVC.blocks["lockerNum"] as? String ?? "")"),
+            settingsBlock(blockName: "Locker Num", className: "\(LoginVC.blocks["lockerNum"] as? String ?? "")"),
+            settingsBlock(blockName: "Locker Code", className: "\(lockerCode)"),
             settingsBlock(blockName: "Advisory Room", className: "\(LoginVC.blocks["room-advisory"] as? String ?? "")"),
             settingsBlock(blockName: "Appearance", className: "\(LoginVC.appearance)")
         ]
@@ -617,7 +642,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         }
     }
     func setHeader() {
-        let header = StretchyTableHeaderView(frame: CGRect(x: 0, y: 0, width: view.frame.size.width, height: view.frame.size.width))
+        let header = StretchyTableHeaderView(frame: CGRect(x: 0, y: 0, width: view.frame.size.width, height: view.frame.size.width-50))
         header.imageview.image = LoginVC.profilePhoto.image
         header.nameLabel.text = LoginVC.fullName.capitalized
         tableView.tableHeaderView = header

@@ -56,6 +56,39 @@ class AuthVC: CustomLoader {
             window?.overrideUserInterfaceStyle = .light
         }
     }
+    func updateSpecialSchedules(completion: @escaping (Swift.Result<[String: SpecialSchedule], Error>) -> Void) {
+        let db = Firestore.firestore()
+        db.collection("special-schedules").getDocuments { (snapshot, error) in
+            if error != nil {
+                ProgressHUD.showFailed("Failed to find 'special-schedules'")
+                completion(.failure(error!))
+            } else {
+                var tempArray = [String: SpecialSchedule]()
+                for document in (snapshot?.documents)! {
+                    let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
+                    var blocksl1 = [block]()
+                    for x in arrayl1 {
+                        blocksl1.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
+                    }
+                    
+                    let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
+                    var blocks = [block]()
+                    for x in array {
+                        blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
+                    }
+                    let date = document.data()["date"] as? String ?? "N/A"
+                    let reason = document.data()["reason"] as? String ?? "N/A"
+                    let imageUrl = document.data()["imageUrl"] as? String ?? "N/A"
+                    if blocksl1.isEmpty {
+                        blocksl1 = blocks
+                    }
+                    tempArray[date] = SpecialSchedule(specialSchedules: blocks, specialSchedulesL1: blocksl1, reason: reason, date: date, imageUrl: imageUrl, image: nil)
+                }
+                LoginVC.specialSchedules = tempArray
+                completion(.success(tempArray))
+            }
+        }
+    }
     func setProfileImage(useGoogle: Bool, width: UInt, completion: @escaping (Swift.Result<UIImageView, Error>) -> Void) {
         if !useGoogle {
             LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
@@ -148,37 +181,9 @@ class AuthVC: CustomLoader {
                 }
             }
         })
-        db.collection("special-schedules").getDocuments { (snapshot, error) in
-            if error != nil {
-                ProgressHUD.showFailed("Failed to find 'special-schedules'")
-            } else {
-                var tempArray = [String: SpecialSchedule]()
-                //                var newArray = [String: [block]]()
-                //                var reasonArray = [String: String]()
-                //                var newArray2 = [String: [block]]()
-                for document in (snapshot?.documents)! {
-                    let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
-                    var blocksl1 = [block]()
-                    for x in arrayl1 {
-                        blocksl1.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
-                    }
-                    
-                    let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
-                    var blocks = [block]()
-                    for x in array {
-                        blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
-                    }
-                    let date = document.data()["date"] as? String ?? "N/A"
-                    let reason = document.data()["reason"] as? String ?? "N/A"
-                    let imageUrl = document.data()["imageUrl"] as? String ?? "N/A"
-                    if blocksl1.isEmpty {
-                        blocksl1 = blocks
-                    }
-                    tempArray[date] = SpecialSchedule(specialSchedules: blocks, specialSchedulesL1: blocksl1, reason: reason, date: date, imageUrl: imageUrl, image: nil)
-                }
-                LoginVC.specialSchedules = tempArray
-            }
-        }
+        updateSpecialSchedules(completion: {_ in
+            
+        })
         // change here to filter for the users id
         db.collection("users").document("\(FirebaseAuth.Auth.auth().currentUser?.uid ?? "--")").getDocument { (document, error) in
             if error != nil {
@@ -186,7 +191,6 @@ class AuthVC: CustomLoader {
             } else {
                 //                var isCreated = false
                 if !(document?.exists ?? false) {
-                    //                    print("no uid!")
                     guard let Login = (strongSelf as? LoginVC) else {
                         //                        print("not LoginVC")
                         self.hideLoader(completion: {

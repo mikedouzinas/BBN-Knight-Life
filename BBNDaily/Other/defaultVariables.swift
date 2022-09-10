@@ -80,7 +80,7 @@ var defaultSchedules = [
             block(name: "Advisory", startTime: "10:15am", endTime: "10:30am", block: "N/A"),
             block(name: "B", startTime: "10:35am", endTime: "11:20am", block: "B"),
             block(name: "Lunch", startTime: "11:25am", endTime: "11:55am", block: "N/A"),
-            block(name: "E2", startTime: "12:00pm", endTime: "12:45pm", block: "E"),
+            block(name: "D2", startTime: "12:00pm", endTime: "12:45pm", block: "D"),
             block(name: "Extended E", startTime: "12:50pm", endTime: "01:55pm", block: "E"),
             block(name: "Community Activity", startTime: "02:00pm", endTime: "02:35pm", block: "N/A"),
             block(name: "A", startTime: "02:40pm", endTime: "03:25pm", block: "A")

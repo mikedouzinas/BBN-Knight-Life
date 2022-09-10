@@ -33,7 +33,6 @@ class DaySelectVC: UIViewController {
         finalString = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)"
         
         let db = Firestore.firestore()
-        //        print("daysIsEditing: \(DaySelectVC.daysIsEditing)")
         if isEditingClass {
             let oldRow = ClassesOptionsPopupVC.editedClass
             let oldString = "\(oldRow.Subject)~\(oldRow.Teacher)~\(oldRow.Room)~\(oldRow.Block)"
@@ -55,7 +54,6 @@ class DaySelectVC: UIViewController {
                     
                     let data2 = ["monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
                     let data = ["name":"\(finalString)", "owner":"\(creator)", "isEditable":isEditable, "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn, "members":array, "homework":homeworkText, "block":"\(oldRow.Block.uppercased())"] as [String : Any]
-                    print("creator is \(creator) and isEditable is \(isEditable)")
                     if !isEditable || LoginVC.email.lowercased() != creator.lowercased() && LoginVC.email.lowercased() != "mveson@bbns.org" {
                         hideLoader(completion: {
                             ProgressHUD.colorAnimation = .red
