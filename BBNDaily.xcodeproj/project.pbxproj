@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2709F90928CD62E20022B4D3 /* spring.gif in Resources */ = {isa = PBXBuildFile; fileRef = 2709F90828CD62E20022B4D3 /* spring.gif */; };
+		2709F90D28CD63EA0022B4D3 /* summer.gif in Resources */ = {isa = PBXBuildFile; fileRef = 2709F90C28CD63EA0022B4D3 /* summer.gif */; };
+		2709F91928CD6B110022B4D3 /* fall.gif in Resources */ = {isa = PBXBuildFile; fileRef = 2709F91828CD6B110022B4D3 /* fall.gif */; };
+		2709F91B28CD6D4D0022B4D3 /* halloween.gif in Resources */ = {isa = PBXBuildFile; fileRef = 2709F91A28CD6D4D0022B4D3 /* halloween.gif */; };
+		2709F92128CD71AE0022B4D3 /* snowfall.gif in Resources */ = {isa = PBXBuildFile; fileRef = 2709F92028CD71AE0022B4D3 /* snowfall.gif */; };
+		2709F92528CD73E10022B4D3 /* hearts.gif in Resources */ = {isa = PBXBuildFile; fileRef = 2709F92428CD73E10022B4D3 /* hearts.gif */; };
 		272BA654282D40E0009BA067 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		278AFAF9288C1C2800E64F23 /* ThroughDateVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */; };
 		278AFAFB288C1F1400E64F23 /* ImageVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAFA288C1F1400E64F23 /* ImageVC.swift */; };
@@ -63,7 +69,6 @@
 		877ED47827093828007FE2E5 /* BBNDailyWidget.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 877ED47427093827007FE2E5 /* BBNDailyWidget.intentdefinition */; };
 		877ED47927093828007FE2E5 /* BBNDailyWidget.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 877ED47427093827007FE2E5 /* BBNDailyWidget.intentdefinition */; };
 		877ED47C27093828007FE2E5 /* BBNDailyWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 877ED46E27093827007FE2E5 /* BBNDailyWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		878BCCF027A9BA1400D7B30C /* snowfall.gif in Resources */ = {isa = PBXBuildFile; fileRef = 878BCCEF27A9BA1400D7B30C /* snowfall.gif */; };
 		87AAFC4327062AC6006AF8DC /* demo.gif in Resources */ = {isa = PBXBuildFile; fileRef = 87AAFC4227062AC6006AF8DC /* demo.gif */; };
 		87D3254526E6BCB5009B28CB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */; };
 		87D3D39027A8512000E3A1E1 /* WorkVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D3D38F27A8512000E3A1E1 /* WorkVC.swift */; };
@@ -132,6 +137,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2709F90828CD62E20022B4D3 /* spring.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = spring.gif; sourceTree = "<group>"; };
+		2709F90C28CD63EA0022B4D3 /* summer.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = summer.gif; sourceTree = "<group>"; };
+		2709F91828CD6B110022B4D3 /* fall.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = fall.gif; sourceTree = "<group>"; };
+		2709F91A28CD6D4D0022B4D3 /* halloween.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = halloween.gif; sourceTree = "<group>"; };
+		2709F92028CD71AE0022B4D3 /* snowfall.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = snowfall.gif; sourceTree = "<group>"; };
+		2709F92428CD73E10022B4D3 /* hearts.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = hearts.gif; sourceTree = "<group>"; };
 		278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThroughDateVC.swift; sourceTree = "<group>"; };
 		278AFAFA288C1F1400E64F23 /* ImageVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVC.swift; sourceTree = "<group>"; };
 		2792D7C028B4562800DBA403 /* BusScheduleVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusScheduleVC.swift; sourceTree = "<group>"; };
@@ -198,7 +209,6 @@
 		877ED47527093828007FE2E5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		877ED47727093828007FE2E5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		877ED4802709383C007FE2E5 /* BBNDailyWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BBNDailyWidgetExtension.entitlements; sourceTree = "<group>"; };
-		878BCCEF27A9BA1400D7B30C /* snowfall.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = snowfall.gif; sourceTree = "<group>"; };
 		87AAFC4227062AC6006AF8DC /* demo.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = demo.gif; sourceTree = "<group>"; };
 		87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		87D3D38F27A8512000E3A1E1 /* WorkVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkVC.swift; sourceTree = "<group>"; };
@@ -442,7 +452,12 @@
 				8704E97C26EEA865001826F8 /* Login */,
 				27B8BCDE285CA67E00892509 /* Side Menu */,
 				87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */,
-				878BCCEF27A9BA1400D7B30C /* snowfall.gif */,
+				2709F92028CD71AE0022B4D3 /* snowfall.gif */,
+				2709F92428CD73E10022B4D3 /* hearts.gif */,
+				2709F91828CD6B110022B4D3 /* fall.gif */,
+				2709F91A28CD6D4D0022B4D3 /* halloween.gif */,
+				2709F90C28CD63EA0022B4D3 /* summer.gif */,
+				2709F90828CD62E20022B4D3 /* spring.gif */,
 				87AAFC4227062AC6006AF8DC /* demo.gif */,
 				87507FCC26E6ADEB005DDFB4 /* Main.storyboard */,
 				87507FCF26E6ADEB005DDFB4 /* Assets.xcassets */,
@@ -616,10 +631,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				878BCCF027A9BA1400D7B30C /* snowfall.gif in Resources */,
+				2709F92128CD71AE0022B4D3 /* snowfall.gif in Resources */,
+				2709F92528CD73E10022B4D3 /* hearts.gif in Resources */,
+				2709F90928CD62E20022B4D3 /* spring.gif in Resources */,
+				2709F91928CD6B110022B4D3 /* fall.gif in Resources */,
+				2709F91B28CD6D4D0022B4D3 /* halloween.gif in Resources */,
 				87507FD326E6ADEB005DDFB4 /* LaunchScreen.storyboard in Resources */,
 				87FDD7BE285E36B300E07ABA /* SideMenuCell.xib in Resources */,
 				87D3254526E6BCB5009B28CB /* GoogleService-Info.plist in Resources */,
+				2709F90D28CD63EA0022B4D3 /* summer.gif in Resources */,
 				87AAFC4327062AC6006AF8DC /* demo.gif in Resources */,
 				87507FD026E6ADEB005DDFB4 /* Assets.xcassets in Resources */,
 				87507FCE26E6ADEB005DDFB4 /* Main.storyboard in Resources */,

@@ -45,7 +45,7 @@ extension String {
         
         let date1 = self.prefix(ind)
         let date2 = self.suffix(self.count-(ind+1))
-        if date.isBetweenTimeFrame(date1: "\(date1)".startOrEndDate(isStart: true) ?? Date(), date2: "\(date2)".startOrEndDate(isStart: false) ?? Date()) {
+        if date.isBetweenTimeFrame(date1: "\(date1)".startOrEndDate(isStart: true, year: nil) ?? Date(), date2: "\(date2)".startOrEndDate(isStart: false, year: nil) ?? Date()) {
             return true
         }
         return false
@@ -263,12 +263,13 @@ extension String {
         }
         return nil
     }
-    func startOrEndDate(isStart: Bool) -> Date? {
+    func startOrEndDate(isStart: Bool, year: String?) -> Date? {
         let dateFormatter = DateFormatter()
         
         let formats: [String] = [
             "EEEE, MMMM dd, yyyy",
-            "dd MMM yyyy HH:mm"
+            "dd MMM yyyy HH:mm",
+            "dd MMM"
         ]
 //        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.amSymbol = "am"
@@ -279,7 +280,17 @@ extension String {
                 let calendar = Calendar.current
                 var dateComponents = DateComponents()
                 dateComponents.weekday = calendar.component(.weekday, from: convertedDate)
-                dateComponents.year = calendar.component(.year, from: convertedDate)
+                if let year = year {
+                    if year == "current" {
+                        dateComponents.year = calendar.component(.year, from: Date())
+                    }
+                    else {
+                        dateComponents.year = calendar.component(.year, from: Date()) + 1
+                    }
+                }
+                else {
+                    dateComponents.year = calendar.component(.year, from: convertedDate)
+                }
                 dateComponents.month = calendar.component(.month, from: convertedDate)
                 dateComponents.day = calendar.component(.day, from: convertedDate)
                 if isStart {
@@ -609,7 +620,7 @@ class CustomLoader: UIViewController {
     }()
     
     lazy var gifImage: UIImageView = {
-        var gifImage = UIImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 60))
+        var gifImage = UIImageView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
         if isLarge {
             gifImage.frame = view.bounds
             gifImage.contentMode = .scaleAspectFill

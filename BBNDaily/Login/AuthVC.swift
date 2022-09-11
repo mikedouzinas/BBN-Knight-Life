@@ -194,6 +194,7 @@ class AuthVC: CustomLoader {
                     guard let Login = (strongSelf as? LoginVC) else {
                         //                        print("not LoginVC")
                         self.hideLoader(completion: {
+                            self.hideLoaderView()
                             strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
                         })
                         return
@@ -206,6 +207,7 @@ class AuthVC: CustomLoader {
                     ProgressHUD.showSucceed("Welcome to Knight Life!")
                     currDoc.setData(LoginVC.blocks)
                     weakSelf?.hideLoader(completion: {
+                        self.hideLoaderView()
                         Login.callTabBar()
                     })
                 }
@@ -248,6 +250,7 @@ class AuthVC: CustomLoader {
                 myGroup.notify(queue: .main) {
                     print("Finished all requests.")
                     weakSelf?.hideLoader(completion: {
+                        self.hideLoaderView()
                         guard let Login = (strongSelf as? LoginVC) else {
                             //                                        print("not LoginVC")
                             strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
@@ -259,6 +262,7 @@ class AuthVC: CustomLoader {
                 return
             }
             weakSelf?.hideLoader(completion: {
+                self.hideLoaderView()
                 guard let Login = (strongSelf as? LoginVC) else {
                     //                        print("not LoginVC")
                     strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
