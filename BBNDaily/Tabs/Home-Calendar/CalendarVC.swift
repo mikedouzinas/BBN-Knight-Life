@@ -51,6 +51,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                 if now.isBetweenTimeFrame(date1: t, date2: t2) {
                     currentBlock = x
                     var name = ""
+                    
                     if currentBlock.block != "N/A" {
                         var className = (LoginVC.blocks[currentBlock.block] as? String) ?? ""
                         if className == "" {
@@ -59,6 +60,9 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                         else if className.contains("~") {
                             let array = className.getValues()
                             className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+                        }
+                        if !(LoginVC.classMeetingDays["\(currentBlock.block.lowercased())"]?[selectedDay] ?? true) {
+                            className = "Free"
                         }
                         name = className
                     }
@@ -319,6 +323,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
     }
     var v = 1
     override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         print("view WILL appear -> reloading the page")
         isActive = true
         reloadPage()
@@ -394,7 +399,6 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
     override func viewDidLoad() {
         super.viewDidLoad()
         viewIsNew = true
-//        print("view DID load")
         if AuthVC.isFirstTime || viewIsNew {
             AuthVC.isFirstTime = false
             viewIsNew = false
@@ -445,80 +449,6 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
             }
         })
     }
-//    var session: WCSession?
-//    func setWatchClasses(todBlocks: [block]) {
-//        watchClasses = [WatchClass]()
-//        for x in todBlocks {
-//            let dateformatter = DateFormatter()
-//            dateformatter.dateFormat = "h:mm a"
-//            dateformatter.amSymbol = "AM"
-//            dateformatter.pmSymbol = "PM"
-//            let dates = getReturnDates(currBlock: x)
-//            let t2 = dates[1]
-//            let t3 = dates[2]
-//
-//            var className: String?
-//            if x.block != "N/A" {
-//                className = LoginVC.blocks[x.block] as? String
-//                if className == "" {
-//                    className = "[\(x.block) Class]"
-//                }
-//                if (className ?? "").contains("~") {
-//                    let array = (className ?? "").getValues()
-//                    className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
-//                    if !(LoginVC.classMeetingDays["\(x.block.lowercased())"]?[selectedDay] ?? true) {
-//                        className = "\(x.name)"
-//                    }
-//                }
-//            }
-//            else {
-//                className = "\(x.name)"
-//            }
-//            watchClasses.append(WatchClass(Title: (className ?? ""), StartTime: "\(dateformatter.string(from: t3))", EndTime: "\(dateformatter.string(from: t2))"))
-//        }
-////        let data2: [String: Any] = ["classes": watchClasses as Any]
-////        session!.sendMessage(data2, replyHandler: nil, errorHandler: { error in
-////            print("on't work \(error)")
-////        })
-//        if let validSession = self.session, validSession.isReachable {//5.1
-//            print("success!")
-//            let data: [String: Any] = ["classes": watchClasses as Any]
-//            validSession.sendMessage(data, replyHandler: nil, errorHandler: nil)
-//        }
-//        else {
-//            print("FAILED AGAIn")
-//        }
-//    }
-    
-    
-//    func configureWatchKitSession() {
-//
-//        if WCSession.isSupported() {//4.1
-//            print("session activated??")
-//          session = WCSession.default//4.2
-//          session?.delegate = self//4.3
-//          session?.activate()//4.4
-//        }
-//        else {
-//            print("SHIT DON WORK")
-//        }
-//      }
-//    @IBOutlet weak var scheduleImageView: UIImageView!
-    static let vacationDates = [
-        NoSchoolDay(date: "Monday, September 6, 2021", reason: "Labor Day"),
-        NoSchoolDay(date: "Tuesday, September 7, 2021", reason: "Rosh Hashanah"),
-        NoSchoolDay(date: "Thursday, September 16, 2021", reason: "Yom Kippur"),
-        NoSchoolDay(date: "Monday, October 11, 2021", reason: "Indigenous Peoples Day"),
-        NoSchoolDay(date: "Tuesday, October 12, 2021", reason: "Professional Day"),
-        NoSchoolDay(date: "Thursday, November 11, 2021", reason: "Veterans Day"),
-        NoSchoolDay(date: "Thursday, November 25, 2021", reason: "Thankgiving Break"),
-        NoSchoolDay(date: "Friday, November 26, 2021", reason: "Thankgiving Break"),
-        NoSchoolDay(date: "Monday, January 17, 2022", reason: "MLK Jr. Day"),
-        NoSchoolDay(date: "Monday, February 21, 2022", reason: "Presidents Day"),
-        NoSchoolDay(date: "Tuesday, February 22, 2022", reason: "Professional Day"),
-        NoSchoolDay(date: "Monday, April 18, 2022", reason: "Patriots Day"),
-        NoSchoolDay(date: "Monday, May 30, 2022", reason: "Memorial Day")
-    ]
     var selectedDay = 0
     var realCurrentDate = Date()
     func setCurrentday(date: Date, completion: @escaping (Swift.Result<[block], Error>) -> Void) {
@@ -544,13 +474,6 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         else {
             ScheduleCalendar.restore()
         }
-//        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".startOrEndDate(isStart: true) ?? Date(), date2: "02 Sep 2022 04:00".startOrEndDate(isStart: false) ?? Date()) {
-//            currentDay = [block]()
-//            ScheduleCalendar.restore()
-//            ScheduleCalendar.setEmptyMessage("No Class - Summer Break!")
-//            completion(.success(currentDay))
-//            return
-//        }
         	
         for x in LoginVC.specialSchedules {
             if x.key.isInThroughDate(date: date) {

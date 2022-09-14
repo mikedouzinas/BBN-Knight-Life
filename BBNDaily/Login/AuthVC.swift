@@ -119,14 +119,29 @@ class AuthVC: CustomLoader {
                     print("GOT IMAGE")
                     
                     let newurl = (user!.profile?.imageURL(withDimension: width)!)!
-                    let data = NSData(contentsOf: newurl)
-                    if data != nil {
-                        LoginVC.profilePhoto.image = UIImage(data: data! as Data)
-                    }
-                    else {
-                        LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
-                    }
-                    completion(.success(LoginVC.profilePhoto))
+                    URLSession.shared.dataTask(with: newurl) { data, response, error in
+                        guard
+                            let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode == 200,
+                            let mimeType = response?.mimeType, mimeType.hasPrefix("image"),
+                            let data = data, error == nil,
+                            let image = UIImage(data: data)
+                        else {
+                            LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+                            return
+                        }
+                        DispatchQueue.main.async() {
+                            LoginVC.profilePhoto.image = image
+                            completion(.success(LoginVC.profilePhoto))
+                        }
+                    }.resume()
+//                    let data = NSData(contentsOf: newurl)
+//                    if data != nil {
+//                        LoginVC.profilePhoto.image = UIImage(data: data! as Data)
+//                    }
+//                    else {
+//                        LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+//                    }
+                    
                 }
             }
         }

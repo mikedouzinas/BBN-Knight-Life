@@ -95,7 +95,7 @@ class coverTableViewCell: calendarTableViewCell {
                 className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
                 text = "Press for details"
                 if !(LoginVC.classMeetingDays["\(viewModel.block.lowercased())"]?[selectedDay] ?? true) {
-                    className = "\(viewModel.name)"
+                    className = "Free"
                 }
             }
             // corrected

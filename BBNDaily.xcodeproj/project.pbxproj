@@ -353,6 +353,20 @@
 			path = "Side Menu";
 			sourceTree = "<group>";
 		};
+		27DDD12828D14F8700D3CCFE /* gifs */ = {
+			isa = PBXGroup;
+			children = (
+				2709F92428CD73E10022B4D3 /* hearts.gif */,
+				2709F92028CD71AE0022B4D3 /* snowfall.gif */,
+				2709F91828CD6B110022B4D3 /* fall.gif */,
+				2709F90828CD62E20022B4D3 /* spring.gif */,
+				2709F90C28CD63EA0022B4D3 /* summer.gif */,
+				87AAFC4227062AC6006AF8DC /* demo.gif */,
+				2709F91A28CD6D4D0022B4D3 /* halloween.gif */,
+			);
+			path = gifs;
+			sourceTree = "<group>";
+		};
 		5CCFC48CB358238E1A835200 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -452,13 +466,7 @@
 				8704E97C26EEA865001826F8 /* Login */,
 				27B8BCDE285CA67E00892509 /* Side Menu */,
 				87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */,
-				2709F92028CD71AE0022B4D3 /* snowfall.gif */,
-				2709F92428CD73E10022B4D3 /* hearts.gif */,
-				2709F91828CD6B110022B4D3 /* fall.gif */,
-				2709F91A28CD6D4D0022B4D3 /* halloween.gif */,
-				2709F90C28CD63EA0022B4D3 /* summer.gif */,
-				2709F90828CD62E20022B4D3 /* spring.gif */,
-				87AAFC4227062AC6006AF8DC /* demo.gif */,
+				27DDD12828D14F8700D3CCFE /* gifs */,
 				87507FCC26E6ADEB005DDFB4 /* Main.storyboard */,
 				87507FCF26E6ADEB005DDFB4 /* Assets.xcassets */,
 				87507FD126E6ADEB005DDFB4 /* LaunchScreen.storyboard */,

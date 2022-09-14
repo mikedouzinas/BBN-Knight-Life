@@ -626,6 +626,9 @@ class CustomLoader: UIViewController {
             gifImage.contentMode = .scaleAspectFill
         }
         else {
+            if gifName == "demo" {
+                gifImage.frame = CGRect(x: 0, y: 0, width: 200, height: 60)
+            }
             gifImage.contentMode = .scaleAspectFit
         }
         gifImage.center = transparentView.center
@@ -851,12 +854,6 @@ extension UIViewController {
                 }
             }
         }
-//        UNUserNotificationCenter.current().get
-//        UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { notifs in
-//            for x in notifs {
-//                print("identifier: \(x.identifier) \n date: \(dateFormatter.string(from: calendar.date(from:(x.trigger as! UNCalendarNotificationTrigger).dateComponents) ?? Date()))")
-//            }
-//        })
     }
     func addNotif(x: block, weekDay: String, date: Date) {
         let calendar = Calendar.current
@@ -914,7 +911,7 @@ extension UIViewController {
                 
                 tile = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
                 if num >= 0 && num <= 4 && !(LoginVC.classMeetingDays["\(x.block.lowercased())"]?[num] ?? true) {
-                    tile = "\(x.block) Block"
+                    tile = "Free (\(x.block))"
                 }
             }
             content.title = "5 Minutes Until \(tile)"
