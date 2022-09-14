@@ -96,8 +96,13 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
                                                             Time(departure: "7:40 AM", arrival: "7:45 AM"),
                                                             Time(departure: "7:55 AM", arrival: "8:00 AM"),
                                                             Time(departure: "8:10 AM", arrival: "8:15 AM"),
+                                                            Time(departure: "8:20 AM", arrival: "8:25 AM", weekDays: "M/W/Th/F"),
                                                             Time(departure: "8:25 AM", arrival: "8:30 AM"),
-                                                            Time(departure: "8:40 AM", arrival: "8:45 AM", weekDays: "Tuesday")
+                                                            Time(departure: "8:35 AM", arrival: "8:40 AM", weekDays: "M/W/Th/F"),
+                                                            Time(departure: "8:45 AM", arrival: "8:50 AM", weekDays: "Tuesday"),
+                                                            Time(departure: "8:50 AM", arrival: "8:55 AM", weekDays: "M/W/Th/F"),
+                                                            Time(departure: "9:00 AM", arrival: "9:05 AM", weekDays: "Tuesday"),
+                                                            Time(departure: "9:15 AM", arrival: "9:20 AM", weekDays: "Tuesday")
                                                         ]
                                                    )]),
         BusSection(title: "Midday Shuttle", buses: [Bus(title: "Upper School to 4th Lot", times:
@@ -450,7 +455,6 @@ class BusTimesVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         cell.configure(with: viewModel.times[indexPath.row])
         return cell
     }
-    
     private var tableView = UITableView()
     var viewModel: Bus!
     var titleTime = ""
@@ -462,6 +466,9 @@ class BusTimesVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         tableView.frame = view.bounds
         tableView.register(busTimesTableViewCell.self, forCellReuseIdentifier: busTimesTableViewCell.identifier)
         tableView.backgroundColor = UIColor(named: "background")
+        if let tabBarController = tabBarController {
+            self.tableView.contentInset = UIEdgeInsets(top: 0.0, left: 0.0, bottom: tabBarController.tabBar.frame.height, right: 0.0)
+        }
         tableView.delegate = self
         tableView.dataSource = self
     }

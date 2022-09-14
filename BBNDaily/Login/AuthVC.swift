@@ -101,50 +101,52 @@ class AuthVC: CustomLoader {
             completion(.success(LoginVC.profilePhoto))
         }
         else {
-            GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
+            GIDSignIn.sharedInstance.restorePreviousSignIn { [self] user, error in
                 if error != nil || user == nil {
                     // Show the app's signed-out state.
                     let imgUrl = (Auth.auth().currentUser?.photoURL!)!
-                    let data = NSData(contentsOf: imgUrl)
-                    if data != nil {
-                        LoginVC.profilePhoto.image = UIImage(data: data! as Data)
-                    }
-                    else {
-                        LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
-                    }
-                    print("failed to get user photo")
-                    completion(.success(LoginVC.profilePhoto))
+                    setImage(url: imgUrl, completion: { result in
+                        switch result {
+                        case .success(_):
+                            completion(.success(LoginVC.profilePhoto))
+                        case .failure(_):
+                            print("error")
+                        }
+                    })
                 } else {
                     // Show the app's signed-in state.
                     print("GOT IMAGE")
                     
                     let newurl = (user!.profile?.imageURL(withDimension: width)!)!
-                    URLSession.shared.dataTask(with: newurl) { data, response, error in
-                        guard
-                            let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode == 200,
-                            let mimeType = response?.mimeType, mimeType.hasPrefix("image"),
-                            let data = data, error == nil,
-                            let image = UIImage(data: data)
-                        else {
-                            LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
-                            return
-                        }
-                        DispatchQueue.main.async() {
-                            LoginVC.profilePhoto.image = image
+                    setImage(url: newurl, completion: { result in
+                        switch result {
+                        case .success(_):
                             completion(.success(LoginVC.profilePhoto))
+                        case .failure(_):
+                            print("error")
                         }
-                    }.resume()
-//                    let data = NSData(contentsOf: newurl)
-//                    if data != nil {
-//                        LoginVC.profilePhoto.image = UIImage(data: data! as Data)
-//                    }
-//                    else {
-//                        LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
-//                    }
-                    
+                    })
                 }
             }
         }
+    }
+    func setImage(url: URL, completion: @escaping (Swift.Result<UIImage?, Error>) -> Void) {
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard
+                let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode == 200,
+                let mimeType = response?.mimeType, mimeType.hasPrefix("image"),
+                let data = data, error == nil,
+                let image = UIImage(data: data)
+            else {
+                LoginVC.profilePhoto.setImageForName("\(LoginVC.fullName)", backgroundColor: UIColor(named: "blue"), circular: false, textAttributes: nil, gradient: true)
+                completion(.success(LoginVC.profilePhoto.image))
+                return
+            }
+            DispatchQueue.main.async() {
+                LoginVC.profilePhoto.image = image
+                completion(.success(LoginVC.profilePhoto.image))
+            }
+        }.resume()
     }
     func setLoginInfo(weakSelf: UIViewController?) {
         guard let strongSelf = weakSelf else {

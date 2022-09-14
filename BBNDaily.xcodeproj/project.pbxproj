@@ -62,13 +62,6 @@
 		87507FDE26E6ADEB005DDFB4 /* BBNDailyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FDD26E6ADEB005DDFB4 /* BBNDailyTests.swift */; };
 		87507FE926E6ADEB005DDFB4 /* BBNDailyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FE826E6ADEB005DDFB4 /* BBNDailyUITests.swift */; };
 		8761CA7226F29D3B00CADE56 /* MapsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8761CA7126F29D3B00CADE56 /* MapsVC.swift */; };
-		877ED46F27093827007FE2E5 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 870CBB1227090AEC00363BF4 /* WidgetKit.framework */; };
-		877ED47027093827007FE2E5 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 870CBB1427090AEC00363BF4 /* SwiftUI.framework */; };
-		877ED47327093827007FE2E5 /* BBNDailyWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 877ED47227093827007FE2E5 /* BBNDailyWidget.swift */; };
-		877ED47627093828007FE2E5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 877ED47527093828007FE2E5 /* Assets.xcassets */; };
-		877ED47827093828007FE2E5 /* BBNDailyWidget.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 877ED47427093827007FE2E5 /* BBNDailyWidget.intentdefinition */; };
-		877ED47927093828007FE2E5 /* BBNDailyWidget.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = 877ED47427093827007FE2E5 /* BBNDailyWidget.intentdefinition */; };
-		877ED47C27093828007FE2E5 /* BBNDailyWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 877ED46E27093827007FE2E5 /* BBNDailyWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		87AAFC4327062AC6006AF8DC /* demo.gif in Resources */ = {isa = PBXBuildFile; fileRef = 87AAFC4227062AC6006AF8DC /* demo.gif */; };
 		87D3254526E6BCB5009B28CB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */; };
 		87D3D39027A8512000E3A1E1 /* WorkVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D3D38F27A8512000E3A1E1 /* WorkVC.swift */; };
@@ -92,13 +85,6 @@
 			remoteGlobalIDString = 87507FC226E6ADEB005DDFB4;
 			remoteInfo = BBNDaily;
 		};
-		877ED47A27093828007FE2E5 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 87507FBB26E6ADEA005DDFB4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 877ED46D27093827007FE2E5;
-			remoteInfo = BBNDailyWidgetExtension;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -119,7 +105,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				877ED47C27093828007FE2E5 /* BBNDailyWidgetExtension.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 1;
@@ -203,12 +188,6 @@
 		87507FE826E6ADEB005DDFB4 /* BBNDailyUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyUITests.swift; sourceTree = "<group>"; };
 		87507FEA26E6ADEB005DDFB4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8761CA7126F29D3B00CADE56 /* MapsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapsVC.swift; sourceTree = "<group>"; };
-		877ED46E27093827007FE2E5 /* BBNDailyWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BBNDailyWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		877ED47227093827007FE2E5 /* BBNDailyWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyWidget.swift; sourceTree = "<group>"; };
-		877ED47427093827007FE2E5 /* BBNDailyWidget.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = BBNDailyWidget.intentdefinition; sourceTree = "<group>"; };
-		877ED47527093828007FE2E5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		877ED47727093828007FE2E5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		877ED4802709383C007FE2E5 /* BBNDailyWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BBNDailyWidgetExtension.entitlements; sourceTree = "<group>"; };
 		87AAFC4227062AC6006AF8DC /* demo.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = demo.gif; sourceTree = "<group>"; };
 		87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		87D3D38F27A8512000E3A1E1 /* WorkVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkVC.swift; sourceTree = "<group>"; };
@@ -242,15 +221,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				575B54522BBD79A3E37DD92A /* Pods_BBNDaily_BBNDailyUITests.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		877ED46B27093827007FE2E5 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				877ED47027093827007FE2E5 /* SwiftUI.framework in Frameworks */,
-				877ED46F27093827007FE2E5 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -432,11 +402,9 @@
 		87507FBA26E6ADEA005DDFB4 = {
 			isa = PBXGroup;
 			children = (
-				877ED4802709383C007FE2E5 /* BBNDailyWidgetExtension.entitlements */,
 				87507FC526E6ADEB005DDFB4 /* BBNDaily */,
 				87507FDC26E6ADEB005DDFB4 /* BBNDailyTests */,
 				87507FE726E6ADEB005DDFB4 /* BBNDailyUITests */,
-				877ED47127093827007FE2E5 /* BBNDailyWidget */,
 				87507FC426E6ADEB005DDFB4 /* Products */,
 				5CCFC48CB358238E1A835200 /* Pods */,
 				11209A40124E46FFFA8F7C60 /* Frameworks */,
@@ -449,7 +417,6 @@
 				87507FC326E6ADEB005DDFB4 /* BBNDaily.app */,
 				87507FD926E6ADEB005DDFB4 /* BBNDailyTests.xctest */,
 				87507FE426E6ADEB005DDFB4 /* BBNDailyUITests.xctest */,
-				877ED46E27093827007FE2E5 /* BBNDailyWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -493,17 +460,6 @@
 			path = BBNDailyUITests;
 			sourceTree = "<group>";
 		};
-		877ED47127093827007FE2E5 /* BBNDailyWidget */ = {
-			isa = PBXGroup;
-			children = (
-				877ED47227093827007FE2E5 /* BBNDailyWidget.swift */,
-				877ED47427093827007FE2E5 /* BBNDailyWidget.intentdefinition */,
-				877ED47527093828007FE2E5 /* Assets.xcassets */,
-				877ED47727093828007FE2E5 /* Info.plist */,
-			);
-			path = BBNDailyWidget;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -524,7 +480,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				877ED47B27093828007FE2E5 /* PBXTargetDependency */,
 			);
 			name = BBNDaily;
 			productName = BBNDaily;
@@ -571,23 +526,6 @@
 			productReference = 87507FE426E6ADEB005DDFB4 /* BBNDailyUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		877ED46D27093827007FE2E5 /* BBNDailyWidgetExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 877ED47D27093828007FE2E5 /* Build configuration list for PBXNativeTarget "BBNDailyWidgetExtension" */;
-			buildPhases = (
-				877ED46A27093827007FE2E5 /* Sources */,
-				877ED46B27093827007FE2E5 /* Frameworks */,
-				877ED46C27093827007FE2E5 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = BBNDailyWidgetExtension;
-			productName = BBNDailyWidgetExtension;
-			productReference = 877ED46E27093827007FE2E5 /* BBNDailyWidgetExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -608,9 +546,6 @@
 						CreatedOnToolsVersion = 12.5.1;
 						TestTargetID = 87507FC226E6ADEB005DDFB4;
 					};
-					877ED46D27093827007FE2E5 = {
-						CreatedOnToolsVersion = 13.0;
-					};
 				};
 			};
 			buildConfigurationList = 87507FBE26E6ADEA005DDFB4 /* Build configuration list for PBXProject "BBNDaily" */;
@@ -629,7 +564,6 @@
 				87507FC226E6ADEB005DDFB4 /* BBNDaily */,
 				87507FD826E6ADEB005DDFB4 /* BBNDailyTests */,
 				87507FE326E6ADEB005DDFB4 /* BBNDailyUITests */,
-				877ED46D27093827007FE2E5 /* BBNDailyWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -665,14 +599,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		877ED46C27093827007FE2E5 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				877ED47627093828007FE2E5 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -832,7 +758,6 @@
 				8704E97426EEA663001826F8 /* LaunchVC.swift in Sources */,
 				27AEED7C288B365300C6176C /* ProfileTableViewCell.swift in Sources */,
 				8704E96E26EEA5B9001826F8 /* LoginVC.swift in Sources */,
-				877ED47927093828007FE2E5 /* BBNDailyWidget.intentdefinition in Sources */,
 				27AEED78288B360900C6176C /* AboutUsVC.swift in Sources */,
 				8761CA7226F29D3B00CADE56 /* MapsVC.swift in Sources */,
 				87507FC926E6ADEB005DDFB4 /* SceneDelegate.swift in Sources */,
@@ -883,15 +808,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		877ED46A27093827007FE2E5 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				877ED47327093827007FE2E5 /* BBNDailyWidget.swift in Sources */,
-				877ED47827093828007FE2E5 /* BBNDailyWidget.intentdefinition in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -904,11 +820,6 @@
 			isa = PBXTargetDependency;
 			target = 87507FC226E6ADEB005DDFB4 /* BBNDaily */;
 			targetProxy = 87507FE526E6ADEB005DDFB4 /* PBXContainerItemProxy */;
-		};
-		877ED47B27093828007FE2E5 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 877ED46D27093827007FE2E5 /* BBNDailyWidgetExtension */;
-			targetProxy = 877ED47A27093828007FE2E5 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1061,13 +972,15 @@
 				DEVELOPMENT_TEAM = JZUXQ9JH9H;
 				GCC_NO_COMMON_BLOCKS = NO;
 				INFOPLIST_FILE = BBNDaily/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Knight Life";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 2.3.1;
+				MARKETING_VERSION = 2.3.2;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1088,13 +1001,15 @@
 				DEVELOPMENT_TEAM = JZUXQ9JH9H;
 				GCC_NO_COMMON_BLOCKS = NO;
 				INFOPLIST_FILE = BBNDaily/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Knight Life";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				LLVM_LTO = NO;
-				MARKETING_VERSION = 2.3.1;
+				MARKETING_VERSION = 2.3.2;
 				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1190,66 +1105,6 @@
 			};
 			name = Release;
 		};
-		877ED47E27093828007FE2E5 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
-				CODE_SIGN_ENTITLEMENTS = BBNDailyWidgetExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = JZUXQ9JH9H;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = BBNDailyWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BBNDailyWidget;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily.BBNDailyWidget;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		877ED47F27093828007FE2E5 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
-				CODE_SIGN_ENTITLEMENTS = BBNDailyWidgetExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = JZUXQ9JH9H;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = BBNDailyWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BBNDailyWidget;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = mil.BBNDaily.BBNDailyWidget;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1285,15 +1140,6 @@
 			buildConfigurations = (
 				87507FF426E6ADEB005DDFB4 /* Debug */,
 				87507FF526E6ADEB005DDFB4 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		877ED47D27093828007FE2E5 /* Build configuration list for PBXNativeTarget "BBNDailyWidgetExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				877ED47E27093828007FE2E5 /* Debug */,
-				877ED47F27093828007FE2E5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

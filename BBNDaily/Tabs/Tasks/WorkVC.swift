@@ -89,49 +89,6 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         }
         checkIfEmpty()
     }
-//    private func handleMarkAsCompleted() {
-//        let refreshAlert = UIAlertController(title: "Delete Task", message: "Are you sure? This action cannot be undone.", preferredStyle: .alert)
-//        refreshAlert.addAction(UIAlertAction(title: "Delete", style: .default, handler: { [self] (action: UIAlertAction!) in
-//            let tempTasks = LoginVC.blocks["tasks"] as? [[String: Any]]
-//            let index = selectedTask.index
-//            if var tempTasks = tempTasks {
-//                tempTasks.remove(at: index)
-//                LoginVC.blocks["tasks"] = tempTasks
-//                let db = Firestore.firestore()
-//                let currDoc = db.collection("users").document((LoginVC.blocks["uid"] as? String) ?? "")
-//                currDoc.setData(["tasks": tempTasks], merge: true)
-//                sortTasks()
-//                tableView.reloadData()
-//            }
-//        }))
-//        refreshAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction!) in
-//        }))
-//        present(refreshAlert, animated: true, completion: nil)
-//    }
-//    func tableView(_ tableView: UITableView,
-//                   editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
-//        return .none
-//    }
-//    func tableView(_ tableView: UITableView,
-//                   trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-//
-//
-//        let complete = UIContextualAction(style: .normal,
-//                                          title: "Delete") { [weak self] (action, view, completionHandler) in
-//            guard let self = self else {
-//                return
-//            }
-//            self.selectedTask = self.tasks[indexPath.row]
-//            self.handleMarkAsCompleted()
-//            completionHandler(true)
-//        }
-//        complete.backgroundColor = .systemBlue
-//
-//        let configuration = UISwipeActionsConfiguration(actions: [complete])
-//
-//
-//        return configuration
-//    }
     func checkIfEmpty() {
         if tasks.isEmpty {
             tableView.setEmptyMessage("No Tasks! Add one by pressing the plus in the top right corner.")
