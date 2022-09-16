@@ -99,7 +99,7 @@ var defaultSchedules = [
         L1: [
             block(name: "E", startTime: "08:15am", endTime: "09:00am", block: "E"),
             block(name: "Extended F", startTime: "09:05am", endTime: "10:10am", block: "F"),
-            block(name: "Long Passing", startTime: "10:15am", endTime: "10:30am", block: "N/A"),
+            block(name: "Long Passing", startTime: "10:10am", endTime: "10:30am", block: "N/A"),
             block(name: "D", startTime: "10:35am", endTime: "11:20am", block: "D"),
             block(name: "Lunch", startTime: "11:25am", endTime: "11:55am", block: "N/A"),
             block(name: "B2", startTime: "12:00pm", endTime: "12:45pm", block: "B"),
@@ -109,7 +109,7 @@ var defaultSchedules = [
         ], L2: [
             block(name: "E", startTime: "08:15am", endTime: "09:00am", block: "E"),
             block(name: "Extended F", startTime: "09:05am", endTime: "10:10am", block: "F"),
-            block(name: "Long Passing", startTime: "10:15am", endTime: "10:30am", block: "N/A"),
+            block(name: "Long Passing", startTime: "10:10am", endTime: "10:30am", block: "N/A"),
             block(name: "D", startTime: "10:35am", endTime: "11:20am", block: "D"),
             block(name: "B1", startTime: "11:25am", endTime: "12:10pm", block: "B"),
             block(name: "Lunch", startTime: "12:15pm", endTime: "12:45pm", block: "N/A"),

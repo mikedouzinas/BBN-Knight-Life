@@ -248,16 +248,21 @@ extension String {
             "yyyy-MM-dd'T'hh:mm:ss.S",
             "dd MMM yyyy HH:mm",
             "MMM dd yyyy",
-            "hh:mma"
+            "hh:mma",
+            "hh:mm"
         ]
-//        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.amSymbol = "am"
         dateFormatter.pmSymbol = "pm"
+//        print("\(self)")
         for format in formats {
+//            print("\(format): name: \(self)")
             dateFormatter.timeZone = TimeZone(abbreviation: "EST")
             dateFormatter.dateFormat = format
+            
             if let convertedDate = dateFormatter.date(from: self) {
 //                convertedDate
+//                print("MATCH! \(convertedDate)")
                 return convertedDate
             }
         }
@@ -271,7 +276,7 @@ extension String {
             "dd MMM yyyy HH:mm",
             "dd MMM"
         ]
-//        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.amSymbol = "am"
         dateFormatter.pmSymbol = "pm"
         for format in formats {
@@ -314,7 +319,7 @@ extension String {
         let formats: [String] = [
             "EEEE, MMMM dd, yyyy"
         ]
-//        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.amSymbol = "am"
         dateFormatter.pmSymbol = "pm"
         
