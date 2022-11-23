@@ -88,90 +88,59 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
     var busSchedule = [BusSection]()
     var fourthLotSchedule = [
         BusSection(title: "AM Shuttle", buses: [Bus(title: "4th Lot to Upper School", times:
-                                                        [
-                                                            Time(departure: "6:40 AM", arrival: "6:45 AM", weekDays: "M/W/Th/F"),
-                                                            Time(departure: "6:55 AM", arrival: "7:00 AM"),
-                                                            Time(departure: "7:10 AM", arrival: "7:15 AM"),
-                                                            Time(departure: "7:25 AM", arrival: "7:30 AM"),
-                                                            Time(departure: "7:40 AM", arrival: "7:45 AM"),
-                                                            Time(departure: "7:55 AM", arrival: "8:00 AM"),
-                                                            Time(departure: "8:10 AM", arrival: "8:15 AM"),
-                                                            Time(departure: "8:20 AM", arrival: "8:25 AM", weekDays: "M/W/Th/F"),
-                                                            Time(departure: "8:25 AM", arrival: "8:30 AM"),
-                                                            Time(departure: "8:35 AM", arrival: "8:40 AM", weekDays: "M/W/Th/F"),
-                                                            Time(departure: "8:45 AM", arrival: "8:50 AM", weekDays: "Tuesday"),
-                                                            Time(departure: "8:50 AM", arrival: "8:55 AM", weekDays: "M/W/Th/F"),
-                                                            Time(departure: "9:00 AM", arrival: "9:05 AM", weekDays: "Tuesday"),
-                                                            Time(departure: "9:15 AM", arrival: "9:20 AM", weekDays: "Tuesday")
+                                [
+            Time(departure: "6:55 AM", arrival: "7:00 AM"),
+            Time(departure: "7:10 AM", arrival: "7:15 AM"),
+            Time(departure: "7:25 AM", arrival: "7:30 AM"),
+            Time(departure: "7:40 AM", arrival: "7:45 AM"),
+            Time(departure: "7:55 AM", arrival: "8:00 AM"),
+            Time(departure: "8:10 AM", arrival: "8:15 AM"),
+            Time(departure: "8:20 AM", arrival: "8:25 AM"),
+            Time(departure: "8:35 AM", arrival: "8:40 AM"),
+            Time(departure: "8:50 AM", arrival: "8:55 AM", weekDays: "Tuesday"),
+            Time(departure: "9:15 AM", arrival: "9:20 AM", weekDays: "Tuesday"),
+            Time(departure: "9:30 AM", arrival: "9:35 AM", weekDays: "Tuesday")
                                                         ]
                                                    )]),
         BusSection(title: "Midday Shuttle", buses: [Bus(title: "Upper School to 4th Lot", times:
                                                             [
-                                                                Time(departure: "11:30 AM", arrival: "11:35 AM"),
-                                                                Time(departure: "11:45 AM", arrival: "11:50 AM"),
-                                                                Time(departure: "12:00 PM", arrival: "12:05 PM"),
-                                                                Time(departure: "12:20 PM", arrival: "12:25 PM"),
-                                                                Time(departure: "12:35 PM", arrival: "12:40 PM"),
-                                                                Time(departure: "12:50 PM", arrival: "12:55 PM"),
-                                                                Time(departure: "1:05 PM", arrival: "1:10 PM"),
-                                                                Time(departure: "1:20 PM", arrival: "1:25 PM"),
-                                                                Time(departure: "1:35 PM", arrival: "1:40 PM"),
-                                                                Time(departure: "1:50 PM", arrival: "1:55 PM")
+            Time(departure: "11:30 AM", arrival: "11:35 AM", weekDays: "M/Tu/Th/F"),
+            Time(departure: "12:45 PM", arrival: "12:50 PM", weekDays: "W/F"),
+            Time(departure: "1:15 PM", arrival: "1:20 PM", weekDays: "W/F"),
+            Time(departure: "1:45 PM", arrival: "1:50 PM", weekDays: "W/F")
                                                             ]
                                                        ),
                                                     Bus(title: "4th Lot to Upper School", times:
                                                             [
-                                                                Time(departure: "11:35 AM", arrival: "11:40 AM"),
-                                                                Time(departure: "11:50 AM", arrival: "11:55 AM"),
-                                                                Time(departure: "12:05 PM", arrival: "12:10 PM"),
-                                                                Time(departure: "12:25 PM", arrival: "12:30 PM"),
-                                                                Time(departure: "12:40 PM", arrival: "12:45 PM"),
-                                                                Time(departure: "12:55 PM", arrival: "1:00 PM"),
-                                                                Time(departure: "1:10 PM", arrival: "1:15 PM"),
-                                                                Time(departure: "1:25 PM", arrival: "1:30 PM"),
-                                                                Time(departure: "1:40 PM", arrival: "1:45 PM"),
-                                                                Time(departure: "1:55 PM", arrival: "2:00 PM")
+            Time(departure: "12:30 PM", arrival: "12:35 PM", weekDays: "M/Tu/Th/F")
                                                             ]
                                                            )]),
         BusSection(title: "PM Shuttle", buses: [Bus(title: "Upper School to 4th Lot", times:
                                                         [
-                                                            Time(departure: "3:00 PM", arrival: "3:05 PM"),
-                                                            Time(departure: "3:15 PM", arrival: "3:20 PM"),
-                                                            Time(departure: "3:30 PM", arrival: "3:35 PM"),
-                                                            Time(departure: "3:45 PM", arrival: "3:50 PM"),
-                                                            Time(departure: "4:00 PM", arrival: "4:05 PM"),
-                                                            Time(departure: "4:15 PM", arrival: "4:20 PM"),
-                                                            Time(departure: "4:30 PM", arrival: "4:35 PM"),
-                                                            Time(departure: "4:45 PM", arrival: "4:50 PM"),
-                                                            Time(departure: "5:00 PM", arrival: "5:05 PM"),
-                                                            Time(departure: "5:15 PM", arrival: "5:20 PM"),
-                                                            Time(departure: "5:30 PM", arrival: "5:35 PM"),
-                                                            Time(departure: "6:15 PM", arrival: "6:20 PM"),
+            Time(departure: "3:00 PM", arrival: "3:05 PM", weekDays: "M/Tu/Th/F"),
+            Time(departure: "3:30 PM", arrival: "3:35 PM", weekDays: "M/Tu/Th/F"),
+            Time(departure: "4:10 PM", arrival: "4:15 PM", weekDays: "M/Tu/Th/F"),
+            Time(departure: "5:30 PM", arrival: "5:35 PM", weekDays: "M/Tu/Th/F"),
+            Time(departure: "6:15 PM", arrival: "6:20 PM", weekDays: "M/Tu/Th/F"),
                                                         ])])]
     var harvardSquareSchedule = [
         BusSection(title: "AM Shuttle", buses:
                     [
                         Bus(title: "Harvard Square to Upper School", times: [
-                            Time(departure: "6:40 AM", arrival: "6:48 AM", weekDays: "M/W/Th/F"),
-                            Time(departure: "7:00 AM", arrival: "7:08 AM"),
-                            Time(departure: "7:20 AM", arrival: "7:28 AM"),
-                            Time(departure: "7:40 AM", departureSpot: nil, arrival: "7:48 AM", arrivalSpot: "Middle School", arrivalTwo: "7:56 AM", arrivalTwoSpot: "Upper School"),
-                            Time(departure: "8:05 AM", arrival: "8:15 AM"),
-                            Time(departure: "8:05 AM", departureSpot: nil, arrival: "8:13 AM", arrivalSpot: "Middle School", arrivalTwo: "8:21 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday"),
-                            Time(departure: "8:30 AM", departureSpot: nil, arrival: "8:38 AM", arrivalSpot: "Middle School", arrivalTwo: "8:46 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday")
+            Time(departure: "7:20 AM", arrival: "7:28 AM"),
+            Time(departure: "7:40 AM", departureSpot: nil, arrival: "7:48 AM", arrivalSpot: "Middle School", arrivalTwo: "7:56 AM", arrivalTwoSpot: "Upper School"),
+            Time(departure: "8:05 AM", arrival: "8:13 AM"),
+            Time(departure: "8:05 AM", departureSpot: nil, arrival: "8:13 AM", arrivalSpot: "Middle School", arrivalTwo: "8:21 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday"),
+            Time(departure: "8:30 AM", departureSpot: nil, arrival: "8:38 AM", arrivalSpot: "Middle School", arrivalTwo: "8:46 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday")
                         ])]),
         BusSection(title: "PM Shuttle", buses:
                     [
                         Bus(title: "Upper School to Harvard Square", times: [
-                            Time(departure: "2:00 PM", arrival: "2:08 PM"),
-                            Time(departure: "2:20 PM", arrival: "2:28 PM"),
-                            Time(departure: "3:30 PM", arrival: "3:38 PM"),
-                            Time(departure: "3:50 PM", arrival: "3:58 PM"),
-                            Time(departure: "4:10 PM", arrival: "4:18 PM"),
-                            Time(departure: "4:30 PM", arrival: "4:38 PM"),
-                            Time(departure: "4:50 PM", arrival: "4:58 PM"),
-                            Time(departure: "5:10 PM", arrival: "5:18 PM"),
-                            Time(departure: "6:15 PM", arrival: "6:23 PM")
+                            Time(departure: "3:00 PM", arrival: "2:15 PM", weekDays: "M/Tu/Th/F"),
+                            Time(departure: "3:30 PM", arrival: "3:45 PM", weekDays: "M/Tu/Th/F"),
+                            Time(departure: "4:10 PM", arrival: "4:25 PM", weekDays: "M/Tu/Th/F"),
+                            Time(departure: "5:30 PM", arrival: "5:45 PM", weekDays: "M/Tu/Th/F"),
+                            Time(departure: "6:15 PM", arrival: "6:25 PM", weekDays: "M/Tu/Th/F")
                         ])])]
     var athleticsSchedule = [BusSection(title: "PM Shuttle", buses: [
         Bus(title: "Bus to Upper School", times: [
@@ -184,7 +153,7 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
             Time(departure: "6:15 PM", departureSpot: "Upper School", arrival: "6:45 PM", arrivalSpot: "Charles St. @ Beacon St.")
         ]),
         Bus(title: "Upper School to Newton", times: [
-            Time(departure: "6:15 PM", departureSpot: "Upper School", arrival: "6:40 PM", arrivalSpot: "Riverside, Newton")
+            Time(departure: "6:15 PM", departureSpot: "Upper School", arrival: "6:40 PM", arrivalSpot: "Riverside, Newton", weekDays: "M/Tu/Th")
         ])
     ])]
     override func viewDidLoad() {
@@ -412,7 +381,9 @@ class busTimesTableViewCell: UITableViewCell {
         super.layoutSubviews()
     }
     func configure(with viewModel: Time) {
-        TitleLabel.text?.append(viewModel.departure)
+        TitleLabel.text = "Departs: \(viewModel.departure)"
+        BlockLabel.text = "Arrival: "
+//        TitleLabel.text?.append(viewModel.departure)
         if let departureSpot = viewModel.departureSpot {
             TitleLabel.text = "\(departureSpot) Departure: \(viewModel.departure)"
         }

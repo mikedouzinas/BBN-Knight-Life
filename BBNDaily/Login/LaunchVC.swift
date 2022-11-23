@@ -22,7 +22,6 @@ class LaunchVC: AuthVC {
         setAppearance(input: nil)
         if FirebaseAuth.Auth.auth().currentUser != nil {
             checkSeason()
-//            showLoader(text: "Signing you in...")
             setLoginInfo(weakSelf: self)
         }
         else {

@@ -13,7 +13,7 @@ import SafariServices
 import FSCalendar
 import WebKit
 import SkeletonView
-
+ 
 class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate, WKNavigationDelegate {
     @IBOutlet var sideMenuBtn: UIBarButtonItem!
     @IBOutlet var webView: WKWebView!
@@ -61,7 +61,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                             let array = className.getValues()
                             className = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
                         }
-                        if !(LoginVC.classMeetingDays["\(currentBlock.block.lowercased())"]?[selectedDay] ?? true) {
+                        if (LoginVC.classMeetingDays["\(currentBlock.block.lowercased())"]?.count ?? 0) > selectedDay && !(LoginVC.classMeetingDays["\(currentBlock.block.lowercased())"]?[selectedDay] ?? true) {
                             className = "Free"
                         }
                         name = className
