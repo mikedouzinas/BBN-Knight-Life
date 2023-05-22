@@ -44,6 +44,8 @@
 	<string>Please allow use of your location if you would like to see your live location on the map.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Please allow use of photos to add schedules</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Please allow use of calendar to add your schedule</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>ConfigurationIntent</string>

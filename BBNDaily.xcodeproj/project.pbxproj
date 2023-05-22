@@ -14,6 +14,8 @@
 		2709F92128CD71AE0022B4D3 /* snowfall.gif in Resources */ = {isa = PBXBuildFile; fileRef = 2709F92028CD71AE0022B4D3 /* snowfall.gif */; };
 		2709F92528CD73E10022B4D3 /* hearts.gif in Resources */ = {isa = PBXBuildFile; fileRef = 2709F92428CD73E10022B4D3 /* hearts.gif */; };
 		272BA654282D40E0009BA067 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2767E70129DF6C5C006DBE86 /* WelcomeVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2767E70029DF6C5C006DBE86 /* WelcomeVC.swift */; };
+		2767E70429DF845F006DBE86 /* SelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2767E70329DF845F006DBE86 /* SelectionView.swift */; };
 		278AFAF9288C1C2800E64F23 /* ThroughDateVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */; };
 		278AFAFB288C1F1400E64F23 /* ImageVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAFA288C1F1400E64F23 /* ImageVC.swift */; };
 		2792D7C128B4562800DBA403 /* BusScheduleVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2792D7C028B4562800DBA403 /* BusScheduleVC.swift */; };
@@ -128,6 +130,8 @@
 		2709F91A28CD6D4D0022B4D3 /* halloween.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = halloween.gif; sourceTree = "<group>"; };
 		2709F92028CD71AE0022B4D3 /* snowfall.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = snowfall.gif; sourceTree = "<group>"; };
 		2709F92428CD73E10022B4D3 /* hearts.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = hearts.gif; sourceTree = "<group>"; };
+		2767E70029DF6C5C006DBE86 /* WelcomeVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeVC.swift; sourceTree = "<group>"; };
+		2767E70329DF845F006DBE86 /* SelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionView.swift; sourceTree = "<group>"; };
 		278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThroughDateVC.swift; sourceTree = "<group>"; };
 		278AFAFA288C1F1400E64F23 /* ImageVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVC.swift; sourceTree = "<group>"; };
 		2792D7C028B4562800DBA403 /* BusScheduleVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusScheduleVC.swift; sourceTree = "<group>"; };
@@ -237,6 +241,15 @@
 				C1C38801EED401BB43CE1C9D /* Pods_BBNDailyTests.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		2767E70229DF8451006DBE86 /* Welcome */ = {
+			isa = PBXGroup;
+			children = (
+				2767E70029DF6C5C006DBE86 /* WelcomeVC.swift */,
+				2767E70329DF845F006DBE86 /* SelectionView.swift */,
+			);
+			path = Welcome;
 			sourceTree = "<group>";
 		};
 		27AEED56288B333200C6176C /* Home-Calendar */ = {
@@ -368,6 +381,7 @@
 			isa = PBXGroup;
 			children = (
 				8704E96D26EEA5B9001826F8 /* LoginVC.swift */,
+				2767E70229DF8451006DBE86 /* Welcome */,
 				8704E97326EEA663001826F8 /* LaunchVC.swift */,
 				27B0DB7E288B025D009C32B8 /* AuthVC.swift */,
 			);
@@ -760,6 +774,7 @@
 				8704E96E26EEA5B9001826F8 /* LoginVC.swift in Sources */,
 				27AEED78288B360900C6176C /* AboutUsVC.swift in Sources */,
 				8761CA7226F29D3B00CADE56 /* MapsVC.swift in Sources */,
+				2767E70429DF845F006DBE86 /* SelectionView.swift in Sources */,
 				87507FC926E6ADEB005DDFB4 /* SceneDelegate.swift in Sources */,
 				27AEED6C288B352100C6176C /* ClassNameVC.swift in Sources */,
 				27AEED81288B374A00C6176C /* detailedWorkVC.swift in Sources */,
@@ -777,6 +792,7 @@
 				27AEED6A288B34E400C6176C /* ClassesOptionsPopupVC.swift in Sources */,
 				27AEED86288B379A00C6176C /* HomeworkInfoVC.swift in Sources */,
 				27AEED6E288B353D00C6176C /* TeacherNameVC.swift in Sources */,
+				2767E70129DF6C5C006DBE86 /* WelcomeVC.swift in Sources */,
 				27AEED62288B341100C6176C /* CalendarTableViewCell.swift in Sources */,
 				27AEED58288B334B00C6176C /* PersonPopupVC.swift in Sources */,
 				2792D7C128B4562800DBA403 /* BusScheduleVC.swift in Sources */,
@@ -894,7 +910,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -949,7 +965,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;

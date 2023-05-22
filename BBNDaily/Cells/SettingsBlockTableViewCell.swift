@@ -59,7 +59,8 @@ class SettingsBlockTableViewCell: UITableViewCell {
         }
         else {
             if viewModel.blockName.count > 1 {
-                if viewModel.blockName.lowercased().contains("share") {
+                // sets the right label text to empty if it is a share, google, or apple function.
+                if viewModel.blockName.lowercased().contains("share") || viewModel.blockName.lowercased().contains("apple") || viewModel.blockName.lowercased().contains("google") {
                     DataLabel.text = ""
                 }
                 else {

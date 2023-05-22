@@ -11,6 +11,7 @@ import ProgressHUD
 import Firebase
 import GoogleSignIn
 
+// Parent class that is never shown, but only overridden
 class AuthVC: CustomLoader {
     static var isFirstTime = true
     func signOutToken() {
@@ -148,17 +149,11 @@ class AuthVC: CustomLoader {
             }
         }.resume()
     }
-    func setLoginInfo(weakSelf: UIViewController?) {
-        guard let strongSelf = weakSelf else {
-            ProgressHUD.colorAnimation = UIColor(named: "red")!
-            ProgressHUD.showFailed("Invalid class")
-            return
-        }
+    func setLoginInfo() {
         LoginVC.fullName = (FirebaseAuth.Auth.auth().currentUser?.displayName ?? "").replacingOccurrences(of: "**", with: "")
         LoginVC.email = FirebaseAuth.Auth.auth().currentUser?.email ?? ""
         LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
         let db = Firestore.firestore()
-        //         check if statement to use online classes or not
         db.collection("ifstatements").document("ifstatements").getDocument(completion: {(snapshot, error) in
             if error != nil {
                 ProgressHUD.showFailed("Failed to find 'ifstatements'")
@@ -208,11 +203,11 @@ class AuthVC: CustomLoader {
             } else {
                 //                var isCreated = false
                 if !(document?.exists ?? false) {
-                    guard let Login = (strongSelf as? LoginVC) else {
+                    guard let Login = (self as? LoginVC) else {
                         //                        print("not LoginVC")
                         self.hideLoader(completion: {
                             self.hideLoaderView()
-                            strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
+                            self.performSegue(withIdentifier: "SignedIn", sender: nil)
                         })
                         return
                     }
@@ -223,7 +218,7 @@ class AuthVC: CustomLoader {
                     ProgressHUD.colorAnimation = .green
                     ProgressHUD.showSucceed("Welcome to Knight Life!")
                     currDoc.setData(LoginVC.blocks)
-                    weakSelf?.hideLoader(completion: {
+                    self.hideLoader(completion: {
                         self.hideLoaderView()
                         Login.callTabBar()
                     })
@@ -256,21 +251,21 @@ class AuthVC: CustomLoader {
                     })
                 }
                 if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
-                    self.setProfileImage(useGoogle: true, width: UInt(strongSelf.view.frame.width), completion: {_ in
+                    self.setProfileImage(useGoogle: true, width: UInt(self.view.frame.width), completion: {_ in
                         
                     })
                 }
                 else {
-                    self.setProfileImage(useGoogle: false, width: UInt(strongSelf.view.frame.width), completion: {_ in
+                    self.setProfileImage(useGoogle: false, width: UInt(self.view.frame.width), completion: {_ in
                     })
                 }
                 myGroup.notify(queue: .main) {
                     print("Finished all requests.")
-                    weakSelf?.hideLoader(completion: {
+                    self.hideLoader(completion: {
                         self.hideLoaderView()
-                        guard let Login = (strongSelf as? LoginVC) else {
+                        guard let Login = (self as? LoginVC) else {
                             //                                        print("not LoginVC")
-                            strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
+                            self.performSegue(withIdentifier: "SignedIn", sender: nil)
                             return
                         }
                         Login.callTabBar()
@@ -278,15 +273,18 @@ class AuthVC: CustomLoader {
                 }
                 return
             }
-            weakSelf?.hideLoader(completion: {
+            self.hideLoader(completion: {
                 self.hideLoaderView()
-                guard let Login = (strongSelf as? LoginVC) else {
+                guard let Login = (self as? LoginVC) else {
                     //                        print("not LoginVC")
-                    strongSelf.performSegue(withIdentifier: "SignedIn", sender: nil)
+                    self.performSegue(withIdentifier: "SignedIn", sender: nil)
                     return
                 }
                 Login.callTabBar()
             })
         }
     }
+    
 }
+
+

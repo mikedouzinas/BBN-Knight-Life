@@ -41,23 +41,22 @@ class LoginVC: AuthVC {
         
         // Create Google Sign In configuration object.
         let config = GIDConfiguration(clientID: clientID)
-        
+        GIDSignIn.sharedInstance.configuration = config
         // Start the sign in flow!
-        GIDSignIn.sharedInstance.signIn(with: config, presenting: self) { [unowned self] user, error in
+        GIDSignIn.sharedInstance.signIn(withPresenting: self) { [unowned self] result, error in
             
             if let _ = error {
                 return
             }
             
-            guard
-                let authentication = user?.authentication,
-                let idToken = authentication.idToken
+            guard let user = result?.user,
+                let idToken = user.idToken?.tokenString
             else {
                 return
             }
             showLoader(text: "Signing you in...")
             let credential = GoogleAuthProvider.credential(withIDToken: idToken,
-                                                           accessToken: authentication.accessToken)
+                                                           accessToken: user.accessToken.tokenString)
             
             Auth.auth().signIn(with: credential) {
                 [weak self]
@@ -72,7 +71,7 @@ class LoginVC: AuthVC {
                     
                     return
                 }
-                self?.setLoginInfo(weakSelf: self)
+                self?.setLoginInfo()
             }
         }
     }

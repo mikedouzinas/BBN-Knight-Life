@@ -94,3 +94,14 @@ class POVVC: PublicationVC {
         sideMenuBtn.action = #selector(revealViewController()?.revealSideMenu)
     }
 }
+
+class MerchStoreVC: PublicationVC {
+    @IBOutlet weak var sideMenuBtn: UIBarButtonItem!
+    override func viewDidLoad() {
+        self.urlString =  "https://www.amerasport.com/Buckingham-Browne-Nichols-BBN-BBN/departments/1029/"
+        super.viewDidLoad()
+        self.title = "BB&N Merchandise"
+        sideMenuBtn.target = revealViewController()
+        sideMenuBtn.action = #selector(revealViewController()?.revealSideMenu)
+    }
+}

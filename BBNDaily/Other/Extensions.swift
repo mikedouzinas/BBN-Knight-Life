@@ -254,9 +254,7 @@ extension String {
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.amSymbol = "am"
         dateFormatter.pmSymbol = "pm"
-//        print("\(self)")
         for format in formats {
-//            print("\(format): name: \(self)")
             dateFormatter.timeZone = TimeZone(abbreviation: "EST")
             dateFormatter.dateFormat = format
             
@@ -767,7 +765,7 @@ extension UIViewController {
         for x in LoginVC.specialSchedules {
             if x.key.isInThroughDate(date: date) {
                 currentDay = [block]()
-                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
+                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date, hasImage: false)
             }
             if x.key.lowercased() == stringDate.lowercased() {
                 if !((LoginVC.blocks["l-\(weekday)"] as? String) ?? "").lowercased().contains("2") {
@@ -776,10 +774,14 @@ extension UIViewController {
                 else {
                     currentDay = x.value.specialSchedules
                 }
-                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
+                var hasImage = false
+                if let _ = x.value.imageUrl {
+                    hasImage = true
+                }
+                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date, hasImage: hasImage)
             }
         }
-        return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
+        return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date, hasImage: false)
     }
     func getLunchDays(weekDay: String) -> (blocks: [block], selectedDay: Int) {
         var weekdayBlocks = [block]()
@@ -834,6 +836,18 @@ extension UIViewController {
         }
         return (weekdayBlocks, selectedDay)
     }
+    func nextWeekday(weekday: Int) -> Date {
+        let calendar = Calendar.current
+        let today = Date()
+
+        guard let nextWeekday = calendar.nextDate(after: today,
+                                                 matching: DateComponents(weekday: weekday),
+                                                 matchingPolicy: .nextTime) else {
+            fatalError("Couldn't find the next Weekday.")
+        }
+
+        return nextWeekday
+    }
     func setNotifications() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         let calendar = Calendar.current
@@ -849,7 +863,7 @@ extension UIViewController {
             if ((LoginVC.blocks["notifs"] as? String) ?? "") == "true" {
                 for x in tempWeekday.blocks {
                     if z < 64 {
-                        addNotif(x: x, weekDay: tempWeekday.weekday, date: tempWeekday.date)
+                        addNotif(x: x, weekDay: tempWeekday.weekday ?? "", date: tempWeekday.date ?? Date())
                         z+=1
                     }
                     else {
@@ -858,6 +872,55 @@ extension UIViewController {
                     
                 }
             }
+        }
+    }
+    func getBlockOnDate(date: Date, time: String) -> Date {
+        var dateComponents = DateComponents()
+        let calendar = Calendar.current
+        let convertedTime = time.dateFromMultipleFormats() ?? Date()
+        dateComponents.hour = calendar.component(.hour, from: convertedTime)
+        dateComponents.minute = calendar.component(.minute, from: convertedTime)
+        dateComponents.day = calendar.component(.day, from: date)
+        dateComponents.month = calendar.component(.month, from: date)
+        dateComponents.year = calendar.component(.year, from: date)
+        dateComponents.timeZone = .current
+        
+        return calendar.date(from: dateComponents) ?? Date()
+    }
+    func getTitleForBlock(x: block, weekNum: Int, notif: Bool) -> String {
+        if x.block != "N/A" {
+            var tile = ((LoginVC.blocks[x.block] ?? "") as? String) ?? ""
+            if tile == "" {
+                tile = "\(x.block) Block"
+            }
+            else if tile.contains("~") {
+                let array = tile.getValues()
+                var num = weekNum - 2
+                
+                tile = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
+                if num >= 0 && num <= 4 && !(LoginVC.classMeetingDays["\(x.block.lowercased())"]?[num] ?? true) {
+                    tile = "Free (\(x.block))"
+                }
+            }
+            if notif {
+                return "5 Minutes Until \(tile)"
+            }
+            return tile
+        }
+        else {
+            if x.name.lowercased().contains("passing") {
+                if notif {
+                    return "No Class - \(x.name)"
+                }
+                return x.name
+            }
+            else {
+                if notif {
+                    return "5 Minutes Until \(x.name)"
+                }
+                return x.name
+            }
+            
         }
     }
     func addNotif(x: block, weekDay: String, date: Date) {
@@ -902,35 +965,11 @@ extension UIViewController {
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         
-        // 2
+        
         let content = UNMutableNotificationContent()
         content.sound = UNNotificationSound.default
-        if x.block != "N/A" {
-            var tile = ((LoginVC.blocks[x.block] ?? "") as? String) ?? ""
-            if tile == "" {
-                tile = "\(x.block) Block"
-            }
-            else if tile.contains("~") {
-                let array = tile.getValues()
-                let num = weekNum - 2
-                
-                tile = "\(array[0]) \(array[2].replacingOccurrences(of: "N/A", with: ""))"
-                if num >= 0 && num <= 4 && !(LoginVC.classMeetingDays["\(x.block.lowercased())"]?[num] ?? true) {
-                    tile = "Free (\(x.block))"
-                }
-            }
-            content.title = "5 Minutes Until \(tile)"
-            // Write/Set Value
-        }
-        else {
-            if x.name.lowercased().contains("passing") {
-                content.title = "No Class - \(x.name)"
-            }
-            else {
-                content.title = "5 Minutes Until \(x.name)"
-            }
-            
-        }
+        
+        content.title = getTitleForBlock(x: x, weekNum: weekNum, notif: true)
         
         let randomIdentifier = UUID().uuidString
         let request = UNNotificationRequest(identifier: randomIdentifier, content: content, trigger: trigger)

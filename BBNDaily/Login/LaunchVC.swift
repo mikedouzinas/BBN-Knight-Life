@@ -15,16 +15,32 @@ import FSCalendar
 import WebKit
 
 
+// class that opens first when app opens
 class LaunchVC: AuthVC {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-//        getTotalKnightLifeUsers()
-        setAppearance(input: nil)
+        
+//        // START OF TEST WELCOME CODE
+//
+//        let welcomeVC = WelcomeVC()
+//        welcomeVC.modalPresentationStyle = .fullScreen
+//        welcomeVC.modalTransitionStyle = .crossDissolve
+//        self.present(welcomeVC, animated: true, completion: nil)
+//        return
+//        // END OF FAKE CODE
+        
+        setAppearance(input: nil) // sets Knight life appearance to light or dark mode depending on user's stored preference
+        
+        // checks to see if user is signed in or not
         if FirebaseAuth.Auth.auth().currentUser != nil {
+            
+            // if user is signed in, set the loading screen to current season and set the local login info
             checkSeason()
-            setLoginInfo(weakSelf: self)
+            setLoginInfo()
         }
         else {
+            
+            // go to LoginVC to show sign in page
             self.performSegue(withIdentifier: "NotSignedIn", sender: nil)
         }
     }

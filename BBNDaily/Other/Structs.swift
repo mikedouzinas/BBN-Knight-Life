@@ -86,9 +86,10 @@ struct Person {
 }
 
 struct CustomWeekday {
-    let blocks: [block]
-    let weekday: String
-    let date: Date
+    var blocks: [block]
+    let weekday: String?
+    let date: Date?
+    var hasImage: Bool
 }
 
 struct SpecialSchedule {

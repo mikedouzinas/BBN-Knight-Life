@@ -13,7 +13,7 @@ import SafariServices
 import FSCalendar
 import WebKit
 import SkeletonView
- 
+
 class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate, WKNavigationDelegate {
     @IBOutlet var sideMenuBtn: UIBarButtonItem!
     @IBOutlet var webView: WKWebView!
@@ -86,23 +86,24 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                 i+=1
             }
             setOld()
-            if currentWeekday.isEmpty {
+            
+            if currentWeekday.blocks.isEmpty && currentWeekday.hasImage == false { // i need to check if the active day is an image
                 var z = 0
                 var currDate = Date()
                 let currTitle = self.navigationItem.title
                 for x in LoginVC.upcomingDays {
                     if z != 0 {
                         currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
-                        let currVal = "Next Day of Classes: \(x.weekday.capitalized)"
+                        let currVal = "Next Day of Classes: \(x.weekday?.capitalized ?? "")"
                         if !x.blocks.isEmpty {
                             if currTitle != currVal {
-                                currentWeekday = x.blocks
+                                currentWeekday.blocks = x.blocks
                                 dayOverBlocks = x.blocks
                                 calendar.select(currDate)
-                                setCurrentday(date: currDate, completion: { _ in
+                                setCurrentday(date: currDate, shouldEdit: false, completion: { _ in
                                     self.ScheduleCalendar.reloadData()
                                 })
-                                self.navigationItem.title = "Next Day of Classes: \(x.weekday.capitalized)"
+                                self.navigationItem.title = "Next Day of Classes: \(x.weekday?.capitalized ?? "")"
                                 z-=1
                             }
                             break
@@ -120,7 +121,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
             Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [self] timer in
                 setTimes(recursive: true)
                 if isActive {
-                    print("reloading...")
+//                    print("reloading...")
                     ScheduleCalendar.reloadData()
                 }
             }
@@ -147,22 +148,22 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         formatter1.dateStyle = .short
         let stringDate = formatter1.string(from: Date())
         var y = 0
-        for x in currentWeekday {
+        for x in currentWeekday.blocks {
             let big = getReturnDates(currBlock: x)
             let t2 = big[3]
             if currentDate == stringDate {
                 if Date() > t2 {
-                    currentWeekday.remove(at: y)
+                    currentWeekday.blocks.remove(at: y)
                     y-=1
                 }
-                if currentBlock.startTime == x.startTime && y == currentWeekday.count {
+                if currentBlock.startTime == x.startTime && y == currentWeekday.blocks.count {
                     currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n")
                     self.navigationItem.title = "My Schedule"
                 }
             }
             y+=1
         }
-        if currentWeekday.isEmpty {
+        if currentWeekday.blocks.isEmpty {
             dayIsOver = true
         }
     }
@@ -182,7 +183,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         return [currDate, reminderTime, startTime, endTime]
     }
     static var todayBlocks = [block]()
-    var currentWeekday = [block(name: "", startTime: "", endTime: "", block: "")]
+    var currentWeekday = CustomWeekday(blocks: [block](), weekday: nil, date: nil, hasImage: false)
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: coverTableViewCell.identifier, for: indexPath) as? coverTableViewCell else {
             fatalError()
@@ -229,7 +230,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                     if !dayIsOver {
                         cell.alpha = 1
                         cell.contentView.alpha = 1
-                        currentDay = currentWeekday
+                        currentDay = currentWeekday.blocks
                         tableView.reloadData()
                     }
                     else {
@@ -324,14 +325,13 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
     var v = 1
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        print("view WILL appear -> reloading the page")
         isActive = true
         reloadPage()
         v+=1
     }
     @objc func screenReopened() {
         isActive = true
-        print("screen has reopened -> reloading the page")
+        print("screen has reopened -> restarting the page")
         reloadPage()
     }
     @objc func reloadPage() {
@@ -361,7 +361,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                 })
             }
             else {
-                setCurrentday(date: realCurrentDate, completion: { [self]_ in
+                setCurrentday(date: realCurrentDate, shouldEdit: false, completion: { [self]_ in
                     setTimes(recursive: false)
                     print("normal reload")
                     ScheduleCalendar.reloadData()
@@ -431,16 +431,15 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         configureRefreshPull()
         ScheduleCalendar.showsVerticalScrollIndicator = false
         ScheduleCalendar.tableFooterView = UIView(frame: .zero)
-        setCurrentday(date: Date(), completion: { [self]result in
+        setCurrentday(date: Date(), shouldEdit: true, completion: { [self]result in
             switch result {
             case .success(let todBlocks):
-                self.currentWeekday = todBlocks
+                self.currentWeekday.blocks = todBlocks
                 CalendarVC.todayBlocks = todBlocks
                 calendar.delegate = self
                 calendar.dataSource = self
                 ScheduleCalendar.delegate = self
                 ScheduleCalendar.dataSource = self
-//                self.configureWatchKitSession()
                 setNotifications()
                 ScheduleCalendar.reloadData()
                 setTimes(recursive: true)
@@ -451,7 +450,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
     }
     var selectedDay = 0
     var realCurrentDate = Date()
-    func setCurrentday(date: Date, completion: @escaping (Swift.Result<[block], Error>) -> Void) {
+    func setCurrentday(date: Date, shouldEdit: Bool, completion: @escaping (Swift.Result<[block], Error>) -> Void) {
         ScheduleCalendar.isHidden = false
         webView.isHidden = true
         realCurrentDate = date
@@ -475,7 +474,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
             ScheduleCalendar.restore()
         }
         	
-        for x in LoginVC.specialSchedules {
+        for x in LoginVC.specialSchedules { // loops through special schedule dates to see if we are in that period
             if x.key.isInThroughDate(date: date) {
                 currentDay = [block]()
                 ScheduleCalendar.restore()
@@ -497,10 +496,10 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
 //                        scheduleImageView.image = UIImage(named: "mustachejohn")
                         if let url = URL(string: urlstring) {
                             webView.load(URLRequest(url: url))
+                            if shouldEdit {
+                                currentWeekday.hasImage = true
+                            }
                         }
-//                        scheduleImageView.loadImageUsingCacheWithUrlString(urlstring: urlstring, completion: { _ in
-//                        })
-                        // check for image
                     }
                     else {
                         ScheduleCalendar.restore()
@@ -516,7 +515,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
     }
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
         setOld()
-        setCurrentday(date: date, completion: { _ in
+        setCurrentday(date: date, shouldEdit: false, completion: { _ in
             self.ScheduleCalendar.reloadData()
         })
     }

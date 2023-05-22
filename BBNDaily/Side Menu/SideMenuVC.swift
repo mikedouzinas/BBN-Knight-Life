@@ -164,6 +164,8 @@ extension MainViewController: SideMenuViewControllerDelegate {
             self.showViewController(viewController: UINavigationController.self, storyboardId: "CHASMNavID")
         case 5:
             self.showViewController(viewController: UINavigationController.self, storyboardId: "POVNavID")
+        case 6:
+            self.showViewController(viewController: UINavigationController.self, storyboardId: "MerchNavID")
         default:
             break
         }
@@ -331,7 +333,8 @@ class SideMenuViewController: AuthVC {
         SideMenuModel(icon: UIImage(named: "spectatorLogo")!, title: "The Spectator", textImage: UIImage(named: "spectatorTextLogo")),
         SideMenuModel(icon: UIImage(named: "benchwarmerLogo")!, title: "The Benchwarmer", textImage: UIImage(named: "benchwarmerTextLogo")),
         SideMenuModel(icon: UIImage(systemName: "bonjour")!, title: "CHASM"),
-        SideMenuModel(icon: UIImage(named: "POVLogo")!, title: "POV", textImage: UIImage(named: "povTextLogo"))
+        SideMenuModel(icon: UIImage(named: "POVLogo")!, title: "POV", textImage: UIImage(named: "povTextLogo")),
+        SideMenuModel(icon: UIImage(systemName: "bag.circle.fill")!, title: "Merch Store")
     ]
     override func viewDidLoad() {
         super.viewDidLoad()

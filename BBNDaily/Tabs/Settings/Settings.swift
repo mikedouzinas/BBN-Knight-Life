@@ -14,6 +14,7 @@ import SafariServices
 import FSCalendar
 import SkeletonView
 import WebKit
+import EventKit
 
 class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollViewDelegate, UITextFieldDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -101,7 +102,14 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
                 fatalError()
             }
-            let imageview = UIImageView(image: UIImage(systemName: "square.and.arrow.up")!)
+            var imgName = "square.and.arrow.up"
+            if indexPath.row == 1 { // google calendar add
+                imgName = "calendar.circle"
+            }
+            else if indexPath.row == 2 { // apple calendar add
+                imgName = "calendar.circle.fill"
+            }
+            let imageview = UIImageView(image: UIImage(systemName: imgName)!)
             imageview.tintColor = UIColor(named: "inverse")
             cell.accessoryView = imageview
             cell.configure(with: other[indexPath.row])
@@ -457,8 +465,15 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         }
         else if indexPath.section == 4 {
             tableView.deselectRow(at: indexPath, animated: true)
-            if shareSheetVC != nil {
-                present(shareSheetVC!, animated: true)
+            switch indexPath.row {
+            case 0: // share
+                if shareSheetVC != nil { // shareSheetVC is initialized in the setBlocks method so it always has the user's most updated schedule
+                    present(shareSheetVC!, animated: true)
+                }
+            case 1: // google calendar
+                addItemToCalendar(pref: 0)
+            default: // apple calendar
+                addItemToCalendar(pref: 1)
             }
         }
     }
@@ -473,26 +488,6 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
 //    static var ProfileLink: SideMenuViewController!
     private var profileCells = [ProfileCell]()
     private var tableView = UITableView()
-//    @objc func signOut() {
-//        let refreshAlert = UIAlertController(title: "Sign Out?", message: "Are you sure you want to sign out?", preferredStyle: UIAlertController.Style.alert)
-//        refreshAlert.addAction(UIAlertAction(title: "Ok", style: .default, handler: { (action: UIAlertAction!) in
-//            self.signOutToken()
-//        }))
-//        refreshAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction!) in
-//        }))
-//        present(refreshAlert, animated: true, completion: nil)
-//    }
-//    var SignOutButton: UIButton = {
-//        let b = UIButton()
-//        b.translatesAutoresizingMaskIntoConstraints = false
-//        b.backgroundColor = UIColor(named: "gold")
-//        b.setTitle("Sign Out", for: .normal)
-//        b.setTitleColor(UIColor.white, for: .normal)
-//        b.layer.masksToBounds = true
-//        b.layer.cornerRadius = 8
-//        b.dropShadow()
-//        return b
-//    }()
     var shareSheetVC: UIActivityViewController?
     func setBlocks() {
         blocks = [
@@ -534,20 +529,6 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         }
         shareSheetVC = UIActivityViewController(activityItems: ["\(LoginVC.fullName.trimmingCharacters(in: .whitespacesAndNewlines))'s Classes\nA: \(a.prefix(a.count-2))\nB: \(b.prefix(b.count-2))\nC: \(c.prefix(c.count-2))\nD: \(d.prefix(d.count-2))\nE: \(e.prefix(e.count-2))\nF: \(f.prefix(f.count-2))\nG: \(g.prefix(g.count-2))"], applicationActivities: nil)
     }
-//    public let closeButton: UIButton = {
-//        let button = UIButton()
-//        button.setTitle("", for: .normal)
-//        button.setImage(UIImage(named: "x-mark"), for: .normal)
-//        button.translatesAutoresizingMaskIntoConstraints = false
-//        button.tintColor = .white
-//        button.dropShadow()
-//        button.backgroundColor = .clear
-//        return button
-//    } ()
-//    @objc func close(_ sender: Any) {
-////        print("made it?")
-//        dismiss(animated: true, completion: nil)
-//    }
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.navigationController?.isNavigationBarHidden = false
@@ -559,10 +540,6 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(named: "background")
-//        self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default) //UIImage.init(named: "transparent.png")
-//        self.navigationController?.navigationBar.shadowImage = UIImage()
-//        self.navigationController?.navigationBar.isTranslucent = true
-//        self.navigationController?.view.backgroundColor = .clear
         setBlocks()
         let userDefaults = UserDefaults.standard
         let lockerCode = userDefaults.object(forKey: "lockerCode") as? String ?? ""
@@ -582,7 +559,9 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             settingsBlock(blockName: "Friday Lunch", className: "\(LoginVC.blocks["l-friday"] as? String ?? "")")
         ]
         other = [
-            settingsBlock(blockName: "Share Your Classes", className: "")
+            settingsBlock(blockName: "Share Your Classes", className: ""),
+            settingsBlock(blockName: "Add Schedule to Google Calendar", className: ""),
+            settingsBlock(blockName: "Add Schedule to Apple Calendar", className: "")
         ]
         tableView = UITableView(frame: .zero, style: .grouped)
         view.addSubview(tableView)
@@ -655,5 +634,174 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             return
         }
         header.scrollViewDidScroll(scrollView: tableView)
+    }
+    
+    // function loops through and adds repeating *normal* schedule to google or apple calendar, respectively
+    func addItemToCalendar(pref: Int) {
+        let alertController = UIAlertController(title: "Add Events",
+                                                message: "Are you sure you want to add all events to your calendar?",
+                                                preferredStyle: .alert)
+        
+        let confirmAction = UIAlertAction(title: "Yes", style: .default) { [self] (_) in
+            if pref == 0 { // google calendar
+                updateGoogleCalendar()
+            }
+            else { // apple calendar
+                updateAppleCalendar()
+            }
+        }
+        alertController.addAction(confirmAction)
+            
+        let cancelAction = UIAlertAction(title: "No", style: .cancel, handler: nil)
+        alertController.addAction(cancelAction)
+        
+        present(alertController, animated: true, completion: nil)
+        
+    }
+    
+    // updates google or apple calendar for special schedules. It should check for all special schedules and add (or remove) specific places where it could be faulty
+    func updateGoogleCalendar() {
+        
+        
+    }
+    
+    func updateAppleCalendar() {
+        requestCalendarAccess { [self] result in
+            if result {
+                deleteExistingKnightLifeEvents {
+                    self.addWeekLongScheduleToCalendar()
+                }
+            }
+        }
+    }
+    let eventStore = EKEventStore()
+    var regularBlocks = [[block]]()
+    func requestCalendarAccess(completion: @escaping (Bool) -> Void) {
+        let authorizationStatus = EKEventStore.authorizationStatus(for: .event)
+                
+        if authorizationStatus == .authorized {
+            completion(true)
+        } else if authorizationStatus == .notDetermined {
+            eventStore.requestAccess(to: .event) { (granted, error) in
+                DispatchQueue.main.async {
+                    if let error = error {
+                        print("Error requesting calendar access: \(error.localizedDescription)")
+                        completion(false)
+                    }
+                    completion(granted)
+                }
+            }
+        } else {
+            completion(false)
+        }
+    }
+    
+    private func showCalendarAccessDeniedAlert() {
+        let alert = UIAlertController(title: "Calendar Access Denied", message: "Please allow access to your calendar in the Settings app.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(alert, animated: true, completion: nil)
+    }
+    func addWeekLongScheduleToCalendar() {
+        let selectedCalendar = EKSourceType.local
+        
+        guard let calendar = eventStore.calendars(for: .event).first(where: { $0.source.sourceType == selectedCalendar }) else {
+            print("no calendar")
+            return
+        }
+        
+        // default schedule for the week w/ correct lunches
+        regularBlocks = [getLunchDays(weekDay: "monday").blocks,getLunchDays(weekDay: "tuesday").blocks,getLunchDays(weekDay: "wednesday").blocks,getLunchDays(weekDay: "thursday").blocks,getLunchDays(weekDay: "friday").blocks]
+        var weekday = 2
+        for day in regularBlocks {
+            for event in day {
+                let date = nextWeekday(weekday: weekday)
+                let title = getTitleForBlock(x: event, weekNum: weekday, notif: false)
+                addEventToCalendar(calendar: calendar, title: title, startDate: getBlockOnDate(date: date, time: event.startTime), endDate: getBlockOnDate(date: date, time: event.endTime))
+            }
+            weekday+=1
+        }
+        ProgressHUD.showSuccess("Added Schedule to Calendar!")
+    }
+    
+    private func addEventToCalendar(calendar: EKCalendar, title: String, startDate: Date, endDate: Date) {
+        let event = EKEvent(eventStore: eventStore)
+        event.calendar = calendar
+        event.title = title
+        event.startDate = startDate
+        event.endDate = endDate
+        
+        // Add a unique identifier as a note
+        event.notes = "KnightLifeScheduleIdentifier"
+        
+        // Create a notification 5 minutes before the event
+        let notification = EKAlarm(relativeOffset: -5 * 60)
+        event.addAlarm(notification)
+        
+        // recurs every week until end of school
+        event.addRecurrenceRule(.init(recurrenceWith: .weekly, interval: 1, end: createRecurrenceEnd()))
+        
+//        // Adds a recurrence rule to avoid special schedule dates. I should maybe loop through here to check for each individual one but i'll figure this out
+//        let calendar = Calendar.current
+//        var exceptionDates = [Date]()
+//        
+//        for x in LoginVC.specialSchedules {
+//            // if something is a special schedule date, we don't add it to calendar
+//            if let specialDate = x.key.dateFromMultipleFormats() {
+//                exceptionDates.append(specialDate)
+//            }
+//        }
+//        event.exceptionDates = exceptionDates
+//        
+        
+        do {
+            try eventStore.save(event, span: .thisEvent)
+        } catch {
+            print("Error saving event: \(error.localizedDescription)")
+        }
+    }
+    
+    func deleteExistingKnightLifeEvents(completion: @escaping () -> Void) {
+        DispatchQueue.main.async {
+            let allCalendars = self.eventStore.calendars(for: .event)
+            let predicate = self.eventStore.predicateForEvents(withStart: Date(),
+                                                               end: Date.distantFuture,
+                                                               calendars: allCalendars)
+            
+            let events = self.eventStore.events(matching: predicate)
+            for event in events {
+                // Check if the event has the unique identifier in its notes
+                if event.notes == "KnightLifeScheduleIdentifier" {
+                    do {
+                        try self.eventStore.remove(event, span: .thisEvent, commit: false)
+                    } catch {
+                        print("Error deleting event: \(error.localizedDescription)")
+                    }
+                }
+            }
+            
+            // Commit changes and call completion handler
+            do {
+                try self.eventStore.commit()
+                completion()
+            } catch {
+                print("Error committing event store changes: \(error.localizedDescription)")
+                completion()
+            }
+        }
+    }
+    
+    private func createRecurrenceEnd() -> EKRecurrenceEnd? {
+        // Set the recurrence end date to June 2. Yes, this is hard coded, but it should edited each year to be the final day of classes.
+        var components = DateComponents()
+        components.year = Calendar.current.component(.year, from: Date())
+        components.month = 6
+        components.day = 2
+        
+        guard let endDate = Calendar.current.date(from: components) else {
+            print("Failed to create recurrence end date.")
+            return nil
+        }
+        
+        return EKRecurrenceEnd(end: endDate)
     }
 }
