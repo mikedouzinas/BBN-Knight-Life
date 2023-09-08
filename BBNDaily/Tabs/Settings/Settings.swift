@@ -613,9 +613,12 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         dismiss(animated: true, completion: nil)
     }
     @objc func openSecretSchedule() {
-        if LoginVC.email.contains("mveson") {
+        // admin access to schedule changing
+        if LoginVC.email.contains("mveson") || LoginVC.email.contains("amoro-araujo") {
             self.performSegue(withIdentifier: "secretSchedule", sender: nil)
         }
+        
+        // normal users
         else {
             showMessage(title: "You found the secret button!", subTitle: "On the calendar page, press on the top right corner for a cool trick...")
         }
