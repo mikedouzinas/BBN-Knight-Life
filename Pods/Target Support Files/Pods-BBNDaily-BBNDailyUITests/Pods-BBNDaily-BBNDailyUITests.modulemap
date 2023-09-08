@@ -1,0 +1,6 @@
+framework module Pods_BBNDaily_BBNDailyUITests {
+  umbrella header "Pods-BBNDaily-BBNDailyUITests-umbrella.h"
+
+  export *
+  module * { export * }
+}
