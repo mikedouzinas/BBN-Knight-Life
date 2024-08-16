@@ -22,7 +22,7 @@ class AuthVC: CustomLoader {
             UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
             hideLoader(completion: {
                 ProgressHUD.colorAnimation = .green
-                ProgressHUD.showSucceed("Successfully signed out")
+                ProgressHUD.succeed("Successfully signed out")
                 if let settingsSelf = (self as? SettingsVC) {
                     settingsSelf.performSegue(withIdentifier: "Reset", sender: nil)
                 }
@@ -32,7 +32,7 @@ class AuthVC: CustomLoader {
             })
         }
         catch {
-            ProgressHUD.showFailed("Failed to Sign Out")
+            ProgressHUD.failed("Failed to Sign Out")
         }
     }
     
@@ -61,7 +61,7 @@ class AuthVC: CustomLoader {
         let db = Firestore.firestore()
         db.collection("special-schedules").getDocuments { (snapshot, error) in
             if error != nil {
-                ProgressHUD.showFailed("Failed to find 'special-schedules'")
+                ProgressHUD.failed("Failed to find 'special-schedules'")
                 completion(.failure(error!))
             } else {
                 var tempArray = [String: SpecialSchedule]()
@@ -156,13 +156,13 @@ class AuthVC: CustomLoader {
         let db = Firestore.firestore()
         db.collection("ifstatements").document("ifstatements").getDocument(completion: {(snapshot, error) in
             if error != nil {
-                ProgressHUD.showFailed("Failed to find 'ifstatements'")
+                ProgressHUD.failed("Failed to find 'ifstatements'")
                 print("failed to find \(error)")
             } else {
                 if ((snapshot?.data()?["shouldUseOnlineClasses"] as? Bool) ?? false) {
                     db.collection("default-schedules").getDocuments(completion: {(snap, err) in
                         if err != nil {
-                            ProgressHUD.showFailed("Failed to find 'default schedules'")
+                            ProgressHUD.failed("Failed to find 'default schedules'")
                         }
                         else {
                             for document in (snap?.documents)! {
@@ -199,7 +199,7 @@ class AuthVC: CustomLoader {
         // change here to filter for the users id
         db.collection("users").document("\(FirebaseAuth.Auth.auth().currentUser?.uid ?? "--")").getDocument { (document, error) in
             if error != nil {
-                ProgressHUD.showFailed("Failed to find 'users'")
+                ProgressHUD.failed("Failed to find 'users'")
             } else {
                 //                var isCreated = false
                 if !(document?.exists ?? false) {
@@ -216,7 +216,7 @@ class AuthVC: CustomLoader {
                     let currDoc = db.collection("users").document("\(Auth.auth().currentUser?.uid ?? "")")
                     LoginVC.blocks["uid"] = Auth.auth().currentUser?.uid ?? ""
                     ProgressHUD.colorAnimation = .green
-                    ProgressHUD.showSucceed("Welcome to Knight Life!")
+                    ProgressHUD.succeed("Welcome to Knight Life!")
                     currDoc.setData(LoginVC.blocks)
                     self.hideLoader(completion: {
                         self.hideLoaderView()

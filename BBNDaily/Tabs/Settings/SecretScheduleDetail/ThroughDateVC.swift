@@ -42,7 +42,7 @@ class ThroughDateVC: UIViewController {
         }
         else {
             ProgressHUD.colorAnimation = .red
-            ProgressHUD.showFailed("The start date must precede the end date!")
+            ProgressHUD.failed("The start date must precede the end date!")
         }
     }
     @IBOutlet var startDatePicker: UIDatePicker!

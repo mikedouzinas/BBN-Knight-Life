@@ -87,7 +87,7 @@ class ClassPopupVC: UIViewController, UITableViewDelegate, SkeletonTableViewData
                     }
                     else {
                         ProgressHUD.colorAnimation = .red
-                        ProgressHUD.showFailed("This user has public classes turned off")
+                        ProgressHUD.failed("This user has public classes turned off")
                     }
                 } else {
                     print("Document does not exist!")
@@ -96,7 +96,7 @@ class ClassPopupVC: UIViewController, UITableViewDelegate, SkeletonTableViewData
         }
         else {
             ProgressHUD.colorAnimation = .red
-            ProgressHUD.showFailed("This user has not set up this shared class")
+            ProgressHUD.failed("This user has not set up this shared class")
         }
     }
     @IBOutlet weak var editButton: UIButton!
@@ -129,7 +129,7 @@ class ClassPopupVC: UIViewController, UITableViewDelegate, SkeletonTableViewData
             } else {
                 print("Document does not exist, no members to add!")
                 ProgressHUD.colorAnimation = .red
-                ProgressHUD.showFailed("This class no longer exists! Please change your class in settings.")
+                ProgressHUD.failed("This class no longer exists! Please change your class in settings.")
             }
             TextView.stopSkeletonAnimation()
             classAdminLabel.stopSkeletonAnimation()

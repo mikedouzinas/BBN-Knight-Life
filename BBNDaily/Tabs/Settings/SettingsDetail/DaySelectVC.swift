@@ -38,7 +38,7 @@ class DaySelectVC: UIViewController {
             let oldString = "\(oldRow.Subject)~\(oldRow.Teacher)~\(oldRow.Room)~\(oldRow.Block)"
             if finalString != oldString && alreadyExists(word: finalString) {
                 ProgressHUD.colorAnimation = .red
-                ProgressHUD.showFailed("Class already exists!")
+                ProgressHUD.failed("Class already exists!")
                 return
             }
             showLoader(text: "Changing class...")
@@ -54,10 +54,10 @@ class DaySelectVC: UIViewController {
                     
                     let data2 = ["monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
                     let data = ["name":"\(finalString)", "owner":"\(creator)", "isEditable":isEditable, "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn, "members":array, "homework":homeworkText, "block":"\(oldRow.Block.uppercased())"] as [String : Any]
-                    if !isEditable || LoginVC.email.lowercased() != creator.lowercased() && LoginVC.email.lowercased() != "mveson@bbns.org" {
+                    if !isEditable || LoginVC.email.lowercased() != creator.lowercased() && LoginVC.email.lowercased() != "mveson@bbns.org" && LoginVC.email.lowercased() != "yzhao@bbns.org" {
                         hideLoader(completion: {
                             ProgressHUD.colorAnimation = .red
-                            ProgressHUD.showFailed("Sorry, you do not have permission to edit this class.")
+                            ProgressHUD.failed("Sorry, you do not have permission to edit this class.")
                             self.dismiss(animated: true, completion: nil)
                             return
                         })
@@ -78,7 +78,7 @@ class DaySelectVC: UIViewController {
                                 hideLoader(completion: { [self] in
                                     if let err = err {
                                         ProgressHUD.colorAnimation = .red
-                                        ProgressHUD.showFailed("Failed to change class, please exit and try again.")
+                                        ProgressHUD.failed("Failed to change class, please exit and try again.")
                                         print(err)
                                     }
                                     else {
@@ -93,7 +93,7 @@ class DaySelectVC: UIViewController {
                                 hideLoader(completion: { [self] in
                                     if let err = err {
                                         ProgressHUD.colorAnimation = .red
-                                        ProgressHUD.showFailed("Failed to change class, please exit and try again.")
+                                        ProgressHUD.failed("Failed to change class, please exit and try again.")
                                         print(err)
                                     }
                                     else {
@@ -115,7 +115,7 @@ class DaySelectVC: UIViewController {
                     print("Document does not exist, no members to add!")
                     hideLoader(completion: {
                         ProgressHUD.colorAnimation = .red
-                        ProgressHUD.showFailed("Sorry, you cannot edit this class.")
+                        ProgressHUD.failed("Sorry, you cannot edit this class.")
                         self.dismiss(animated: true, completion: nil)
                         return
                     })
@@ -126,7 +126,7 @@ class DaySelectVC: UIViewController {
         else {
             if alreadyExists(word: finalString) {
                 ProgressHUD.colorAnimation = .red
-                ProgressHUD.showFailed("Class already exists!")
+                ProgressHUD.failed("Class already exists!")
                 return
             }
             showLoader(text: "Adding class...")
@@ -136,7 +136,7 @@ class DaySelectVC: UIViewController {
                 hideLoader(completion: { [self] in
                     if let err = err {
                         ProgressHUD.colorAnimation = .red
-                        ProgressHUD.showFailed("Failed to add class, please exit and try again.")
+                        ProgressHUD.failed("Failed to add class, please exit and try again.")
                         print(err)
                     }
                     else {

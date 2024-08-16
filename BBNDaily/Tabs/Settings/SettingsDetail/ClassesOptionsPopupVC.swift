@@ -84,7 +84,7 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
             LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = realDef
             guard let uid: String = (LoginVC.blocks["uid"] as? String), uid != "" else {
                 ProgressHUD.colorAnimation = .red
-                ProgressHUD.showFailed("Please Sign Out To Fix Your Account")
+                ProgressHUD.failed("Please Sign Out To Fix Your Account")
                 return
             }
             let currDoc = db.collection("users").document("\(uid)")
@@ -131,7 +131,7 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         let db = Firestore.firestore()
         db.collection("classes").whereField("block", isEqualTo: "\(ClassesOptionsPopupVC.currentBlock.uppercased())").getDocuments { [self] (snapshot, error) in
             if error != nil {
-                ProgressHUD.showFailed("Failed to find 'special-schedules'")
+                ProgressHUD.failed("Failed to find 'special-schedules'")
             } else {
                 Classes = [ClassModel]()
                 for document in (snapshot?.documents)! {

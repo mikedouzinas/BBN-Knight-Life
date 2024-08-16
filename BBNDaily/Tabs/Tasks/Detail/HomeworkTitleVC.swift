@@ -14,7 +14,7 @@ class HomeworkTitleVC: TextFieldVC {
     @IBAction func pressed(_ sender: Any) {
         guard var text = TextField.text, text.trimmingCharacters(in: .whitespacesAndNewlines) != "", !text.contains("~"), !text.contains("/") else {
             ProgressHUD.colorAnimation = .red
-            ProgressHUD.showFailed("Please complete fields! (Don't use any ~ or /)")
+            ProgressHUD.failed("Please complete fields! (Don't use any ~ or /)")
             return
         }
         text = text.trimmingCharacters(in: .whitespacesAndNewlines)

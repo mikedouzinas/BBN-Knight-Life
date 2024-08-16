@@ -18,7 +18,7 @@ class ImageVC: UIViewController, UIImagePickerControllerDelegate, UINavigationCo
     @IBAction func pressedFinish() {
         guard let image = tempImageView.image else {
             ProgressHUD.colorAnimation = .red
-            ProgressHUD.showFailed("You need to select an image!")
+            ProgressHUD.failed("You need to select an image!")
             return
         }
         let currDate = link.currentDate.replacingOccurrences(of: "/", with: "-")
@@ -31,7 +31,7 @@ class ImageVC: UIViewController, UIImagePickerControllerDelegate, UINavigationCo
         storageRef.child("schedules/\(currDate).png").putData(imageData, metadata: nil, completion: { _, error in
             guard error == nil else {
                 print("failed to upload \(String(describing: error))")
-                ProgressHUD.showFailed("Failed to upload photo :(")
+                ProgressHUD.failed("Failed to upload photo :(")
                 return
             }
             DispatchQueue.main.async { [self] in

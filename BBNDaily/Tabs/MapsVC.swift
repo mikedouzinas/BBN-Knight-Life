@@ -66,7 +66,7 @@ class MapsVC: UIViewController, ResultsViewControllerDelegate, CLLocationManager
         guard let number = URL(string: "tel://" + "\(LoginVC.busNumber)") else { return }
         UIApplication.shared.open(number)
 //        ProgressHUD.colorAnimation = UIColor(named: "gold-bright")!
-//        ProgressHUD.showSucceed("Coming Soon! \n Bus number is (617) 593-0396")
+//        ProgressHUD.succeed("Coming Soon! \n Bus number is (617) 593-0396")
     }
     var locationManager = CLLocationManager()
     func didTapPlace(with classroom: Classroom) {

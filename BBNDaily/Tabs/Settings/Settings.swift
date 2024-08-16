@@ -614,7 +614,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     }
     @objc func openSecretSchedule() {
         // admin access to schedule changing
-        if LoginVC.email.contains("mveson") || LoginVC.email.contains("amoro-araujo") {
+        if LoginVC.email.contains("mveson") || LoginVC.email.contains("amoro-araujo") || LoginVC.email.contains("yzhao") {
             self.performSegue(withIdentifier: "secretSchedule", sender: nil)
         }
         
@@ -723,7 +723,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             }
             weekday+=1
         }
-        ProgressHUD.showSuccess("Added Schedule to Calendar!")
+        ProgressHUD.succeed("Added Schedule to Calendar!")
     }
     
     private func addEventToCalendar(calendar: EKCalendar, title: String, startDate: Date, endDate: Date) {

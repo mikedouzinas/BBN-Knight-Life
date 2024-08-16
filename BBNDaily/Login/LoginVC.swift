@@ -66,7 +66,7 @@ class LoginVC: AuthVC {
                     // show failed sign in
                     self?.hideLoader(completion: {
                         ProgressHUD.colorAnimation = UIColor(named: "red")!
-                        ProgressHUD.showFailed("Invalid credentials")
+                        ProgressHUD.failed("Invalid credentials")
                     })
                     
                     return

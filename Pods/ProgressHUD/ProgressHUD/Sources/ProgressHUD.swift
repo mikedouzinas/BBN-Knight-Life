@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2023 Related Code - https://relatedcode.com
+// Copyright (c) 2024 Related Code - https://relatedcode.com
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -11,429 +11,205 @@
 
 import UIKit
 
-// MARK: - AnimationType
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-public enum AnimationType {
-
-	case none
-	case systemActivityIndicator
-	case horizontalCirclesPulse
-	case lineScaling
-	case singleCirclePulse
-	case multipleCirclePulse
-	case singleCircleScaleRipple
-	case multipleCircleScaleRipple
-	case circleSpinFade
-	case lineSpinFade
-	case circleRotateChase
-	case circleStrokeSpin
-}
-
-// MARK: - AnimatedIcon
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-public enum AnimatedIcon {
-
-	case succeed
-	case failed
-	case added
-}
-
-// MARK: - AlertIcon
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-public enum AlertIcon {
-
-	case heart
-	case doc
-	case bookmark
-	case moon
-	case star
-	case exclamation
-	case flag
-	case message
-	case question
-	case bolt
-	case shuffle
-	case eject
-	case card
-	case rotate
-	case like
-	case dislike
-	case privacy
-	case cart
-	case search
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-extension AlertIcon {
-
-	var image: UIImage? {
-		switch self {
-			case .heart:		return UIImage(systemName: "heart.fill")
-			case .doc:			return UIImage(systemName: "doc.fill")
-			case .bookmark:		return UIImage(systemName: "bookmark.fill")
-			case .moon:			return UIImage(systemName: "moon.fill")
-			case .star:			return UIImage(systemName: "star.fill")
-			case .exclamation:	return UIImage(systemName: "exclamationmark.triangle.fill")
-			case .flag:			return UIImage(systemName: "flag.fill")
-			case .message:		return UIImage(systemName: "envelope.fill")
-			case .question:		return UIImage(systemName: "questionmark.diamond.fill")
-			case .bolt:			return UIImage(systemName: "bolt.fill")
-			case .shuffle:		return UIImage(systemName: "shuffle")
-			case .eject:		return UIImage(systemName: "eject.fill")
-			case .card:			return UIImage(systemName: "creditcard.fill")
-			case .rotate:		return UIImage(systemName: "rotate.right.fill")
-			case .like:			return UIImage(systemName: "hand.thumbsup.fill")
-			case .dislike:		return UIImage(systemName: "hand.thumbsdown.fill")
-			case .privacy:		return UIImage(systemName: "hand.raised.fill")
-			case .cart:			return UIImage(systemName: "cart.fill")
-			case .search:		return UIImage(systemName: "magnifyingglass")
-		}
-	}
-}
-
-// MARK: - ProgressHUD
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-public extension ProgressHUD {
-
-	class var mediaSize: CGFloat {
-		get { shared.mediaSize }
-		set { shared.mediaSize = newValue }
-	}
-
-	class var marginSize: CGFloat {
-		get { shared.marginSize }
-		set { shared.marginSize = newValue }
-	}
-
-	class var animationType: AnimationType {
-		get { shared.animationType }
-		set { shared.animationType = newValue }
-	}
-
-	class var colorBackground: UIColor {
-		get { shared.colorBackground }
-		set { shared.colorBackground = newValue }
-	}
-
-	class var colorHUD: UIColor {
-		get { shared.colorHUD }
-		set { shared.colorHUD = newValue }
-	}
-
-	class var colorStatus: UIColor {
-		get { shared.colorStatus }
-		set { shared.colorStatus = newValue }
-	}
-
-	class var colorProgress: UIColor {
-		get { shared.colorProgress }
-		set { shared.colorProgress = newValue }
-	}
-
-	class var colorAnimation: UIColor {
-		get { shared.colorAnimation }
-		set { shared.colorAnimation = newValue }
-	}
-
-	class var fontStatus: UIFont {
-		get { shared.fontStatus }
-		set { shared.fontStatus = newValue }
-	}
-
-	class var imageSuccess: UIImage {
-		get { shared.imageSuccess }
-		set { shared.imageSuccess = newValue }
-	}
-
-	class var imageError: UIImage {
-		get { shared.imageError }
-		set { shared.imageError = newValue }
-	}
-}
-
-// MARK: - ProgressHUD
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-public extension ProgressHUD {
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func dismiss() {
-
-		DispatchQueue.main.async {
-			shared.dismissHUD()
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func remove() {
-
-		DispatchQueue.main.async {
-			shared.removeHUD()
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func show(_ text: String? = nil, interaction: Bool = true) {
-
-		DispatchQueue.main.async {
-			shared.setup(text: text, interaction: interaction)
-		}
-	}
-
-	// MARK: - Animated Icon
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func show(_ text: String? = nil, icon: AnimatedIcon, interaction: Bool = true, delay: TimeInterval? = nil) {
-
-		DispatchQueue.main.async {
-			shared.setup(text: text, animatedIcon: icon, interaction: interaction, delay: delay)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func showSucceed(_ text: String? = nil, interaction: Bool = true, delay: TimeInterval? = nil) {
-
-		DispatchQueue.main.async {
-			shared.setup(text: text, animatedIcon: .succeed, interaction: interaction, delay: delay)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func showFailed(_ text: String? = nil, interaction: Bool = true, delay: TimeInterval? = nil) {
-
-		DispatchQueue.main.async {
-			shared.setup(text: text, animatedIcon: .failed, interaction: interaction, delay: delay)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func showFailed(_ error: Error?, interaction: Bool = true, delay: TimeInterval? = nil) {
-
-		DispatchQueue.main.async {
-			shared.setup(text: error?.localizedDescription, animatedIcon: .failed, interaction: interaction, delay: delay)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func showAdded(_ text: String? = nil, interaction: Bool = true, delay: TimeInterval? = nil) {
-
-		DispatchQueue.main.async {
-			shared.setup(text: text, animatedIcon: .added, interaction: interaction, delay: delay)
-		}
-	}
-
-	// MARK: - Static Image
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func show(_ text: String? = nil, icon: AlertIcon, interaction: Bool = true, delay: TimeInterval? = nil) {
-
-		let image = icon.image?.withTintColor(shared.colorAnimation, renderingMode: .alwaysOriginal)
-
-		DispatchQueue.main.async {
-			shared.setup(text: text, staticImage: image, interaction: interaction, delay: delay)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func show(_ text: String? = nil, symbol: String, interaction: Bool = true, delay: TimeInterval? = nil) {
-
-		let image = UIImage(systemName: symbol)?.withTintColor(shared.colorAnimation, renderingMode: .alwaysOriginal)
-
-		DispatchQueue.main.async {
-			shared.setup(text: text, staticImage: image, interaction: interaction, delay: delay)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func showSuccess(_ text: String? = nil, image: UIImage? = nil, interaction: Bool = true, delay: TimeInterval? = nil) {
-
-		DispatchQueue.main.async {
-			shared.setup(text: text, staticImage: image ?? shared.imageSuccess, interaction: interaction, delay: delay)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func showError(_ text: String? = nil, image: UIImage? = nil, interaction: Bool = true, delay: TimeInterval? = nil) {
-
-		DispatchQueue.main.async {
-			shared.setup(text: text, staticImage: image ?? shared.imageError, interaction: interaction, delay: delay)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func showError(_ error: Error?, image: UIImage? = nil, interaction: Bool = true, delay: TimeInterval? = nil) {
-
-		DispatchQueue.main.async {
-			shared.setup(text: error?.localizedDescription, staticImage: image ?? shared.imageError, interaction: interaction, delay: delay)
-		}
-	}
-
-	// MARK: - Progress
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func showProgress(_ progress: CGFloat, interaction: Bool = false) {
-
-		DispatchQueue.main.async {
-			shared.setup(text: nil, progress: progress, interaction: interaction)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	class func showProgress(_ text: String?, _ progress: CGFloat, interaction: Bool = false) {
-
-		DispatchQueue.main.async {
-			shared.setup(text: text, progress: progress, interaction: interaction)
-		}
-	}
-}
-
-// MARK: - ProgressHUD
-//-----------------------------------------------------------------------------------------------------------------------------------------------
 public class ProgressHUD: UIView {
 
-	private var timer: Timer?
+	var main: UIWindow!
 
-	private var mediaSize: CGFloat = 70
-	private var marginSize: CGFloat = 30
+	// Banner properties
+	var viewBanner: UIToolbar?
+	var colorBanner = UIColor.clear
+	var timerBanner: Timer?
+	var observerBanner: NSObjectProtocol?
 
-	private var viewBackground: UIView?
-	private var toolbarHUD: UIToolbar?
-	private var labelStatus: UILabel?
+	var textBannerTitle = ""
+	var colorBannerTitle = UIColor.label
+	var fontBannerTitle = UIFont.boldSystemFont(ofSize: 16)
+	var labelBannerTitle: UILabel?
 
-	private var viewProgress: ProgressView?
-	private var viewAnimatedIcon: UIView?
-	private var viewStaticImage: UIImageView?
-	private var viewAnimation: UIView?
+	var textBannerMessage = ""
+	var colorBannerMessage = UIColor.secondaryLabel
+	var fontBannerMessage = UIFont.systemFont(ofSize: 14)
+	var labelBannerMessage: UILabel?
 
-	private var animationType	= AnimationType.systemActivityIndicator
+	// HUD properties
+	var timerHUD: Timer?
 
-	private var colorBackground	= UIColor(red: 0, green: 0, blue: 0, alpha: 0.2)
-	private var colorHUD		= UIColor.systemGray
-	private var colorStatus		= UIColor.label
-	private var colorProgress	= UIColor.lightGray
-	private var colorAnimation	= UIColor.lightGray
+	var mediaSize: CGFloat = 70
+	var marginSize: CGFloat = 30
 
-	private var fontStatus		= UIFont.boldSystemFont(ofSize: 24)
-	private var imageSuccess	= UIImage.checkmark.withTintColor(UIColor.systemGreen, renderingMode: .alwaysOriginal)
-	private var imageError		= UIImage.remove.withTintColor(UIColor.systemRed, renderingMode: .alwaysOriginal)
+	var viewBackground: UIView?
+	var toolbarHUD: UIToolbar?
+	var labelStatus: UILabel?
 
-	private var didSetupNotifications	= false
-	private let keyboardWillShow		= UIResponder.keyboardWillShowNotification
-	private let keyboardWillHide		= UIResponder.keyboardWillHideNotification
-	private let keyboardDidShow			= UIResponder.keyboardDidShowNotification
-	private let keyboardDidHide			= UIResponder.keyboardDidHideNotification
-	private let orientationDidChange	= UIDevice.orientationDidChangeNotification
+	var viewProgress: ProgressView?
+	var viewLiveIcon: UIView?
+	var viewStaticImage: UIImageView?
+	var viewAnimation: UIView?
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	static let shared: ProgressHUD = {
-		let instance = ProgressHUD()
-		return instance
-	} ()
+	var animationType	= AnimationType.activityIndicator
+	var animationSymbol	= "sun.max"
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
+	var colorBackground	= UIColor(red: 0, green: 0, blue: 0, alpha: 0.2)
+	var colorHUD		= UIColor.systemGray
+	var colorStatus		= UIColor.label
+	var colorProgress	= UIColor.lightGray
+	var colorAnimation	= UIColor.lightGray
+
+	var fontStatus		= UIFont.boldSystemFont(ofSize: 24)
+	var imageSuccess	= UIImage.checkmark.withTintColor(UIColor.systemGreen, renderingMode: .alwaysOriginal)
+	var imageError		= UIImage.remove.withTintColor(UIColor.systemRed, renderingMode: .alwaysOriginal)
+
+	var didSetupNotifications	= false
+	let keyboardWillShow		= UIResponder.keyboardWillShowNotification
+	let keyboardWillHide		= UIResponder.keyboardWillHideNotification
+	let keyboardDidShow			= UIResponder.keyboardDidShowNotification
+	let keyboardDidHide			= UIResponder.keyboardDidHideNotification
+	let orientationDidChange	= UIDevice.orientationDidChangeNotification
+
+	static let shared = ProgressHUD()
+
 	convenience private init() {
-
 		self.init(frame: UIScreen.main.bounds)
 		self.alpha = 0
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	required internal init?(coder: NSCoder) {
-
 		super.init(coder: coder)
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	override private init(frame: CGRect) {
-
 		super.init(frame: frame)
 	}
 }
 
-// MARK: - Setup
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+// MARK: - Progress
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func setup(text: String?, progress: CGFloat? = nil, animatedIcon: AnimatedIcon? = nil, staticImage: UIImage? = nil,
-						interaction: Bool, delay: TimeInterval? = nil) {
+	func progress(text: String?, value: CGFloat, interaction: Bool) {
 
 		removeDelayTimer()
 
-		setupNotifications()
+		setupWindow()
 		setupBackground(interaction)
 		setupToolbar()
 		setupStatus(text)
 
-		var animation = false
+		removeLiveIcon()
+		removeStaticImage()
+		removeAnimationView()
+		setupProgressView(value)
 
-		if let progress {
-			removeAnimatedIcon()
-			removeStaticImage()
-			removeAnimationView()
-			setupProgressView(progress)
-		} else if let animatedIcon {
-			removeProgressView()
-			removeStaticImage()
-			removeAnimationView()
-			setupAnimatedIcon(animatedIcon)
-			setupDelayTimer(text, delay)
-		} else if let staticImage {
-			removeProgressView()
-			removeAnimatedIcon()
-			removeAnimationView()
-			setupStaticImage(staticImage)
-			setupDelayTimer(text, delay)
-		} else {
-			removeProgressView()
-			removeAnimatedIcon()
-			removeStaticImage()
-			setupAnimationView()
-			animation = true
-		}
+		setupSizes(text, false)
+		setupNotifications()
+		setupPosition()
+		displayHUD()
+	}
+}
 
-		setupSizes(text, animation)
+// MARK: - Live Icon
+extension ProgressHUD {
+
+	func liveIcon(text: String?, icon: LiveIcon, interaction: Bool, delay: TimeInterval?) {
+
+		removeDelayTimer()
+
+		setupWindow()
+		setupBackground(interaction)
+		setupToolbar()
+		setupStatus(text)
+
+		removeStaticImage()
+		removeProgressView()
+		removeAnimationView()
+		setupLiveIcon(icon)
+		setupDelayTimer(text, delay)
+
+		setupSizes(text, false)
+		setupNotifications()
+		setupPosition()
+		displayHUD()
+	}
+}
+
+// MARK: - Static Image
+extension ProgressHUD {
+
+	func staticImage(text: String?, image: UIImage?, interaction: Bool, delay: TimeInterval?) {
+
+		removeDelayTimer()
+
+		setupWindow()
+		setupBackground(interaction)
+		setupToolbar()
+		setupStatus(text)
+
+		removeLiveIcon()
+		removeProgressView()
+		removeAnimationView()
+		setupStaticImage(image)
+		setupDelayTimer(text, delay)
+
+		setupSizes(text, false)
+		setupNotifications()
+		setupPosition()
+		displayHUD()
+	}
+}
+
+// MARK: - Animation
+extension ProgressHUD {
+
+	func animate(text: String?, interaction: Bool) {
+
+		removeDelayTimer()
+
+		setupWindow()
+		setupBackground(interaction)
+		setupToolbar()
+		setupStatus(text)
+
+		removeLiveIcon()
+		removeStaticImage()
+		removeProgressView()
+		setupAnimationView()
+
+		setupSizes(text, true)
+		setupNotifications()
 		setupPosition()
 		displayHUD()
 	}
 }
 
 // MARK: - Delay Timer
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func removeDelayTimer() {
-
-		timer?.invalidate()
-		timer = nil
+		timerHUD?.invalidate()
+		timerHUD = nil
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func setupDelayTimer(_ text: String?, _ delay: TimeInterval?) {
-
 		let count = text?.count ?? 0
 		let delay = delay ?? Double(count) * 0.03 + 1.25
 
-		timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+		timerHUD = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
 			guard let self = self else { return }
-			self.dismissHUD()
+			dismissHUD()
 		}
 	}
 }
 
 // MARK: - Notifications
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func removeNotifications() {
-
 		if (didSetupNotifications) {
 			NotificationCenter.default.removeObserver(self)
 			didSetupNotifications = false
 		}
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func setupNotifications() {
-
 		if (!didSetupNotifications) {
 			NotificationCenter.default.addObserver(self, selector: #selector(setupPosition(_:)), name: keyboardWillShow, object: nil)
 			NotificationCenter.default.addObserver(self, selector: #selector(setupPosition(_:)), name: keyboardWillHide, object: nil)
@@ -445,24 +221,28 @@ private extension ProgressHUD {
 	}
 }
 
-// MARK: - Background View
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+// MARK: - Window
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
+	func setupWindow() {
+		if (main == nil) {
+			main = UIApplication.shared.windows.first
+		}
+	}
+}
+
+// MARK: - Background
+extension ProgressHUD {
+
 	private func removeBackground() {
-
 		viewBackground?.removeFromSuperview()
 		viewBackground = nil
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func setupBackground(_ interaction: Bool) {
-
 		if (viewBackground == nil) {
-			let mainWindow = UIApplication.shared.windows.first ?? UIWindow()
 			viewBackground = UIView(frame: bounds)
-			mainWindow.addSubview(viewBackground!)
+			main.addSubview(viewBackground!)
 		}
 
 		viewBackground?.backgroundColor = interaction ? .clear : colorBackground
@@ -470,20 +250,15 @@ private extension ProgressHUD {
 	}
 }
 
-// MARK: - HUD Toolbar
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+// MARK: - Toolbar
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func removeToolbar() {
-
 		toolbarHUD?.removeFromSuperview()
 		toolbarHUD = nil
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func setupToolbar() {
-
 		if (toolbarHUD == nil) {
 			toolbarHUD = UIToolbar(frame: CGRect.zero)
 			toolbarHUD?.isTranslucent = true
@@ -494,26 +269,18 @@ private extension ProgressHUD {
 		}
 
 		toolbarHUD?.backgroundColor = colorHUD
-
-		toolbarHUD?.layer.borderWidth = 0.0
-		toolbarHUD?.layer.borderColor = UIColor.clear.cgColor
 	}
 }
 
 // MARK: - Status Label
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func removeStatus() {
-
 		labelStatus?.removeFromSuperview()
 		labelStatus = nil
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func setupStatus(_ text: String?) {
-
 		if (labelStatus == nil) {
 			labelStatus = UILabel()
 			labelStatus?.textAlignment = .center
@@ -530,156 +297,149 @@ private extension ProgressHUD {
 }
 
 // MARK: - Progress View
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func removeProgressView() {
-
 		viewProgress?.removeFromSuperview()
 		viewProgress = nil
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func setupProgressView(_ progress: CGFloat) {
-
+	private func setupProgressView(_ value: CGFloat) {
 		if (viewProgress == nil) {
 			viewProgress = ProgressView(colorProgress)
 			viewProgress?.frame = CGRect(x: 0, y: 0, width: mediaSize, height: mediaSize)
 		}
 
-		if (viewProgress?.superview == nil) {
-			toolbarHUD?.addSubview(viewProgress!)
+		guard let viewProgress = viewProgress else { return }
+
+		if (viewProgress.superview == nil) {
+			toolbarHUD?.addSubview(viewProgress)
 		}
 
-		viewProgress?.setProgress(progress)
+		viewProgress.setProgress(value)
 	}
 }
 
-// MARK: - Animated Icon
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+// MARK: - Live Icon
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func removeAnimatedIcon() {
-
-		viewAnimatedIcon?.removeFromSuperview()
-		viewAnimatedIcon = nil
+	private func removeLiveIcon() {
+		viewLiveIcon?.removeFromSuperview()
+		viewLiveIcon = nil
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func setupAnimatedIcon(_ animatedIcon: AnimatedIcon) {
-
-		if (viewAnimatedIcon == nil) {
-			viewAnimatedIcon = UIView(frame: CGRect(x: 0, y: 0, width: mediaSize, height: mediaSize))
+	private func setupLiveIcon(_ icon: LiveIcon) {
+		if (viewLiveIcon == nil) {
+			viewLiveIcon = UIView(frame: CGRect(x: 0, y: 0, width: mediaSize, height: mediaSize))
 		}
 
-		if (viewAnimatedIcon?.superview == nil) {
-			toolbarHUD?.addSubview(viewAnimatedIcon!)
+		guard let viewLiveIcon = viewLiveIcon else { return }
+
+		if (viewLiveIcon.superview == nil) {
+			toolbarHUD?.addSubview(viewLiveIcon)
 		}
 
-		viewAnimatedIcon?.layer.sublayers?.forEach {
+		viewLiveIcon.layer.sublayers?.forEach {
 			$0.removeFromSuperlayer()
 		}
 
-		if (animatedIcon == .succeed)	{ animatedIconSucceed(viewAnimatedIcon!)	}
-		if (animatedIcon == .failed)	{ animatedIconFailed(viewAnimatedIcon!)		}
-		if (animatedIcon == .added)		{ animatedIconAdded(viewAnimatedIcon!)		}
+		if (icon == .succeed)	{ liveIconSucceed(viewLiveIcon)	}
+		if (icon == .failed)	{ liveIconFailed(viewLiveIcon)	}
+		if (icon == .added)		{ liveIconAdded(viewLiveIcon)	}
 	}
 }
 
 // MARK: - Static Image
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func removeStaticImage() {
-
 		viewStaticImage?.removeFromSuperview()
 		viewStaticImage = nil
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func setupStaticImage(_ staticImage: UIImage) {
-
+	private func setupStaticImage(_ image: UIImage?) {
 		if (viewStaticImage == nil) {
 			viewStaticImage = UIImageView(frame: CGRect(x: 0, y: 0, width: mediaSize, height: mediaSize))
 		}
 
-		if (viewStaticImage?.superview == nil) {
-			toolbarHUD?.addSubview(viewStaticImage!)
+		guard let viewStaticImage = viewStaticImage else { return }
+
+		if (viewStaticImage.superview == nil) {
+			toolbarHUD?.addSubview(viewStaticImage)
 		}
 
-		viewStaticImage?.image = staticImage
-		viewStaticImage?.contentMode = .scaleAspectFit
+		viewStaticImage.image = image
+		viewStaticImage.contentMode = .scaleAspectFit
 	}
 }
 
 // MARK: - Animation View
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func removeAnimationView() {
-
 		viewAnimation?.removeFromSuperview()
 		viewAnimation = nil
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func setupAnimationView() {
-
 		if (viewAnimation == nil) {
 			viewAnimation = UIView(frame: CGRect(x: 0, y: 0, width: mediaSize, height: mediaSize))
 		}
 
-		if (viewAnimation?.superview == nil) {
-			toolbarHUD?.addSubview(viewAnimation!)
+		guard let viewAnimation = viewAnimation else { return }
+
+		if (viewAnimation.superview == nil) {
+			toolbarHUD?.addSubview(viewAnimation)
 		}
 
-		viewAnimation?.subviews.forEach {
+		viewAnimation.subviews.forEach {
 			$0.removeFromSuperview()
 		}
 
-		viewAnimation?.layer.sublayers?.forEach {
+		viewAnimation.layer.sublayers?.forEach {
 			$0.removeFromSuperlayer()
 		}
 
-		if (animationType == .systemActivityIndicator)		{ animationSystemActivityIndicator(viewAnimation!)		}
-		if (animationType == .horizontalCirclesPulse)		{ animationHorizontalCirclesPulse(viewAnimation!)		}
-		if (animationType == .lineScaling)					{ animationLineScaling(viewAnimation!)					}
-		if (animationType == .singleCirclePulse)			{ animationSingleCirclePulse(viewAnimation!)			}
-		if (animationType == .multipleCirclePulse)			{ animationMultipleCirclePulse(viewAnimation!)			}
-		if (animationType == .singleCircleScaleRipple)		{ animationSingleCircleScaleRipple(viewAnimation!)		}
-		if (animationType == .multipleCircleScaleRipple)	{ animationMultipleCircleScaleRipple(viewAnimation!)	}
-		if (animationType == .circleSpinFade)				{ animationCircleSpinFade(viewAnimation!)				}
-		if (animationType == .lineSpinFade)					{ animationLineSpinFade(viewAnimation!)					}
-		if (animationType == .circleRotateChase)			{ animationCircleRotateChase(viewAnimation!)			}
-		if (animationType == .circleStrokeSpin)				{ animationCircleStrokeSpin(viewAnimation!)				}
+		if (animationType == .activityIndicator)		{ animationActivityIndicator(viewAnimation)		}
+		if (animationType == .ballVerticalBounce)		{ animationBallVerticalBounce(viewAnimation)	}
+		if (animationType == .barSweepToggle)			{ animationBarSweepToggle(viewAnimation)		}
+		if (animationType == .circleArcDotSpin)			{ animationCircleArcDotSpin(viewAnimation)		}
+		if (animationType == .circleBarSpinFade)		{ animationCircleBarSpinFade(viewAnimation)		}
+		if (animationType == .circleDotSpinFade)		{ animationCircleDotSpinFade(viewAnimation)		}
+		if (animationType == .circlePulseMultiple)		{ animationCirclePulseMultiple(viewAnimation)	}
+		if (animationType == .circlePulseSingle)		{ animationCirclePulseSingle(viewAnimation)		}
+		if (animationType == .circleRippleMultiple)		{ animationCircleRippleMultiple(viewAnimation)	}
+		if (animationType == .circleRippleSingle)		{ animationCircleRippleSingle(viewAnimation)	}
+		if (animationType == .circleRotateChase)		{ animationCircleRotateChase(viewAnimation)		}
+		if (animationType == .circleStrokeSpin)			{ animationCircleStrokeSpin(viewAnimation)		}
+		if (animationType == .dualDotSidestep)			{ animationDualDotSidestep(viewAnimation)		}
+		if (animationType == .horizontalBarScaling)		{ animationHorizontalBarScaling(viewAnimation)	}
+		if (animationType == .horizontalDotScaling)		{ animationHorizontalDotScaling(viewAnimation)	}
+		if (animationType == .pacmanProgress)			{ animationPacmanProgress(viewAnimation)		}
+		if (animationType == .quintupleDotDance)		{ animationQuintupleDotDance(viewAnimation)		}
+		if (animationType == .semiRingRotation)			{ animationSemiRingRotation(viewAnimation)		}
+		if (animationType == .sfSymbolBounce)			{ animationSFSymbolBounce(viewAnimation)		}
+		if (animationType == .squareCircuitSnake)		{ animationSquareCircuitSnake(viewAnimation)	}
+		if (animationType == .triangleDotShift)			{ animationTriangleDotShift(viewAnimation)		}
 	}
 }
 
 // MARK: - Setup Sizes
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func setupSizes(_ text: String?, _ animation: Bool) {
-
 		if let text {
-			if (animation == false) || (animationType != .none) {
-				setupSizesBoth(text)
-			} else {
+			if (animation) && (animationType == .none) {
 				setupSizesTextOnly(text)
+			} else {
+				setupSizesBoth(text)
 			}
 		} else {
 			setupSizesTextNone()
 		}
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func setupSizesBoth(_ text: String) {
-
 		var rect = rectText(text)
 		let base = mediaSize + 2 * marginSize
 
@@ -694,9 +454,7 @@ private extension ProgressHUD {
 		setupSizes(width, height, center, rect)
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func setupSizesTextOnly(_ text: String) {
-
 		var rect = rectText(text)
 		let base = mediaSize + 2 * marginSize
 
@@ -709,9 +467,7 @@ private extension ProgressHUD {
 		setupSizes(width, height, CGPointZero, rect)
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func setupSizesTextNone() {
-
 		let width = mediaSize + 2 * marginSize
 		let height = mediaSize + 2 * marginSize
 
@@ -720,36 +476,28 @@ private extension ProgressHUD {
 		setupSizes(width, height, center, CGRectZero)
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func setupSizes(_ width: CGFloat, _ height: CGFloat, _ center: CGPoint, _ rect: CGRect) {
-
-		toolbarHUD?.bounds = CGRect(x: 0, y: 0, width: width, height: height)
+		toolbarHUD?.bounds = CGRect(x: 0, y: 0, width: ceil(width), height: ceil(height))
 
 		viewProgress?.center = center
-		viewAnimatedIcon?.center = center
+		viewLiveIcon?.center = center
 		viewStaticImage?.center = center
 		viewAnimation?.center = center
 
 		labelStatus?.frame = rect
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func rectText(_ text: String) -> CGRect {
-
 		let size = CGSize(width: 250, height: 250)
 		let attributes = [NSAttributedString.Key.font: fontStatus]
-
 		return text.boundingRect(with: size, options: .usesLineFragmentOrigin, attributes: attributes, context: nil)
 	}
 }
 
 // MARK: - Setup Position
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	@objc private func setupPosition(_ notification: Notification? = nil) {
-
 		var heightKeyboard: CGFloat = 0
 		var animationDuration: TimeInterval = 0
 
@@ -768,31 +516,27 @@ private extension ProgressHUD {
 			heightKeyboard = keyboardHeight()
 		}
 
-		let mainWindow = UIApplication.shared.windows.first ?? UIWindow()
-		let screen = mainWindow.bounds
-		let center = CGPoint(x: screen.size.width / 2, y: (screen.size.height - heightKeyboard) / 2)
+		DispatchQueue.main.async { [self] in
+			let center = CGPoint(x: main.bounds.size.width / 2, y: (main.bounds.size.height - heightKeyboard) / 2)
 
-		UIView.animate(withDuration: animationDuration, delay: 0, options: .allowUserInteraction, animations: { [self] in
-			toolbarHUD?.center = center
-			viewBackground?.frame = screen
-		}, completion: nil)
+			UIView.animate(withDuration: animationDuration, delay: 0, options: .allowUserInteraction) { [self] in
+				viewBackground?.frame = main.bounds
+				toolbarHUD?.center = center
+			}
+		}
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func keyboardHeight() -> CGFloat {
-
-		if let keyboardWindowClass = NSClassFromString("UIRemoteKeyboardWindow"),
-			let inputSetContainerView = NSClassFromString("UIInputSetContainerView"),
-			let inputSetHostView = NSClassFromString("UIInputSetHostView") {
-
-			for window in UIApplication.shared.windows {
-				if window.isKind(of: keyboardWindowClass) {
-					for firstSubView in window.subviews {
-						if firstSubView.isKind(of: inputSetContainerView) {
-							for secondSubView in firstSubView.subviews {
-								if secondSubView.isKind(of: inputSetHostView) {
-									return secondSubView.frame.size.height
-								}
+		let windows = UIApplication.shared.windows
+		for window in windows {
+			for view in window.subviews {
+				if String(describing: type(of: view)).hasPrefix("UIInputSetContainerView") {
+					for subview in view.subviews {
+						if String(describing: type(of: subview)).hasPrefix("UIInputSetHostView") {
+							let screenRect = UIScreen.main.bounds
+							let keyboardRect = window.convert(subview.frame, to: nil)
+							if keyboardRect.intersects(screenRect) {
+								return subview.frame.height
 							}
 						}
 					}
@@ -804,12 +548,9 @@ private extension ProgressHUD {
 }
 
 // MARK: - Display, Dismiss, Remove, Destroy
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
+extension ProgressHUD {
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func displayHUD() {
-
 		if (alpha == 0) {
 			alpha = 1
 			toolbarHUD?.alpha = 0
@@ -822,9 +563,7 @@ private extension ProgressHUD {
 		}
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func dismissHUD() {
-
+	func dismissHUD() {
 		if (alpha == 1) {
 			UIView.animate(withDuration: 0.15, delay: 0, options: [.allowUserInteraction, .curveEaseIn], animations: { [self] in
 				toolbarHUD?.transform = CGAffineTransform(scaleX: 0.3, y: 0.3)
@@ -836,9 +575,7 @@ private extension ProgressHUD {
 		}
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func removeHUD() {
-
+	func removeHUD() {
 		if (alpha == 1) {
 			toolbarHUD?.alpha = 0
 			destroyHUD()
@@ -846,691 +583,17 @@ private extension ProgressHUD {
 		}
 	}
 
-	//-------------------------------------------------------------------------------------------------------------------------------------------
 	private func destroyHUD() {
-
 		removeDelayTimer()
 		removeNotifications()
 
-		removeAnimationView()
+		removeLiveIcon()
 		removeStaticImage()
-		removeAnimatedIcon()
 		removeProgressView()
+		removeAnimationView()
 
 		removeStatus()
 		removeToolbar()
 		removeBackground()
-	}
-}
-
-// MARK: - Animation View
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animationSystemActivityIndicator(_ view: UIView) {
-
-		let spinner = UIActivityIndicatorView(style: .large)
-		let scale = view.frame.size.width / spinner.frame.size.width
-		spinner.transform = CGAffineTransform(scaleX: scale, y: scale)
-		spinner.frame = view.bounds
-		spinner.color = colorAnimation
-		spinner.hidesWhenStopped = true
-		spinner.startAnimating()
-		view.addSubview(spinner)
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animationHorizontalCirclesPulse(_ view: UIView) {
-
-		let width = view.frame.size.width
-		let height = view.frame.size.height
-
-		let spacing = 3.0
-		let radius = (width - spacing * 2) / 3
-		let center = CGPoint(x: radius / 2, y: radius / 2)
-		let positionY = (height - radius) / 2
-
-		let beginTime = CACurrentMediaTime()
-		let beginTimes = [0.36, 0.24, 0.12]
-		let timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.68, 0.18, 1.08)
-
-		let animation = CAKeyframeAnimation(keyPath: "transform.scale")
-		animation.keyTimes = [0, 0.5, 1]
-		animation.timingFunctions = [timingFunction, timingFunction]
-		animation.values = [1, 0.3, 1]
-		animation.duration = 1
-		animation.repeatCount = HUGE
-		animation.isRemovedOnCompletion = false
-
-		let path = UIBezierPath(arcCenter: center, radius: radius / 2, startAngle: 0, endAngle: 2 * .pi, clockwise: false)
-
-		for i in 0..<3 {
-			let layer = CAShapeLayer()
-			layer.frame = CGRect(x: (radius + spacing) * CGFloat(i), y: positionY, width: radius, height: radius)
-			layer.path = path.cgPath
-			layer.fillColor = colorAnimation.cgColor
-
-			animation.beginTime = beginTime - beginTimes[i]
-
-			layer.add(animation, forKey: "animation")
-			view.layer.addSublayer(layer)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animationLineScaling(_ view: UIView) {
-
-		let width = view.frame.size.width
-		let height = view.frame.size.height
-
-		let lineWidth = width / 9
-
-		let beginTime = CACurrentMediaTime()
-		let beginTimes = [0.5, 0.4, 0.3, 0.2, 0.1]
-		let timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.68, 0.18, 1.08)
-
-		let animation = CAKeyframeAnimation(keyPath: "transform.scale.y")
-		animation.keyTimes = [0, 0.5, 1]
-		animation.timingFunctions = [timingFunction, timingFunction]
-		animation.values = [1, 0.4, 1]
-		animation.duration = 1
-		animation.repeatCount = HUGE
-		animation.isRemovedOnCompletion = false
-
-		let path = UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: lineWidth, height: height), cornerRadius: width / 2)
-
-		for i in 0..<5 {
-			let layer = CAShapeLayer()
-			layer.frame = CGRect(x: lineWidth * 2 * CGFloat(i), y: 0, width: lineWidth, height: height)
-			layer.path = path.cgPath
-			layer.backgroundColor = nil
-			layer.fillColor = colorAnimation.cgColor
-
-			animation.beginTime = beginTime - beginTimes[i]
-
-			layer.add(animation, forKey: "animation")
-			view.layer.addSublayer(layer)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animationSingleCirclePulse(_ view: UIView) {
-
-		let width = view.frame.size.width
-		let height = view.frame.size.height
-		let center = CGPoint(x: width / 2, y: height / 2)
-		let radius = width / 2
-
-		let duration = 1.0
-
-		let animationScale = CABasicAnimation(keyPath: "transform.scale")
-		animationScale.duration = duration
-		animationScale.fromValue = 0
-		animationScale.toValue = 1
-
-		let animationOpacity = CABasicAnimation(keyPath: "opacity")
-		animationOpacity.duration = duration
-		animationOpacity.fromValue = 1
-		animationOpacity.toValue = 0
-
-		let animation = CAAnimationGroup()
-		animation.animations = [animationScale, animationOpacity]
-		animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-		animation.duration = duration
-		animation.repeatCount = HUGE
-		animation.isRemovedOnCompletion = false
-
-		let path = UIBezierPath(arcCenter: center, radius: radius, startAngle: 0, endAngle: 2 * .pi, clockwise: false)
-
-		let layer = CAShapeLayer()
-		layer.frame = CGRect(x: 0, y: 0, width: width, height: height)
-		layer.path = path.cgPath
-		layer.fillColor = colorAnimation.cgColor
-
-		layer.add(animation, forKey: "animation")
-		view.layer.addSublayer(layer)
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animationMultipleCirclePulse(_ view: UIView) {
-
-		let width = view.frame.size.width
-		let height = view.frame.size.height
-		let center = CGPoint(x: width / 2, y: height / 2)
-		let radius = width / 2
-
-		let duration = 1.0
-		let beginTime = CACurrentMediaTime()
-		let beginTimes = [0, 0.3, 0.6]
-
-		let animationScale = CABasicAnimation(keyPath: "transform.scale")
-		animationScale.duration = duration
-		animationScale.fromValue = 0
-		animationScale.toValue = 1
-
-		let animationOpacity = CAKeyframeAnimation(keyPath: "opacity")
-		animationOpacity.duration = duration
-		animationOpacity.keyTimes = [0, 0.05, 1]
-		animationOpacity.values = [0, 1, 0]
-
-		let animation = CAAnimationGroup()
-		animation.animations = [animationScale, animationOpacity]
-		animation.timingFunction = CAMediaTimingFunction(name: .linear)
-		animation.duration = duration
-		animation.repeatCount = HUGE
-		animation.isRemovedOnCompletion = false
-
-		let path = UIBezierPath(arcCenter: center, radius: radius, startAngle: 0, endAngle: 2 * .pi, clockwise: false)
-
-		for i in 0..<3 {
-			let layer = CAShapeLayer()
-			layer.frame = CGRect(x: 0, y: 0, width: width, height: height)
-			layer.path = path.cgPath
-			layer.fillColor = colorAnimation.cgColor
-			layer.opacity = 0
-
-			animation.beginTime = beginTime + beginTimes[i]
-
-			layer.add(animation, forKey: "animation")
-			view.layer.addSublayer(layer)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animationSingleCircleScaleRipple(_ view: UIView) {
-
-		let width = view.frame.size.width
-		let height = view.frame.size.height
-		let center = CGPoint(x: width / 2, y: height / 2)
-		let radius = width / 2
-
-		let duration = 1.0
-		let timingFunction = CAMediaTimingFunction(controlPoints: 0.21, 0.53, 0.56, 0.8)
-
-		let animationScale = CAKeyframeAnimation(keyPath: "transform.scale")
-		animationScale.keyTimes = [0, 0.7]
-		animationScale.timingFunction = timingFunction
-		animationScale.values = [0.1, 1]
-		animationScale.duration = duration
-
-		let animationOpacity = CAKeyframeAnimation(keyPath: "opacity")
-		animationOpacity.keyTimes = [0, 0.7, 1]
-		animationOpacity.timingFunctions = [timingFunction, timingFunction]
-		animationOpacity.values = [1, 0.7, 0]
-		animationOpacity.duration = duration
-
-		let animation = CAAnimationGroup()
-		animation.animations = [animationScale, animationOpacity]
-		animation.duration = duration
-		animation.repeatCount = HUGE
-		animation.isRemovedOnCompletion = false
-
-		let path = UIBezierPath(arcCenter: center, radius: radius, startAngle: 0, endAngle: 2 * .pi, clockwise: false)
-
-		let layer = CAShapeLayer()
-		layer.frame = CGRect(x: 0, y: 0, width: width, height: height)
-		layer.path = path.cgPath
-		layer.backgroundColor = nil
-		layer.fillColor = nil
-		layer.strokeColor = colorAnimation.cgColor
-		layer.lineWidth = 3
-
-		layer.add(animation, forKey: "animation")
-		view.layer.addSublayer(layer)
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animationMultipleCircleScaleRipple(_ view: UIView) {
-
-		let width = view.frame.size.width
-		let height = view.frame.size.height
-		let center = CGPoint(x: width / 2, y: height / 2)
-		let radius = width / 2
-
-		let duration = 1.25
-		let beginTime = CACurrentMediaTime()
-		let beginTimes = [0, 0.2, 0.4]
-		let timingFunction = CAMediaTimingFunction(controlPoints: 0.21, 0.53, 0.56, 0.8)
-
-		let animationScale = CAKeyframeAnimation(keyPath: "transform.scale")
-		animationScale.keyTimes = [0, 0.7]
-		animationScale.timingFunction = timingFunction
-		animationScale.values = [0, 1]
-		animationScale.duration = duration
-
-		let animationOpacity = CAKeyframeAnimation(keyPath: "opacity")
-		animationOpacity.keyTimes = [0, 0.7, 1]
-		animationOpacity.timingFunctions = [timingFunction, timingFunction]
-		animationOpacity.values = [1, 0.7, 0]
-		animationOpacity.duration = duration
-
-		let animation = CAAnimationGroup()
-		animation.animations = [animationScale, animationOpacity]
-		animation.duration = duration
-		animation.repeatCount = HUGE
-		animation.isRemovedOnCompletion = false
-
-		let path = UIBezierPath(arcCenter: center, radius: radius, startAngle: 0, endAngle: 2 * .pi, clockwise: false)
-
-		for i in 0..<3 {
-			let layer = CAShapeLayer()
-			layer.frame = CGRect(x: 0, y: 0, width: width, height: height)
-			layer.path = path.cgPath
-			layer.backgroundColor = nil
-			layer.strokeColor = colorAnimation.cgColor
-			layer.lineWidth = 3
-			layer.fillColor = nil
-
-			animation.beginTime = beginTime + beginTimes[i]
-
-			layer.add(animation, forKey: "animation")
-			view.layer.addSublayer(layer)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animationCircleSpinFade(_ view: UIView) {
-
-		let width = view.frame.size.width
-
-		let spacing = 3.0
-		let radius = (width - 4 * spacing) / 3.5
-		let radiusX = (width - radius) / 2
-		let center = CGPoint(x: radius / 2, y: radius / 2)
-
-		let duration = 1.0
-		let beginTime = CACurrentMediaTime()
-		let beginTimes: [CFTimeInterval] = [0.84, 0.72, 0.6, 0.48, 0.36, 0.24, 0.12, 0]
-
-		let animationScale = CAKeyframeAnimation(keyPath: "transform.scale")
-		animationScale.keyTimes = [0, 0.5, 1]
-		animationScale.values = [1, 0.4, 1]
-		animationScale.duration = duration
-
-		let animationOpacity = CAKeyframeAnimation(keyPath: "opacity")
-		animationOpacity.keyTimes = [0, 0.5, 1]
-		animationOpacity.values = [1, 0.3, 1]
-		animationOpacity.duration = duration
-
-		let animation = CAAnimationGroup()
-		animation.animations = [animationScale, animationOpacity]
-		animation.timingFunction = CAMediaTimingFunction(name: .linear)
-		animation.duration = duration
-		animation.repeatCount = HUGE
-		animation.isRemovedOnCompletion = false
-
-		let path = UIBezierPath(arcCenter: center, radius: radius / 2, startAngle: 0, endAngle: 2 * .pi, clockwise: false)
-
-		for i in 0..<8 {
-			let angle = .pi / 4 * CGFloat(i)
-
-			let layer = CAShapeLayer()
-			layer.path = path.cgPath
-			layer.fillColor = colorAnimation.cgColor
-			layer.backgroundColor = nil
-			layer.frame = CGRect(x: radiusX * (cos(angle) + 1), y: radiusX * (sin(angle) + 1), width: radius, height: radius)
-
-			animation.beginTime = beginTime - beginTimes[i]
-
-			layer.add(animation, forKey: "animation")
-			view.layer.addSublayer(layer)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animationLineSpinFade(_ view: UIView) {
-
-		let width = view.frame.size.width
-		let height = view.frame.size.height
-
-		let spacing = 3.0
-		let lineWidth = (width - 4 * spacing) / 5
-		let lineHeight = (height - 2 * spacing) / 3
-		let containerSize = max(lineWidth, lineHeight)
-		let radius = width / 2 - containerSize / 2
-
-		let duration = 1.2
-		let beginTime = CACurrentMediaTime()
-		let beginTimes: [CFTimeInterval] = [0.96, 0.84, 0.72, 0.6, 0.48, 0.36, 0.24, 0.12]
-		let timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-
-		let animation = CAKeyframeAnimation(keyPath: "opacity")
-		animation.keyTimes = [0, 0.5, 1]
-		animation.timingFunctions = [timingFunction, timingFunction]
-		animation.values = [1, 0.3, 1]
-		animation.duration = duration
-		animation.repeatCount = HUGE
-		animation.isRemovedOnCompletion = false
-
-		let path = UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: lineWidth, height: lineHeight), cornerRadius: lineWidth / 2)
-
-		for i in 0..<8 {
-			let angle = .pi / 4 * CGFloat(i)
-
-			let line = CAShapeLayer()
-			line.frame = CGRect(x: (containerSize - lineWidth) / 2, y: (containerSize - lineHeight) / 2, width: lineWidth, height: lineHeight)
-			line.path = path.cgPath
-			line.backgroundColor = nil
-			line.fillColor = colorAnimation.cgColor
-
-			let container = CALayer()
-			container.frame = CGRect(x: radius * (cos(angle) + 1), y: radius * (sin(angle) + 1), width: containerSize, height: containerSize)
-			container.addSublayer(line)
-			container.sublayerTransform = CATransform3DMakeRotation(.pi / 2 + angle, 0, 0, 1)
-
-			animation.beginTime = beginTime - beginTimes[i]
-
-			container.add(animation, forKey: "animation")
-			view.layer.addSublayer(container)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animationCircleRotateChase(_ view: UIView) {
-
-		let width = view.frame.size.width
-		let height = view.frame.size.height
-		let center1 = CGPoint(x: width / 2, y: height / 2)
-
-		let spacing = 3.0
-		let radius = (width - 4 * spacing) / 4
-		let center2 = CGPoint(x: radius / 2, y: radius / 2)
-
-		let duration = 1.5
-
-		let path1 = UIBezierPath(arcCenter: center1, radius: radius * 2, startAngle: 1.5 * .pi, endAngle: 3.5 * .pi, clockwise: true)
-		let path2 = UIBezierPath(arcCenter: center2, radius: radius / 2, startAngle: 0, endAngle: 2 * .pi, clockwise: false)
-
-		for i in 0..<5 {
-			let rate = Float(i) * 1 / 5
-			let fromScale = 1 - rate
-			let toScale = 0.2 + rate
-			let timeFunc = CAMediaTimingFunction(controlPoints: 0.5, 0.15 + rate, 0.25, 1)
-
-			let animationScale = CABasicAnimation(keyPath: "transform.scale")
-			animationScale.duration = duration
-			animationScale.repeatCount = HUGE
-			animationScale.fromValue = fromScale
-			animationScale.toValue = toScale
-
-			let animationPosition = CAKeyframeAnimation(keyPath: "position")
-			animationPosition.duration = duration
-			animationPosition.repeatCount = HUGE
-			animationPosition.path = path1.cgPath
-
-			let animation = CAAnimationGroup()
-			animation.animations = [animationScale, animationPosition]
-			animation.timingFunction = timeFunc
-			animation.duration = duration
-			animation.repeatCount = HUGE
-			animation.isRemovedOnCompletion = false
-
-			let layer = CAShapeLayer()
-			layer.frame = CGRect(x: 0, y: 0, width: radius, height: radius)
-			layer.path = path2.cgPath
-			layer.fillColor = colorAnimation.cgColor
-
-			layer.add(animation, forKey: "animation")
-			view.layer.addSublayer(layer)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animationCircleStrokeSpin(_ view: UIView) {
-
-		let width = view.frame.size.width
-		let height = view.frame.size.height
-		let center = CGPoint(x: width / 2, y: height / 2)
-
-		let beginTime		= 0.5
-		let durationStart	= 1.2
-		let durationStop	= 0.7
-
-		let animationRotation = CABasicAnimation(keyPath: "transform.rotation")
-		animationRotation.byValue = 2 * Float.pi
-		animationRotation.timingFunction = CAMediaTimingFunction(name: .linear)
-
-		let animationStart = CABasicAnimation(keyPath: "strokeStart")
-		animationStart.duration = durationStart
-		animationStart.timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0, 0.2, 1)
-		animationStart.fromValue = 0
-		animationStart.toValue = 1
-		animationStart.beginTime = beginTime
-
-		let animationStop = CABasicAnimation(keyPath: "strokeEnd")
-		animationStop.duration = durationStop
-		animationStop.timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0, 0.2, 1)
-		animationStop.fromValue = 0
-		animationStop.toValue = 1
-
-		let animation = CAAnimationGroup()
-		animation.animations = [animationRotation, animationStop, animationStart]
-		animation.duration = durationStart + beginTime
-		animation.repeatCount = .infinity
-		animation.isRemovedOnCompletion = false
-		animation.fillMode = .forwards
-
-		let path = UIBezierPath(arcCenter: center, radius: width / 2, startAngle: -0.5 * .pi, endAngle: 1.5 * .pi, clockwise: true)
-
-		let layer = CAShapeLayer()
-		layer.frame = CGRect(x: 0, y: 0, width: width, height: height)
-		layer.path = path.cgPath
-		layer.fillColor = nil
-		layer.strokeColor = colorAnimation.cgColor
-		layer.lineWidth = 3
-
-		layer.add(animation, forKey: "animation")
-		view.layer.addSublayer(layer)
-	}
-}
-
-// MARK: - Animated Icon
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private extension ProgressHUD {
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animatedIconSucceed(_ view: UIView) {
-
-		let length = view.frame.width
-		let delay = (alpha == 0) ? 0.25 : 0.0
-
-		let path = UIBezierPath()
-		path.move(to: CGPoint(x: length * 0.15, y: length * 0.50))
-		path.addLine(to: CGPoint(x: length * 0.5, y: length * 0.80))
-		path.addLine(to: CGPoint(x: length * 1.0, y: length * 0.25))
-
-		let animation = CABasicAnimation(keyPath: "strokeEnd")
-		animation.duration = 0.25
-		animation.fromValue = 0
-		animation.toValue = 1
-		animation.fillMode = .forwards
-		animation.isRemovedOnCompletion = false
-		animation.beginTime = CACurrentMediaTime() + delay
-
-		let layer = CAShapeLayer()
-		layer.path = path.cgPath
-		layer.fillColor = UIColor.clear.cgColor
-		layer.strokeColor = colorAnimation.cgColor
-		layer.lineWidth = 9
-		layer.lineCap = .round
-		layer.lineJoin = .round
-		layer.strokeEnd = 0
-
-		layer.add(animation, forKey: "animation")
-		view.layer.addSublayer(layer)
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animatedIconFailed(_ view: UIView) {
-
-		let length = view.frame.width
-		let delay = (alpha == 0) ? 0.25 : 0.0
-
-		let path1 = UIBezierPath()
-		let path2 = UIBezierPath()
-
-		path1.move(to: CGPoint(x: length * 0.15, y: length * 0.15))
-		path2.move(to: CGPoint(x: length * 0.15, y: length * 0.85))
-
-		path1.addLine(to: CGPoint(x: length * 0.85, y: length * 0.85))
-		path2.addLine(to: CGPoint(x: length * 0.85, y: length * 0.15))
-
-		let paths = [path1, path2]
-
-		let animation = CABasicAnimation(keyPath: "strokeEnd")
-		animation.duration = 0.15
-		animation.fromValue = 0
-		animation.toValue = 1
-		animation.fillMode = .forwards
-		animation.isRemovedOnCompletion = false
-
-		for i in 0..<2 {
-			let layer = CAShapeLayer()
-			layer.path = paths[i].cgPath
-			layer.fillColor = UIColor.clear.cgColor
-			layer.strokeColor = colorAnimation.cgColor
-			layer.lineWidth = 9
-			layer.lineCap = .round
-			layer.lineJoin = .round
-			layer.strokeEnd = 0
-
-			animation.beginTime = CACurrentMediaTime() + 0.25 * Double(i) + delay
-
-			layer.add(animation, forKey: "animation")
-			view.layer.addSublayer(layer)
-		}
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	private func animatedIconAdded(_ view: UIView) {
-
-		let length = view.frame.width
-		let delay = (alpha == 0) ? 0.25 : 0.0
-
-		let path1 = UIBezierPath()
-		let path2 = UIBezierPath()
-
-		path1.move(to: CGPoint(x: length * 0.1, y: length * 0.5))
-		path2.move(to: CGPoint(x: length * 0.5, y: length * 0.1))
-
-		path1.addLine(to: CGPoint(x: length * 0.9, y: length * 0.5))
-		path2.addLine(to: CGPoint(x: length * 0.5, y: length * 0.9))
-
-		let paths = [path1, path2]
-
-		let animation = CABasicAnimation(keyPath: "strokeEnd")
-		animation.duration = 0.15
-		animation.fromValue = 0
-		animation.toValue = 1
-		animation.fillMode = .forwards
-		animation.isRemovedOnCompletion = false
-
-		for i in 0..<2 {
-			let layer = CAShapeLayer()
-			layer.path = paths[i].cgPath
-			layer.fillColor = UIColor.clear.cgColor
-			layer.strokeColor = colorAnimation.cgColor
-			layer.lineWidth = 9
-			layer.lineCap = .round
-			layer.lineJoin = .round
-			layer.strokeEnd = 0
-
-			animation.beginTime = CACurrentMediaTime() + 0.25 * Double(i) + delay
-
-			layer.add(animation, forKey: "animation")
-			view.layer.addSublayer(layer)
-		}
-	}
-}
-
-// MARK: - ProgressView
-//-----------------------------------------------------------------------------------------------------------------------------------------------
-private class ProgressView: UIView {
-
-	var color: UIColor = .systemBackground {
-		didSet { setupLayers() }
-	}
-	private var progress: CGFloat = 0
-
-	private var layerCircle = CAShapeLayer()
-	private var layerProgress = CAShapeLayer()
-	private var labelPercentage: UILabel = UILabel()
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	convenience init(_ color: UIColor) {
-
-		self.init(frame: .zero)
-		self.color = color
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	required init?(coder: NSCoder) {
-
-		super.init(coder: coder)
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	override init(frame: CGRect) {
-
-		super.init(frame: frame)
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	override func draw(_ rect: CGRect) {
-
-		super.draw(rect)
-		setupLayers()
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	func setupLayers() {
-
-		subviews.forEach { $0.removeFromSuperview() }
-		layer.sublayers?.forEach { $0.removeFromSuperlayer() }
-
-		let width = frame.size.width
-		let height = frame.size.height
-		let center = CGPoint(x: width / 2, y: height / 2)
-
-		let radiusCircle = width / 2
-		let radiusProgress = width / 2 - 5
-
-		let pathCircle = UIBezierPath(arcCenter: center, radius: radiusCircle, startAngle: -0.5 * .pi, endAngle: 1.5 * .pi, clockwise: true)
-		let pathProgress = UIBezierPath(arcCenter: center, radius: radiusProgress, startAngle: -0.5 * .pi, endAngle: 1.5 * .pi, clockwise: true)
-
-		layerCircle.path = pathCircle.cgPath
-		layerCircle.fillColor = UIColor.clear.cgColor
-		layerCircle.lineWidth = 3
-		layerCircle.strokeColor = color.cgColor
-
-		layerProgress.path = pathProgress.cgPath
-		layerProgress.fillColor = UIColor.clear.cgColor
-		layerProgress.lineWidth = 7
-		layerProgress.strokeColor = color.cgColor
-		layerProgress.strokeEnd = 0
-
-		layer.addSublayer(layerCircle)
-		layer.addSublayer(layerProgress)
-
-		labelPercentage.frame = bounds
-		labelPercentage.textColor = color
-		labelPercentage.textAlignment = .center
-		addSubview(labelPercentage)
-	}
-
-	//-------------------------------------------------------------------------------------------------------------------------------------------
-	func setProgress(_ value: CGFloat, duration: TimeInterval = 0.2) {
-
-		let animation = CABasicAnimation(keyPath: "strokeEnd")
-		animation.duration = duration
-		animation.fromValue = progress
-		animation.toValue = value
-		animation.fillMode = .both
-		animation.isRemovedOnCompletion = false
-		layerProgress.add(animation, forKey: "animation")
-
-		progress = value
-		labelPercentage.text = "\(Int(value*100))%"
 	}
 }
