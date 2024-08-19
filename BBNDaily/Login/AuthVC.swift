@@ -59,6 +59,51 @@ class AuthVC: CustomLoader {
     }
     func updateSpecialSchedules(completion: @escaping (Swift.Result<[String: SpecialSchedule], Error>) -> Void) {
         let db = Firestore.firestore()
+        db.collection("schedules").document("special").getDocument(completion: {(snapshot, error) in
+            if error != nil {
+                ProgressHUD.failed("Failed to find 'special'")
+            } else {
+                var tempDict = [String: Day]()
+                
+                if let days = snapshot?.data() {
+                    for (key, value) in days {
+                        let data = value as! [String: Any]
+                        var day = Day(type: data["type"] as! String)
+                        
+                        if day.type == "noschool" {
+                            day.reason = (data["reason"] as! String)
+                        } else if day.type == "blocks" {
+                            day.blocks = [Event]()
+                            let schedule = data["blocks"] as? [[String: Any]] ?? [[String: Any]]()
+                            for scheduleBlock in schedule {
+                                day.blocks?.append(self.convertToEvent(scheduleBlock: scheduleBlock))
+                            }
+                        } else if day.type == "image" {
+                            day.imageUrl = (data["imageUrl"] as! String)
+                        }
+                        tempDict[key] = day
+                    }
+                }
+                LoginVC.specialDays = tempDict
+            }
+        })
+        db.collection("schedules").document("break").getDocument(completion: {(snapshot, error) in
+            if error != nil {
+                ProgressHUD.failed("Failed to find 'break'")
+            } else {
+                var tempArr = [Break]()
+                
+                if let breaks = snapshot?.data() {
+                    for (key, value) in breaks {
+                        let data = value as! [String: Any]
+                        let dates = key.components(separatedBy: "-")
+                        var oneBreak = Break(reason: (data["reason"] as! String), startDate: dates[0], endDate: dates[1])
+                        tempArr.append(oneBreak)
+                    }
+                }
+                LoginVC.breaks = tempArr
+            }
+        })
         db.collection("special-schedules").getDocuments { (snapshot, error) in
             if error != nil {
                 ProgressHUD.failed("Failed to find 'special-schedules'")
@@ -184,6 +229,20 @@ class AuthVC: CustomLoader {
                             }
                         }
                     })
+                    db.collection("schedules").document("regular").getDocument(completion: {(snap, err) in
+                        if (err != nil) {
+                            ProgressHUD.failed("Failed to find regular schedules")
+                        } else {
+                            for day in ["monday", "tuesday", "wednesday", "thursday", "friday"] {
+                                let schedule = snap?.data()?[day] as? [[String: Any]] ?? [[String: Any]]()
+                                var blocks = [Event]()
+                                for scheduleBlock in schedule {
+                                    blocks.append(self.convertToEvent(scheduleBlock: scheduleBlock))
+                                }
+                                regularSchedule[day] = blocks
+                            }
+                        }
+                    })
                 }
                 else {
                     print("false!")
@@ -285,6 +344,28 @@ class AuthVC: CustomLoader {
         }
     }
     
+    func convertToEvent(scheduleBlock: [String: Any]) -> Event {
+        var ev = Event(type: scheduleBlock["type"]! as! String)
+        
+        if ev.type == "block" {
+            ev.block = (scheduleBlock["block"] as! String)
+            ev.name = (scheduleBlock["name"] as! String)
+            ev.startTime = (scheduleBlock["startTime"] as! String)
+            ev.endTime = (scheduleBlock["endTime"] as! String)
+        } else if ev.type == "lunch" {
+            ev.startTime = (scheduleBlock["startTime"] as! String)
+            ev.endTime = (scheduleBlock["endTime"] as! String)
+        } else if ev.type == "specific" {
+            ev.filter = (scheduleBlock["filter"] as! String)
+            ev.lunchBlock = (scheduleBlock["lunchBlock"] as? String)
+            ev.contents = [Event]()
+            for subBlock in scheduleBlock["contents"] as! [[String: Any]] {
+                ev.contents?.append(convertToEvent(scheduleBlock: subBlock))
+            }
+        }
+        
+        return ev
+    }
 }
 
 

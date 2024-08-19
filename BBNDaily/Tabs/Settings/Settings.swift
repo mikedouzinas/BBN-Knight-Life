@@ -713,7 +713,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         }
         
         // default schedule for the week w/ correct lunches
-        regularBlocks = [getLunchDays(weekDay: "monday").blocks,getLunchDays(weekDay: "tuesday").blocks,getLunchDays(weekDay: "wednesday").blocks,getLunchDays(weekDay: "thursday").blocks,getLunchDays(weekDay: "friday").blocks]
+//        regularBlocks = [getLunchDays(weekDay: "monday").blocks,getLunchDays(weekDay: "tuesday").blocks,getLunchDays(weekDay: "wednesday").blocks,getLunchDays(weekDay: "thursday").blocks,getLunchDays(weekDay: "friday").blocks]
+        regularBlocks = [getRegularSchedule(weekday: "monday").blocks,getRegularSchedule(weekday: "tuesday").blocks,getRegularSchedule(weekday: "wednesday").blocks,getRegularSchedule(weekday: "thursday").blocks,getRegularSchedule(weekday: "friday").blocks]
         var weekday = 2
         for day in regularBlocks {
             for event in day {

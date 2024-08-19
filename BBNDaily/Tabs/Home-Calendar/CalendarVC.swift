@@ -454,26 +454,85 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         ScheduleCalendar.isHidden = false
         webView.isHidden = true
         realCurrentDate = date
+        
         let formatter2 = DateFormatter()
         formatter2.dateFormat = "yyyy-MM-dd"
         formatter2.dateStyle = .short
         let stringDate1 = formatter2.string(from: date)
         currentDate = stringDate1
-        let formatter1 = DateFormatter()
-        formatter1.dateFormat = "yyyy-MM-dd"
-        formatter1.dateStyle = .full
-        let stringDate = formatter1.string(from: date)
-        let weekDay = stringDate.prefix(upTo: formatter1.string(from: date).firstIndex(of: ",")!)
-        let lunchDays = getLunchDays(weekDay: String(weekDay))
-        currentDay = lunchDays.blocks
-        selectedDay = lunchDays.selectedDay
-        if currentDay.isEmpty {
-            ScheduleCalendar.setEmptyMessage("No Class - Enjoy your Weekend")
+        
+//        let formatter1 = DateFormatter()
+//        formatter1.dateFormat = "yyyy-MM-dd"
+//        formatter1.dateStyle = .full
+//        let stringDate = formatter1.string(from: date)
+//        let weekDay = stringDate.prefix(upTo: formatter1.string(from: date).firstIndex(of: ",")!)
+//        let lunchDays = getLunchDays(weekDay: String(weekDay))
+//        let lunchDays = getRegularSchedule(weekday: String(weekDay))
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy/M/d" // Use standard format without leading zeros
+        let stringDate = dateFormatter.string(from: date)
+        dateFormatter.dateFormat = "EEEE"
+        let weekday = dateFormatter.string(from: date)
+        
+        var day = (blocks: [block](), selectedDay: 11)
+        
+        if let value = LoginVC.specialDays[stringDate] {
+            let dayType = value.type
+                
+            if dayType == "noschool" {
+                
+                if let reason = value.reason {
+                    ScheduleCalendar.setEmptyMessage("No Class - \(reason)")
+                } else {
+                    ScheduleCalendar.setEmptyMessage("No Class")
+                }
+                
+            } else if dayType == "blocks" {
+                
+                var weekdayBlocks = [block]()
+                for scheduleBlock in value.blocks ?? [] {
+                    weekdayBlocks += getNextBlock(scheduleBlock: scheduleBlock) ?? []
+                }
+                day = (weekdayBlocks, getWeekdayAsInt(weekday))
+                
+            } else if dayType == "image" {
+                
+                ScheduleCalendar.isHidden = true
+                webView.isHidden = false
+                if let url = URL(string: value.imageUrl!) {
+                    webView.load(URLRequest(url: url))
+                    if shouldEdit {
+                        currentWeekday.hasImage = true
+                    }
+                }
+                
+            }
+            
+        } else {
+            var found = false
+            for singularBreak in LoginVC.breaks {
+                if isDateInRange(date: date, breakPeriod: singularBreak) {
+                    ScheduleCalendar.setEmptyMessage("No Class - \(singularBreak.reason)")
+                    found = true
+                    break
+                }
+            }
+            if !found {
+                day = getRegularSchedule(weekday: weekday)
+            }
         }
-        else {
+        
+        currentDay = day.blocks
+        selectedDay = day.selectedDay
+        
+        if selectedDay < 10 {
             ScheduleCalendar.restore()
+        } else if selectedDay == 10 {
+            ScheduleCalendar.setEmptyMessage("No Class - Enjoy your weekend")
         }
         	
+        /*
         for x in LoginVC.specialSchedules { // loops through special schedule dates to see if we are in that period
             if x.key.isInThroughDate(date: date) {
                 currentDay = [block]()
@@ -510,9 +569,26 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                 return
             }
         }
+        */
         completion(.success(self.currentDay))
         return
     }
+    
+    func isDateInRange(date: Date, breakPeriod: Break) -> Bool {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy/M/d"
+        
+        // Convert the startDate, endDate, and the date to compare into Date objects
+        guard let start = dateFormatter.date(from: breakPeriod.startDate),
+              let end = dateFormatter.date(from: breakPeriod.endDate)
+        else {
+            return false // Return false if any date conversion fails
+        }
+        
+        // Check if targetDate is between start and end (inclusive)
+        return (start...end).contains(date)
+    }
+    
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
         setOld()
         setCurrentday(date: date, shouldEdit: false, completion: { _ in

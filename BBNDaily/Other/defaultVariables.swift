@@ -118,3 +118,11 @@ var defaultSchedules = [
             block(name: "Community Activity", startTime: "02:50pm", endTime: "03:25pm", block: "N/A")
         ]),
 ]
+
+var regularSchedule = [
+    "monday": [],
+    "tuesday": [],
+    "wednesday": [],
+    "thursday": [],
+    "friday": []
+]

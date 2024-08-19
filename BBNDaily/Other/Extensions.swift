@@ -756,7 +756,8 @@ extension UIViewController {
         let index = stringDate.firstIndex(of: ",")
         let weekday = stringDate.prefix(upTo: index!).lowercased()
         var currentDay = [block]()
-        let lunchDays = getLunchDays(weekDay: weekday)
+//        let lunchDays = getLunchDays(weekDay: weekday)
+        let lunchDays = getRegularSchedule(weekday: weekday)
         currentDay = lunchDays.blocks
 //        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".startOrEndDate(isStart: true) ?? Date(), date2: "02 Sep 2022 04:00".startOrEndDate(isStart: false) ?? Date()) {
 //            currentDay = [block]()
@@ -783,7 +784,9 @@ extension UIViewController {
         }
         return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date, hasImage: false)
     }
-    func getLunchDays(weekDay: String) -> (blocks: [block], selectedDay: Int) {
+    
+    /*
+     func getLunchDays(weekDay: String) -> (blocks: [block], selectedDay: Int) {
         var weekdayBlocks = [block]()
         var selectedDay = 0
 //        print("weekday: \(weekDay)")
@@ -836,6 +839,122 @@ extension UIViewController {
         }
         return (weekdayBlocks, selectedDay)
     }
+     */
+    
+    // MARK: Generael purpose getting schedule for v2 format
+    func getSchedule(date: Date) -> (blocks: [block], selectedDay: Int) {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy/M/d" // Use standard format without leading zeros
+        let stringDate = dateFormatter.string(from: date)
+        dateFormatter.dateFormat = "EEEE"
+        let weekday = dateFormatter.string(from: date)
+        
+        if let value = LoginVC.specialDays[stringDate] {
+            var weekdayBlocks = [block]()
+            for scheduleBlock in value.blocks ?? [] {
+                weekdayBlocks += getNextBlock(scheduleBlock: scheduleBlock) ?? []
+            }
+            return (weekdayBlocks, getWeekdayAsInt(weekday))
+        } else {
+            return getRegularSchedule(weekday: weekday)
+        }
+    }
+    
+    // MARK: get default schedule for a certain day with v2 format
+    func getRegularSchedule(weekday: String) -> (blocks: [block], selectedDay: Int) {
+        var weekdayBlocks = [block]()
+//        print("weekday: \(weekday)")
+        let lowercaseWeekday = weekday.lowercased()
+        
+        for scheduleBlock in regularSchedule[lowercaseWeekday] ?? [] {
+            weekdayBlocks += getNextBlock(scheduleBlock: scheduleBlock as! Event) ?? []
+        }
+        
+        // Can't sort blocks yet because need to deal with 12h time format
+//        return (sortBlocks(weekdayBlocks), selectedDay)
+        return (weekdayBlocks, getWeekdayAsInt(lowercaseWeekday))
+    }
+    
+    func getNextBlock(scheduleBlock: Event) -> [block]? {
+        let blockType = scheduleBlock.type.lowercased()
+        var blocks = [block]()
+        
+        // Block types of N/A are "temporary" while migrating schedule formats
+        if blockType == "block" {
+            blocks.append(block(name: scheduleBlock.name!, startTime: scheduleBlock.startTime!, endTime: scheduleBlock.endTime!, block: scheduleBlock.block!.count == 1 ? scheduleBlock.block!.uppercased() : "N/A"))
+            return blocks
+        }
+        
+        if blockType == "lunch" {
+            blocks.append(block(name: "Lunch", startTime: scheduleBlock.startTime!, endTime: scheduleBlock.endTime!, block: "N/A"))
+            return blocks
+        }
+        
+        if blockType == "specific" {
+            let filter = scheduleBlock.filter!.lowercased()
+            
+            if filter == "l1" || filter == "l2" {
+                if let userLunchPeriod = LoginVC.blocks["l-\(scheduleBlock.lunchBlock!.lowercased())"] as? String{
+                    
+                    if !userLunchPeriod.isEmpty && filter != userLunchPeriod {
+                        return blocks
+                    }
+                }
+                
+                for subBlock in scheduleBlock.contents ?? [] {
+                    blocks += (getNextBlock(scheduleBlock: subBlock) ?? [])
+                }
+            
+                return blocks
+            }
+            
+            if filter == (LoginVC.blocks["grade"] as! String).lowercased() {
+                for subBlock in scheduleBlock.contents ?? [] {
+                    blocks += (getNextBlock(scheduleBlock: subBlock) ?? [])
+                }
+            }
+            
+            return blocks
+        }
+        
+        return blocks
+    }
+    
+    func sortBlocks(_ blocks: [block]) -> [block] {
+        // Sort the blocks while maintaining their original order when start and end times are the same
+        return blocks.enumerated().sorted {
+            let (index1, block1) = $0
+            let (index2, block2) = $1
+            if block1 < block2 {
+                return true
+            } else if block1 == block2 {
+                return index1 < index2
+            } else {
+                return false
+            }
+        }.map { $0.1 } // Return the sorted blocks, ignoring the indices
+    }
+    
+    func getWeekdayAsInt(_ weekday: String) -> Int {
+        let lowercaseWeekday = weekday.lowercased()
+        
+        switch lowercaseWeekday {
+        case "monday":
+            return 0
+        case "tuesday":
+            return 1
+        case "wednesday":
+            return 2
+        case "thursday":
+            return 3
+        case "friday":
+            return 4
+        default:
+            return 10
+        }
+    }
+    // MARK: End v2
+    
     func nextWeekday(weekday: Int) -> Date {
         let calendar = Calendar.current
         let today = Date()
