@@ -661,24 +661,28 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     
     // function loops through and adds repeating *normal* schedule to google or apple calendar, respectively
     func addItemToCalendar(pref: Int) {
-        let alertController = UIAlertController(title: "Add Events",
-                                                message: "Are you sure you want to add all events to your calendar?",
-                                                preferredStyle: .alert)
+        let alert = UIAlertController(title: "Coming Soon™", message: "sorry :(", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(alert, animated: true, completion: nil)
         
-        let confirmAction = UIAlertAction(title: "Yes", style: .default) { [self] (_) in
-            if pref == 0 { // google calendar
-                updateGoogleCalendar()
-            }
-            else { // apple calendar
-                updateAppleCalendar()
-            }
-        }
-        alertController.addAction(confirmAction)
-            
-        let cancelAction = UIAlertAction(title: "No", style: .cancel, handler: nil)
-        alertController.addAction(cancelAction)
-        
-        present(alertController, animated: true, completion: nil)
+//        let alertController = UIAlertController(title: "Add Events",
+//                                                message: "Are you sure you want to add all events to your calendar?",
+//                                                preferredStyle: .alert)
+//        
+//        let confirmAction = UIAlertAction(title: "Yes", style: .default) { [self] (_) in
+//            if pref == 0 { // google calendar
+//                updateGoogleCalendar()
+//            }
+//            else { // apple calendar
+//                updateAppleCalendar()
+//            }
+//        }
+//        alertController.addAction(confirmAction)
+//            
+//        let cancelAction = UIAlertAction(title: "No", style: .cancel, handler: nil)
+//        alertController.addAction(cancelAction)
+//        
+//        present(alertController, animated: true, completion: nil)
         
     }
     
