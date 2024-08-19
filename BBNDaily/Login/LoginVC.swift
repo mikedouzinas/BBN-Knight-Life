@@ -22,7 +22,7 @@ class LoginVC: AuthVC {
     static var defaultBlocks = [String: [String: [block]]]()
     static var appearance = ""
     static var busNumber = 16175930396
-    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","googlePhoto":"false","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
+    static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","l-a":"Not Set","l-b":"Not Set","l-c":"Not Set","l-d":"Not Set","l-e":"Not Set","l-f":"Not Set","l-g":"Not Set","googlePhoto":"false","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
     static var specialSchedules = [String: SpecialSchedule]()
     static var specialDays = [String: Day]()
     static var breaks = [Break]()

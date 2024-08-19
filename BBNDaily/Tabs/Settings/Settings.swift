@@ -418,18 +418,30 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         else if indexPath.section == 3 {
             var name = ""
             switch indexPath.row {
+//            case 0:
+//                name = "monday"
+//            case 1:
+//                name = "tuesday"
+//            case 2:
+//                name = "wednesday"
+//            case 3:
+//                name = "thursday"
+//            case 4:
+//                name = "friday"
             case 0:
-                name = "monday"
+                name = "a"
             case 1:
-                name = "tuesday"
+                name = "c"
             case 2:
-                name = "wednesday"
+                name = "d"
             case 3:
-                name = "thursday"
+                name = "f"
+            case 4:
+                name = "g"
             default:
-                name = "friday"
+                name = "[Unknown]"
             }
-            let alertController = UIAlertController(title: "Lunch", message: "Please enter your lunch preference for \(name.capitalized). You may need to restart the app to save your changes.", preferredStyle: .actionSheet)
+            let alertController = UIAlertController(title: "Lunch", message: "Please enter your lunch preference for \(name.count == 1 ? name.capitalized + " Block" : name.capitalized). You may need to restart the app to save your changes.", preferredStyle: .actionSheet)
             let lunch1 = UIAlertAction(title: "1st Lunch", style: .default) { _ in
                 LoginVC.blocks["l-\(name)"] = "1st Lunch"
                 self.lunchBlocks[indexPath.row] = settingsBlock(blockName: "\(self.lunchBlocks[indexPath.row].blockName)", className: "1st Lunch")
@@ -552,11 +564,19 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         ]
         
         lunchBlocks = [
-            settingsBlock(blockName: "Monday Lunch", className: "\(LoginVC.blocks["l-monday"] as? String ?? "")"),
-            settingsBlock(blockName: "Tuesday Lunch", className: "\(LoginVC.blocks["l-tuesday"] as? String ?? "")"),
-            settingsBlock(blockName: "Wednesday Lunch", className: "\(LoginVC.blocks["l-wednesday"] as? String ?? "")"),
-            settingsBlock(blockName: "Thursday Lunch", className: "\(LoginVC.blocks["l-thursday"] as? String ?? "")"),
-            settingsBlock(blockName: "Friday Lunch", className: "\(LoginVC.blocks["l-friday"] as? String ?? "")")
+//            settingsBlock(blockName: "Monday Lunch", className: "\(LoginVC.blocks["l-monday"] as? String ?? "")"),
+//            settingsBlock(blockName: "Tuesday Lunch", className: "\(LoginVC.blocks["l-tuesday"] as? String ?? "")"),
+//            settingsBlock(blockName: "Wednesday Lunch", className: "\(LoginVC.blocks["l-wednesday"] as? String ?? "")"),
+//            settingsBlock(blockName: "Thursday Lunch", className: "\(LoginVC.blocks["l-thursday"] as? String ?? "")"),
+//            settingsBlock(blockName: "Friday Lunch", className: "\(LoginVC.blocks["l-friday"] as? String ?? "")"),
+            
+            settingsBlock(blockName: "A Block", className: "\(LoginVC.blocks["l-a"] as? String ?? "")"),
+//            settingsBlock(blockName: "B Block", className: "\(LoginVC.blocks["l-b"] as? String ?? "")"),
+            settingsBlock(blockName: "C Block", className: "\(LoginVC.blocks["l-c"] as? String ?? "")"),
+            settingsBlock(blockName: "D Block", className: "\(LoginVC.blocks["l-d"] as? String ?? "")"),
+//            settingsBlock(blockName: "E Block", className: "\(LoginVC.blocks["l-e"] as? String ?? "")"),
+            settingsBlock(blockName: "F Block", className: "\(LoginVC.blocks["l-f"] as? String ?? "")"),
+            settingsBlock(blockName: "G Block", className: "\(LoginVC.blocks["l-g"] as? String ?? "")")
         ]
         other = [
             settingsBlock(blockName: "Share Your Classes", className: ""),

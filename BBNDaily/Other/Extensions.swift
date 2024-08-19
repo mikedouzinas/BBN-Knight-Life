@@ -894,9 +894,8 @@ extension UIViewController {
             let filter = scheduleBlock.filter!.lowercased()
             
             if filter == "l1" || filter == "l2" {
-                if let userLunchPeriod = LoginVC.blocks["l-\(scheduleBlock.lunchBlock!.lowercased())"] as? String{
-                    
-                    if !userLunchPeriod.isEmpty && filter != userLunchPeriod {
+                if let userLunchPeriod = LoginVC.blocks["l-\(scheduleBlock.lunchBlock!.lowercased())"] as? String {
+                    if (userLunchPeriod == "1st Lunch" && filter != "l1") || (userLunchPeriod == "2nd Lunch" && filter != "l2") {
                         return blocks
                     }
                 }

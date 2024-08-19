@@ -64,7 +64,7 @@ class SettingsBlockTableViewCell: UITableViewCell {
                     DataLabel.text = ""
                 }
                 else {
-                    DataLabel.text = "Not set"
+                    DataLabel.text = "Not Set"
                 }
             }
             else if viewModel.blockName.lowercased().contains("lunch") {
