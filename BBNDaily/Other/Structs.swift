@@ -137,7 +137,8 @@ struct Event {
     var name: String?
     var startTime: String?
     var endTime: String?
-    var filter: String?
+    var filter: [String]?
+    var matchMode: String?
     var lunchBlock: String?
     var contents: [Event]?
 }

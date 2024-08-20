@@ -891,23 +891,25 @@ extension UIViewController {
         }
         
         if blockType == "specific" {
-            let filter = scheduleBlock.filter!.lowercased()
+            let filters = scheduleBlock.filter
+            let matchMode = scheduleBlock.matchMode
             
-            if filter == "l1" || filter == "l2" {
-                if let userLunchPeriod = LoginVC.blocks["l-\(scheduleBlock.lunchBlock!.lowercased())"] as? String {
-                    if (userLunchPeriod == "1st Lunch" && filter != "l1") || (userLunchPeriod == "2nd Lunch" && filter != "l2") {
-                        return blocks
+            var matched = (matchMode == "all")
+            
+            for filt in filters ?? [] {
+                if checkFilter(filterIn: filt, scheduleBlock: scheduleBlock) {
+                    matched = true
+                    if matchMode != "all" {
+                        matched = true
+                        break
                     }
+                } else if matchMode == "all" {
+                    matched = false
+                    break
                 }
-                
-                for subBlock in scheduleBlock.contents ?? [] {
-                    blocks += (getNextBlock(scheduleBlock: subBlock) ?? [])
-                }
-            
-                return blocks
             }
             
-            if filter == (LoginVC.blocks["grade"] as! String).lowercased() {
+            if matched {
                 for subBlock in scheduleBlock.contents ?? [] {
                     blocks += (getNextBlock(scheduleBlock: subBlock) ?? [])
                 }
@@ -917,6 +919,28 @@ extension UIViewController {
         }
         
         return blocks
+    }
+    
+    func checkFilter(filterIn: String, scheduleBlock: Event) -> Bool {
+        let filter = filterIn.lowercased()
+        
+        // Filter is lunch block
+        if filter == "l1" || filter == "l2" {
+            if let userLunchPeriod = LoginVC.blocks["l-\(scheduleBlock.lunchBlock!.lowercased())"] as? String {
+                return userLunchPeriod == "" || (userLunchPeriod == "1st Lunch" && filter == "l1") || (userLunchPeriod == "2nd Lunch" && filter == "l2")
+            } else {
+                return true
+            }
+        }
+        
+        // Filter is grade
+        if let userGrade = (LoginVC.blocks["grade"] as? String)?.lowercased() {
+            // If the user has no grade set, show it to them just in case
+            return userGrade == "" || userGrade == filter
+        } else {
+            // Somehow the user has no grade
+            return true
+        }
     }
     
     func sortBlocks(_ blocks: [block]) -> [block] {

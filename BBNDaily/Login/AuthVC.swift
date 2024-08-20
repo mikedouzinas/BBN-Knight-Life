@@ -356,7 +356,8 @@ class AuthVC: CustomLoader {
             ev.startTime = (scheduleBlock["startTime"] as! String)
             ev.endTime = (scheduleBlock["endTime"] as! String)
         } else if ev.type == "specific" {
-            ev.filter = (scheduleBlock["filter"] as! String)
+            ev.filter = (scheduleBlock["filter"] as? [String])
+            ev.matchMode = (scheduleBlock["matchMode"] as? String)
             ev.lunchBlock = (scheduleBlock["lunchBlock"] as? String)
             ev.contents = [Event]()
             for subBlock in scheduleBlock["contents"] as! [[String: Any]] {
