@@ -66,7 +66,7 @@ class coverTableViewCell: calendarTableViewCell {
     // if viewmodel.block != N/A {
     //var className = LoginVC.blocks[viewModel.block] as? String
     //if className == "" {
-    //    className = "[\(viewModel.block) Class]"
+    //    className = "[\(viewModel.block) Block]"
 //    }
 //    var text = "Update classes in settings to see details"
 //    if (className ?? "").contains("~") {
@@ -87,7 +87,7 @@ class coverTableViewCell: calendarTableViewCell {
         if viewModel.block != "N/A" {
             var className = LoginVC.blocks[viewModel.block] as? String
             if className == "" {
-                className = "[\(viewModel.block) Class]"
+                className = "[\(viewModel.block) Block]"
             }
             var text = "Update class in settings."
             if (className ?? "").contains("~") {

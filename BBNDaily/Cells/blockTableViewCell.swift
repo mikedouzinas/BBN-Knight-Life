@@ -123,7 +123,7 @@ class blockTableViewCell: UITableViewCell {
             BlockLabel.isHidden = false
             var className = LoginVC.blocks[viewModel.block] as? String
             if className == "" {
-                className = "[\(viewModel.block) Class]"
+                className = "[\(viewModel.block) Block]"
             }
             var text = "Update classes in settings to see details"
             if (className ?? "").contains("~") {

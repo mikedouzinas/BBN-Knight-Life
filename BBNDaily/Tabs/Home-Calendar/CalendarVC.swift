@@ -55,7 +55,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                     if currentBlock.block != "N/A" {
                         var className = (LoginVC.blocks[currentBlock.block] as? String) ?? ""
                         if className == "" {
-                            className = "[\(currentBlock.block) Class]"
+                            className = "[\(currentBlock.block) Block]"
                         }
                         else if className.contains("~") {
                             let array = className.getValues()
