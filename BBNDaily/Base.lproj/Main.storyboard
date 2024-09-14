@@ -2368,9 +2368,7 @@
                                 <rect key="frame" x="4" y="44" width="382" height="32"/>
                                 <color key="backgroundColor" name="background"/>
                                 <segments>
-                                    <segment title="4th Lot"/>
-                                    <segment title="Harvard Sq."/>
-                                    <segment title="Athletics"/>
+                                    <segment title="Shuttles"/>
                                     <segment title="Home"/>
                                 </segments>
                                 <color key="tintColor" name="inverse"/>

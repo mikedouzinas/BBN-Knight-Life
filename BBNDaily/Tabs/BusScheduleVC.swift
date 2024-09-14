@@ -31,12 +31,8 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
         let index = segmentedControl.selectedSegmentIndex
         switch index {
         case 0:
-            busSchedule = fourthLotSchedule
+            busSchedule = shuttleSchedule
         case 1:
-            busSchedule = harvardSquareSchedule
-        case 2:
-            busSchedule = athleticsSchedule
-        case 3:
             busSchedule = homeSchedule
         default:
             busSchedule = [BusSection]()
@@ -86,79 +82,66 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     public var tasks = [SchoolTask]()
     var busSchedule = [BusSection]()
-    var fourthLotSchedule = [
-        BusSection(title: "AM Shuttle", buses: [Bus(title: "4th Lot to Upper School", times:
-                                [
-            Time(departure: "6:55 AM", arrival: "7:00 AM"),
-            Time(departure: "7:10 AM", arrival: "7:15 AM"),
-            Time(departure: "7:25 AM", arrival: "7:30 AM"),
-            Time(departure: "7:40 AM", arrival: "7:45 AM"),
-            Time(departure: "7:55 AM", arrival: "8:00 AM"),
-            Time(departure: "8:10 AM", arrival: "8:15 AM"),
-            Time(departure: "8:20 AM", arrival: "8:25 AM"),
-            Time(departure: "8:35 AM", arrival: "8:40 AM"),
-            Time(departure: "8:50 AM", arrival: "8:55 AM", weekDays: "Tuesday"),
-            Time(departure: "9:15 AM", arrival: "9:20 AM", weekDays: "Tuesday"),
-            Time(departure: "9:30 AM", arrival: "9:35 AM", weekDays: "Tuesday")
-                                                        ]
-                                                   )]),
-        BusSection(title: "Midday Shuttle", buses: [Bus(title: "Upper School to 4th Lot", times:
-                                                            [
-            Time(departure: "11:30 AM", arrival: "11:35 AM", weekDays: "M/Tu/Th/F"),
-            Time(departure: "12:45 PM", arrival: "12:50 PM", weekDays: "W/F"),
-            Time(departure: "1:15 PM", arrival: "1:20 PM", weekDays: "W/F"),
-            Time(departure: "1:45 PM", arrival: "1:50 PM", weekDays: "W/F")
-                                                            ]
-                                                       ),
-                                                    Bus(title: "4th Lot to Upper School", times:
-                                                            [
-            Time(departure: "12:30 PM", arrival: "12:35 PM", weekDays: "M/Tu/Th/F")
-                                                            ]
-                                                           )]),
-        BusSection(title: "PM Shuttle", buses: [Bus(title: "Upper School to 4th Lot", times:
-                                                        [
-            Time(departure: "3:00 PM", arrival: "3:05 PM", weekDays: "M/Tu/Th/F"),
-            Time(departure: "3:30 PM", arrival: "3:35 PM", weekDays: "M/Tu/Th/F"),
-            Time(departure: "4:10 PM", arrival: "4:15 PM", weekDays: "M/Tu/Th/F"),
-            Time(departure: "5:30 PM", arrival: "5:35 PM", weekDays: "M/Tu/Th/F"),
-            Time(departure: "6:15 PM", arrival: "6:20 PM", weekDays: "M/Tu/Th/F"),
-                                                        ])])]
-    var harvardSquareSchedule = [
-        BusSection(title: "AM Shuttle", buses:
-                    [
-                        Bus(title: "Harvard Square to Upper School", times: [
-            Time(departure: "7:20 AM", arrival: "7:28 AM"),
-            Time(departure: "7:40 AM", departureSpot: nil, arrival: "7:48 AM", arrivalSpot: "Middle School", arrivalTwo: "7:56 AM", arrivalTwoSpot: "Upper School"),
-            Time(departure: "8:05 AM", arrival: "8:13 AM"),
-            Time(departure: "8:05 AM", departureSpot: nil, arrival: "8:13 AM", arrivalSpot: "Middle School", arrivalTwo: "8:21 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday"),
-            Time(departure: "8:30 AM", departureSpot: nil, arrival: "8:38 AM", arrivalSpot: "Middle School", arrivalTwo: "8:46 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday")
-                        ])]),
-        BusSection(title: "PM Shuttle", buses:
-                    [
-                        Bus(title: "Upper School to Harvard Square", times: [
-                            Time(departure: "3:00 PM", arrival: "2:15 PM", weekDays: "M/Tu/Th/F"),
-                            Time(departure: "3:30 PM", arrival: "3:45 PM", weekDays: "M/Tu/Th/F"),
-                            Time(departure: "4:10 PM", arrival: "4:25 PM", weekDays: "M/Tu/Th/F"),
-                            Time(departure: "5:30 PM", arrival: "5:45 PM", weekDays: "M/Tu/Th/F"),
-                            Time(departure: "6:15 PM", arrival: "6:25 PM", weekDays: "M/Tu/Th/F")
-                        ])])]
-    var athleticsSchedule = [BusSection(title: "PM Shuttle", buses: [
-        Bus(title: "Bus to Upper School", times: [
-            Time(departure: "5:50 PM", departureSpot: "Filippello Park", arrival: "6:00 PM", arrivalSpot: "Upper School"),
-            Time(departure: "5:50 PM", departureSpot: "Fresh Pond Pkway", arrival: "6:00 PM", arrivalSpot: "Upper School")
-        ])
-    ])]
-    var homeSchedule = [BusSection(title: "PM Shuttle", buses: [
-        Bus(title: "Upper School to Boston", times: [
-            Time(departure: "6:15 PM", departureSpot: "Upper School", arrival: "6:45 PM", arrivalSpot: "Charles St. @ Beacon St.")
+    var shuttleSchedule = [
+        BusSection(title: "Harvard Square", buses: [
+            Bus(title: "Harvard Square to Upper School", times: [
+                Time(departure: "7:20 AM", arrival: "7:28 AM"),
+                Time(departure: "7:40 AM", departureSpot: nil, arrival: "7:48 AM", arrivalSpot: "Middle School", arrivalTwo: "7:56 AM", arrivalTwoSpot: "Upper School"),
+                Time(departure: "8:05 AM", arrival: "8:13 AM"),
+                Time(departure: "8:05 AM", departureSpot: nil, arrival: "8:13 AM", arrivalSpot: "Middle School", arrivalTwo: "8:21 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday"),
+                Time(departure: "8:30 AM", departureSpot: nil, arrival: "8:38 AM", arrivalSpot: "Middle School", arrivalTwo: "8:46 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday")
+            ]),
+            Bus(title: "Upper School to Harvard Square", times: [
+                Time(departure: "12:15 PM", arrival: "12:30 PM", weekDays: "Wednesday"),
+                Time(departure: "12:45 PM", arrival: "1:00 PM", weekDays: "Wednesday"),
+                Time(departure: "1:15 PM", arrival: "1:30 PM", weekDays: "Wednesday"),
+                Time(departure: "1:45 PM", arrival: "2:00 PM", weekDays: "Wednesday"),
+                Time(departure: "2:15 PM", arrival: "2:30 PM", weekDays: "Wednesday"),
+                Time(departure: "2:45 PM", arrival: "3:00 PM", weekDays: "Wed/Fri"),
+                Time(departure: "3:40 PM", arrival: "3:50 PM"),
+                Time(departure: "4:15 PM", departureSpot: nil, arrival: "4:30 PM", arrivalSpot: "Harvard Square", arrivalTwo: "4:45 PM", arrivalTwoSpot: "Grove St"),
+                Time(departure: "5:45 PM", departureSpot: nil, arrival: "6:00 PM", arrivalSpot: "Harvard Square", arrivalTwo: "6:15 PM", arrivalTwoSpot: "Grove St"),
+                Time(departure: "6:30 PM", departureSpot: nil, arrival: "6:45 PM", arrivalSpot: "Harvard Square", arrivalTwo: "7:00 PM", arrivalTwoSpot: "Grove St")
+            ])
         ]),
-        Bus(title: "Upper School to Newton", times: [
-            Time(departure: "6:15 PM", departureSpot: "Upper School", arrival: "6:40 PM", arrivalSpot: "Riverside, Newton", weekDays: "M/Tu/Th")
+        BusSection(title: "Grove St", buses: [
+            Bus(title: "Grove St to Upper School", times: [
+                Time(departure: "6:30 AM", arrival: "6:45 AM"),
+                Time(departure: "6:55 AM", arrival: "7:10 AM"),
+                Time(departure: "7:20 AM", arrival: "7:35 AM"),
+                Time(departure: "7:45 AM", arrival: "8:00 AM"),
+                Time(departure: "8:10 AM", arrival: "8:25 AM"),
+                Time(departure: "8:35 AM", arrival: "8:50 AM"),
+                Time(departure: "9:00 AM", arrival: "9:15 AM"),
+                Time(departure: "9:30 AM", arrival: "9:45 AM")
+            ]),
+            Bus(title: "Upper School to Grove St", times: [
+                Time(departure: "12:15 PM", arrival: "12:30 PM", weekDays: "Wednesday"),
+                Time(departure: "12:45 PM", arrival: "1:00 PM", weekDays: "Wednesday"),
+                Time(departure: "1:15 PM", arrival: "1:30 PM", weekDays: "Wednesday"),
+                Time(departure: "1:45 PM", arrival: "2:00 PM", weekDays: "Wednesday"),
+                Time(departure: "2:15 PM", arrival: "2:30 PM", weekDays: "Wednesday"),
+                Time(departure: "2:45 PM", arrival: "3:00 PM", weekDays: "Wed/Fri"),
+                Time(departure: "3:30 PM", arrival: "3:45 PM"),
+                Time(departure: "3:50 PM", arrival: "4:05 PM"),
+                Time(departure: "4:15 PM", departureSpot: nil, arrival: "4:30 PM", arrivalSpot: "Harvard Square", arrivalTwo: "4:45 PM", arrivalTwoSpot: "Grove St"),
+                Time(departure: "5:00 PM", arrival: "5:15 PM"),
+                Time(departure: "5:45 PM", departureSpot: nil, arrival: "6:00 PM", arrivalSpot: "Harvard Square", arrivalTwo: "6:15 PM", arrivalTwoSpot: "Grove St"),
+                Time(departure: "6:30 PM", departureSpot: nil, arrival: "6:45 PM", arrivalSpot: "Harvard Square", arrivalTwo: "7:00 PM", arrivalTwoSpot: "Grove St")
+            ])
         ])
-    ])]
+    ]
+    var homeSchedule = [
+        BusSection(title: "Morning", buses: [
+            
+        ]),
+        BusSection(title: "Afternoon", buses: [
+            
+        ])
+    ]
     override func viewDidLoad() {
         super.viewDidLoad()
-        busSchedule = fourthLotSchedule
+        busSchedule = shuttleSchedule
         view.backgroundColor = UIColor(named: "background")
         tableView.register(busTimesTableViewCell.self, forCellReuseIdentifier: busTimesTableViewCell.identifier)
         tableView.backgroundColor = UIColor(named: "background")
