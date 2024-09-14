@@ -429,15 +429,15 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
 //            case 4:
 //                name = "friday"
             case 0:
-                name = "a"
+                name = "d"
             case 1:
                 name = "c"
             case 2:
-                name = "d"
-            case 3:
-                name = "f"
-            case 4:
                 name = "g"
+            case 3:
+                name = "a"
+            case 4:
+                name = "f"
             default:
                 name = "[Unknown]"
             }
@@ -570,13 +570,13 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
 //            settingsBlock(blockName: "Thursday Lunch", className: "\(LoginVC.blocks["l-thursday"] as? String ?? "")"),
 //            settingsBlock(blockName: "Friday Lunch", className: "\(LoginVC.blocks["l-friday"] as? String ?? "")"),
             
-            settingsBlock(blockName: "A Block", className: "\(LoginVC.blocks["l-a"] as? String ?? "")"),
-//            settingsBlock(blockName: "B Block", className: "\(LoginVC.blocks["l-b"] as? String ?? "")"),
-            settingsBlock(blockName: "C Block", className: "\(LoginVC.blocks["l-c"] as? String ?? "")"),
-            settingsBlock(blockName: "D Block", className: "\(LoginVC.blocks["l-d"] as? String ?? "")"),
-//            settingsBlock(blockName: "E Block", className: "\(LoginVC.blocks["l-e"] as? String ?? "")"),
-            settingsBlock(blockName: "F Block", className: "\(LoginVC.blocks["l-f"] as? String ?? "")"),
-            settingsBlock(blockName: "G Block", className: "\(LoginVC.blocks["l-g"] as? String ?? "")")
+            settingsBlock(blockName: "D Block (Mondays)", className: "\(LoginVC.blocks["l-d"] as? String ?? "")"),
+            settingsBlock(blockName: "C Block (Tuesdays)", className: "\(LoginVC.blocks["l-c"] as? String ?? "")"),
+            settingsBlock(blockName: "A Block (Thursdays)", className: "\(LoginVC.blocks["l-a"] as? String ?? "")"),
+            settingsBlock(blockName: "G Block (Wednesdays)", className: "\(LoginVC.blocks["l-g"] as? String ?? "")"),
+            settingsBlock(blockName: "F Block (Fridays)", className: "\(LoginVC.blocks["l-f"] as? String ?? "")")
+            //            settingsBlock(blockName: "B Block", className: "\(LoginVC.blocks["l-b"] as? String ?? "")"),
+            //            settingsBlock(blockName: "E Block", className: "\(LoginVC.blocks["l-e"] as? String ?? "")"),
         ]
         other = [
             settingsBlock(blockName: "Share Your Classes", className: ""),
