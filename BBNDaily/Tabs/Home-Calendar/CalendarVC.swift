@@ -271,6 +271,15 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let block = currentDay[indexPath.row]
         if block.name.lowercased().contains("lunch") {
+            // Set LunchMenuVC.week to the date of the current week's Monday in the form "m/d"
+            let formatter = DateFormatter()
+            formatter.dateFormat = "M/d"
+            let lunchDay = Calendar.current.component(.weekday, from: realCurrentDate)
+            let daysToSubtract = lunchDay - 2
+            let monday = Calendar.current.date(byAdding: .day, value: -daysToSubtract, to: realCurrentDate)!
+            LunchMenuVC.week = formatter.string(from: monday)
+            print(LunchMenuVC.week)
+            
             (tableView.cellForRow(at: indexPath) as! coverTableViewCell).animateView()
             self.performSegue(withIdentifier: "Lunch", sender: nil)
         }
@@ -460,14 +469,6 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         formatter2.dateStyle = .short
         let stringDate1 = formatter2.string(from: date)
         currentDate = stringDate1
-        
-//        let formatter1 = DateFormatter()
-//        formatter1.dateFormat = "yyyy-MM-dd"
-//        formatter1.dateStyle = .full
-//        let stringDate = formatter1.string(from: date)
-//        let weekDay = stringDate.prefix(upTo: formatter1.string(from: date).firstIndex(of: ",")!)
-//        let lunchDays = getLunchDays(weekDay: String(weekDay))
-//        let lunchDays = getRegularSchedule(weekday: String(weekDay))
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/M/d" // Use standard format without leading zeros

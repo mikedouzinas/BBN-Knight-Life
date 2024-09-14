@@ -144,7 +144,7 @@ class blockTableViewCell: UITableViewCell {
             TitleLabel.text = "\(viewModel.name)"
             if isLunch {
                 BlockLabel.isHidden = false
-                BlockLabel.text = "Press for Current Menu"
+                BlockLabel.text = "Press for menu"
             }
             else {
                 if viewModel.name.lowercased().contains("advisory") {

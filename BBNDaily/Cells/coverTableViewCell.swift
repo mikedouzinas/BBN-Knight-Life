@@ -110,7 +110,7 @@ class coverTableViewCell: calendarTableViewCell {
             RightLabel.text = "\(viewModel.name)"
             if isLunch {
                 BottomRightLabel.isHidden = false
-                BottomRightLabel.text = "Press for Current Menu"
+                BottomRightLabel.text = "Press for menu"
             }
             else {
                 if viewModel.name.lowercased().contains("advisory") {
