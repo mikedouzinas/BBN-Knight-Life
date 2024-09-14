@@ -2397,7 +2397,7 @@
                     </view>
                     <tabBarItem key="tabBarItem" title="Bus Schedule" image="bus" catalog="system" selectedImage="bus" id="8N9-7H-l1z"/>
                     <navigationItem key="navigationItem" title="Bus Schedule" id="ox3-fG-zQu">
-                        <barButtonItem key="leftBarButtonItem" image="info.circle" catalog="system" id="PSp-Uu-WE1">
+                        <barButtonItem key="leftBarButtonItem" image="info.circle" catalog="system" hidden="YES" id="PSp-Uu-WE1">
                             <color key="tintColor" name="inverse"/>
                             <connections>
                                 <action selector="comingSoon:" destination="9av-zj-sam" id="Gun-yf-8FA"/>
@@ -2575,7 +2575,7 @@
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemRedColor">
-            <color red="1" green="0.23137254901960785" blue="0.18823529411764706" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="1" green="0.23137254900000001" blue="0.18823529410000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>
