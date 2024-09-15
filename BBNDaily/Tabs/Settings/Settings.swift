@@ -50,7 +50,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         label.centerYAnchor.constraint(equalTo: backview.centerYAnchor).isActive = true
         label.rightAnchor.constraint(equalTo: backview.rightAnchor, constant: -5).isActive = true
         if section == 0 {
-            label.text = "Personal Info."
+            label.text = "Personal Info"
         }
         else if section == 1 {
             label.text = "Blocks"
@@ -572,8 +572,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             
             settingsBlock(blockName: "D Block (Mondays)", className: "\(LoginVC.blocks["l-d"] as? String ?? "")"),
             settingsBlock(blockName: "C Block (Tuesdays)", className: "\(LoginVC.blocks["l-c"] as? String ?? "")"),
-            settingsBlock(blockName: "A Block (Thursdays)", className: "\(LoginVC.blocks["l-a"] as? String ?? "")"),
             settingsBlock(blockName: "G Block (Wednesdays)", className: "\(LoginVC.blocks["l-g"] as? String ?? "")"),
+            settingsBlock(blockName: "A Block (Thursdays)", className: "\(LoginVC.blocks["l-a"] as? String ?? "")"),
             settingsBlock(blockName: "F Block (Fridays)", className: "\(LoginVC.blocks["l-f"] as? String ?? "")")
             //            settingsBlock(blockName: "B Block", className: "\(LoginVC.blocks["l-b"] as? String ?? "")"),
             //            settingsBlock(blockName: "E Block", className: "\(LoginVC.blocks["l-e"] as? String ?? "")"),

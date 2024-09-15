@@ -867,7 +867,7 @@ extension UIViewController {
         let lowercaseWeekday = weekday.lowercased()
         
         for scheduleBlock in regularSchedule[lowercaseWeekday] ?? [] {
-            weekdayBlocks += getNextBlock(scheduleBlock: scheduleBlock as! Event) ?? []
+            weekdayBlocks += getNextBlock(scheduleBlock: scheduleBlock ) ?? []
         }
         
         // Can't sort blocks yet because need to deal with 12h time format
@@ -927,7 +927,7 @@ extension UIViewController {
         // Filter is lunch block
         if filter == "l1" || filter == "l2" {
             if let userLunchPeriod = LoginVC.blocks["l-\(scheduleBlock.lunchBlock!.lowercased())"] as? String {
-                return userLunchPeriod == "" || (userLunchPeriod == "1st Lunch" && filter == "l1") || (userLunchPeriod == "2nd Lunch" && filter == "l2")
+                return userLunchPeriod == "" || userLunchPeriod == "Not Set" || (userLunchPeriod == "1st Lunch" && filter == "l1") || (userLunchPeriod == "2nd Lunch" && filter == "l2")
             } else {
                 return true
             }

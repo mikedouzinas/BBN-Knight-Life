@@ -18,7 +18,7 @@ class AuthVC: CustomLoader {
         do {
             self.showLoader(text: "Signing you out...")
             try FirebaseAuth.Auth.auth().signOut()
-            LoginVC.blocks = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","l-a":"Not Set","l-b":"Not Set","l-c":"Not Set","l-d":"Not Set","l-e":"Not Set","l-f":"Not Set","l-g":"Not Set","googlePhoto":"false","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
+            LoginVC.blocks = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","l-a":"","l-b":"","l-c":"","l-d":"","l-e":"","l-f":"","l-g":"","googlePhoto":"false","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
             UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
             hideLoader(completion: {
                 ProgressHUD.colorAnimation = .green
