@@ -8,7 +8,7 @@ Built by BB&N students, and open to students who want to work on it.
 
 - [Contributing](docs/CONTRIBUTING.md) starts here: setup, project layout, pods, how to pick
   something up.
-- [Firebase](docs/FIREBASE.md) covers the data, the admin allowlist, and the security rules.
+- [Firebase](docs/FIREBASE.md) covers the data, the admins collection, and the security rules.
 - [Releasing](docs/RELEASING.md) covers shipping an update through App Store Connect.
 
 ## Quick start
@@ -19,5 +19,9 @@ cd BBN-Knight-Life
 pod install
 open BBNDaily.xcworkspace
 ```
+
+This repo does not vendor `Pods/`. `Podfile.lock` pins every dependency to an exact version
+and checksum, so `pod install` reproduces the tree exactly, and it is required on a fresh
+clone.
 
 See [Contributing](docs/CONTRIBUTING.md) if any of that does not work.

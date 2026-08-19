@@ -1,0 +1,127 @@
+name: Clean clone build
+
+# HQ-608.
+#
+# From 2024-08-15 to 2026-08-19 this repo could not be built from a clean clone.
+# Four unanchored .gitignore patterns (*.cc, *.h, *.inc, *.m) stripped every
+# header out of the committed Pods/ tree. It stayed invisible for two years
+# because everyone who touched the repo already had Pods/ on disk.
+#
+# This workflow is the mechanism that makes that impossible to repeat: every push
+# checks out a fresh tree that has never seen a developer's machine, runs
+# `pod install`, and builds. If a dependency is missing from the checkout, or an
+# ignore rule swallows something the build needs, this job goes red.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: clean-clone-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitignore-scope:
+    name: .gitignore scope guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No unanchored source patterns, no half-tracked Pods
+        run: ./scripts/check-gitignore-scope.sh
+
+  clean-clone-build:
+    name: Build from a fresh clone
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      # A fresh checkout on a fresh runner. Nothing here has ever had Pods/ on
+      # disk, which is precisely the condition that hid HQ-608.
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          pod --version
+
+      # If the checkout already contains Pods/, someone has re-vendored a
+      # partial dependency tree and we are back in the HQ-608 failure mode.
+      - name: Assert Pods/ is not in the checkout
+        run: |
+          if [ -e Pods ]; then
+            echo "::error::Pods/ is present in a fresh checkout. This repo does not vendor Pods/; Podfile.lock plus 'pod install' is the contract. See scripts/check-gitignore-scope.sh."
+            exit 1
+          fi
+          echo "OK: Pods/ absent, as expected."
+
+      # No cache of Pods/ on purpose. A warm Pods/ sandbox is what makes this
+      # bug invisible: `pod install` sees a matching Manifest.lock and skips the
+      # download, so a gutted tree looks installed. Only ~/Library/Caches is
+      # cached, which holds downloaded archives and cannot mask a missing file.
+      - name: Cache CocoaPods downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods/repos
+          key: cocoapods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
+          restore-keys: cocoapods-${{ runner.os }}-
+
+      - name: pod install
+        run: pod install --repo-update
+
+      # `pod install` must not drift from the committed lockfile. If it does, the
+      # lockfile is not actually pinning the build.
+      #
+      # The trailing `COCOAPODS:` line records which CocoaPods binary last wrote
+      # the file, not a dependency version, and it legitimately differs between
+      # a developer's machine and the runner. Every other line -- the resolved
+      # versions, the dependency graph, and the SPEC CHECKSUMS -- must match.
+      - name: Assert Podfile.lock did not drift
+        run: |
+          drift=$(git diff -U0 -- Podfile.lock \
+                  | grep -E '^[+-][^+-]' \
+                  | grep -v '^[+-]COCOAPODS:' || true)
+          if [ -n "$drift" ]; then
+            echo "::error::pod install resolved different dependencies than Podfile.lock pins. Commit the updated lockfile deliberately."
+            printf '%s\n' "$drift"
+            exit 1
+          fi
+          echo "OK: resolved versions and checksums match Podfile.lock."
+
+      # The direct HQ-608 assertion: headers exist. If the ignore rules ever
+      # strip dependency source again, this fires before the build does, with a
+      # message that names the cause.
+      - name: Assert dependency headers are present
+        run: |
+          count=$(find Pods -name '*.h' | wc -l | tr -d ' ')
+          echo "Pods/ header count: $count"
+          if [ "$count" -lt 1000 ]; then
+            echo "::error::Only $count header(s) under Pods/. Expected several thousand. Dependency source is missing (this is the HQ-608 failure)."
+            exit 1
+          fi
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace BBNDaily.xcworkspace \
+            -scheme BBNDaily \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            build \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee /tmp/xcodebuild.log \
+            | grep -E '^(\*\*|CompileSwift|Ld|error:|warning: .*deprecat)' || true
+          grep -q '^\*\* BUILD SUCCEEDED \*\*' /tmp/xcodebuild.log
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: /tmp/xcodebuild.log
+          if-no-files-found: ignore

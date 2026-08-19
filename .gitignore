@@ -50,14 +50,27 @@ playground.xcworkspace
 
 # CocoaPods
 #
-# We recommend against adding the Pods directory to your .gitignore. However
-# you should judge for yourself, the pros and cons are mentioned at:
-# https://guides.cocoapods.org/using/using-cocoapods.html#should-i-check-the-pods-directory-into-source-control
+# Pods/ is NOT vendored. Podfile.lock is committed and pins every pod to an exact
+# version and checksum, so `pod install` reproduces the dependency tree exactly.
+# Run `pod install` after cloning, then open BBNDaily.xcworkspace.
 #
-# Pods/
+# Podfile, Podfile.lock and BBNDaily.xcworkspace stay tracked. Only the generated
+# sandbox is ignored.
+Pods/
+
+# NEVER add an unanchored source-file pattern to this file.
 #
-# Add this line if you want to avoid checking in source code from the Xcode workspace
-# *.xcworkspace
+# From 2024-08-15 (85f2ca3) until HQ-608 this file contained the bare patterns
+# `*.cc`, `*.h`, `*.inc` and `*.m`. A pattern with no `/` matches at EVERY depth,
+# so those four lines silently stripped all 4,099 header files and most of the
+# C/C++/Obj-C sources out of the committed Pods/ tree. The repo could not be built
+# from a clean clone for two years; it only worked for people who already had
+# Pods/ on disk.
+#
+# If a build artifact of one of those extensions ever needs ignoring, anchor it to
+# its directory (e.g. `/BBNDaily/Generated/*.h`), never bare.
+# .github/workflows/clean-clone-build.yml enforces this and builds from a fresh
+# clone on every push.
 
 # Carthage
 #
@@ -88,11 +101,6 @@ fastlane/test_output
 # https://github.com/johnno1962/injectionforxcode
 
 iOSInjectionProject/
-*.cc
-*.h
-*.inc
-*.m
-Pods/BoringSSL-GRPC/src/crypto
 
 # Mac
 
