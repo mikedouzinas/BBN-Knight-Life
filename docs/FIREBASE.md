@@ -36,18 +36,31 @@ separate documents and they go out of sync easily.
 ## Who is allowed to change schedules
 
 Schedule data is read-only for students. Writing to `schedules`, `special-schedules`,
-`default-schedules`, `ifstatements`, or to Storage requires being on an admin allowlist.
+`default-schedules`, `ifstatements`, or to Storage requires being an admin.
 
-Current admins:
+Admins are documents in the **`admins` collection in Firestore**, one per person, with the
+document ID being their lowercase email. Both the Firestore rules and the Storage rules read
+that same collection, so there is one list rather than two copies that can disagree.
 
-- mveson@bbns.org (Mike Veson)
-- kveson@bbns.org (Kai Veson)
-- lho@bbns.org (Lucas Ho)
-- yzhao@bbns.org
-- amoro-araujo@bbns.org
+The list is readable in the console by admins. It is deliberately not readable by students,
+so it cannot be used as a directory.
 
-If you are not on that list, the console will let you type an edit and then reject the save.
-That is the rules working, not a bug. Ask an admin to make the change, or to add you.
+If you are not an admin, the console will let you type an edit and then reject the save. That
+is the rules working, not a bug. Ask an admin to make the change, or to add you.
+
+### Adding an admin
+
+Create a document in the `admins` collection with the person's lowercase email as the
+document ID. That is the whole thing. No code change, no deploy, and it works before they
+have ever signed in, which is usually when you want to add someone.
+
+Clients cannot write to this collection at all, so it has to be done from the Firebase
+console or with the Admin SDK.
+
+Two things worth knowing. Someone's school address stops working when they leave, so add a
+personal address as well if their access should outlive graduation. And if someone changes
+their Google username, their sign-in token carries the new address while Firebase's stored
+record still shows the old one, so keep both until they have signed in again.
 
 Before 2026-08-19 any signed-in account could rewrite the school schedule and read every
 student's record. That is what these rules closed.
@@ -71,8 +84,8 @@ to understand exactly who can do what.
 4. Check it worked. Sign in as a normal student account and confirm you can still see your
    schedule and your classes, and that you cannot write to `schedules`.
 
-Adding or removing an admin means editing the allowlist in both files, since Firestore and
-Storage each have their own copy.
+Adding or removing an admin is not a rules change. It is a document in the `admins`
+collection, described above.
 
 Never edit the rules only in the console. The console version and the repo version have to
 match, and the repo is what the next person reads.
