@@ -20,12 +20,20 @@
 #
 # Usage:  ./scripts/test-emulator.sh          all emulator tests
 #         ./scripts/test-emulator.sh <path>   one file
-# FALSIFIED 2026-08-19: ran the suite without the emulator, which is exactly the state that
-# hid four unrun tests for months. It printed
+# FALSIFIED 2026-08-19, in both directions, which took two goes.
+#
+# Skip case: ran the suite without the emulator, the exact state that hid four unrun tests for
+# months. It printed
 #     Tests  10 skipped (10)
 #     CHECKED 0 emulator tests executed, 10 skipped
 #     ::error::Ran 0 emulator tests. Zero is a broken run, not a pass...
 # and exited 1, where the same command without this guard exits 0.
+#
+# False-positive case, found by CI rather than by me: the first version FAILED A RUN WHOSE TEN
+# TESTS ALL PASSED, because vitest colours its summary when it has a terminal and Actions is
+# one. Both counters are now checked against the literal coloured line Actions produced:
+#     coloured "10 passed"  -> passed=10 skipped=0
+#     coloured "10 skipped" -> passed=0  skipped=10
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -81,8 +89,15 @@ set -e
 # 0. That is how four of them went from written to never-run without anybody noticing: the
 # command succeeded and reported nothing. If the emulator ever stops starting, or the env var
 # stops being passed through, this must go red rather than quietly cover nothing again.
-PASSED=$(grep -oE 'Tests +[0-9]+ passed' "$LOG" | tail -1 | grep -oE '[0-9]+' || echo 0)
-SKIPPED=$(grep -oE '[0-9]+ skipped' "$LOG" | tail -1 | grep -oE '[0-9]+' || echo 0)
+# Strip ANSI escapes before matching. vitest colours its summary when it thinks it has a
+# terminal, and GitHub Actions is one, so in CI the line reads
+#     ESC[2m      Tests ESC[22m ESC[1mESC[32m10 passedESC[39m
+# and a pattern like 'Tests +[0-9]+ passed' matches nothing. That made this guard FAIL A RUN
+# WHOSE TESTS ALL PASSED, which is the opposite failure and the more corrosive one: a check
+# that cries wolf is a check somebody deletes.
+CLEAN=$(sed -E $'s/\033\[[0-9;]*[a-zA-Z]//g' "$LOG")
+PASSED=$(printf '%s' "$CLEAN" | grep -oE 'Tests +[0-9]+ passed' | tail -1 | grep -oE '[0-9]+' || echo 0)
+SKIPPED=$(printf '%s' "$CLEAN" | grep -oE '[0-9]+ skipped' | tail -1 | grep -oE '[0-9]+' || echo 0)
 echo "CHECKED $PASSED emulator tests executed, $SKIPPED skipped"
 
 if [ "${PASSED:-0}" -lt 1 ]; then
