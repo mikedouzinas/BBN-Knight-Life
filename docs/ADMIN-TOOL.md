@@ -66,17 +66,34 @@ rules. The confirmation step only protects anyone if you actually read the times
 
 ## Breaks and the school year
 
-A range (summer, winter break) is not published through the tool yet. Ranges live in
-`schedules/break`, keyed `2026/12/19-2027/1/3`, with a `reason` field, and the app reads them
-directly. The 2026-27 calendar is loaded through June 2027.
+Paste the break announcement like anything else. A vacation comes back as **one break**
+covering the whole span, not a card per day.
 
-Two things to know before editing that document by hand:
+The review card shows the last day off and, spelled out, the day classes resume. Check that
+line: reading *"classes resume Monday the 4th"* as the end date takes an extra day of school
+off the calendar for the whole school, and it is the only mistake a break really invites.
 
-- The key must be `yyyy/M/d-yyyy/M/d`, and the start must not be after the end. The app builds
-  a Swift `ClosedRange` from it, which **crashes** if the start is later.
-- Every value must be a map with a `reason` string. The app force-casts both.
+Breaks live in `schedules/break`, keyed `2026/12/19-2027/1/3`. The 2026-27 calendar is loaded
+through June 2027.
 
-Adding ranges to the tool, with those checks, is HQ-641.
+The tool refuses a span that overlaps one already published. Two breaks covering the same day
+disagree, and the app shows whichever it reads first, so it asks you which you meant instead
+of guessing. Republishing the same span is an edit and is allowed.
+
+If you ever edit that document by hand in the console, two rules are load-bearing against the
+shipped app, which will never be updated:
+
+- The start must not be after the end. The app builds a Swift `ClosedRange` from the key,
+  which **crashes on launch** if they are reversed.
+- Every value must be a map with a `reason` string, which the app force-casts.
+
+The tool enforces both, which is the reason to use it rather than the console.
+
+**The school year itself** is `schedules/term`, holding the first and last day of classes. A
+weekday outside it is treated as no school, so a gap in the calendar produces silence rather
+than a confident wrong schedule. If that document is missing the app behaves as it did
+before, which is deliberate: a failed read must never tell the school there is no class
+today.
 
 ## When something is wrong
 
