@@ -63,11 +63,14 @@ Four things worth knowing:
    place.
 4. The app target is called `BBNDaily`, which is the app's original name.
 
-> **If the build fails on a clean clone, that is a known bug, not you.**
-> The `.gitignore` currently strips `.h`, `.m`, `.cc`, and `.inc` files out of the committed
-> `Pods/` directory, so a fresh clone is missing headers it needs to compile. This is being
-> fixed under ticket HQ-608. If you hit it before that lands, ask Mike, and do not spend an
-> afternoon assuming you installed something wrong.
+5. **This repo does not vendor `Pods/`.** `Podfile.lock` pins every dependency to an exact
+   version and checksum, so `pod install` reproduces the tree exactly. A fresh clone has no
+   `Pods/` directory until you run it.
+
+A clean clone is checked on every push by `.github/workflows/clean-clone-build.yml`, which
+clones from scratch, runs `pod install`, and builds. If that workflow is green, a fresh clone
+builds. If yours does not, it is something local, and the troubleshooting section below is the
+place to start.
 
 ## How the project is laid out
 
@@ -168,6 +171,12 @@ App development throws errors for what look like no reason. Work down this list.
    it tells you rather than pasting it in.
 5. **Xcode version drift.** Every new Xcode deprecates something. An error after an Xcode
    update usually means a setting or an API moved, not that you broke anything.
+6. **`pod install` fails with `No podspec exists at path .../<something>-eap-<x>.podspec.json`.**
+   Your local CocoaPods spec index is stale and still lists a version that has since been
+   pulled. Run `pod install --repo-update`.
+7. **`pod --version` errors about `ffi` extensions.** That is an old CocoaPods installed
+   against system Ruby. Install a current one with `brew install cocoapods`, and check that
+   `which pod` points at the Homebrew copy rather than `/usr/local/bin/pod`.
 
 If none of that works, ask a maintainer, with the full error text, your Xcode version, and
 what you were doing.
