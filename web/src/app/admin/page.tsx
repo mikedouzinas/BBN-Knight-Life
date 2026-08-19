@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { IngestTool } from '@/components/IngestTool';
 import { LinkAgent } from '@/components/LinkAgent';
 import { clientAuth, firebaseConfigured, signInWithGoogle, signOutOfGoogle } from '@/lib/firebase/client';
+import { withBasePath } from '@/lib/basePath';
 
 type Status =
   | { kind: 'loading' }
@@ -32,7 +33,7 @@ export default function AdminPage() {
       setStatus({ kind: 'signed-out' });
       return;
     }
-    const res = await fetch('/api/admin/session', { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(withBasePath('/api/admin/session'), { headers: { Authorization: `Bearer ${token}` } });
     const data = (await res.json().catch(() => ({}))) as { email?: string; error?: string };
     if (res.ok && data.email) setStatus({ kind: 'admin', email: data.email });
     else setStatus({ kind: 'denied', message: data.error ?? `HTTP ${res.status}` });

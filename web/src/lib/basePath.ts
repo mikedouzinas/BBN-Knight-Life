@@ -16,7 +16,17 @@
  */
 export const BASE_PATH = '/knight-life';
 
-/** A path under this app, prefixed. Use for anything Next does not prefix itself. */
-export function asset(path: string): string {
+/**
+ * A root-relative URL inside this app, prefixed.
+ *
+ * Use for EVERY path this app writes by hand: image sources, plain anchors, and above all
+ * `fetch`. A bare `fetch('/api/admin/session')` leaves this app entirely and lands on
+ * whatever else is served at that origin, which on 2026-08-19 was the portfolio answering
+ * 404 immediately after a successful Google sign-in.
+ *
+ * Named for what it does rather than for assets, because the fetch case is the one that
+ * breaks sign-in and the one most easily forgotten.
+ */
+export function withBasePath(path: string): string {
   return `${BASE_PATH}${path.startsWith('/') ? path : `/${path}`}`;
 }

@@ -6,6 +6,7 @@
  * is no code path from here to the school's data, which is what makes it safe to leave
  * open (HQ-613).
  */
+import { withBasePath } from '@/lib/basePath';
 import { useCallback, useState } from 'react';
 import { IngestTool } from '@/components/IngestTool';
 import type { PublishOutcome } from '@/components/useIngest';
@@ -32,7 +33,7 @@ export default function DemoPage() {
         This is not the real tool. It reads pasted text and shows you the result, and publishing here
         writes to this page and nowhere else. {published.length > 0 && `${published.length} pretend published.`}
       </p>
-      <IngestTool options={{ ingestUrl: '/api/demo/ingest', publishDay }} textOnly publishLabel="Pretend to publish" />
+      <IngestTool options={{ ingestUrl: withBasePath('/api/demo/ingest'), publishDay }} textOnly publishLabel="Pretend to publish" />
     </>
   );
 }

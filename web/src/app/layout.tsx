@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
 import Link from 'next/link';
-import { asset } from '@/lib/basePath';
+import { withBasePath } from '@/lib/basePath';
 import './globals.css';
 
 // Plex Sans reads well at the small sizes this tool lives at. Plex Mono carries every bell
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   title: 'Knight Life admin',
   description: 'Change what Knight Life shows students for a day.',
   // metadata.icons is NOT base-path-prefixed by Next. See src/lib/basePath.ts.
-  icons: { icon: asset('/knight-life-icon.png') },
+  icons: { icon: withBasePath('/knight-life-icon.png') },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               entirely and land on the portfolio's homepage. */}
           <Link className="masthead-brand" href="/">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={asset('/knight-life-icon.png')} alt="" width={34} height={34} />
+            <img src={withBasePath('/knight-life-icon.png')} alt="" width={34} height={34} />
             <span className="wordmark">
               Knight Life
               <span className="wordmark-sub">admin</span>
