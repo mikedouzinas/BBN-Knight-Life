@@ -27,6 +27,10 @@ class LoginVC: AuthVC {
     static var specialDays = [String: Day]()
     static var breaks = [Break]()
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
+    // Whether this account may publish schedules. Set from the admins collection in
+    // Firestore, which is the same source the security rules read, so the button and the
+    // permission can never disagree. Defaults to false until the lookup answers.
+    static var isAdmin = false
     @IBOutlet weak var SignInButton: GIDSignInButton!
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -78,6 +82,6 @@ class LoginVC: AuthVC {
         }
     }
     static var classMeetingDays = ["a":[true, true, true, true, true],"b":[true, true, true, true, true],"c":[true, true, true, true, true],"d":[true, true, true, true, true],"e":[true, true, true, true, true], "f":[true, true, true, true, true], "g":[true, true, true, true, true]]
-    static var upcomingDays = [CustomWeekday]()
+    static var upcomingDays = [ResolvedDay]()
 }
 
