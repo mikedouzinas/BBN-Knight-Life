@@ -1,0 +1,24 @@
+{
+  "name": "knight-life-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Publish BB&N Knight Life schedules from an AI agent, with a human confirming every write.",
+  "type": "module",
+  "bin": { "knight-life-mcp": "dist/index.js" },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "link-agent": "node scripts/link-agent.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

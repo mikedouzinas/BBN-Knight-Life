@@ -7,6 +7,7 @@ import { UnauthorizedError, requireAdmin } from '@/lib/firebase/requireAdmin';
 import { IngestError, extractSchedule } from '@/lib/ingest/extract';
 import { ingestBodySchema } from '@/lib/ingest/requestBody';
 import { dayWarnings } from '@/lib/schedule/warnings';
+import { displayDate } from '@/lib/schedule/dates';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -22,7 +23,14 @@ export async function POST(request: Request) {
 
     const result = await extractSchedule(parsed.data);
     return NextResponse.json({
-      days: result.days.map((day) => ({ ...day, warnings: dayWarnings(day.day) })),
+      // `display` is here so a client in another package never formats a date itself.
+      // One builder, every consumer. Two copies of this would drift the moment one of
+      // them reached for toLocaleDateString.
+      days: result.days.map((day) => ({
+        ...day,
+        display: displayDate(day.date),
+        warnings: dayWarnings(day.day),
+      })),
       message: result.message,
       rejected: result.rejected,
       attempts: result.attempts,
