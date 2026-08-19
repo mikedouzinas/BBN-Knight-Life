@@ -156,9 +156,13 @@ jobs:
       # A generic destination is not an option either: `generic/platform=iOS Simulator`
       # builds but cannot run a test.
       #
-      # `-only-testing` on purpose: BBNDailyTests also contains the empty 2021 template
-      # (testExample, testPerformanceExample). Running those would report a passing suite
-      # that asserts nothing, which is the shape this repo has been bitten by before.
+      # The WHOLE target, not a named suite. It used to name ResolveDayTests specifically, to
+      # avoid running the empty 2021 template alongside it. That template is deleted, so the
+      # exclusion is gone too -- and it had to go, because naming one suite meant every suite
+      # added afterwards was silently not run. FirestoreParsingTests would have been the first.
+      #
+      # This is the same failure as the template itself, one level up: a green tick that
+      # covers less than it appears to.
       - name: Test
         run: |
           set -o pipefail
@@ -174,7 +178,7 @@ jobs:
             -workspace BBNDaily.xcworkspace \
             -scheme BBNDaily \
             -destination "platform=iOS Simulator,id=$udid" \
-            -only-testing:BBNDailyTests/ResolveDayTests \
+            -only-testing:BBNDailyTests \
             CODE_SIGNING_ALLOWED=NO \
             | tee /tmp/xctest.log \
             | grep -E '^(Test Case|Executed|\*\*|error:)' || true
