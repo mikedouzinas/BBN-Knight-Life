@@ -13,7 +13,6 @@ import InitialsImageView
 import SafariServices
 import FSCalendar
 import WebKit
-import GoogleMaps
 
 class LoginVC: AuthVC {
     static var fullName = ""

@@ -20,7 +20,6 @@ target 'BBNDaily' do
 	pod 'Firebase/Storage'
 	pod 'Firebase/Messaging'
 	pod 'GoogleSignIn'
-	pod 'GoogleMaps'
 	pod 'SkeletonView'
 	pod 'SideMenu'
   target 'BBNDailyTests' do
