@@ -39,6 +39,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # firebase-tools needs Java 21 or newer for the Firestore emulator, and the runner's
+      # default is older. Pinned rather than "latest" so a JDK release cannot break CI on a
+      # morning nobody touched the code.
+      - uses: actions/setup-java@v4
+        if: matrix.package == 'web'
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -78,6 +87,17 @@ jobs:
 
       - name: Test
         run: npm test
+
+      # The emulator suite. It existed and had NEVER RUN: `npm test` skips it unless
+      # FIRESTORE_EMULATOR_HOST is set, and nothing set it, so a green `npm test` covered four
+      # tests that had not executed since the day they were written.
+      #
+      # It is a separate step from `Test` because it needs Java and a downloaded emulator, and
+      # because a failure here should read as "the write path is wrong" rather than as a unit
+      # test failing.
+      - name: Test against the Firestore emulator
+        if: matrix.package == 'web'
+        run: bash ../scripts/test-emulator.sh
 
       - name: Build
         run: npm run build
