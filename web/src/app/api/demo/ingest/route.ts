@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     const result = await extractSchedule(parsed.data);
     return NextResponse.json({
       days: result.days.map((day) => ({ ...day, warnings: dayWarnings(day.day) })),
+      ranges: result.ranges,
       message: result.message,
       rejected: result.rejected,
       attempts: result.attempts,

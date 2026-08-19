@@ -159,3 +159,41 @@ export function issueLines(error: z.ZodError): string[] {
     return `${path}: ${issue.message}`;
   });
 }
+
+
+/**
+ * A break: a span of days with no school, written to `schedules/break`.
+ *
+ * A span is not a schedule and does not live in `schedules/special`. Expanding one into
+ * per-day documents would turn a single summer into ninety of them, and the app already
+ * reads spans directly.
+ *
+ * The rules below are not style. Each one is a launch crash in the SHIPPED 2.4.1 app, which
+ * has not been updated and will not be:
+ *
+ *   start after end     `CalendarVC.isDateInRange` builds `(start...end)`, a Swift
+ *                       ClosedRange, which TRAPS at runtime when the bounds are reversed.
+ *                       One reversed range takes the app down for every student.
+ *   missing reason      force-cast `data["reason"] as! String`.
+ *   a key with the
+ *   wrong hyphen count  the key is split on "-" and index [1] is read without checking.
+ *                       Handled by toBreakKey, which refuses to build such a key.
+ */
+export const scheduleRangeSchema = z
+  .object({
+    startDate: z.string().refine(isValidIsoDate, 'startDate must be YYYY-MM-DD'),
+    endDate: z.string().refine(isValidIsoDate, 'endDate must be YYYY-MM-DD'),
+    reason: z.string().min(1).max(200),
+  })
+  .superRefine((range, ctx) => {
+    if (range.endDate < range.startDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          `endDate ${range.endDate} is before startDate ${range.startDate}. ` +
+          'The shipped app builds a Swift ClosedRange from these and crashes on launch if they are reversed.',
+      });
+    }
+  });
+
+export type ScheduleRange = z.infer<typeof scheduleRangeSchema>;

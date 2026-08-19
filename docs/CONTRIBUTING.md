@@ -193,3 +193,9 @@ If a step here does not work, that is a bug in this file. Fix it in the same pul
 whatever you were doing. This guide used to live in a Google Doc only one person could edit,
 which is how it got a year out of date. It is in the repo now so that anyone who trips over a
 wrong step can correct it.
+
+## Where the project is going
+
+`docs/REBUILD.md` is the design for the SwiftUI rebuild, and it argues for an order: schema,
+then resolver, then views. Read it before starting anything large. It is a position, not a
+decree, and disagreeing with it in a pull request is a perfectly good contribution.

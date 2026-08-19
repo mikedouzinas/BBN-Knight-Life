@@ -6,11 +6,12 @@
  * never saw. If the server restarts between propose and publish, the publish fails and the
  * agent proposes again, which costs one model call and is the correct trade.
  */
-import type { ProposedDay } from './format.js';
+import type { ProposedDay, ProposedRange } from './format.js';
 
 export interface Proposal {
   id: string;
   days: ProposedDay[];
+  ranges: ProposedRange[];
   createdAt: number;
 }
 
@@ -23,10 +24,10 @@ export class ProposalStore {
 
   constructor(private readonly now: () => number = Date.now) {}
 
-  create(days: ProposedDay[]): Proposal {
+  create(days: ProposedDay[], ranges: ProposedRange[] = []): Proposal {
     this.sweep();
     this.counter += 1;
-    const proposal: Proposal = { id: `p${this.counter}`, days, createdAt: this.now() };
+    const proposal: Proposal = { id: `p${this.counter}`, days, ranges, createdAt: this.now() };
     this.items.set(proposal.id, proposal);
     return proposal;
   }

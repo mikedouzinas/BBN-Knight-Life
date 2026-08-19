@@ -7,7 +7,7 @@ import { UnauthorizedError, requireAdmin } from '@/lib/firebase/requireAdmin';
 import { IngestError, extractSchedule } from '@/lib/ingest/extract';
 import { ingestBodySchema } from '@/lib/ingest/requestBody';
 import { dayWarnings } from '@/lib/schedule/warnings';
-import { displayDate } from '@/lib/schedule/dates';
+import { daysBetween, displayDate } from '@/lib/schedule/dates';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -30,6 +30,12 @@ export async function POST(request: Request) {
         ...day,
         display: displayDate(day.date),
         warnings: dayWarnings(day.day),
+      })),
+      // Spans carry their own day count so the review card can say "16 days" without
+      // recomputing a date difference in the browser.
+      ranges: result.ranges.map((range) => ({
+        ...range,
+        dayCount: daysBetween(range.startDate, range.endDate),
       })),
       message: result.message,
       rejected: result.rejected,

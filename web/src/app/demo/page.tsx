@@ -12,7 +12,8 @@ import { IngestTool } from '@/components/IngestTool';
 import type { PublishOutcome } from '@/components/useIngest';
 import type { DatedScheduleDay } from '@/lib/schedule/types';
 import { deriveLegacyDay } from '@/lib/schedule/derive';
-import { toCanonicalKey } from '@/lib/schedule/dates';
+import { toBreakKey, toCanonicalKey } from '@/lib/schedule/dates';
+import type { ScheduleRange } from '@/lib/schedule/schema';
 
 export default function DemoPage() {
   const [published, setPublished] = useState<DatedScheduleDay[]>([]);
@@ -26,6 +27,16 @@ export default function DemoPage() {
     };
   }, []);
 
+  // The sandbox needs its own range stub for the same reason it needs publishDay: without an
+  // override, useIngest would POST to the real /api/admin/publish-range. The demo's guarantee
+  // is that nothing it does can reach Firestore, and that guarantee is per-write-path.
+  const publishRange = useCallback(async (range: ScheduleRange): Promise<PublishOutcome> => {
+    return {
+      ok: true,
+      detail: `Nothing was written. The real tool would write schedules/break.${toBreakKey(range.startDate, range.endDate)}.`,
+    };
+  }, []);
+
   return (
     <>
       <h1>Demo</h1>
@@ -33,7 +44,7 @@ export default function DemoPage() {
         This is not the real tool. It reads pasted text and shows you the result, and publishing here
         writes to this page and nowhere else. {published.length > 0 && `${published.length} pretend published.`}
       </p>
-      <IngestTool options={{ ingestUrl: withBasePath('/api/demo/ingest'), publishDay }} textOnly publishLabel="Pretend to publish" />
+      <IngestTool options={{ ingestUrl: withBasePath('/api/demo/ingest'), publishDay, publishRange }} textOnly publishLabel="Pretend to publish" />
     </>
   );
 }

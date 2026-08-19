@@ -18,6 +18,11 @@ student's phone until you say yes.
 One source can cover several dates. A message naming three snow days produces one proposal
 with three days, and publishing it publishes all three.
 
+A vacation comes back as **one break**, not a pile of days. *"Winter break begins after
+classes Friday the 18th, classes resume Monday the 4th"* becomes a single span, and the
+proposal spells out the last day off and the day classes resume, because reading the resume
+date as the end date takes an extra day of school off the calendar for everybody.
+
 ## Setting it up
 
 You need to already be a Knight Life admin. If you are not, an existing admin adds you by

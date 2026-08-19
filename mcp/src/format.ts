@@ -82,13 +82,47 @@ export function formatDay(proposed: ProposedDay): string {
   return lines.join('\n');
 }
 
-export function formatProposal(id: string, days: ProposedDay[]): string {
-  const body = days.map(formatDay).join('\n\n');
-  const count = days.length === 1 ? '1 day' : `${days.length} days`;
+export interface ProposedRange {
+  startDate: string;
+  endDate: string;
+  reason: string;
+  dayCount?: number;
+  displayStart?: string;
+  displayEnd?: string;
+  displayResume?: string;
+}
+
+/**
+ * A span, rendered so the one easy mistake is visible.
+ *
+ * A break has no blocks to check, so what a person must verify is the LAST day off. Reading
+ * "classes resume Monday the 4th" as the end date takes an extra day of school off the
+ * calendar for the whole school, so the resume date is spelled out rather than implied.
+ */
+export function formatRange(range: ProposedRange): string {
+  const days = range.dayCount;
   return [
-    `Proposal ${id} - ${count}. NOTHING IS PUBLISHED YET.`,
+    `${range.displayStart ?? range.startDate} through ${range.displayEnd ?? range.endDate}`,
+    `  No school - ${range.reason}`,
+    days ? `  ${days} ${days === 1 ? 'day' : 'days'}, both ends included.` : '',
+    range.displayResume ? `  Classes resume ${range.displayResume}.` : '',
+  ].filter(Boolean).join('\n');
+}
+
+export function formatProposal(id: string, days: ProposedDay[], ranges: ProposedRange[] = []): string {
+  const parts: string[] = [];
+  // Breaks first: a span sets the frame the individual days sit inside.
+  if (ranges.length) parts.push(ranges.map(formatRange).join('\n\n'));
+  if (days.length) parts.push(days.map(formatDay).join('\n\n'));
+
+  const bits: string[] = [];
+  if (ranges.length) bits.push(`${ranges.length} break${ranges.length === 1 ? '' : 's'}`);
+  if (days.length) bits.push(`${days.length} day${days.length === 1 ? '' : 's'}`);
+
+  return [
+    `Proposal ${id} - ${bits.join(' and ')}. NOTHING IS PUBLISHED YET.`,
     '',
-    body,
+    parts.join('\n\n'),
     '',
     'Show this to the person who asked for it and get a yes in their own words.',
     `Then call publish_schedule with proposal_id "${id}" and confirm true.`,

@@ -15,8 +15,8 @@
  */
 import { z } from 'zod';
 import type { LegacyDayDoc, ScheduleDay } from './types';
-import { datedScheduleDaySchema, issueLines } from './schema';
-import { toCanonicalKey } from './dates';
+import { datedScheduleDaySchema, issueLines, scheduleRangeSchema, type ScheduleRange } from './schema';
+import { toBreakKey, toCanonicalKey, daysBetween } from './dates';
 import { deriveLegacyDay } from './derive';
 
 export type PublishSource = 'manual' | 'ingest';
@@ -85,5 +85,89 @@ export function planPublish(request: PublishRequest): PublishPlan {
 export async function publishDay(store: ScheduleStore, request: PublishRequest): Promise<PublishPlan> {
   const plan = planPublish(request);
   await store.commit(plan);
+  return plan;
+}
+
+
+/* -------------------------------------------------------------------------- ranges ---- */
+
+export interface RangePublishRequest {
+  range: ScheduleRange;
+  updatedBy: string;
+  source: PublishSource;
+}
+
+export interface RangePublishPlan {
+  /** `schedules/break` field key, e.g. `2026/12/19-2027/1/3`. */
+  breakKey: string;
+  range: ScheduleRange;
+  /** Inclusive, so a reviewer can see "16 days" rather than count. */
+  dayCount: number;
+  provenance: { updatedBy: string; source: PublishSource; updatedAt: string };
+}
+
+export interface RangeStore {
+  /** Every range currently published, keyed as `schedules/break` holds them. */
+  readRanges(): Promise<Record<string, { reason: string }>>;
+  commitRange(plan: RangePublishPlan): Promise<void>;
+}
+
+/** Validate and describe a range without writing it. */
+export function planRangePublish(request: RangePublishRequest): RangePublishPlan {
+  const parsed = scheduleRangeSchema.safeParse(request.range);
+  if (!parsed.success) throw new ScheduleValidationError(issueLines(parsed.error as z.ZodError));
+
+  const range = parsed.data;
+  return {
+    breakKey: toBreakKey(range.startDate, range.endDate),
+    range,
+    dayCount: daysBetween(range.startDate, range.endDate),
+    provenance: {
+      updatedBy: request.updatedBy,
+      source: request.source,
+      updatedAt: new Date().toISOString(),
+    },
+  };
+}
+
+/** True when two inclusive ISO spans share at least one day. */
+export function rangesOverlap(a: { start: string; end: string }, b: { start: string; end: string }): boolean {
+  return a.start <= b.end && b.start <= a.end;
+}
+
+/**
+ * Validate, check against what is already published, write.
+ *
+ * Overlap is refused rather than merged. Two ranges covering the same day are not a crash,
+ * but they are a disagreement nobody can see: the app takes whichever the dictionary iterates
+ * first, so students get "Winter break" or "Spring break" depending on Firestore's ordering.
+ * Refusing makes the admin say which one they meant.
+ */
+export async function publishRange(store: RangeStore, request: RangePublishRequest): Promise<RangePublishPlan> {
+  const plan = planRangePublish(request);
+
+  const existing = await store.readRanges();
+  const clashes: string[] = [];
+  for (const key of Object.keys(existing)) {
+    if (key === plan.breakKey) continue; // republishing the same span is an edit, not a clash
+    const parts = key.split('-');
+    if (parts.length !== 2) continue;
+    const [y1, m1, d1] = parts[0].split('/').map(Number);
+    const [y2, m2, d2] = parts[1].split('/').map(Number);
+    const iso = (y: number, m: number, d: number) =>
+      `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const other = { start: iso(y1, m1, d1), end: iso(y2, m2, d2) };
+    if (rangesOverlap({ start: plan.range.startDate, end: plan.range.endDate }, other)) {
+      clashes.push(`${key} (${existing[key]?.reason ?? 'no reason'})`);
+    }
+  }
+  if (clashes.length) {
+    throw new ScheduleValidationError([
+      `that span overlaps a break already published: ${clashes.join(', ')}`,
+      'Two breaks covering one day disagree, and the app shows whichever it reads first.',
+    ]);
+  }
+
+  await store.commitRange(plan);
   return plan;
 }

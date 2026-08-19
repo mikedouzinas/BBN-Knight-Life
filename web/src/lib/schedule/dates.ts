@@ -42,6 +42,48 @@ export function toLegacyKey(iso: string): string {
   return `${WEEKDAYS[weekday]}, ${MONTHS[m - 1]} ${d}, ${y}`;
 }
 
+/**
+ * The break document's field key: `2026/12/19-2027/1/3`.
+ *
+ * Two canonical keys joined by a hyphen, which works only because `yyyy/M/d` contains no
+ * hyphen of its own. The shipped 2.4.1 app splits this key on "-" and indexes `[1]` without
+ * checking, so a key with any other number of hyphens is an index-out-of-range crash on
+ * launch for every student.
+ */
+export function toBreakKey(startIso: string, endIso: string): string {
+  const key = `${toCanonicalKey(startIso)}-${toCanonicalKey(endIso)}`;
+  // Belt and braces. If this ever fires, the canonical key format changed and the shipped
+  // app cannot read what we are about to write.
+  if (key.split('-').length !== 2) {
+    throw new Error(`break key must contain exactly one hyphen: ${key}`);
+  }
+  return key;
+}
+
+/** `2026/12/19-2027/1/3` back to a pair of ISO dates. */
+export function fromBreakKey(key: string): { start: string; end: string } {
+  const parts = key.split('-');
+  if (parts.length !== 2) throw new Error(`not a break key: ${key}`);
+  return { start: fromCanonicalKey(parts[0]), end: fromCanonicalKey(parts[1]) };
+}
+
+/**
+ * Inclusive day count between two ISO dates, so a range can say how long it is.
+ *
+ * Built through `parts`, which validates and returns real components, rather than by
+ * spreading the split string into `Date.UTC`. That shortcut is off by one on the month and
+ * silently wrong: it type-checks, and the error only shows as a range that reports the wrong
+ * length. UTC throughout, because a local-time midnight crosses a DST boundary twice a year
+ * and turns an exact day count into 20.958333.
+ */
+export function daysBetween(startIso: string, endIso: string): number {
+  const a = parts(startIso);
+  const b = parts(endIso);
+  const start = Date.UTC(a.y, a.m - 1, a.d);
+  const end = Date.UTC(b.y, b.m - 1, b.d);
+  return Math.round((end - start) / 86_400_000) + 1;
+}
+
 /** `2024/9/4` back to `2024-09-04`. */
 export function fromCanonicalKey(key: string): string {
   const m = /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(key);
