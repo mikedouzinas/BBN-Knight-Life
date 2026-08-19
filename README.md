@@ -1,19 +1,23 @@
 # Knight Life
-BBN Knight Life App
 
-To Do List:
-- [ ] Bus Tracking
-- [x] Fix next day stuff so it works better (NECESSARY BIG)
-- [ ] Options for different schedules for different grades (meh, prob requires a redesign to current change schedule thingy so idrk)
-- [ ] New solution for notifications (NECESSARY BIG) (push notifs, ios academy vid)
-- [x] Edit class button (do this by creating a new class and going through and changing the data of each person in the class; remove old class at the end)
-- [ ] Deletable tasks
-- [x] Different days working & lunch working (without needing to reload)
-- [x] Different days shouldn’t delete a class when editing
-- [x] Delete repeated code in LaunchVC and LoginVC
-- [ ] WIDGET SHOWING CURRENT CLASS and time left
-- [ ] Apple watch app showing current class and time left
-- [ ] Maybe make a light/dark mode choice
-- [ ] Make macos app
-- [ ] Make firebase allow through dates for no school (like summer)
-- [ ] BRING VESON SIDE MENU INTO KNIGHT LIFE WITH PROFILE PAGE & DIFF SETTINGS PAGE
+The BB&N student app. Schedules, classes, special schedules, and the lunch menu, on iOS.
+
+Built by BB&N students, and open to students who want to work on it.
+
+## Docs
+
+- [Contributing](docs/CONTRIBUTING.md) starts here: setup, project layout, pods, how to pick
+  something up.
+- [Firebase](docs/FIREBASE.md) covers the data, the admin allowlist, and the security rules.
+- [Releasing](docs/RELEASING.md) covers shipping an update through App Store Connect.
+
+## Quick start
+
+```bash
+git clone https://github.com/mikedouzinas/BBN-Knight-Life.git
+cd BBN-Knight-Life
+pod install
+open BBNDaily.xcworkspace
+```
+
+See [Contributing](docs/CONTRIBUTING.md) if any of that does not work.
