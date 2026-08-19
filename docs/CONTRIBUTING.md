@@ -133,15 +133,16 @@ See `docs/RELEASING.md`.
 ## Picking something to work on
 
 The old version of this guide ended with a to-do list. That list is now tracked as tickets so
-it does not silently rot again. Ask Mike for the current Knight Life backlog, or look at the
-open issues on GitHub.
+it does not silently rot again. Ask a current maintainer for the Knight Life backlog. The
+maintainers are the people on the admin list in `firebase/firestore.rules`.
 
 You do not have to pick from the backlog. If you have an idea for something the app should
 do, that counts, and it is the better reason to start. Say what you want to build before you
 build it, so nobody duplicates work.
 
-To claim something: open an issue saying what you are doing, or comment on the existing one.
-Then branch, build, and open a pull request.
+To claim something: tell a maintainer what you are taking, then branch, build, and open a
+pull request. A public place to file ideas and bug reports is planned but does not exist yet,
+so for now asking is the way in.
 
 ### Pull requests
 
@@ -168,15 +169,18 @@ App development throws errors for what look like no reason. Work down this list.
 5. **Xcode version drift.** Every new Xcode deprecates something. An error after an Xcode
    update usually means a setting or an API moved, not that you broke anything.
 
-If none of that works, open an issue on
-https://github.com/mikedouzinas/BBN-Knight-Life with the full error text, your Xcode version,
-and what you were doing. Write it down in the repo rather than sending a text message. The
-last version of this guide said to text the maintainer, and when that maintainer graduated
-the app went stale for a year. An issue is visible to whoever picks this up next.
+If none of that works, ask a maintainer, with the full error text, your Xcode version, and
+what you were doing.
+
+Then write down what fixed it. Add it to this file in your next pull request. The last
+version of this guide said to text the maintainer, and when that maintainer graduated the app
+went stale for a year, because everything anyone had learned lived in a text thread nobody
+else could read. A fix written into this file is visible to whoever picks this up next. A
+fix in a message is not.
 
 ## Keeping this document true
 
 If a step here does not work, that is a bug in this file. Fix it in the same pull request as
-whatever you were doing, or open an issue. This guide used to live in a Google Doc only one
-person could edit, which is how it got a year out of date. It is in the repo now so that
-anyone who trips over a wrong step can correct it.
+whatever you were doing. This guide used to live in a Google Doc only one person could edit,
+which is how it got a year out of date. It is in the repo now so that anyone who trips over a
+wrong step can correct it.

@@ -83,6 +83,6 @@ The app's `GoogleService-Info.plist` is committed and is meant to be. It is clie
 configuration, not a secret, and the security rules are what protect the data.
 
 Service account keys are different. They bypass every rule on this page. They are gitignored
-(`*serviceAccount*.json`, `*-adminsdk-*.json`) and must never be committed, pasted into an
-issue, or checked into any branch. If you need admin scripting access, ask Mike rather than
+(`*serviceAccount*.json`, `*-adminsdk-*.json`) and must never be committed, pasted into a
+message or a ticket, or checked into any branch. If you need admin scripting access, ask Mike rather than
 generating a key and leaving it in the project folder.
