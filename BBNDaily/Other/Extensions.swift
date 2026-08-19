@@ -748,42 +748,20 @@ extension UIViewController {
             completion!()
         })
     }
-    func getScheduleFor(date: Date) -> CustomWeekday {
-        let formatter1 = DateFormatter()
-        formatter1.dateFormat = "yyyy-MM-dd"
-        formatter1.dateStyle = .full
-        let stringDate = formatter1.string(from: date)
-        let index = stringDate.firstIndex(of: ",")
-        let weekday = stringDate.prefix(upTo: index!).lowercased()
-        var currentDay = [block]()
-//        let lunchDays = getLunchDays(weekDay: weekday)
-        let lunchDays = getRegularSchedule(weekday: weekday)
-        currentDay = lunchDays.blocks
-//        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".startOrEndDate(isStart: true) ?? Date(), date2: "02 Sep 2022 04:00".startOrEndDate(isStart: false) ?? Date()) {
-//            currentDay = [block]()
-//            return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
-//        }
-        for x in LoginVC.specialSchedules {
-            if x.key.isInThroughDate(date: date) {
-                currentDay = [block]()
-                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date, hasImage: false)
-            }
-            if x.key.lowercased() == stringDate.lowercased() {
-                if !((LoginVC.blocks["l-\(weekday)"] as? String) ?? "").lowercased().contains("2") {
-                    currentDay = x.value.specialSchedulesL1
-                }
-                else {
-                    currentDay = x.value.specialSchedules
-                }
-                var hasImage = false
-                if let _ = x.value.imageUrl {
-                    hasImage = true
-                }
-                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date, hasImage: hasImage)
-            }
-        }
-        return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date, hasImage: false)
-    }
+    // getScheduleFor lived here and is gone. HQ-607.
+    //
+    // It was the v1 way of working out a day, superseded by resolveDay, and it had zero
+    // callers anywhere in the project. It also carried a locale crash that could never fire
+    // precisely because nothing called it: it set `dateFormat` and then `dateStyle`, which
+    // silently discards the format, then force-unwrapped `stringDate.firstIndex(of: ",")`.
+    // In any locale whose full date has no comma -- French renders `lundi 15 septembre 2025`
+    // -- that unwrap is nil.
+    //
+    // The lesson is worth more than the code: NEVER DERIVE MEANING FROM A FORMATTED DISPLAY
+    // STRING. The same mistake, made in SecretSchedule, is why every legacy schedule document
+    // is keyed on a locale-dependent sentence and why that collection cannot be range-queried
+    // (HQ-603). resolveDay takes its weekday from a DateFormatter with an explicit "EEEE"
+    // format and never reads a display string for meaning.
     
     /*
      func getLunchDays(weekDay: String) -> (blocks: [block], selectedDay: Int) {

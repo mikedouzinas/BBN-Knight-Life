@@ -11,29 +11,6 @@
     </dependencies>
     <scenes>
         <!--Bus Tracking-->
-        <scene sceneID="1id-Tm-3Di">
-            <objects>
-                <viewController id="2dN-Hz-XAt" customClass="MapsVC" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="X2T-lI-1tl">
-                        <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <viewLayoutGuide key="safeArea" id="DdK-CF-p6S"/>
-                        <color key="backgroundColor" name="background"/>
-                    </view>
-                    <tabBarItem key="tabBarItem" title="Bus Tracking" image="bus" catalog="system" selectedImage="bus" id="OcX-qw-wMR"/>
-                    <navigationItem key="navigationItem" title="Bus Tracking" id="1YP-Sf-Ngx">
-                        <barButtonItem key="rightBarButtonItem" image="phone.circle.fill" catalog="system" id="43F-yQ-bWk">
-                            <color key="tintColor" name="white"/>
-                            <connections>
-                                <action selector="moreInfo:" destination="2dN-Hz-XAt" id="dOX-Xs-cAo"/>
-                            </connections>
-                        </barButtonItem>
-                    </navigationItem>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="uIV-u7-vpi" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="538" y="1998"/>
-        </scene>
         <!--English HW-->
         <scene sceneID="WPM-Sg-w69">
             <objects>
@@ -683,30 +660,6 @@
             <point key="canvasLocation" x="3657" y="864"/>
         </scene>
         <!--Bus Tracking-->
-        <scene sceneID="zMZ-JE-5PK">
-            <objects>
-                <navigationController id="vL4-oO-Q5e" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="Bus Tracking" image="bus" catalog="system" selectedImage="bus" id="vQU-2T-l5c"/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="PIP-fo-TbM">
-                        <rect key="frame" x="0.0" y="47" width="390" height="44"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <color key="barTintColor" name="blue"/>
-                        <textAttributes key="titleTextAttributes">
-                            <color key="textColor" name="white"/>
-                        </textAttributes>
-                        <textAttributes key="largeTitleTextAttributes">
-                            <fontDescription key="fontDescription" type="boldSystem" pointSize="26"/>
-                            <color key="textColor" name="white"/>
-                        </textAttributes>
-                    </navigationBar>
-                    <connections>
-                        <segue destination="2dN-Hz-XAt" kind="relationship" relationship="rootViewController" id="dgu-OV-dzy"/>
-                    </connections>
-                </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="BzZ-IN-Ovf" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="538" y="1296"/>
-        </scene>
         <!--LoginVC-->
         <scene sceneID="KmL-x6-47y">
             <objects>
