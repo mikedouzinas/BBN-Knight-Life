@@ -123,3 +123,8 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Never commit Firebase service-account credentials
+*serviceAccount*.json
+*-adminsdk-*.json
+firebase/*.local.json

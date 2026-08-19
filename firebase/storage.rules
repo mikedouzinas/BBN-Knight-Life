@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// Knight Life Storage rules. Holds special-schedule images and lunch menu images
+// (6 objects total). Students read them; only admins upload.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in [
+             'mveson@bbns.org',      // Mike Veson
+             'kveson@bbns.org',      // Kai Veson
+             'lho@bbns.org',         // Lucas Ho - taking over
+             'yzhao@bbns.org',
+             'amoro-araujo@bbns.org'
+           ];
+    }
+
+    match /schedules/{file}   { allow read: if request.auth != null; allow write: if isAdmin(); }
+    match /lunchmenus/{file}  { allow read: if request.auth != null; allow write: if isAdmin(); }
+
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}
