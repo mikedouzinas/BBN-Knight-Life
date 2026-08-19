@@ -136,3 +136,7 @@ Temporary Items
 *serviceAccount*.json
 *-adminsdk-*.json
 firebase/*.local.json
+
+# `vercel link` writes project and org ids here. Vercel gitignores it by default, and
+# this repository is public.
+.vercel

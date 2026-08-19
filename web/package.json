@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:assets": "node scripts/check-assets.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.118.0",

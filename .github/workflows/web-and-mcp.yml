@@ -72,3 +72,24 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Start the built app and ask it for every URL its own pages reference.
+      #
+      # This catches a class nothing above it can. The app carries a Next `basePath`, and Next
+      # prefixes what it controls but not a raw <img src>, a plain <a href>, or metadata.icons.
+      # On 2026-08-19 the masthead icon 404'd in production while working in development,
+      # where the prefix is already in the URL you typed. tsc passed, the build passed, 57
+      # unit tests passed, and the page was broken.
+      #
+      # web only: the MCP server has no pages.
+      - name: Check every referenced URL resolves
+        if: matrix.package == 'web'
+        run: |
+          npm start > /tmp/next-start.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3000/knight-life/admin && break
+            sleep 1
+          done
+          node scripts/check-assets.mjs \
+            http://localhost:3000/knight-life \
+            http://localhost:3000/knight-life/admin
