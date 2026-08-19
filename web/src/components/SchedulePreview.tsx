@@ -10,6 +10,7 @@ import type { ScheduleDay } from '@/lib/schedule/types';
 import { renderForAudience, type Grade, type LunchWave } from '@/lib/schedule/render';
 import { deriveLegacyDay } from '@/lib/schedule/derive';
 import { displayDate } from '@/lib/schedule/dates';
+import { BellRail } from './BellRail';
 
 const GRADES: Grade[] = ['9', '10', '11', '12'];
 const WAVES: { value: LunchWave; label: string }[] = [
@@ -57,25 +58,7 @@ export function SchedulePreview({ isoDate, day }: { isoDate: string; day: Schedu
         ))}
       </div>
 
-      <table className="schedule">
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={`${row.name}-${index}`}>
-              <td className="time">
-                {row.startTime}
-                <span className="dash">to</span>
-                {row.endTime}
-              </td>
-              <td className="name">
-                {row.block && <span className="blockletter">{row.block}</span>}
-                {row.name}
-                {row.room && <span className="room">Room {row.room}</span>}
-                {row.audienceLabel && <span className="audience">{row.audienceLabel}</span>}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <BellRail rows={rows} />
 
       <button type="button" className="link" onClick={() => setShowLegacy((v) => !v)}>
         {showLegacy ? 'Hide' : 'Show'} what older app versions will see

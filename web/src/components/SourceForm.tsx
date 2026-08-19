@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import type { IngestRequest } from './useIngest';
+import { Glow } from './Glow';
 
 const ACCEPT = 'application/pdf,image/png,image/jpeg,image/gif,image/webp';
 const MAX_BYTES = 4_500_000;
@@ -34,7 +35,7 @@ export function SourceForm({
     event.preventDefault();
     setError(null);
     if (!text.trim() && !files.length) {
-      setError('Paste the schedule, or attach the PDF or photo.');
+      setError('Paste the message, or attach the PDF or photo.');
       return;
     }
     const tooBig = files.find((f) => f.size > MAX_BYTES);
@@ -55,30 +56,42 @@ export function SourceForm({
 
   return (
     <form className="card" onSubmit={submit}>
-      <h2>The schedule BB&amp;N sent</h2>
+      <Glow size={300} intensity={0.1} />
 
-      <label htmlFor="source-text">Paste it</label>
-      <textarea
-        id="source-text"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        rows={12}
-        placeholder={'Wednesday, September 4\n8:15-9:00  E\n9:05-9:50  C\n...'}
-        disabled={busy}
-      />
+      <h2>Schedule changer</h2>
+      <p className="note lede">
+        A snow day, a delayed start, an assembly schedule. Give it whatever BB&amp;N sent, in
+        whatever form it arrived.
+      </p>
+
+      <label htmlFor="source-text">Paste the email, text, or note</label>
+      <div className="field">
+        <Glow size={120} intensity={0.26} />
+        <textarea
+          id="source-text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          rows={12}
+          placeholder={'Snow days Monday and Tuesday. Wednesday we come back on a delayed start,\nE 10:00-10:40, C 10:45-11:25...'}
+          disabled={busy}
+        />
+      </div>
 
       {!textOnly && (
         <>
-          <label htmlFor="source-file">Or attach a PDF or a photo</label>
-          <input
-            id="source-file"
-            ref={fileInput}
-            type="file"
-            accept={ACCEPT}
-            multiple
-            disabled={busy}
-            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-          />
+          <label htmlFor="source-file">Or attach the PDF or a photo of it</label>
+          <div className="field">
+            <Glow size={120} intensity={0.26} />
+            <input
+              id="source-file"
+              ref={fileInput}
+              type="file"
+              accept={ACCEPT}
+              multiple
+              disabled={busy}
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+            />
+          </div>
           {files.length > 0 && (
             <p className="note">
               {files.map((f) => f.name).join(', ')}{' '}
@@ -99,28 +112,44 @@ export function SourceForm({
 
       <div className="row">
         <div>
-          <label htmlFor="hint-date">Date, if the source is vague</label>
-          <input id="hint-date" type="date" value={hintDate} onChange={(e) => setHintDate(e.target.value)} disabled={busy} />
+          <label htmlFor="hint-date">Date, if the message does not say</label>
+          <div className="field">
+            <Glow size={110} intensity={0.26} />
+            <input
+              id="hint-date"
+              type="date"
+              value={hintDate}
+              onChange={(e) => setHintDate(e.target.value)}
+              disabled={busy}
+            />
+          </div>
         </div>
         <div className="grow">
-          <label htmlFor="notes">Anything it should know</label>
-          <input
-            id="notes"
-            type="text"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Seniors are off campus after lunch"
-            disabled={busy}
-          />
+          <label htmlFor="notes">Anything else it should know</label>
+          <div className="field">
+            <Glow size={140} intensity={0.26} />
+            <input
+              id="notes"
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Seniors are off campus after lunch"
+              disabled={busy}
+            />
+          </div>
         </div>
       </div>
 
       {error && <p className="error">{error}</p>}
 
       <button type="submit" className="primary" disabled={busy}>
-        {busy ? 'Reading it...' : 'Read it'}
+        <Glow size={140} intensity={0.3} color="255, 214, 130" />
+        {busy ? 'Reading…' : 'Propose the change'}
       </button>
-      <p className="note">Nothing is published until you look at the result and press Publish.</p>
+      <p className="note">
+        You get one proposed day per card. Nothing reaches students until you check a card
+        and press Publish on it.
+      </p>
     </form>
   );
 }
