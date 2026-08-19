@@ -841,23 +841,90 @@ extension UIViewController {
     }
      */
     
-    // MARK: Generael purpose getting schedule for v2 format
-    func getSchedule(date: Date) -> (blocks: [block], selectedDay: Int) {
+    // MARK: The single answer to "what does this date look like"
+    //
+    // Before this existed there were three resolvers that each knew different things:
+    //
+    //   getScheduleFor     read the v1 special-schedules collection, knew through-dates,
+    //                      knew nothing about v2 special days or breaks. Notifications used it.
+    //   getSchedule        read v2 special days, knew nothing about breaks. Nothing used it.
+    //   CalendarVC inline  read v2 special days AND breaks. The calendar used it.
+    //
+    // So on the twelve dates where v1 and v2 disagree, what a student saw on screen and what
+    // their phone notified them about came from different data. Two of those dates had v1
+    // deliberately blanked to prompt an app update, which also silenced notifications for
+    // five real school days.
+    //
+    // Everything that needs a day now goes through here, so a disagreement of that kind cannot
+    // be expressed. Adding a new consumer must not mean adding a fourth resolver.
+    func resolveDay(date: Date) -> ResolvedDay {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy/M/d" // Use standard format without leading zeros
+        dateFormatter.dateFormat = "yyyy/M/d" // v2 keys are not zero padded
         let stringDate = dateFormatter.string(from: date)
         dateFormatter.dateFormat = "EEEE"
-        let weekday = dateFormatter.string(from: date)
-        
+        let weekdayName = dateFormatter.string(from: date)
+        let weekdayIndex = getWeekdayAsInt(weekdayName)
+
+        // 1. An explicitly published day always wins.
         if let value = LoginVC.specialDays[stringDate] {
-            var weekdayBlocks = [block]()
-            for scheduleBlock in value.blocks ?? [] {
-                weekdayBlocks += getNextBlock(scheduleBlock: scheduleBlock) ?? []
+            switch value.type {
+            case "noschool":
+                return ResolvedDay(blocks: [], weekdayIndex: weekdayIndex, weekdayName: weekdayName,
+                                   date: date, kind: .noSchool(reason: value.reason ?? "No Class"))
+            case "image":
+                var blocks = [block]()
+                for scheduleBlock in value.blocks ?? [] {
+                    blocks += getNextBlock(scheduleBlock: scheduleBlock) ?? []
+                }
+                return ResolvedDay(blocks: blocks, weekdayIndex: weekdayIndex, weekdayName: weekdayName,
+                                   date: date, kind: .image(url: value.imageUrl ?? ""))
+            default:
+                var blocks = [block]()
+                for scheduleBlock in value.blocks ?? [] {
+                    blocks += getNextBlock(scheduleBlock: scheduleBlock) ?? []
+                }
+                return ResolvedDay(blocks: blocks, weekdayIndex: weekdayIndex, weekdayName: weekdayName,
+                                   date: date, kind: .classes)
             }
-            return (weekdayBlocks, getWeekdayAsInt(weekday))
-        } else {
-            return getRegularSchedule(weekday: weekday)
         }
+
+        // 2. Breaks. This check is why notifications could not simply be pointed at the old
+        //    getSchedule: it did not know about breaks, so it would have scheduled class
+        //    alerts straight through summer.
+        for singularBreak in LoginVC.breaks where isDateInBreak(date: date, breakPeriod: singularBreak) {
+            return ResolvedDay(blocks: [], weekdayIndex: weekdayIndex, weekdayName: weekdayName,
+                               date: date, kind: .noSchool(reason: singularBreak.reason))
+        }
+
+        // 3. Weekends carry no regular schedule.
+        if weekdayIndex == 10 {
+            return ResolvedDay(blocks: [], weekdayIndex: weekdayIndex, weekdayName: weekdayName,
+                               date: date, kind: .weekend)
+        }
+
+        let regular = getRegularSchedule(weekday: weekdayName)
+        return ResolvedDay(blocks: regular.blocks, weekdayIndex: regular.selectedDay,
+                           weekdayName: weekdayName, date: date, kind: .classes)
+    }
+
+    // Inclusive on both ends. Break dates are stored as yyyy/M/d strings.
+    func isDateInBreak(date: Date, breakPeriod: Break) -> Bool {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy/M/d"
+        guard let start = dateFormatter.date(from: breakPeriod.startDate),
+              let end = dateFormatter.date(from: breakPeriod.endDate) else {
+            return false
+        }
+        // Compare whole days, so a break ending "today" still counts today.
+        let calendar = Calendar.current
+        let day = calendar.startOfDay(for: date)
+        return calendar.startOfDay(for: start) <= day && day <= calendar.startOfDay(for: end)
+    }
+
+    // MARK: Generael purpose getting schedule for v2 format
+    func getSchedule(date: Date) -> (blocks: [block], selectedDay: Int) {
+        let resolved = resolveDay(date: date)
+        return (resolved.blocks, resolved.weekdayIndex)
     }
     
     // MARK: get default schedule for a certain day with v2 format
@@ -996,23 +1063,20 @@ extension UIViewController {
         let dateFormatter = DateFormatter()
         dateFormatter.timeZone = .current
         dateFormatter.dateFormat = "MM-dd-yyyy hh:mm a Z"
-        LoginVC.upcomingDays = [CustomWeekday]()
+        LoginVC.upcomingDays = [ResolvedDay]()
         var z = 0
+        let notifsOn = ((LoginVC.blocks["notifs"] as? String) ?? "") == "true"
         for i in 0...13 {
             let tempDate = calendar.date(byAdding: .day, value: i, to: Date())!
-            let tempWeekday = getScheduleFor(date: tempDate)
-            LoginVC.upcomingDays.append(tempWeekday)
-            if ((LoginVC.blocks["notifs"] as? String) ?? "") == "true" {
-                for x in tempWeekday.blocks {
-                    if z < 64 {
-                        addNotif(x: x, weekDay: tempWeekday.weekday ?? "", date: tempWeekday.date ?? Date())
-                        z+=1
-                    }
-                    else {
-                        break
-                    }
-                    
-                }
+            // resolveDay is the same call the calendar makes, so a notification can no longer
+            // describe a different day from the one on screen.
+            let day = resolveDay(date: tempDate)
+            LoginVC.upcomingDays.append(day)
+            guard notifsOn, day.hasClasses else { continue }
+            for x in day.blocks {
+                if z >= 64 { break }
+                addNotif(x: x, weekDay: day.weekdayName, date: day.date)
+                z += 1
             }
         }
     }

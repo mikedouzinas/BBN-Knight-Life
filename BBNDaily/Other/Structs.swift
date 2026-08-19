@@ -155,3 +155,39 @@ struct Break {
     var startDate: String
     var endDate: String
 }
+
+// MARK: The resolved shape of a single school day
+
+// What kind of day this is. The calendar renders each case differently, and notification
+// scheduling only fires for .classes.
+enum DayKind {
+    case classes
+    case noSchool(reason: String)
+    case image(url: String)
+    case weekend
+}
+
+// The output of resolveDay(date:), which is the only place a day is worked out.
+// See the comment above resolveDay in Extensions.swift for why one resolver exists.
+struct ResolvedDay {
+    var blocks: [block]
+    var weekdayIndex: Int
+    var weekdayName: String
+    var date: Date
+    var kind: DayKind
+
+    var hasClasses: Bool {
+        if case .classes = kind { return !blocks.isEmpty }
+        return false
+    }
+
+    // The message to show when there are no classes, or nil when there are.
+    var emptyMessage: String? {
+        switch kind {
+        case .classes:              return blocks.isEmpty ? "No Class" : nil
+        case .noSchool(let reason): return "No Class - \(reason)"
+        case .weekend:              return "No Class - Enjoy your weekend"
+        case .image:                return nil
+        }
+    }
+}

@@ -94,8 +94,8 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                 for x in LoginVC.upcomingDays {
                     if z != 0 {
                         currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
-                        let currVal = "Next Day of Classes: \(x.weekday?.capitalized ?? "")"
-                        if !x.blocks.isEmpty {
+                        let currVal = "Next Day of Classes: \(x.weekdayName.capitalized)"
+                        if x.hasClasses {
                             if currTitle != currVal {
                                 currentWeekday.blocks = x.blocks
                                 dayOverBlocks = x.blocks
@@ -103,7 +103,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                                 setCurrentday(date: currDate, shouldEdit: false, completion: { _ in
                                     self.ScheduleCalendar.reloadData()
                                 })
-                                self.navigationItem.title = "Next Day of Classes: \(x.weekday?.capitalized ?? "")"
+                                self.navigationItem.title = "Next Day of Classes: \(x.weekdayName.capitalized)"
                                 z-=1
                             }
                             break
