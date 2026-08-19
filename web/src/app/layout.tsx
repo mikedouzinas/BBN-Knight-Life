@@ -22,7 +22,7 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: 'Knight Life admin',
-  description: 'Publish a BB&N schedule change to the Knight Life app.',
+  description: 'Change what Knight Life shows students for a day.',
   // metadata.icons is NOT base-path-prefixed by Next. See src/lib/basePath.ts.
   icons: { icon: asset('/knight-life-icon.png') },
 };
@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer>
           <p>
             Schedules published here reach students on their next app launch. Check the day
-            against the email before you publish it.
+            against your source before you publish it.
           </p>
         </footer>
       </body>
