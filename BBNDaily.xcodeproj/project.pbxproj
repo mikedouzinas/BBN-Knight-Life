@@ -20,6 +20,7 @@
 		278AFAF9288C1C2800E64F23 /* ThroughDateVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */; };
 		278AFAFB288C1F1400E64F23 /* ImageVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAFA288C1F1400E64F23 /* ImageVC.swift */; };
 		2792D7C128B4562800DBA403 /* BusScheduleVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2792D7C028B4562800DBA403 /* BusScheduleVC.swift */; };
+		A1KTBC0000000000000002 /* KnightTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1KTBC0000000000000001 /* KnightTabBarController.swift */; };
 		27AEED53288B32C600C6176C /* defaultVariables.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED52288B32C600C6176C /* defaultVariables.swift */; };
 		27AEED55288B32E400C6176C /* TextEditVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED54288B32E400C6176C /* TextEditVC.swift */; };
 		27AEED58288B334B00C6176C /* PersonPopupVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED57288B334B00C6176C /* PersonPopupVC.swift */; };
@@ -135,6 +136,7 @@
 		278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThroughDateVC.swift; sourceTree = "<group>"; };
 		278AFAFA288C1F1400E64F23 /* ImageVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVC.swift; sourceTree = "<group>"; };
 		2792D7C028B4562800DBA403 /* BusScheduleVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusScheduleVC.swift; sourceTree = "<group>"; };
+		A1KTBC0000000000000001 /* KnightTabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnightTabBarController.swift; sourceTree = "<group>"; };
 		27AEED52288B32C600C6176C /* defaultVariables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = defaultVariables.swift; sourceTree = "<group>"; };
 		27AEED54288B32E400C6176C /* TextEditVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextEditVC.swift; sourceTree = "<group>"; };
 		27AEED57288B334B00C6176C /* PersonPopupVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonPopupVC.swift; sourceTree = "<group>"; };
@@ -369,6 +371,7 @@
 				8704E97726EEA6F2001826F8 /* NewspapersVC.swift */,
 				8761CA7126F29D3B00CADE56 /* MapsVC.swift */,
 				2792D7C028B4562800DBA403 /* BusScheduleVC.swift */,
+				A1KTBC0000000000000001 /* KnightTabBarController.swift */,
 				8704E97926EEA6FC001826F8 /* NewsVC.swift */,
 				27AEED7F288B373400C6176C /* Tasks */,
 				8738377527EA48CC00CABF47 /* Settings */,
@@ -797,6 +800,7 @@
 				27AEED62288B341100C6176C /* CalendarTableViewCell.swift in Sources */,
 				27AEED58288B334B00C6176C /* PersonPopupVC.swift in Sources */,
 				2792D7C128B4562800DBA403 /* BusScheduleVC.swift in Sources */,
+				A1KTBC0000000000000002 /* KnightTabBarController.swift in Sources */,
 				27AEED88288B37B700C6176C /* HomeworkTitleVC.swift in Sources */,
 				27AEED70288B355900C6176C /* RoomNumVC.swift in Sources */,
 				27AEED5B288B338500C6176C /* ClassPopupVC.swift in Sources */,

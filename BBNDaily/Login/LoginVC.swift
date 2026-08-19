@@ -31,6 +31,32 @@ class LoginVC: AuthVC {
     // Firestore, which is the same source the security rules read, so the button and the
     // permission can never disagree. Defaults to false until the lookup answers.
     static var isAdmin = false
+
+    /// Week keys ("M/d" of that week's Monday) that have a usable lunch menu, read once from
+    /// `schedules/menus`. Empty until the lookup answers.
+    ///
+    /// Without this the app offered "Press for menu" on every lunch block, pushed the menu
+    /// screen, found no URL for the week, and bounced straight back out with "Menu not
+    /// available". The menus document was last written 2026-03-02, so every week since has
+    /// behaved that way.
+    static var lunchMenuWeeks = Set<String>()
+
+    /// The "M/d" key for the Monday of the week containing `date`. Matches how LunchMenuVC
+    /// looks the menu up, so the two cannot disagree about which week it is.
+    static func lunchMenuWeekKey(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+        let weekday = Calendar.current.component(.weekday, from: date)
+        let monday = Calendar.current.date(byAdding: .day, value: -(weekday - 2), to: date) ?? date
+        return formatter.string(from: monday)
+    }
+
+    /// Whether there is a menu worth offering for the week containing `date`. False while the
+    /// lookup is still in flight, so the app stays quiet rather than promising a menu it cannot
+    /// show. The calendar refreshes on a timer, so it appears as soon as the data lands.
+    static func hasLunchMenu(for date: Date = Date()) -> Bool {
+        lunchMenuWeeks.contains(lunchMenuWeekKey(for: date))
+    }
     @IBOutlet weak var SignInButton: GIDSignInButton!
     override func viewDidLoad() {
         super.viewDidLoad()

@@ -264,7 +264,7 @@
         <!--Bubble Tab Bar Controller-->
         <scene sceneID="FHT-4R-h8A">
             <objects>
-                <tabBarController id="bxd-nb-yUd" customClass="BubbleTabBarController" customModule="BubbleTabBar" sceneMemberID="viewController">
+                <tabBarController id="bxd-nb-yUd" customClass="KnightTabBarController" customModule="BBNDaily" customModuleProvider="target" sceneMemberID="viewController">
                     <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="J8p-m0-L9b">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="49"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -411,15 +411,8 @@
                         <barButtonItem key="leftBarButtonItem" title="Menu" image="menu" id="PxE-M1-upz">
                             <color key="tintColor" name="white"/>
                         </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" image="chevron.up" catalog="system" id="kSb-80-gAJ">
-                            <color key="tintColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                            <connections>
-                                <action selector="switchCalendar:" destination="E7k-Su-12S" id="Szh-GD-TDT"/>
-                            </connections>
-                        </barButtonItem>
                     </navigationItem>
                     <connections>
-                        <outlet property="CalendarArrow" destination="kSb-80-gAJ" id="sq1-5M-2qj"/>
                         <outlet property="CalendarHeightConstraint" destination="FBx-fJ-B4a" id="hKk-rr-2ec"/>
                         <outlet property="ScheduleCalendar" destination="cpJ-7A-gBR" id="aBz-hh-pxv"/>
                         <outlet property="calendar" destination="CJc-BH-m1q" id="88H-Ol-cFT"/>

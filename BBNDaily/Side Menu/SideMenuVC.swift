@@ -42,7 +42,11 @@ class MainViewController: UIViewController {
         self.view.backgroundColor = UIColor(named: "backgroundCol")
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
-        navigationController?.navigationBar.scrollEdgeAppearance?.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
+        // See CalendarVC: a transparent bar means white items disappear in light mode.
+        let barItemColor = UIColor(named: "inverse") ?? .label
+        self.navigationController?.navigationBar.tintColor = barItemColor
+        navigationController?.navigationBar.scrollEdgeAppearance?.titleTextAttributes = [NSAttributedString.Key.foregroundColor: barItemColor]
+        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: barItemColor]
         // Shadow Background View
         self.sideMenuShadowView = UIView(frame: self.view.bounds)
         self.sideMenuShadowView.autoresizingMask = [.flexibleWidth, .flexibleHeight]

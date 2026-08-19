@@ -168,9 +168,13 @@ class calendarTableViewCell: UITableViewCell {
         else {
             BottomRightLabel.isHidden = true
             TitleLabel.text = "\(viewModel.name)"
-            if isLunch {
+            if isLunch && LoginVC.hasLunchMenu() {
                 BlockLabel.isHidden = false
                 BlockLabel.text = "Press for menu"
+            }
+            else if isLunch {
+                // No menu published for this week, so do not offer one.
+                BlockLabel.isHidden = true
             }
             else {
                 if viewModel.name.lowercased().contains("advisory") {
