@@ -106,26 +106,56 @@ class LoginVC: AuthVC {
 
                     return
                 }
-                // HQ-647. A personal Google account signs in successfully here -- Firebase
-                // has no opinion on which domain the email belongs to. Left unchecked, that
-                // account becomes this student's permanent Knight Life identity, holding
-                // their classes under an address that is not their school one and that
-                // nothing ever told them was wrong. Reject it before setLoginInfo() gives it
-                // a users/ document, and undo both sign-ins so it never becomes the active
-                // session.
-                guard let email = result?.user.email?.lowercased(), email.hasSuffix("@bbns.org") else {
-                    try? Auth.auth().signOut()
-                    GIDSignIn.sharedInstance.signOut()
-                    self?.hideLoader(completion: {
-                        ProgressHUD.colorAnimation = UIColor(named: "red")!
-                        ProgressHUD.failed("Sign in with your BB&N school account (name@bbns.org), not a personal one.")
-                    })
+                // HQ-647. A personal Google account signs in successfully here: Firebase has
+                // no opinion on which domain an email belongs to. Left unchecked, that account
+                // becomes this student's permanent Knight Life identity, holding their classes
+                // under an address that is not their school one and that nothing ever told them
+                // was wrong. So a NEW account has to be a BB&N one.
+                //
+                // A RETURNING ACCOUNT IS NOT TURNED AWAY, whatever its address. Measured
+                // against production on 2026-08-19: 64 of 646 accounts are not @bbns.org, 29 of
+                // them signed in within the past year, and two of those are admins -- the
+                // person who maintains this app and the person who publishes the schedules.
+                // Rejecting on domain alone would have signed all of them out permanently, with
+                // a message telling them to use an account they do not have.
+                //
+                // That is the HQ-626 failure exactly: an identity check that locks out the
+                // people who keep the thing running. A rule about who may JOIN must not be
+                // applied to people who already have.
+                guard let user = result?.user else {
+                    self?.rejectSignIn(reason: "Invalid credentials")
                     return
                 }
-                self?.setLoginInfo()
+                let email = user.email?.lowercased() ?? ""
+                if email.hasSuffix("@bbns.org") {
+                    self?.setLoginInfo()
+                    return
+                }
+                // Not a school address. Allowed only if this account already exists here.
+                Firestore.firestore().collection("users").document(user.uid).getDocument { document, _ in
+                    if document?.exists == true {
+                        self?.setLoginInfo()
+                    } else {
+                        self?.rejectSignIn(
+                            reason: "Sign in with your BB&N school account (name@bbns.org), not a personal one.")
+                    }
+                }
             }
         }
     }
+    /// Undo both sign-ins so a refused account never becomes the active session, and say why.
+    ///
+    /// Firebase and Google sign-in are separate sessions. Signing out of only one leaves the
+    /// other holding the account, and the next launch silently resumes it.
+    private func rejectSignIn(reason: String) {
+        try? Auth.auth().signOut()
+        GIDSignIn.sharedInstance.signOut()
+        hideLoader(completion: {
+            ProgressHUD.colorAnimation = UIColor(named: "red")!
+            ProgressHUD.failed(reason)
+        })
+    }
+
     static var classMeetingDays = ["a":[true, true, true, true, true],"b":[true, true, true, true, true],"c":[true, true, true, true, true],"d":[true, true, true, true, true],"e":[true, true, true, true, true], "f":[true, true, true, true, true], "g":[true, true, true, true, true]]
     static var upcomingDays = [ResolvedDay]()
 }

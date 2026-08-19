@@ -80,10 +80,19 @@ service cloud.firestore {
       allow get:  if signedIn();
       allow list: if isAdmin();
 
-      // create is gated on isBBN() so a personal account never gets a school-identity
-      // document in the first place. delete is not: a student who already has a doc may
-      // always remove it, whatever email created it.
-      allow create: if signedIn() && request.auth.uid == uid && isBBN();
+      // create is gated so a personal account never gets a school-identity document in the
+      // first place. It does NOT affect anyone who already has one: create fires only for a
+      // document that does not exist, so the 64 non-BB&N accounts already on file keep
+      // working untouched.
+      //
+      // isAdmin() is an escape hatch with a name on it. Two of the eight admins sign in with
+      // a personal address, including the person who maintains this app, and a rule that
+      // stops a maintainer recreating their own account after a reinstall is a rule that gets
+      // deleted in a hurry at the worst moment.
+      //
+      // delete is ungated: a student who has a document may always remove it, whatever email
+      // created it.
+      allow create: if signedIn() && request.auth.uid == uid && (isBBN() || isAdmin());
       allow delete: if signedIn() && request.auth.uid == uid;
       allow update: if signedIn() && (
         request.auth.uid == uid
