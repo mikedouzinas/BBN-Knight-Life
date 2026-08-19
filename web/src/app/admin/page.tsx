@@ -67,10 +67,11 @@ export default function AdminPage() {
     return (
       <div className="card">
         <h1>Sign in</h1>
+        <p className="note">Use your BB&N account (name@bbns.org).</p>
         {status.kind === 'denied' && <p className="error">{status.message}</p>}
         <div className="signin">
           <button type="button" className="primary" onClick={() => signInWithGoogle().then(check)}>
-            Sign in with Google
+            Sign in with your BB&N Google account
           </button>
           {status.kind === 'denied' && (
             <button type="button" className="secondary" onClick={() => signOutOfGoogle().then(check)}>

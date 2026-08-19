@@ -32,6 +32,15 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/admins/$(email()));
     }
 
+    // HQ-647. The client (LoginVC.signIn) already rejects a non-BB&N account before it
+    // ever reaches Firestore, but that check lives in app code a client can skip. This is
+    // the check that cannot be: a personal Google account is a valid Firebase credential,
+    // and without this a `users/{uid}` doc for one is one Firestore call away regardless
+    // of what the app does.
+    function isBBN() {
+      return hasEmail() && email().matches('.*@bbns[.]org');
+    }
+
     // Who can publish schedules.
     //
     //   get   - your own row, or any row if you are an admin. The app reads its own row on
@@ -71,7 +80,11 @@ service cloud.firestore {
       allow get:  if signedIn();
       allow list: if isAdmin();
 
-      allow create, delete: if signedIn() && request.auth.uid == uid;
+      // create is gated on isBBN() so a personal account never gets a school-identity
+      // document in the first place. delete is not: a student who already has a doc may
+      // always remove it, whatever email created it.
+      allow create: if signedIn() && request.auth.uid == uid && isBBN();
+      allow delete: if signedIn() && request.auth.uid == uid;
       allow update: if signedIn() && (
         request.auth.uid == uid
         || request.resource.data.diff(resource.data).affectedKeys()

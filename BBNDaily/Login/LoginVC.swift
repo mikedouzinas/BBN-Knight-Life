@@ -96,14 +96,30 @@ class LoginVC: AuthVC {
             Auth.auth().signIn(with: credential) {
                 [weak self]
                 result, error in
-                
+
                 guard error == nil else {
                     // show failed sign in
                     self?.hideLoader(completion: {
                         ProgressHUD.colorAnimation = UIColor(named: "red")!
                         ProgressHUD.failed("Invalid credentials")
                     })
-                    
+
+                    return
+                }
+                // HQ-647. A personal Google account signs in successfully here -- Firebase
+                // has no opinion on which domain the email belongs to. Left unchecked, that
+                // account becomes this student's permanent Knight Life identity, holding
+                // their classes under an address that is not their school one and that
+                // nothing ever told them was wrong. Reject it before setLoginInfo() gives it
+                // a users/ document, and undo both sign-ins so it never becomes the active
+                // session.
+                guard let email = result?.user.email?.lowercased(), email.hasSuffix("@bbns.org") else {
+                    try? Auth.auth().signOut()
+                    GIDSignIn.sharedInstance.signOut()
+                    self?.hideLoader(completion: {
+                        ProgressHUD.colorAnimation = UIColor(named: "red")!
+                        ProgressHUD.failed("Sign in with your BB&N school account (name@bbns.org), not a personal one.")
+                    })
                     return
                 }
                 self?.setLoginInfo()
