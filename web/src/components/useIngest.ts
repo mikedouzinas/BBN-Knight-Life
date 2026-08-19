@@ -10,6 +10,7 @@
  * no matter what the model emits. That is what makes the public demo (HQ-613) a prop
  * rather than a fork.
  */
+import { withBasePath } from '@/lib/basePath';
 import { useCallback, useState } from 'react';
 import type { DatedScheduleDay } from '@/lib/schedule/types';
 
@@ -80,7 +81,7 @@ async function readError(res: Response): Promise<string> {
 }
 
 export function useIngest(opts: UseIngestOpts = {}) {
-  const { ingestUrl = '/api/admin/ingest', publishDay, getToken } = opts;
+  const { ingestUrl = withBasePath('/api/admin/ingest'), publishDay, getToken } = opts;
   const [state, setState] = useState<State>(EMPTY);
 
   const authHeaders = useCallback(async (): Promise<Record<string, string>> => {
@@ -123,7 +124,7 @@ export function useIngest(opts: UseIngestOpts = {}) {
         if (publishDay) {
           outcome = await publishDay(day);
         } else {
-          const res = await fetch('/api/admin/publish', {
+          const res = await fetch(withBasePath('/api/admin/publish'), {
             method: 'POST',
             headers: await authHeaders(),
             body: JSON.stringify(day),

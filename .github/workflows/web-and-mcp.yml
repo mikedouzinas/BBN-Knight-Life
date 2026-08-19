@@ -64,6 +64,15 @@ jobs:
           fi
           npm audit --audit-level=moderate
 
+      # Source-level, and it runs BEFORE the build because it needs no server and it catches
+      # the one class the asset check structurally cannot: a fetch happens from JavaScript in
+      # response to a user action, so nothing in the served HTML reveals it. That is how
+      # `fetch('/api/admin/session')` reached production and 404'd immediately after a
+      # successful Google sign-in, looking exactly like a broken login.
+      - name: Check hand-written URLs carry the base path
+        if: matrix.package == 'web'
+        run: npm run check:basepath
+
       - name: Typecheck
         run: npx tsc --noEmit
 
