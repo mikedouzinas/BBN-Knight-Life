@@ -156,6 +156,23 @@ struct Break {
     var endDate: String
 }
 
+// The school year's first and last day of classes, as yyyy/M/d strings.
+//
+// This exists so the app can tell "a day with nothing published" apart from "a day outside
+// the school year entirely". Without it, every gap in the calendar produces a confident
+// seven-block Wednesday, which is what students saw all through August 2026.
+//
+// Absent on purpose is a default. There is no fallback term hardcoded anywhere, because a
+// hardcoded year expires silently and then lies. When this is nil the app behaves exactly
+// as it did before, which is the safe direction: a missing read shows a schedule that might
+// be wrong, rather than telling the whole school there is no class today.
+struct Term {
+    var startDate: String
+    var endDate: String
+    // What to call the time outside it. "Summer break" nearly always.
+    var reason: String
+}
+
 // MARK: The resolved shape of a single school day
 
 // What kind of day this is. The calendar renders each case differently, and notification
@@ -165,6 +182,10 @@ enum DayKind {
     case noSchool(reason: String)
     case image(url: String)
     case weekend
+    // Outside the school year. Distinct from .noSchool so the reason is the app's own
+    // inference rather than something an admin published, and so it can be told apart in
+    // a test and in a bug report.
+    case outsideTerm(reason: String)
 }
 
 // The output of resolveDay(date:), which is the only place a day is worked out.
@@ -187,6 +208,7 @@ struct ResolvedDay {
         case .classes:              return blocks.isEmpty ? "No Class" : nil
         case .noSchool(let reason): return "No Class - \(reason)"
         case .weekend:              return "No Class - Enjoy your weekend"
+        case .outsideTerm(let r):   return "No Class - \(r)"
         case .image:                return nil
         }
     }

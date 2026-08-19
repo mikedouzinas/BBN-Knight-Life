@@ -136,3 +136,4 @@ Temporary Items
 *serviceAccount*.json
 *-adminsdk-*.json
 firebase/*.local.json
+.vercel

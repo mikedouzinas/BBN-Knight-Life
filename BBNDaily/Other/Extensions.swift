@@ -902,9 +902,47 @@ extension UIViewController {
                                date: date, kind: .weekend)
         }
 
+        // 4. Outside the school year there is no regular schedule to fall back on.
+        //
+        //    This is the inversion. Before it, an unknown weekday fell straight through to
+        //    the weekly pattern, so a gap in the calendar produced a confident wrong answer:
+        //    on 2026-08-19, mid-summer, the app showed students a full seven-block Wednesday
+        //    because no break happened to cover the date.
+        //
+        //    Both directions are wrong when the calendar goes stale. The difference is what
+        //    the wrongness does. Falling through wakes a student for a class that does not
+        //    exist; stopping here says nothing. Point the failure at silence.
+        //
+        //    Note the guard: this only fires when the term is actually known. A missing or
+        //    unreadable term leaves the old behaviour in place, because "the read failed" must
+        //    never render as "there is no school today" for the whole school.
+        if let term = LoginVC.term, !isDateInTerm(date: date, term: term) {
+            return ResolvedDay(blocks: [], weekdayIndex: weekdayIndex, weekdayName: weekdayName,
+                               date: date, kind: .outsideTerm(reason: term.reason))
+        }
+
         let regular = getRegularSchedule(weekday: weekdayName)
         return ResolvedDay(blocks: regular.blocks, weekdayIndex: regular.selectedDay,
                            weekdayName: weekdayName, date: date, kind: .classes)
+    }
+
+    // Inclusive on both ends: the first and last day of classes are inside the term.
+    //
+    // Deliberately returns TRUE when the dates do not parse. An unparseable term is a broken
+    // read, and a broken read must not tell the school there is no class. Same reasoning as
+    // the nil check in resolveDay, applied one level down, because a malformed string and a
+    // missing document are the same kind of failure.
+    func isDateInTerm(date: Date, term: Term) -> Bool {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy/M/d"
+        guard let start = dateFormatter.date(from: term.startDate),
+              let end = dateFormatter.date(from: term.endDate),
+              start <= end else {
+            return true
+        }
+        let calendar = Calendar.current
+        let day = calendar.startOfDay(for: date)
+        return calendar.startOfDay(for: start) <= day && day <= calendar.startOfDay(for: end)
     }
 
     // Inclusive on both ends. Break dates are stored as yyyy/M/d strings.

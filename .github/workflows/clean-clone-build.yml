@@ -118,6 +118,45 @@ jobs:
             | grep -E '^(\*\*|CompileSwift|Ld|error:|warning: .*deprecat)' || true
           grep -q '^\*\* BUILD SUCCEEDED \*\*' /tmp/xcodebuild.log
 
+      # Tests, in the same job, because they need the same Pods/ tree and the same
+      # toolchain. They were added with HQ-640: resolveDay decides what every student sees
+      # and what every notification fires for, and until then it had no tests at all.
+      #
+      # A named simulator rather than `generic/platform=iOS Simulator`, which can build but
+      # cannot run anything.
+      #
+      # `-only-testing` on purpose: BBNDailyTests also contains the empty 2021 template
+      # (testExample, testPerformanceExample). Running those would report a passing suite
+      # that asserts nothing, which is the shape this repo has been bitten by before.
+      - name: Test
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -workspace BBNDaily.xcworkspace \
+            -scheme BBNDaily \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -only-testing:BBNDailyTests/ResolveDayTests \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee /tmp/xctest.log \
+            | grep -E '^(Test Case|Executed|\*\*|error:)' || true
+          # Say what ran. A test step that executed nothing and a test step that found no
+          # failures print the same "** TEST SUCCEEDED **" otherwise.
+          executed=$(grep -oE 'Executed [0-9]+ test' /tmp/xctest.log | head -1 | grep -oE '[0-9]+' || echo 0)
+          echo "CHECKED $executed tests"
+          if [ "$executed" -lt 1 ]; then
+            echo "::error::Ran $executed tests. Zero is a broken discovery step, not a pass."
+            exit 1
+          fi
+          grep -q '^\*\* TEST SUCCEEDED \*\*' /tmp/xctest.log
+
+      - name: Upload test log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xctest-log
+          path: /tmp/xctest.log
+          if-no-files-found: ignore
+
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4

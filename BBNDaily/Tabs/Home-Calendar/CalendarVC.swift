@@ -463,69 +463,36 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         let stringDate1 = formatter2.string(from: date)
         currentDate = stringDate1
         
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy/M/d" // Use standard format without leading zeros
-        let stringDate = dateFormatter.string(from: date)
-        dateFormatter.dateFormat = "EEEE"
-        let weekday = dateFormatter.string(from: date)
-        
-        var day = (blocks: [block](), selectedDay: 11)
-        
-        if let value = LoginVC.specialDays[stringDate] {
-            let dayType = value.type
-                
-            if dayType == "noschool" {
-                
-                if let reason = value.reason {
-                    ScheduleCalendar.setEmptyMessage("No Class - \(reason)")
-                } else {
-                    ScheduleCalendar.setEmptyMessage("No Class")
-                }
-                
-            } else if dayType == "blocks" {
-                
-                var weekdayBlocks = [block]()
-                for scheduleBlock in value.blocks ?? [] {
-                    weekdayBlocks += getNextBlock(scheduleBlock: scheduleBlock) ?? []
-                }
-                day = (weekdayBlocks, getWeekdayAsInt(weekday))
-                
-            } else if dayType == "image" {
-                
-                ScheduleCalendar.isHidden = true
-                webView.isHidden = false
-                if let url = URL(string: value.imageUrl!) {
-                    webView.load(URLRequest(url: url))
-                    if shouldEdit {
-                        currentWeekday.hasImage = true
-                    }
-                }
-                
-            }
-            
-        } else {
-            var found = false
-            for singularBreak in LoginVC.breaks {
-                if isDateInRange(date: date, breakPeriod: singularBreak) {
-                    ScheduleCalendar.setEmptyMessage("No Class - \(singularBreak.reason)")
-                    found = true
-                    break
+        // The calendar reads the day from the one resolver, the same call setNotifications
+        // makes, so the schedule a student is looking at and the schedule they get alerts for
+        // are by construction the same answer.
+        //
+        // This block used to be a second copy of that logic: special days, then breaks, then
+        // weekday, then the regular pattern. HQ-602 built resolveDay and pointed notifications
+        // at it, but left this copy in place, so "one resolver" was only ever true of
+        // notifications. The two drifted immediately -- resolveDay learned about the school
+        // term and this did not, which would have meant the app suppressed summer
+        // notifications while still drawing students a seven-block Wednesday.
+        let resolved = resolveDay(date: date)
+        currentDay = resolved.blocks
+        selectedDay = resolved.weekdayIndex
+
+        if case .image(let url) = resolved.kind {
+            ScheduleCalendar.isHidden = true
+            webView.isHidden = false
+            if let imageUrl = URL(string: url) {
+                webView.load(URLRequest(url: imageUrl))
+                if shouldEdit {
+                    currentWeekday.hasImage = true
                 }
             }
-            if !found {
-                day = getRegularSchedule(weekday: weekday)
-            }
-        }
-        
-        currentDay = day.blocks
-        selectedDay = day.selectedDay
-        
-        if selectedDay < 10 {
+        } else if let message = resolved.emptyMessage {
             ScheduleCalendar.restore()
-        } else if selectedDay == 10 {
-            ScheduleCalendar.setEmptyMessage("No Class - Enjoy your weekend")
+            ScheduleCalendar.setEmptyMessage(message)
+        } else {
+            ScheduleCalendar.restore()
         }
-        	
+
         /*
         for x in LoginVC.specialSchedules { // loops through special schedule dates to see if we are in that period
             if x.key.isInThroughDate(date: date) {
@@ -568,21 +535,15 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         return
     }
     
-    func isDateInRange(date: Date, breakPeriod: Break) -> Bool {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy/M/d"
-        
-        // Convert the startDate, endDate, and the date to compare into Date objects
-        guard let start = dateFormatter.date(from: breakPeriod.startDate),
-              let end = dateFormatter.date(from: breakPeriod.endDate)
-        else {
-            return false // Return false if any date conversion fails
-        }
-        
-        // Check if targetDate is between start and end (inclusive)
-        return (start...end).contains(date)
-    }
-    
+    // isDateInRange lived here and is gone. It was the calendar's own break test, and the
+    // resolver's isDateInBreak is now the only one.
+    //
+    // It also carried a trap: `(start...end).contains(date)` builds a Swift ClosedRange, which
+    // TRAPS at runtime when start is later than end. One reversed break range typed into the
+    // Firestore console would have crashed the app for every student, and nothing in the app
+    // would have said why. isDateInBreak compares the two bounds directly instead, so a
+    // reversed range is simply not a match.
+
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
         setOld()
         setCurrentday(date: date, shouldEdit: false, completion: { _ in
