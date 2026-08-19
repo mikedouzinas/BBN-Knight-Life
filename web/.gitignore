@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets. This repo is public.
+.env
+.env.local
+.env*.local
+*serviceAccount*.json
+*-adminsdk-*.json

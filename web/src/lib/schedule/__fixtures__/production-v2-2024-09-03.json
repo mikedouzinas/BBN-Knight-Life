@@ -1,0 +1,170 @@
+{
+  "blocks": [
+    {
+      "filter": [
+        "9",
+        "teacher"
+      ],
+      "contents": [
+        {
+          "name": "Gr. 9 Arrival/Bag Drop",
+          "block": "other",
+          "startTime": "7:15 am",
+          "endTime": "7:45 am",
+          "type": "block"
+        },
+        {
+          "name": "Gr. 9 Class Meeting/Advisory",
+          "block": "other",
+          "startTime": "8:00 am",
+          "endTime": "9:30 am",
+          "type": "block"
+        }
+      ],
+      "type": "specific",
+      "matchMode": "any"
+    },
+    {
+      "filter": [
+        "10",
+        "11",
+        "teacher"
+      ],
+      "contents": [
+        {
+          "name": "New 10/11s Orientation",
+          "block": "other",
+          "startTime": "8:30 am",
+          "endTime": "9:00 am",
+          "type": "block"
+        }
+      ],
+      "type": "specific",
+      "matchMode": "any"
+    },
+    {
+      "filter": [
+        "10",
+        "11",
+        "12",
+        "teacher"
+      ],
+      "contents": [
+        {
+          "name": "Advisory",
+          "block": "advisory",
+          "startTime": "9:05 am",
+          "endTime": "9:25 am",
+          "type": "block"
+        }
+      ],
+      "type": "specific",
+      "matchMode": "any"
+    },
+    {
+      "name": "Assembly",
+      "block": "other",
+      "startTime": "9:35 am",
+      "endTime": "9:50 am",
+      "type": "block"
+    },
+    {
+      "name": "A",
+      "block": "a",
+      "startTime": "10:00 am",
+      "endTime": "10:10 am",
+      "type": "block"
+    },
+    {
+      "name": "B",
+      "block": "b",
+      "startTime": "10:15 am",
+      "endTime": "10:25 am",
+      "type": "block"
+    },
+    {
+      "name": "C",
+      "block": "c",
+      "startTime": "10:30 am",
+      "endTime": "10:40 am",
+      "type": "block"
+    },
+    {
+      "name": "D",
+      "block": "d",
+      "startTime": "10:45 am",
+      "endTime": "10:55 am",
+      "type": "block"
+    },
+    {
+      "name": "E",
+      "block": "e",
+      "startTime": "11:00 am",
+      "endTime": "11:10 am",
+      "type": "block"
+    },
+    {
+      "name": "F",
+      "block": "f",
+      "startTime": "11:15 am",
+      "endTime": "11:25 am",
+      "type": "block"
+    },
+    {
+      "name": "G",
+      "block": "g",
+      "startTime": "11:30 am",
+      "endTime": "11:40 am",
+      "type": "block"
+    },
+    {
+      "startTime": "11:45 am",
+      "endTime": "12:45 pm",
+      "type": "lunch"
+    },
+    {
+      "filter": [
+        "10",
+        "11",
+        "teacher"
+      ],
+      "contents": [
+        {
+          "name": "New 10/11s Orientation",
+          "block": "other",
+          "startTime": "12:45 pm",
+          "endTime": "1:30 pm",
+          "type": "block"
+        }
+      ],
+      "type": "specific",
+      "matchMode": "any"
+    },
+    {
+      "name": "Student Diversity Steering Committee Meeting",
+      "block": "other",
+      "startTime": "12:45 pm",
+      "endTime": "1:30 pm",
+      "type": "block",
+      "room": "183/185"
+    },
+    {
+      "filter": [
+        "12",
+        "teacher"
+      ],
+      "contents": [
+        {
+          "name": "Class of 2025 Welcome Reception",
+          "block": "other",
+          "startTime": "5:30 pm",
+          "endTime": "5:30 pm",
+          "type": "block"
+        }
+      ],
+      "type": "specific",
+      "matchMode": "any"
+    }
+  ],
+  "type": "blocks"
+}

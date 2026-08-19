@@ -1,0 +1,105 @@
+{
+  "date": "Wednesday, September 4, 2024",
+  "reason": "Orientation Week",
+  "imageUrl": "",
+  "blocks": [
+    {
+      "name": "E",
+      "block": "E",
+      "startTime": "08:15am",
+      "endTime": "09:00am"
+    },
+    {
+      "name": "C",
+      "block": "C",
+      "startTime": "09:05am",
+      "endTime": "09:50am"
+    },
+    {
+      "name": "Class Meeting",
+      "startTime": "09:55am",
+      "block": "N/A",
+      "endTime": "10:30am"
+    },
+    {
+      "name": "D",
+      "startTime": "10:35am",
+      "block": "D",
+      "endTime": "11:20am"
+    },
+    {
+      "name": "G1",
+      "startTime": "11:25am",
+      "block": "G",
+      "endTime": "12:10pm"
+    },
+    {
+      "name": "Lunch",
+      "block": "N/A",
+      "startTime": "12:15pm",
+      "endTime": "12:55pm"
+    },
+    {
+      "name": "Dessert in the Courtyard",
+      "startTime": "01:00 pm",
+      "block": "N/A",
+      "endTime": "01:30 pm"
+    },
+    {
+      "name": "Student Leadership Workshop",
+      "block": "N/A",
+      "startTime": "01:30pm",
+      "endTime": "02:30pm"
+    }
+  ],
+  "blocks-l1": [
+    {
+      "name": "E",
+      "startTime": "08:15am",
+      "block": "E",
+      "endTime": "09:00am"
+    },
+    {
+      "name": "C",
+      "block": "C",
+      "startTime": "09:05am",
+      "endTime": "09:50am"
+    },
+    {
+      "name": "Class Meeting",
+      "startTime": "09:55am",
+      "block": "N/A",
+      "endTime": "10:30am"
+    },
+    {
+      "name": "D",
+      "startTime": "10:35am",
+      "block": "D",
+      "endTime": "11:20am"
+    },
+    {
+      "name": "Lunch",
+      "block": "N/A",
+      "startTime": "11:25am",
+      "endTime": "12:05am"
+    },
+    {
+      "name": "G2",
+      "block": "G",
+      "startTime": "12:10pm",
+      "endTime": "12:55pm"
+    },
+    {
+      "name": "Dessert in the Courtyard",
+      "block": "N/A",
+      "startTime": "01:00pm",
+      "endTime": "01:30pm"
+    },
+    {
+      "name": "Student Leadership Workshop",
+      "block": "N/A",
+      "startTime": "01:30pm",
+      "endTime": "02:30pm"
+    }
+  ]
+}
