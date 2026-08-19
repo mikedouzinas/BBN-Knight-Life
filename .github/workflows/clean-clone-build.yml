@@ -143,6 +143,59 @@ jobs:
             | grep -E '^(\*\*|CompileSwift|Ld|error:|warning: .*deprecat)' || true
           grep -q '^\*\* BUILD SUCCEEDED \*\*' /tmp/xcodebuild.log
 
+      # Tests, in the same job, because they need the same Pods/ tree and the same
+      # toolchain. They were added with HQ-640: resolveDay decides what every student sees
+      # and what every notification fires for, and until then it had no tests at all.
+      #
+      # The simulator is DISCOVERED, never named. The first version of this step hardcoded
+      # `name=iPhone 16` and failed immediately: the runner image offered 16e, 17, 17 Pro,
+      # 17 Pro Max, 17e and Air, and no plain 16. Device names turn over whenever GitHub
+      # updates the image, so any name written here has an expiry date that nobody notices
+      # until a build goes red for a reason unrelated to the change that triggered it.
+      #
+      # A generic destination is not an option either: `generic/platform=iOS Simulator`
+      # builds but cannot run a test.
+      #
+      # `-only-testing` on purpose: BBNDailyTests also contains the empty 2021 template
+      # (testExample, testPerformanceExample). Running those would report a passing suite
+      # that asserts nothing, which is the shape this repo has been bitten by before.
+      - name: Test
+        run: |
+          set -o pipefail
+          line=$(xcrun simctl list devices available | grep -E '^ +iPhone' | head -1)
+          udid=$(printf '%s' "$line" | grep -oE '[0-9A-Fa-f-]{36}' | head -1)
+          if [ -z "$udid" ]; then
+            echo "::error::Found no available iPhone simulator. That is a broken discovery step, not a pass."
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "CHECKED simulator:$(printf '%s' "$line" | sed 's/ (.*//')"
+          xcodebuild test \
+            -workspace BBNDaily.xcworkspace \
+            -scheme BBNDaily \
+            -destination "platform=iOS Simulator,id=$udid" \
+            -only-testing:BBNDailyTests/ResolveDayTests \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee /tmp/xctest.log \
+            | grep -E '^(Test Case|Executed|\*\*|error:)' || true
+          # Say what ran. A test step that executed nothing and a test step that found no
+          # failures print the same "** TEST SUCCEEDED **" otherwise.
+          executed=$(grep -oE 'Executed [0-9]+ test' /tmp/xctest.log | head -1 | grep -oE '[0-9]+' || echo 0)
+          echo "CHECKED $executed tests"
+          if [ "$executed" -lt 1 ]; then
+            echo "::error::Ran $executed tests. Zero is a broken discovery step, not a pass."
+            exit 1
+          fi
+          grep -q '^\*\* TEST SUCCEEDED \*\*' /tmp/xctest.log
+
+      - name: Upload test log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xctest-log
+          path: /tmp/xctest.log
+          if-no-files-found: ignore
+
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4

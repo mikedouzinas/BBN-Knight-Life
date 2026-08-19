@@ -26,6 +26,9 @@ class LoginVC: AuthVC {
     static var specialSchedules = [String: SpecialSchedule]()
     static var specialDays = [String: Day]()
     static var breaks = [Break]()
+    // nil until read, and nil is meaningful: it means the app does not know the school
+    // year, so it must not claim a day is outside it. See Term in Structs.swift.
+    static var term: Term?
     static var profilePhoto = UIImageView(image: UIImage(named: "logo")!)
     // Whether this account may publish schedules. Set from the admins collection in
     // Firestore, which is the same source the security rules read, so the button and the
