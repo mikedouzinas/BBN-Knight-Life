@@ -200,6 +200,7 @@ class AuthVC: CustomLoader {
         LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
         let db = Firestore.firestore()
         refreshAdminStatus(db: db)
+        refreshLunchMenuWeeks(db: db)
         db.collection("ifstatements").document("ifstatements").getDocument(completion: {(snapshot, error) in
             if error != nil {
                 ProgressHUD.failed("Failed to find 'ifstatements'")
@@ -362,6 +363,24 @@ class AuthVC: CustomLoader {
         }
         db.collection("admins").document(email).getDocument { (snapshot, error) in
             LoginVC.isAdmin = (error == nil) && (snapshot?.exists ?? false)
+        }
+    }
+
+    /// Record which weeks have a lunch menu, so the schedule only offers "Press for menu"
+    /// when pressing it will actually show something. Keys are the "M/d" of that week's Monday.
+    /// A blank or unparseable value counts as no menu, which is exactly what LunchMenuVC does
+    /// with it.
+    func refreshLunchMenuWeeks(db: Firestore) {
+        db.collection("schedules").document("menus").getDocument { (snapshot, error) in
+            guard error == nil, let data = snapshot?.data() else { return }
+            var weeks = Set<String>()
+            for (week, value) in data {
+                guard let urlString = value as? String,
+                      !urlString.trimmingCharacters(in: .whitespaces).isEmpty,
+                      URL(string: urlString) != nil else { continue }
+                weeks.insert(week)
+            }
+            LoginVC.lunchMenuWeeks = weeks
         }
     }
 

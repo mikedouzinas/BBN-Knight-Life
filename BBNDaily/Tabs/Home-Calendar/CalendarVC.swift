@@ -278,8 +278,15 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
             let daysToSubtract = lunchDay - 2
             let monday = Calendar.current.date(byAdding: .day, value: -daysToSubtract, to: realCurrentDate)!
             LunchMenuVC.week = formatter.string(from: monday)
-            print(LunchMenuVC.week)
-            
+
+            // The cell only offers "Press for menu" when a menu exists, but the row itself is
+            // still tappable. Without this, tapping lunch on a week with no published menu
+            // pushes the menu screen and immediately bounces back with "Menu not available".
+            guard LoginVC.hasLunchMenu(for: realCurrentDate) else {
+                tableView.deselectRow(at: indexPath, animated: true)
+                return
+            }
+
             (tableView.cellForRow(at: indexPath) as! coverTableViewCell).animateView()
             self.performSegue(withIdentifier: "Lunch", sender: nil)
         }
@@ -296,26 +303,10 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
     var currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n")
     static var isLunch1 = false
     var calendarIsExpanded = true
-    @IBAction func switchCalendar(_ sender: UIBarButtonItem) {
-        if self.calendar.scope == .month {
-            self.calendar.setScope(.week, animated: true)
-            UIView.animate(withDuration: 0.5) {
-                self.CalendarArrow.image = UIImage(systemName: "chevron.down")
-                self.view.layoutIfNeeded()
-            }
-        } else {
-            self.calendar.setScope(.month, animated: true)
-            UIView.animate(withDuration: 0.5) {
-                self.CalendarArrow.image = UIImage(systemName: "chevron.up")
-                self.view.layoutIfNeeded()
-            }
-        }
-    }
     func calendar(_ calendar: FSCalendar, boundingRectWillChange bounds: CGRect, animated: Bool) {
         self.CalendarHeightConstraint.constant = bounds.height
         self.view.layoutIfNeeded()
     }
-    @IBOutlet weak var CalendarArrow: UIBarButtonItem!
     var currentDate = ""
     @IBOutlet weak var ScheduleCalendar: UITableView!
     @IBOutlet weak var calendar: FSCalendar!
@@ -384,16 +375,8 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
             let velocity = self.scopeGesture.velocity(in: self.view)
             switch self.calendar.scope {
             case .month:
-                UIView.animate(withDuration: 0.5) {
-                    self.CalendarArrow.image = UIImage(systemName: "chevron.down")
-                    self.view.layoutIfNeeded()
-                }
                 return velocity.y < 0
             case .week:
-                UIView.animate(withDuration: 0.5) {
-                    self.CalendarArrow.image = UIImage(systemName: "chevron.up")
-                    self.view.layoutIfNeeded()
-                }
                 return velocity.y > 0
             @unknown default:
                 print("boom failed")
@@ -418,8 +401,18 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         sideMenuBtn.action = #selector(revealViewController()?.revealSideMenu)
         self.navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         self.navigationController?.navigationBar.shadowImage = UIImage()
-        self.navigationItem.backBarButtonItem?.tintColor = .white
+        // The bar above is fully transparent, so bar items sit directly on the app's
+        // background. That background is white in light mode, so anything tinted white
+        // here is invisible. "inverse" is navy in light and white in dark, which reads
+        // against both. The storyboard still tints the menu button white, so override it.
+        let barItemColor = UIColor(named: "inverse") ?? .label
+        self.sideMenuBtn.tintColor = barItemColor
+        self.navigationItem.backBarButtonItem?.tintColor = barItemColor
+        self.navigationController?.navigationBar.tintColor = barItemColor
         self.calendar.scope = .week
+        // The title sits over the calendar header, which is dark in both appearances, so it
+        // stays white. Only the bar items sit on the page background and needed the adaptive
+        // color above.
         navigationController?.navigationBar.scrollEdgeAppearance?.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
         self.dragView.layer.masksToBounds = true
         self.dragView.layer.cornerRadius = 2

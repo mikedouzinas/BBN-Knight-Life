@@ -108,9 +108,13 @@ class coverTableViewCell: calendarTableViewCell {
             // BottomRightLabel.isHidden = true
             // corrected
             RightLabel.text = "\(viewModel.name)"
-            if isLunch {
+            if isLunch && LoginVC.hasLunchMenu() {
                 BottomRightLabel.isHidden = false
                 BottomRightLabel.text = "Press for menu"
+            }
+            else if isLunch {
+                // No menu published for this week, so do not offer one.
+                BottomRightLabel.isHidden = true
             }
             else {
                 if viewModel.name.lowercased().contains("advisory") {
