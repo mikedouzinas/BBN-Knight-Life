@@ -28,6 +28,21 @@ STATE_DIR="BBNDaily"
 FAILURES=0
 CHECKED=0
 
+# WHAT THIS CANNOT SEE, established by sweeping all 16 LoginVC statics on 2026-08-19.
+#
+# It matches direct assignment (`LoginVC.x = ...`), so it reports a false positive for:
+#
+#   a reference type mutated rather than reassigned. `LoginVC.profilePhoto` is a UIImageView
+#   written through `.image =` and `setImageForName(...)`, and is fine.
+#
+#   a static read only through a helper inside LoginVC.swift. `LoginVC.lunchMenuWeeks` is read
+#   by `LoginVC.hasLunchMenu()`, and is fine.
+#
+# Both looked exactly like the HQ-640 bug in a naive sweep and neither was. So the list below
+# is deliberately explicit rather than derived: three value-type statics, each assigned with
+# `=`, each an input to the one function that decides what a day is. Adding a reference type
+# here will produce a false failure, and a check that cries wolf is a check somebody deletes.
+#
 # Each entry: the static resolveDay depends on, and a pattern proving something assigns it.
 check() {
   local name="$1" assign_pattern="$2"
