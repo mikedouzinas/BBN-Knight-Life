@@ -163,8 +163,7 @@ label { display: block; font-size: 13px; font-weight: 600; margin: 15px 0 5px; }
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
   transition: border-color 200ms ease, background-color 200ms ease;
 }
-.field:hover { border-color: var(--hair-hi); background: var(--well-hi); }
-.field:focus-within { border-color: rgba(var(--gold-rgb), 0.55); background: var(--well-hi); }
+.field:hover, .field:focus-within { border-color: var(--hair-hi); background: var(--well-hi); }
 .field > *:not(.glow-layer) { position: relative; z-index: 1; }
 
 textarea, input[type='text'], input[type='date'], input[type='file'] {
@@ -198,9 +197,9 @@ textarea {
   display: block;
 }
 ::placeholder { color: rgba(255, 255, 255, 0.34); }
-/* Fields show focus with the gold border on .field:focus-within, so they need no ring on
-   top of it. Everything else keeps a visible keyboard focus indicator, because removing it
-   outright would strand anyone navigating without a mouse. */
+/* Fields carry no focus ring and no accent border. The caret is the indicator. Everything
+   else keeps a visible keyboard focus outline, because removing it outright would strand
+   anyone navigating without a mouse. */
 :focus-visible { outline: 2px solid var(--hair-hi); outline-offset: 2px; }
 .field :focus-visible,
 input:focus-visible,
@@ -381,7 +380,6 @@ table.schedule.small td { padding: 5px 4px; font-size: 13px; }
 /* ---------- states ------------------------------------------------------ */
 .note { color: var(--faint); font-size: 13px; margin: 10px 0 0; }
 .reason { color: var(--muted); margin: 4px 0 0; font-size: 14px; }
-.noschool { font-size: 17px; font-weight: 600; }
 .error { color: var(--bad); font-weight: 500; }
 .published { color: var(--good); font-weight: 600; margin-top: 16px; word-break: break-word; }
 
@@ -423,3 +421,32 @@ table.schedule.small td { padding: 5px 4px; font-size: 13px; }
   *, *::before { animation: none !important; transition: none !important; }
   button:hover:not(:disabled), button:active:not(:disabled) { transform: none; }
 }
+
+/* A day with no blocks is one fact, so it gets one row instead of an empty schedule. */
+.standalone-row {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+}
+.standalone-row > *:not(.glow-layer) { position: relative; z-index: 1; }
+.standalone-mark {
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: #1a1305;
+  background: var(--gold);
+  border-radius: 5px;
+  padding: 2px 7px;
+  flex: none;
+}
+.standalone-text { font-weight: 500; }
+.standalone-reason { color: var(--muted); font-size: 13.5px; }

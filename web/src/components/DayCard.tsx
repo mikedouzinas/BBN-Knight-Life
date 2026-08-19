@@ -45,7 +45,7 @@ export function DayCard({
         <p className="published">Published. {publishedDetail}</p>
       ) : confirming ? (
         <div className="confirm">
-          <p>Does this match the email you were sent, row for row?</p>
+          <p>Are you sure?</p>
           <button type="button" className="primary" disabled={publishing} onClick={onPublish}>
             <Glow size={130} intensity={0.3} color="255, 214, 130" />
             {publishing ? 'Publishing...' : 'Yes, publish it'}

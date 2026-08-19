@@ -11,6 +11,7 @@ import { renderForAudience, type Grade, type LunchWave } from '@/lib/schedule/re
 import { deriveLegacyDay } from '@/lib/schedule/derive';
 import { displayDate } from '@/lib/schedule/dates';
 import { BellRail } from './BellRail';
+import { Glow } from './Glow';
 
 const GRADES: Grade[] = ['9', '10', '11', '12'];
 const WAVES: { value: LunchWave; label: string }[] = [
@@ -23,17 +24,29 @@ export function SchedulePreview({ isoDate, day }: { isoDate: string; day: Schedu
   const [wave, setWave] = useState<LunchWave>('L1');
   const [showLegacy, setShowLegacy] = useState(false);
 
+  // A closed day is one fact, so it gets one row rather than an empty schedule.
   if (day.type === 'noschool') {
     return (
       <div className="preview">
-        <p className="noschool">No school. {day.reason}</p>
+        <div className="standalone-row">
+          <Glow size={160} intensity={0.16} color="255, 214, 130" />
+          <span className="standalone-mark">No school</span>
+          <span className="standalone-text">{displayDate(isoDate)}</span>
+          {day.reason && <span className="standalone-reason">{day.reason}</span>}
+        </div>
       </div>
     );
   }
   if (day.type === 'image') {
     return (
       <div className="preview">
-        <p className="noschool">Schedule posted as an image.</p>
+        <div className="standalone-row">
+          <Glow size={160} intensity={0.16} />
+          <span className="standalone-mark">Image</span>
+          <span className="standalone-text">
+            Posted as a picture, so the app shows the image rather than blocks.
+          </span>
+        </div>
         <p className="note">{day.imageUrl}</p>
       </div>
     );
