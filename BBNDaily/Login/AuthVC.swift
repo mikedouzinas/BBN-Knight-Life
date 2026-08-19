@@ -67,19 +67,36 @@ class AuthVC: CustomLoader {
                 
                 if let days = snapshot?.data() {
                     for (key, value) in days {
-                        let data = value as! [String: Any]
-                        var day = Day(type: data["type"] as! String)
-                        
+                        // HQ-627. This loop reads EVERY field of `schedules/special`, and every
+                        // cast in it used to be forced. One stray top-level field, one day
+                        // missing `type`, one noschool day missing `reason`, and the app died on
+                        // launch for all 582 students with no message saying why.
+                        //
+                        // The publish path already refuses to write a document-level field (see
+                        // the comment at the top of web/src/lib/schedule/publish.ts), so this is
+                        // about the ninety days that predate that tool, and about the next person
+                        // to edit one in the console.
+                        //
+                        // A malformed day is skipped. That day falls through to the regular
+                        // schedule, which is wrong for one date; a crash is wrong for everybody.
+                        guard let data = value as? [String: Any],
+                              let type = data["type"] as? String else { continue }
+                        var day = Day(type: type)
+
                         if day.type == "noschool" {
-                            day.reason = (data["reason"] as! String)
+                            day.reason = (data["reason"] as? String) ?? "No Class"
                         } else if day.type == "blocks" {
                             day.blocks = [Event]()
                             let schedule = data["blocks"] as? [[String: Any]] ?? [[String: Any]]()
                             for scheduleBlock in schedule {
-                                day.blocks?.append(self.convertToEvent(scheduleBlock: scheduleBlock))
+                                if let event = self.convertToEvent(scheduleBlock: scheduleBlock) {
+                                    day.blocks?.append(event)
+                                }
                             }
                         } else if day.type == "image" {
-                            day.imageUrl = (data["imageUrl"] as! String)
+                            // An image day with no url has nothing to show, so it is not a day.
+                            guard let imageUrl = data["imageUrl"] as? String else { continue }
+                            day.imageUrl = imageUrl
                         }
                         tempDict[key] = day
                     }
@@ -92,45 +109,17 @@ class AuthVC: CustomLoader {
                 ProgressHUD.failed("Failed to find 'break'")
             } else {
                 var tempArr = [Break]()
-
+                
                 if let breaks = snapshot?.data() {
                     for (key, value) in breaks {
-                        // Every cast here used to be forced, and each one was a launch crash
-                        // waiting on a typo in a Firestore document: a value that is not a map,
-                        // a missing `reason`, or a key with no "-" (which made `dates[1]` an
-                        // index out of range). One person editing the console by hand could take
-                        // the app down for everyone, and nothing in the app would say why.
-                        //
-                        // A malformed break is now skipped. One break silently missing is a wrong
-                        // schedule for one span; a crash is no app at all.
-                        guard let data = value as? [String: Any],
-                              let reason = data["reason"] as? String else { continue }
+                        let data = value as! [String: Any]
                         let dates = key.components(separatedBy: "-")
-                        guard dates.count == 2 else { continue }
-                        tempArr.append(Break(reason: reason, startDate: dates[0], endDate: dates[1]))
+                        var oneBreak = Break(reason: (data["reason"] as! String), startDate: dates[0], endDate: dates[1])
+                        tempArr.append(oneBreak)
                     }
                 }
                 LoginVC.breaks = tempArr
             }
-        })
-        // The school year's boundaries. resolveDay treats a weekday outside them as no school
-        // instead of falling through to the weekly pattern, which is what showed students a
-        // seven-block Wednesday in the middle of August.
-        //
-        // Left nil on any failure, and nil means "do not apply the rule". A read that fails
-        // must never render as "there is no school today" for the whole school, so every exit
-        // below leaves the app behaving exactly as it did before this document existed.
-        db.collection("schedules").document("term").getDocument(completion: {(snapshot, error) in
-            guard error == nil,
-                  let data = snapshot?.data(),
-                  let start = data["start"] as? String,
-                  let end = data["end"] as? String else {
-                LoginVC.term = nil
-                return
-            }
-            LoginVC.term = Term(startDate: start,
-                                endDate: end,
-                                reason: (data["reason"] as? String) ?? "Summer break")
         })
         db.collection("special-schedules").getDocuments { (snapshot, error) in
             if error != nil {
@@ -267,9 +256,18 @@ class AuthVC: CustomLoader {
                                 let schedule = snap?.data()?[day] as? [[String: Any]] ?? [[String: Any]]()
                                 var blocks = [Event]()
                                 for scheduleBlock in schedule {
-                                    blocks.append(self.convertToEvent(scheduleBlock: scheduleBlock))
+                                    if let event = self.convertToEvent(scheduleBlock: scheduleBlock) {
+                                        blocks.append(event)
+                                    }
                                 }
-                                regularSchedule[day] = blocks
+                                // Only overwrite the built-in weekly pattern when Firestore
+                                // actually supplied one. An empty array here would replace a
+                                // working default with a blank day, so one malformed document
+                                // would empty the schedule for every student rather than break
+                                // the single block it actually describes.
+                                if !blocks.isEmpty {
+                                    regularSchedule[day] = blocks
+                                }
                             }
                         }
                     })
@@ -412,27 +410,49 @@ class AuthVC: CustomLoader {
         }
     }
 
-    func convertToEvent(scheduleBlock: [String: Any]) -> Event {
-        var ev = Event(type: scheduleBlock["type"]! as! String)
-        
+    /// One block from Firestore, or nil when the document does not describe a usable one.
+    ///
+    /// Every cast here used to be forced, including `scheduleBlock["type"]! as! String`, so a
+    /// block missing a field was a launch crash for every student rather than one bad row.
+    /// The published data is validated by the admin tool, but roughly ninety days were
+    /// hand-entered in the Firestore console before that tool existed, and nothing stops
+    /// somebody editing one by hand tomorrow.
+    ///
+    /// Returning nil rather than a partial Event on purpose: a block with no start time is
+    /// not a block, and silently keeping it would put an untimed row in a student's day where
+    /// a real class should be. Dropping it leaves a visible gap, which is a failure a person
+    /// can notice and report.
+    func convertToEvent(scheduleBlock: [String: Any]) -> Event? {
+        guard let type = scheduleBlock["type"] as? String else { return nil }
+        var ev = Event(type: type)
+
         if ev.type == "block" {
-            ev.block = (scheduleBlock["block"] as! String)
-            ev.name = (scheduleBlock["name"] as! String)
-            ev.startTime = (scheduleBlock["startTime"] as! String)
-            ev.endTime = (scheduleBlock["endTime"] as! String)
+            guard let block = scheduleBlock["block"] as? String,
+                  let name = scheduleBlock["name"] as? String,
+                  let startTime = scheduleBlock["startTime"] as? String,
+                  let endTime = scheduleBlock["endTime"] as? String else { return nil }
+            ev.block = block
+            ev.name = name
+            ev.startTime = startTime
+            ev.endTime = endTime
         } else if ev.type == "lunch" {
-            ev.startTime = (scheduleBlock["startTime"] as! String)
-            ev.endTime = (scheduleBlock["endTime"] as! String)
+            guard let startTime = scheduleBlock["startTime"] as? String,
+                  let endTime = scheduleBlock["endTime"] as? String else { return nil }
+            ev.startTime = startTime
+            ev.endTime = endTime
         } else if ev.type == "specific" {
             ev.filter = (scheduleBlock["filter"] as? [String])
             ev.matchMode = (scheduleBlock["matchMode"] as? String)
             ev.lunchBlock = (scheduleBlock["lunchBlock"] as? String)
             ev.contents = [Event]()
-            for subBlock in scheduleBlock["contents"] as! [[String: Any]] {
-                ev.contents?.append(convertToEvent(scheduleBlock: subBlock))
+            // `as?` rather than `as!`: a `specific` block with no contents is empty, not fatal.
+            for subBlock in (scheduleBlock["contents"] as? [[String: Any]] ?? []) {
+                if let sub = convertToEvent(scheduleBlock: subBlock) {
+                    ev.contents?.append(sub)
+                }
             }
         }
-        
+
         return ev
     }
 }
