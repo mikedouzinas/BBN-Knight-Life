@@ -1,0 +1,65 @@
+rules_version = '2';
+
+// Knight Life Firestore rules.
+//
+// Before this file, the entire database was `allow read, write: if request.auth != null`,
+// meaning any of ~645 signed-in accounts could rewrite the school schedule or read every
+// student record. These rules keep every access pattern the shipped 2.4.1 app relies on
+// and close everything else.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in [
+             'mveson@bbns.org',      // Mike Veson
+             'kveson@bbns.org',      // Kai Veson
+             'lho@bbns.org',         // Lucas Ho - taking over
+             'yzhao@bbns.org',
+             'amoro-araujo@bbns.org'
+           ];
+    }
+
+    // Schedule data. Every student reads it; only admins change it.
+    match /schedules/{doc}         { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /special-schedules/{doc} { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /default-schedules/{doc} { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /ifstatements/{doc}      { allow read: if signedIn(); allow write: if isAdmin(); }
+
+    // Student records.
+    //   get   - allowed, because ClassPopupVC shows who else is in your class.
+    //   list  - admins only. Nothing in the app lists this collection
+    //           (getTotalKnightLifeUsers is dead code), so denying it costs nothing
+    //           and stops one query from returning every student's locker number.
+    //   write - your own document, or the A-G block fields of a classmate's document,
+    //           which is what DaySelectVC does when a class is renamed.
+    match /users/{uid} {
+      allow get:  if signedIn();
+      allow list: if isAdmin();
+
+      allow create, delete: if signedIn() && request.auth.uid == uid;
+      allow update: if signedIn() && (
+        request.auth.uid == uid
+        || request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
+      );
+    }
+
+    // Class rosters. Students create and join classes, and ClassesOptionsPopupVC
+    // queries this collection by block, so both get and list stay open.
+    match /classes/{doc} {
+      allow read:  if signedIn();
+      allow write: if signedIn();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
