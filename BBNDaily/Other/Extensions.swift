@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import Firebase
+import ProgressHUD
 
 extension UIViewController {
     func hideKeyboardWhenTappedAround() {
@@ -835,6 +836,53 @@ extension UIViewController {
     //
     // Everything that needs a day now goes through here, so a disagreement of that kind cannot
     // be expressed. Adding a new consumer must not mean adding a fourth resolver.
+    /// The legacy `special-schedules` collection, loaded ON DEMAND rather than on launch.
+    ///
+    /// This was the single most expensive thing the app did. It listed the entire collection
+    /// every time anyone opened the app: **82 documents of a 101-read launch**, measured
+    /// against production on 2026-08-19.
+    ///
+    /// Almost nothing consumed it. `getScheduleFor` had zero callers and is deleted (HQ-607),
+    /// the loop in `CalendarVC` sits inside a `/* */` block, and what remains is
+    /// `SecretSchedule`, the in-app schedule editor that only an admin can open and that the
+    /// web tool replaces. So 638 students each paid 82 reads per launch to populate data for a
+    /// screen 8 of them can reach.
+    ///
+    /// Calling it twice is cheap and safe: it overwrites `LoginVC.specialSchedules` wholesale.
+    func loadLegacySpecialSchedules(completion: @escaping (Swift.Result<[String: SpecialSchedule], Error>) -> Void) {
+        let db = Firestore.firestore()
+        db.collection("special-schedules").getDocuments { (snapshot, error) in
+            if let error = error {
+                ProgressHUD.failed("Failed to find 'special-schedules'")
+                completion(.failure(error))
+                return
+            }
+            var tempArray = [String: SpecialSchedule]()
+            for document in (snapshot?.documents ?? []) {
+                let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
+                var blocksl1 = [block]()
+                for x in arrayl1 {
+                    blocksl1.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
+                }
+
+                let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
+                var blocks = [block]()
+                for x in array {
+                    blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
+                }
+                let date = document.data()["date"] as? String ?? "N/A"
+                let reason = document.data()["reason"] as? String ?? "N/A"
+                let imageUrl = document.data()["imageUrl"] as? String ?? "N/A"
+                if blocksl1.isEmpty {
+                    blocksl1 = blocks
+                }
+                tempArray[date] = SpecialSchedule(specialSchedules: blocks, specialSchedulesL1: blocksl1, reason: reason, date: date, imageUrl: imageUrl, image: nil)
+            }
+            LoginVC.specialSchedules = tempArray
+            completion(.success(tempArray))
+        }
+    }
+
     func resolveDay(date: Date) -> ResolvedDay {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/M/d" // v2 keys are not zero padded

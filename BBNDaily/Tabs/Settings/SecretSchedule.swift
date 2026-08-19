@@ -37,18 +37,28 @@ class SecretScheduleVC: UIViewController, FSCalendarDelegate, FSCalendarDataSour
         editReasonButton.setTitle("", for: .normal)
         throughDateButton.setTitle("", for: .normal)
         
-        setCurrentday(date: Date(), completion: { [self] result in
-            switch result {
-            case .success(let todBlocks):
-                self.currentDay = todBlocks
-                calendar.delegate = self
-                calendar.dataSource = self
-                ScheduleCalendar.delegate = self
-                ScheduleCalendar.dataSource = self
-                ScheduleCalendar.reloadData()
-            case .failure(_):
-                print("failed :(")
-            }
+        // The legacy `special-schedules` collection is loaded HERE rather than on every app
+        // launch. This screen is the only live consumer left, it is admin-only, and listing
+        // that collection was 82 of a 101-read launch for all 638 users. See
+        // loadLegacySpecialSchedules in Extensions.swift.
+        //
+        // The screen still draws if the load fails: `setCurrentday` reads
+        // `LoginVC.specialSchedules`, which is then simply empty, so an admin sees today's
+        // regular schedule rather than a blank screen or a crash.
+        loadLegacySpecialSchedules(completion: { [self] _ in
+            setCurrentday(date: Date(), completion: { [self] result in
+                switch result {
+                case .success(let todBlocks):
+                    self.currentDay = todBlocks
+                    calendar.delegate = self
+                    calendar.dataSource = self
+                    ScheduleCalendar.delegate = self
+                    ScheduleCalendar.dataSource = self
+                    ScheduleCalendar.reloadData()
+                case .failure(_):
+                    print("failed :(")
+                }
+            })
         })
     }
     @IBOutlet weak var throughDateButton: UIButton!

@@ -56,6 +56,16 @@ jobs:
       - name: No unanchored source patterns, no half-tracked Pods
         run: ./scripts/check-gitignore-scope.sh
 
+  resolver-inputs:
+    name: Resolver inputs have writers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Cheap, and it catches a class no test can: a feature that is compiled, silent, and
+      # always falls back because the code that loads its data was lost in a merge.
+      - name: Every input resolveDay reads is written somewhere
+        run: ./scripts/check-resolver-inputs.sh
+
   clean-clone-build:
     name: Build from a fresh clone
     runs-on: macos-latest

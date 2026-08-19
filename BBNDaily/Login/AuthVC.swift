@@ -59,7 +59,15 @@ class AuthVC: CustomLoader {
     }
     func updateSpecialSchedules(completion: @escaping (Swift.Result<[String: SpecialSchedule], Error>) -> Void) {
         let db = Firestore.firestore()
+        // Every read here is independent, so they run together and the completion waits on all
+        // of them. Before this the callback was attached to whichever read happened to be
+        // written last, which meant a caller could be told the schedule was ready while
+        // `specialDays`, `breaks` or `term` were still nil.
+        let group = DispatchGroup()
+
+        group.enter()
         db.collection("schedules").document("special").getDocument(completion: {(snapshot, error) in
+            defer { group.leave() }
             if error != nil {
                 ProgressHUD.failed("Failed to find 'special'")
             } else {
@@ -104,7 +112,9 @@ class AuthVC: CustomLoader {
                 LoginVC.specialDays = tempDict
             }
         })
+        group.enter()
         db.collection("schedules").document("break").getDocument(completion: {(snapshot, error) in
+            defer { group.leave() }
             if error != nil {
                 ProgressHUD.failed("Failed to find 'break'")
             } else {
@@ -112,44 +122,52 @@ class AuthVC: CustomLoader {
                 
                 if let breaks = snapshot?.data() {
                     for (key, value) in breaks {
-                        let data = value as! [String: Any]
+                        // Every cast here used to be forced, and each one was a launch crash
+                        // waiting on a typo in a Firestore document: a value that is not a map,
+                        // a missing `reason`, or a key with no "-" (which made `dates[1]` an
+                        // index out of range). One person editing the console by hand could take
+                        // the app down for everyone, and nothing in the app would say why.
+                        //
+                        // A malformed break is now skipped. One break silently missing is a wrong
+                        // schedule for one span; a crash is no app at all.
+                        guard let data = value as? [String: Any],
+                              let reason = data["reason"] as? String else { continue }
                         let dates = key.components(separatedBy: "-")
-                        var oneBreak = Break(reason: (data["reason"] as! String), startDate: dates[0], endDate: dates[1])
-                        tempArr.append(oneBreak)
+                        guard dates.count == 2 else { continue }
+                        tempArr.append(Break(reason: reason, startDate: dates[0], endDate: dates[1]))
                     }
                 }
                 LoginVC.breaks = tempArr
             }
         })
-        db.collection("special-schedules").getDocuments { (snapshot, error) in
-            if error != nil {
-                ProgressHUD.failed("Failed to find 'special-schedules'")
-                completion(.failure(error!))
-            } else {
-                var tempArray = [String: SpecialSchedule]()
-                for document in (snapshot?.documents)! {
-                    let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
-                    var blocksl1 = [block]()
-                    for x in arrayl1 {
-                        blocksl1.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
-                    }
-                    
-                    let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
-                    var blocks = [block]()
-                    for x in array {
-                        blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
-                    }
-                    let date = document.data()["date"] as? String ?? "N/A"
-                    let reason = document.data()["reason"] as? String ?? "N/A"
-                    let imageUrl = document.data()["imageUrl"] as? String ?? "N/A"
-                    if blocksl1.isEmpty {
-                        blocksl1 = blocks
-                    }
-                    tempArray[date] = SpecialSchedule(specialSchedules: blocks, specialSchedulesL1: blocksl1, reason: reason, date: date, imageUrl: imageUrl, image: nil)
-                }
-                LoginVC.specialSchedules = tempArray
-                completion(.success(tempArray))
+        // The school year's boundaries. resolveDay treats a weekday outside them as no school
+        // instead of falling through to the weekly pattern, which is what showed students a
+        // seven-block Wednesday in the middle of August.
+        //
+        // Left nil on any failure, and nil means "do not apply the rule". A read that fails
+        // must never render as "there is no school today" for the whole school, so every exit
+        // below leaves the app behaving exactly as it did before this document existed.
+        group.enter()
+        db.collection("schedules").document("term").getDocument(completion: {(snapshot, error) in
+            defer { group.leave() }
+            guard error == nil,
+                  let data = snapshot?.data(),
+                  let start = data["start"] as? String,
+                  let end = data["end"] as? String else {
+                LoginVC.term = nil
+                return
             }
+            LoginVC.term = Term(startDate: start,
+                                endDate: end,
+                                reason: (data["reason"] as? String) ?? "Summer break")
+        })
+        // The three reads above are the whole launch path now, and the completion fires when
+        // ALL of them have finished rather than when whichever one happened to be last does.
+        // It used to be tied to the `special-schedules` scan, which meant the callback could
+        // run before `specialDays`, `breaks` or `term` had arrived, and worked only because
+        // that scan was the slowest.
+        group.notify(queue: .main) {
+            completion(.success([:]))
         }
     }
     func setProfileImage(useGoogle: Bool, width: UInt, completion: @escaping (Swift.Result<UIImageView, Error>) -> Void) {
@@ -337,7 +355,9 @@ class AuthVC: CustomLoader {
                         myGroup.leave()
                     })
                 }
-                if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
+                // `LoginVC.blocks` is a Firestore user document, so a non-string here is a
+                // launch crash rather than a missing profile picture.
+                if (LoginVC.blocks["googlePhoto"] as? String) == "true" {
                     self.setProfileImage(useGoogle: true, width: UInt(self.view.frame.width), completion: {_ in
                         
                     })
