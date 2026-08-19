@@ -12,14 +12,39 @@ name: Clean clone build
 # `pod install`, and builds. If a dependency is missing from the checkout, or an
 # ignore rule swallows something the build needs, this job goes red.
 
+# This job takes a macOS runner, which is the scarcest thing in CI, so it runs only when it
+# could possibly say something.
+#
+# On 2026-08-19 seventeen of these were queued at once and none were running. Two causes,
+# both self-inflicted:
+#
+#   - `push` on every branch PLUS `pull_request` fired TWO runs per push, and the concurrency
+#     group keyed on `github.ref` did not dedupe them, because a push and a pull_request have
+#     different refs for the same commit.
+#   - Dependabot's JavaScript pull requests (next, vitest) triggered a full iOS build. Nothing
+#     under BBNDaily/ changed in either, so both were guaranteed to build exactly the tree
+#     that already passed.
+#
+# Now: pull_request covers branches, push covers main, neither fires for a change that cannot
+# affect an iOS build, and the concurrency group is keyed so a push and its PR share one slot.
 on:
   push:
-    branches: ['**']
+    branches: [main]
+    paths-ignore: &non-ios
+      - 'web/**'
+      - 'mcp/**'
+      - 'docs/**'
+      - '**.md'
+      - '.github/workflows/web-and-mcp.yml'
+      - '.github/dependabot.yml'
   pull_request:
+    paths-ignore: *non-ios
   workflow_dispatch:
 
 concurrency:
-  group: clean-clone-build-${{ github.ref }}
+  # PR number when there is one, ref otherwise, so a push and its pull request do not each
+  # take a macOS runner to build the same commit.
+  group: clean-clone-build-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
