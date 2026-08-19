@@ -122,10 +122,19 @@ class AuthVC: CustomLoader {
                 
                 if let breaks = snapshot?.data() {
                     for (key, value) in breaks {
-                        let data = value as! [String: Any]
+                        // Every cast here used to be forced, and each one was a launch crash
+                        // waiting on a typo in a Firestore document: a value that is not a map,
+                        // a missing `reason`, or a key with no "-" (which made `dates[1]` an
+                        // index out of range). One person editing the console by hand could take
+                        // the app down for everyone, and nothing in the app would say why.
+                        //
+                        // A malformed break is now skipped. One break silently missing is a wrong
+                        // schedule for one span; a crash is no app at all.
+                        guard let data = value as? [String: Any],
+                              let reason = data["reason"] as? String else { continue }
                         let dates = key.components(separatedBy: "-")
-                        var oneBreak = Break(reason: (data["reason"] as! String), startDate: dates[0], endDate: dates[1])
-                        tempArr.append(oneBreak)
+                        guard dates.count == 2 else { continue }
+                        tempArr.append(Break(reason: reason, startDate: dates[0], endDate: dates[1]))
                     }
                 }
                 LoginVC.breaks = tempArr
@@ -346,7 +355,9 @@ class AuthVC: CustomLoader {
                         myGroup.leave()
                     })
                 }
-                if ((LoginVC.blocks["googlePhoto"] ?? "") as! String) == "true" {
+                // `LoginVC.blocks` is a Firestore user document, so a non-string here is a
+                // launch crash rather than a missing profile picture.
+                if (LoginVC.blocks["googlePhoto"] as? String) == "true" {
                     self.setProfileImage(useGoogle: true, width: UInt(self.view.frame.width), completion: {_ in
                         
                     })
