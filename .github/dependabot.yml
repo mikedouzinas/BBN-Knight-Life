@@ -1,0 +1,42 @@
+# Dependency updates arrive as pull requests rather than as an email somebody has to
+# remember to act on.
+#
+# Both manifests landed on 2026-08-19 and brought six alerts with them within the hour,
+# every one transitive through `next` or `firebase-admin`. Nobody is going to notice the
+# next batch by reading GitHub notifications, least of all a student inheriting this repo
+# in two years.
+#
+# Grouped so a routine week is one PR to review, not eleven. Security fixes are deliberately
+# left ungrouped: those should be able to land on their own without waiting for whatever else
+# happens to be in the group.
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      routine:
+        applies-to: version-updates
+        patterns: ['*']
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /mcp
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      routine:
+        applies-to: version-updates
+        patterns: ['*']
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
