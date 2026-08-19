@@ -199,3 +199,26 @@ wrong step can correct it.
 `docs/REBUILD.md` is the design for the SwiftUI rebuild, and it argues for an order: schema,
 then resolver, then views. Read it before starting anything large. It is a position, not a
 decree, and disagreeing with it in a pull request is a perfectly good contribution.
+
+## Environment traps, found the hard way
+
+Written down because each of these cost real time and none of them says what it is.
+
+**The Firestore emulator needs Java 21 or newer, and firebase-tools needs a Node it supports.**
+Use `npm run test:emulator` from `web/`, which finds a suitable JDK and pins firebase-tools
+rather than trusting what is installed. Running the emulator by hand on this machine fails
+twice: the globally installed firebase-tools crashes on Node 26 reading `SlowBuffer.prototype`
+(the error mentions neither Node nor a version), and current firebase-tools refuses a JDK
+older than 21.
+
+**`pod install` after switching branches.** Branches differ in their Podfile, and a stale
+sandbox reports `The sandbox is not in sync with the Podfile.lock` from xcodebuild rather than
+from CocoaPods, which reads like a project problem.
+
+**Commit before switching branches.** `git checkout` will carry uncommitted changes across,
+and a `git reset --hard` afterwards destroys them silently. Untracked files survive; edits to
+tracked files do not.
+
+**The test target runs as a whole.** Do not add `-only-testing:BBNDailyTests/SomeSuite` to
+CI. Naming one suite means every suite added afterwards silently does not run, which is how
+the 2021 template sat there for five years reporting success.
