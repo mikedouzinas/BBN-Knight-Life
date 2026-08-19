@@ -60,8 +60,8 @@ export function SourceForm({
 
       <h2>Schedule changer</h2>
       <p className="note lede">
-        A snow day, a delayed start, an assembly schedule. Give it whatever BB&amp;N sent, in
-        whatever form it arrived.
+        Change what students see for a day, or for several at once. A snow day, a delayed
+        start, an assembly, a day off. Give it whatever you have, in whatever form it arrived.
       </p>
 
       <label htmlFor="source-text">Paste the email, text, or note</label>
