@@ -23,4 +23,11 @@ export const publishBodySchema = z.object({
   day: z.unknown(),
 });
 
+/** A break span. Validated again by scheduleRangeSchema inside publishRange. */
+export const rangeBodySchema = z.object({
+  startDate: z.string().refine(isValidIsoDate, 'startDate must be YYYY-MM-DD'),
+  endDate: z.string().refine(isValidIsoDate, 'endDate must be YYYY-MM-DD'),
+  reason: z.string().min(1).max(200),
+});
+
 export type IngestBody = z.infer<typeof ingestBodySchema>;

@@ -10,9 +10,9 @@
  */
 import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
-import { datedScheduleDaySchema, issueLines } from '@/lib/schedule/schema';
+import { datedScheduleDaySchema, issueLines, scheduleRangeSchema, type ScheduleRange } from '@/lib/schedule/schema';
 import type { DatedScheduleDay } from '@/lib/schedule/types';
-import { EMIT_SCHEDULE_TOOL, SYSTEM_PROMPT, buildUserPreamble } from './tool';
+import { EMIT_RANGE_TOOL, EMIT_SCHEDULE_TOOL, RANGE_GUIDANCE, SYSTEM_PROMPT, buildUserPreamble } from './tool';
 
 export const INGEST_MODEL = 'claude-opus-5';
 const MAX_ATTEMPTS = 3;
@@ -38,6 +38,8 @@ export interface IngestInput {
 
 export interface IngestResult {
   days: DatedScheduleDay[];
+  /** Stretches of days with no school, bound for `schedules/break`. */
+  ranges: ScheduleRange[];
   /** Anything the model said in prose, e.g. why it could not read a page. */
   message: string;
   /** Days the model produced that never passed validation, with the reasons. */
@@ -95,6 +97,7 @@ export async function extractSchedule(input: IngestInput, client?: Anthropic): P
 
   const messages: Anthropic.MessageParam[] = [{ role: 'user', content: buildFirstMessage(input) }];
   const days: DatedScheduleDay[] = [];
+  const ranges: ScheduleRange[] = [];
   const rejected: { input: unknown; issues: string[] }[] = [];
   let message = '';
   let attempts = 0;
@@ -105,8 +108,8 @@ export async function extractSchedule(input: IngestInput, client?: Anthropic): P
       model: INGEST_MODEL,
       max_tokens: MAX_TOKENS,
       thinking: { type: 'adaptive' },
-      system: SYSTEM_PROMPT,
-      tools: [EMIT_SCHEDULE_TOOL],
+      system: `${SYSTEM_PROMPT}\n\n${RANGE_GUIDANCE}`,
+      tools: [EMIT_SCHEDULE_TOOL, EMIT_RANGE_TOOL],
       // A copy: `messages` grows below, and a request should carry the history as it
       // stood when it was sent.
       messages: [...messages],
@@ -120,7 +123,9 @@ export async function extractSchedule(input: IngestInput, client?: Anthropic): P
     if (prose) message = prose;
 
     const calls = response.content.filter(
-      (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use' && block.name === EMIT_SCHEDULE_TOOL.name,
+      (block): block is Anthropic.ToolUseBlock =>
+        block.type === 'tool_use' &&
+        (block.name === EMIT_SCHEDULE_TOOL.name || block.name === EMIT_RANGE_TOOL.name),
     );
     if (!calls.length) break;
 
@@ -129,6 +134,35 @@ export async function extractSchedule(input: IngestInput, client?: Anthropic): P
 
     for (const call of calls) {
       const raw = call.input as Record<string, unknown>;
+
+      // A span goes to schedules/break and is validated by its own schema, which refuses the
+      // shapes that trap the shipped app.
+      if (call.name === EMIT_RANGE_TOOL.name) {
+        const parsedRange = scheduleRangeSchema.safeParse(raw);
+        if (parsedRange.success) {
+          const key = `${parsedRange.data.startDate}..${parsedRange.data.endDate}`;
+          const existing = ranges.findIndex((r) => `${r.startDate}..${r.endDate}` === key);
+          if (existing >= 0) ranges[existing] = parsedRange.data;
+          else ranges.push(parsedRange.data);
+          results.push({
+            type: 'tool_result',
+            tool_use_id: call.id,
+            content: `Accepted ${parsedRange.data.startDate} to ${parsedRange.data.endDate}.`,
+          });
+        } else {
+          anyInvalid = true;
+          const issues = issueLines(parsedRange.error);
+          rejected.push({ input: raw, issues });
+          results.push({
+            type: 'tool_result',
+            tool_use_id: call.id,
+            is_error: true,
+            content: `Rejected. Fix these and call emit_range again:\n${issues.join('\n')}`,
+          });
+        }
+        continue;
+      }
+
       const { date, ...day } = raw;
       const parsed = datedScheduleDaySchema.safeParse({ date, day });
       if (parsed.success) {
@@ -164,5 +198,6 @@ export async function extractSchedule(input: IngestInput, client?: Anthropic): P
   });
 
   days.sort((a, b) => a.date.localeCompare(b.date));
-  return { days, message, rejected: stillRejected, attempts };
+  ranges.sort((a, b) => a.startDate.localeCompare(b.startDate));
+  return { days, ranges, message, rejected: stillRejected, attempts };
 }

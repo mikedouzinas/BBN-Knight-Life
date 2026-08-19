@@ -95,3 +95,52 @@ live('extractSchedule from a file', () => {
     expectations(result.days[0]);
   });
 });
+
+live('ranges, against the real model', () => {
+  it('reads a break announcement as ONE range, not a pile of days', async () => {
+    const result = await extractSchedule({
+      text:
+        'Winter break begins after classes on Friday, December 18. ' +
+        'Classes resume Monday, January 4.',
+      hintDate: '2026-12-18',
+    });
+
+    expect(result.ranges).toHaveLength(1);
+    expect(result.days).toHaveLength(0);
+
+    const range = result.ranges[0];
+    expect(range.startDate).toBe('2026-12-19');
+    // The whole point. "Classes resume Monday Jan 4" means the last day OFF is Sunday Jan 3.
+    // Reading the resume date as the end date takes an extra day of school off the calendar.
+    expect(range.endDate).toBe('2027-01-03');
+    expect(range.reason.toLowerCase()).toContain('winter');
+  }, 120_000);
+
+  it('still uses a day, not a range, for a single holiday', async () => {
+    const result = await extractSchedule({
+      text: 'No school Monday, October 12, Indigenous Peoples Day.',
+      hintDate: '2026-10-12',
+    });
+
+    expect(result.ranges).toHaveLength(0);
+    expect(result.days).toHaveLength(1);
+    expect(result.days[0].day.type).toBe('noschool');
+  }, 120_000);
+
+  it('handles a source carrying a break AND a schedule day together', async () => {
+    const result = await extractSchedule({
+      text:
+        'Thanksgiving break runs from Wednesday November 25 through Sunday November 29. ' +
+        'On Tuesday November 24 we run a half day: A 8:15-9:00 am, B 9:05-9:50 am, ' +
+        'C 10:00-10:45 am, then dismissal.',
+      hintDate: '2026-11-24',
+    });
+
+    expect(result.ranges).toHaveLength(1);
+    expect(result.ranges[0].startDate).toBe('2026-11-25');
+    expect(result.ranges[0].endDate).toBe('2026-11-29');
+    expect(result.days).toHaveLength(1);
+    expect(result.days[0].date).toBe('2026-11-24');
+    expect(result.days[0].day.type).toBe('blocks');
+  }, 120_000);
+});

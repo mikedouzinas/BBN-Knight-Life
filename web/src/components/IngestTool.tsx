@@ -6,6 +6,8 @@
  */
 import { SourceForm } from './SourceForm';
 import { DayCard } from './DayCard';
+import { RangeCard } from './RangeCard';
+import { rangeKey } from './useIngest';
 import { useIngest, type UseIngestOpts } from './useIngest';
 
 export function IngestTool({
@@ -25,7 +27,9 @@ export function IngestTool({
 
       {tool.error && <p className="error card">{tool.error}</p>}
 
-      {tool.message && !tool.days.length && !tool.reading && <p className="card note">{tool.message}</p>}
+      {tool.message && !tool.days.length && !tool.ranges.length && !tool.reading && (
+        <p className="card note">{tool.message}</p>
+      )}
 
       {tool.rejected.length > 0 && (
         <div className="card">
@@ -40,6 +44,19 @@ export function IngestTool({
           ))}
         </div>
       )}
+
+      {/* Breaks first: a span sets the frame the individual days sit inside. */}
+      {tool.ranges.map((range) => (
+        <RangeCard
+          key={rangeKey(range)}
+          range={range}
+          publishing={tool.publishing === rangeKey(range)}
+          publishedDetail={tool.published[rangeKey(range)]}
+          onPublish={() => tool.publishRange(range)}
+          onDiscard={() => tool.discardRange(rangeKey(range))}
+          publishLabel={publishLabel}
+        />
+      ))}
 
       {tool.days.map((candidate) => (
         <DayCard

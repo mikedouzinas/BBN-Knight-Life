@@ -117,3 +117,45 @@ export function buildUserPreamble(input: { defaultYear: number; hintDate?: strin
   lines.push('Transcribe every day this source describes.');
   return lines.join('\n');
 }
+
+/**
+ * A second tool rather than a `type: "range"` on the first.
+ *
+ * A span is a different kind of thing from a day: it has no blocks, no lunch waves and no
+ * grades, and it lands in a different Firestore document. Folding it into `emit_schedule`
+ * would add four fields that are meaningless on every other call, and the model's most
+ * common mistake would become emitting a day-shaped range.
+ *
+ * It also keeps the blast radius separate. `emit_schedule` writes one day; this writes a span
+ * that can silence months of notifications at once.
+ */
+export const EMIT_RANGE_TOOL: Anthropic.Tool = {
+  name: 'emit_range',
+  description:
+    'Emit a continuous stretch of days with no school: a vacation, a long weekend, summer. Call it once per stretch. Use emit_schedule instead for a single day off, or for any day that has a schedule.',
+  input_schema: {
+    type: 'object' as const,
+    additionalProperties: false,
+    required: ['startDate', 'endDate', 'reason'],
+    properties: {
+      startDate: {
+        type: 'string',
+        description: 'First day with no school, YYYY-MM-DD. If the source says "break begins after classes Friday the 18th", the first day off is Saturday the 19th.',
+      },
+      endDate: {
+        type: 'string',
+        description: 'LAST day with no school, YYYY-MM-DD, inclusive. If the source says "classes resume Monday the 4th", the last day off is Sunday the 3rd. Never the return date itself.',
+      },
+      reason: {
+        type: 'string',
+        description: 'What students see: "Winter break", "Thanksgiving break", "Summer break". Short.',
+      },
+    },
+  },
+};
+
+export const RANGE_GUIDANCE = `Stretches of days with no school
+- A vacation is ONE call to emit_range, not one emit_schedule per day. Summer is a single range, not ninety days.
+- endDate is the LAST day off, not the day classes resume. "Break begins after classes Friday Dec 18, classes resume Monday Jan 4" is startDate 2026-12-19 and endDate 2027-01-03.
+- A single holiday with no school is emit_schedule with type "noschool", not a one-day range. Ranges are for stretches.
+- A range never carries blocks. If any day inside the stretch has a schedule, it is not one stretch.`;

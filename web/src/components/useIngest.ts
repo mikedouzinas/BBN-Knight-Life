@@ -13,9 +13,19 @@
 import { withBasePath } from '@/lib/basePath';
 import { useCallback, useState } from 'react';
 import type { DatedScheduleDay } from '@/lib/schedule/types';
+import type { ScheduleRange } from '@/lib/schedule/schema';
 
 export interface CandidateDay extends DatedScheduleDay {
   warnings: string[];
+}
+
+/** A break span, keyed for the UI by its own span. */
+export interface CandidateRange extends ScheduleRange {
+  dayCount?: number;
+}
+
+export function rangeKey(range: { startDate: string; endDate: string }): string {
+  return `${range.startDate}..${range.endDate}`;
 }
 
 export interface RejectedDay {
@@ -45,12 +55,15 @@ export interface UseIngestOpts {
    * the only route in the app that writes. The demo supplies a local-state version.
    */
   publishDay?: (day: DatedScheduleDay) => Promise<PublishOutcome>;
+  /** Override the range write, for the same reason as publishDay. */
+  publishRange?: (range: ScheduleRange) => Promise<PublishOutcome>;
   /** How to get a Firebase ID token for the real routes. The demo needs none. */
   getToken?: () => Promise<string | null>;
 }
 
 interface State {
   days: CandidateDay[];
+  ranges: CandidateRange[];
   rejected: RejectedDay[];
   message: string;
   reading: boolean;
@@ -61,6 +74,7 @@ interface State {
 
 const EMPTY: State = {
   days: [],
+  ranges: [],
   rejected: [],
   message: '',
   reading: false,
@@ -81,7 +95,7 @@ async function readError(res: Response): Promise<string> {
 }
 
 export function useIngest(opts: UseIngestOpts = {}) {
-  const { ingestUrl = withBasePath('/api/admin/ingest'), publishDay, getToken } = opts;
+  const { ingestUrl = withBasePath('/api/admin/ingest'), publishDay, publishRange: publishRangeOverride, getToken } = opts;
   const [state, setState] = useState<State>(EMPTY);
 
   const authHeaders = useCallback(async (): Promise<Record<string, string>> => {
@@ -93,7 +107,7 @@ export function useIngest(opts: UseIngestOpts = {}) {
 
   const read = useCallback(
     async (request: IngestRequest) => {
-      setState((s) => ({ ...s, reading: true, error: null, days: [], rejected: [], message: '' }));
+      setState((s) => ({ ...s, reading: true, error: null, days: [], ranges: [], rejected: [], message: '' }));
       try {
         const res = await fetch(ingestUrl, {
           method: 'POST',
@@ -101,11 +115,17 @@ export function useIngest(opts: UseIngestOpts = {}) {
           body: JSON.stringify(request),
         });
         if (!res.ok) throw new Error(await readError(res));
-        const data = (await res.json()) as { days: CandidateDay[]; message: string; rejected: RejectedDay[] };
+        const data = (await res.json()) as {
+          days: CandidateDay[];
+          ranges?: CandidateRange[];
+          message: string;
+          rejected: RejectedDay[];
+        };
         setState((s) => ({
           ...s,
           reading: false,
           days: data.days ?? [],
+          ranges: data.ranges ?? [],
           rejected: data.rejected ?? [],
           message: data.message ?? '',
         }));
@@ -146,11 +166,49 @@ export function useIngest(opts: UseIngestOpts = {}) {
     [publishDay, authHeaders],
   );
 
+  const publishRange = useCallback(
+    async (range: ScheduleRange) => {
+      const key = rangeKey(range);
+      setState((s) => ({ ...s, publishing: key, error: null }));
+      try {
+        let outcome: PublishOutcome;
+        if (publishRangeOverride) {
+          outcome = await publishRangeOverride(range);
+        } else {
+          const res = await fetch(withBasePath('/api/admin/publish-range'), {
+            method: 'POST',
+            headers: await authHeaders(),
+            body: JSON.stringify(range),
+          });
+          if (!res.ok) throw new Error(await readError(res));
+          const data = (await res.json()) as { published: { breakKey: string; dayCount: number } };
+          outcome = {
+            ok: true,
+            detail: `Wrote schedules/break.${data.published.breakKey} (${data.published.dayCount} days)`,
+          };
+        }
+        if (!outcome.ok) throw new Error(outcome.error ?? 'The publish was refused.');
+        setState((s) => ({
+          ...s,
+          publishing: null,
+          published: { ...s.published, [key]: outcome.detail ?? 'Published.' },
+        }));
+      } catch (error) {
+        setState((s) => ({ ...s, publishing: null, error: (error as Error).message }));
+      }
+    },
+    [publishRangeOverride, authHeaders],
+  );
+
+  const discardRange = useCallback((key: string) => {
+    setState((s) => ({ ...s, ranges: s.ranges.filter((r) => rangeKey(r) !== key) }));
+  }, []);
+
   const discard = useCallback((date: string) => {
     setState((s) => ({ ...s, days: s.days.filter((d) => d.date !== date) }));
   }, []);
 
   const reset = useCallback(() => setState(EMPTY), []);
 
-  return { ...state, read, publish, discard, reset };
+  return { ...state, read, publish, publishRange, discard, discardRange, reset };
 }
