@@ -8,6 +8,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { IngestTool } from '@/components/IngestTool';
+import { LinkAgent } from '@/components/LinkAgent';
 import { clientAuth, firebaseConfigured, signInWithGoogle, signOutOfGoogle } from '@/lib/firebase/client';
 
 type Status =
@@ -90,6 +91,7 @@ export default function AdminPage() {
         </button>
       </div>
       <IngestTool options={{ getToken }} />
+      <LinkAgent />
     </>
   );
 }

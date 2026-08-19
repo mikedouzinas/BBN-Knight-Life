@@ -450,3 +450,35 @@ table.schedule.small td { padding: 5px 4px; font-size: 13px; }
 }
 .standalone-text { font-weight: 500; }
 .standalone-reason { color: var(--muted); font-size: 13.5px; }
+
+/* ---------- link an agent ------------------------------------------------ */
+/* Collapsed by default: this is a thing you do once, not part of publishing. */
+.link-agent { margin-top: 18px; }
+.link-agent > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  list-style: none;
+  color: var(--muted);
+  transition: color 200ms ease;
+}
+.link-agent > summary:hover { color: var(--text); }
+.link-agent > summary::-webkit-details-marker { display: none; }
+.link-agent > summary::before { content: '+ '; color: var(--gold); font-family: var(--font-mono), monospace; }
+.link-agent[open] > summary::before { content: '- '; }
+.link-agent[open] > summary { margin-bottom: 12px; color: var(--text); }
+.token {
+  background: var(--well);
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  padding: 11px 13px;
+  margin: 10px 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  word-break: break-all;
+  white-space: pre-wrap;
+  max-height: 150px;
+  overflow-y: auto;
+}

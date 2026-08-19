@@ -1,0 +1,74 @@
+name: Web and MCP
+
+# The iOS app has had a clean-clone build guard since HQ-608. The admin tool and the MCP
+# server had nothing: no test run, no build, and no check that their dependencies are safe.
+#
+# The dependency half exists because of a real event. On 2026-08-19, adding web/package-lock.json
+# surfaced six Dependabot alerts (three high) within the hour, all transitive through `next` and
+# `firebase-admin`. They were fixed by hand the same day. This job is what makes the next six
+# fail a check instead of arriving as an email somebody has to act on.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+  # Vulnerabilities are published against code that has not changed, so a push-only trigger
+  # would go quiet on a branch nobody is touching. Weekly catches those.
+  schedule:
+    - cron: '0 13 * * 1'
+
+concurrency:
+  group: web-and-mcp-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [web, mcp]
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.package }}/package-lock.json
+
+      # `npm ci` on purpose: it installs exactly the lockfile. `npm install` would silently
+      # resolve something newer, and then this job would be testing a tree that does not
+      # match what anyone else gets.
+      - name: Install
+        run: npm ci
+
+      # Say what was examined. A security job that finds nothing and a security job that
+      # looked at nothing print the same thing otherwise, and the second one is worse than
+      # having no job at all.
+      - name: Audit dependencies
+        run: |
+          count=$(npm ls --all --parseable 2>/dev/null | wc -l | tr -d ' ')
+          echo "CHECKED $count installed packages in ${{ matrix.package }}/"
+          if [ "$count" -lt 2 ]; then
+            echo "::error::Resolved $count packages. That is a broken install, not a clean audit."
+            exit 1
+          fi
+          npm audit --audit-level=moderate
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
