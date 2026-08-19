@@ -20,11 +20,31 @@ export class KnightLifeError extends Error {
   }
 }
 
+export interface ProposedRange {
+  startDate: string;
+  endDate: string;
+  reason: string;
+  dayCount?: number;
+}
+
 export interface IngestResult {
-  days: { date: string; day: unknown; warnings?: string[] }[];
+  days: { date: string; day: unknown; display?: string; warnings?: string[] }[];
+  ranges?: ProposedRange[];
   message?: string;
   rejected?: string[];
   attempts?: number;
+}
+
+export interface RangePublishResult {
+  published: {
+    breakKey: string;
+    startDate: string;
+    endDate: string;
+    reason: string;
+    dayCount: number;
+    updatedBy: string;
+    updatedAt: string;
+  };
 }
 
 export interface PublishResult {
@@ -124,5 +144,12 @@ export class KnightLifeClient {
 
   publish(date: string, day: unknown): Promise<PublishResult> {
     return this.call('/api/admin/publish', { method: 'POST', body: JSON.stringify({ date, day }) });
+  }
+
+  publishRange(range: ProposedRange): Promise<RangePublishResult> {
+    return this.call('/api/admin/publish-range', {
+      method: 'POST',
+      body: JSON.stringify({ startDate: range.startDate, endDate: range.endDate, reason: range.reason }),
+    });
   }
 }

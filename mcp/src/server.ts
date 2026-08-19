@@ -20,7 +20,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { KnightLifeClient, KnightLifeError } from './client.js';
 import { ProposalStore } from './proposals.js';
-import { formatDay, formatProposal, type ProposedDay } from './format.js';
+import { formatDay, formatProposal, type ProposedDay, type ProposedRange } from './format.js';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -103,6 +103,8 @@ export function createServer(client: KnightLifeClient, proposals = new ProposalS
         'Turn a schedule announcement into proposed days. Accepts pasted text, a PDF, or a photo, ' +
         'and handles a source covering several dates at once (a message naming three snow days ' +
         'produces three days in one proposal).\n\n' +
+        'A stretch of days with no school comes back as ONE break rather than a pile of days, so ' +
+        '"winter break, back January 4th" is a single entry covering the whole span.\n\n' +
         'This NEVER publishes. It returns a readable plan and a proposal id. Show the plan to the ' +
         'person, get their answer, then call publish_schedule.',
       inputSchema: {
@@ -122,18 +124,19 @@ export function createServer(client: KnightLifeClient, proposals = new ProposalS
       }
       try {
         const result = await client.ingest({ text: sourceText, attachments, hintDate, notes });
-        if (!result.days.length) {
+        const ranges = (result.ranges ?? []) as ProposedRange[];
+        if (!result.days.length && !ranges.length) {
           return failure(
             `Nothing publishable came out of that source.${result.message ? ` ${result.message}` : ''}` +
               (result.rejected?.length ? `\nSkipped: ${result.rejected.join('; ')}` : ''),
           );
         }
-        const proposal = proposals.create(result.days as ProposedDay[]);
+        const proposal = proposals.create(result.days as ProposedDay[], ranges);
         const extra = [
           result.message ? `\nNote: ${result.message}` : '',
           result.rejected?.length ? `\nSkipped: ${result.rejected.join('; ')}` : '',
         ].join('');
-        return text(formatProposal(proposal.id, proposal.days) + extra);
+        return text(formatProposal(proposal.id, proposal.days, proposal.ranges) + extra);
       } catch (error) {
         return failure(describe(error));
       }
@@ -159,7 +162,10 @@ export function createServer(client: KnightLifeClient, proposals = new ProposalS
         dates: z
           .array(z.string().regex(ISO_DATE))
           .optional()
-          .describe('Publish only these dates from the proposal. Omit to publish all of them.'),
+          .describe(
+            'Publish only these from the proposal. A day is named by its date; a break is named by ' +
+            'the date it STARTS. Omit to publish everything in the proposal.',
+          ),
       },
     },
     async ({ proposal_id, confirm, dates }) => {
@@ -178,11 +184,20 @@ export function createServer(client: KnightLifeClient, proposals = new ProposalS
         );
       }
 
-      const chosen = dates?.length ? proposal.days.filter((d) => dates.includes(d.date)) : proposal.days;
-      if (!chosen.length) {
+      // `dates` selects days by date and breaks by their start date, so an admin approving
+      // "just the winter one" names the day it begins, which is what they see on the card.
+      const chosenDays = dates?.length ? proposal.days.filter((d) => dates.includes(d.date)) : proposal.days;
+      const chosenRanges = dates?.length
+        ? proposal.ranges.filter((r) => dates.includes(r.startDate))
+        : proposal.ranges;
+
+      if (!chosenDays.length && !chosenRanges.length) {
+        const covers = [
+          ...proposal.ranges.map((r) => `${r.startDate} (break)`),
+          ...proposal.days.map((d) => d.date),
+        ];
         return failure(
-          `Proposal ${proposal_id} has no days matching ${dates?.join(', ')}. It covers: ` +
-            proposal.days.map((d) => d.date).join(', '),
+          `Proposal ${proposal_id} has nothing matching ${dates?.join(', ')}. It covers: ${covers.join(', ')}`,
         );
       }
 
@@ -191,7 +206,21 @@ export function createServer(client: KnightLifeClient, proposals = new ProposalS
       // here, because the person would stop looking.
       const done: string[] = [];
       const failed: string[] = [];
-      for (const day of chosen) {
+
+      // Breaks first. A span is what decides whether the days inside it are school days at
+      // all, so if only one of the two kinds lands, the break is the more useful one to have.
+      for (const range of chosenRanges) {
+        try {
+          const result = await client.publishRange(range);
+          done.push(
+            `${range.startDate} to ${range.endDate} (${range.reason}) -> schedules/break.${result.published.breakKey}`,
+          );
+        } catch (error) {
+          failed.push(`${range.startDate} to ${range.endDate}: ${describe(error)}`);
+        }
+      }
+
+      for (const day of chosenDays) {
         try {
           const result = await client.publish(day.date, day.day);
           done.push(`${day.display ?? day.date} -> ${result.published.legacyId}`);
@@ -199,6 +228,8 @@ export function createServer(client: KnightLifeClient, proposals = new ProposalS
           failed.push(`${day.display ?? day.date}: ${describe(error)}`);
         }
       }
+
+      const chosen = [...chosenRanges, ...chosenDays];
 
       if (!failed.length) proposals.take(proposal_id);
 

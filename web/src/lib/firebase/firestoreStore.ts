@@ -9,13 +9,20 @@
  */
 import 'server-only';
 import type { Firestore } from 'firebase-admin/firestore';
-import type { PublishPlan, ScheduleStore } from '@/lib/schedule/publish';
+import type { PublishPlan, RangePublishPlan, RangeStore, ScheduleStore } from '@/lib/schedule/publish';
 import type { ScheduleDay } from '@/lib/schedule/types';
 import { toCanonicalKey } from '@/lib/schedule/dates';
 
 export const CANONICAL_DOC = 'schedules/special';
 export const LEGACY_COLLECTION = 'special-schedules';
 export const PUBLISH_LOG_COLLECTION = 'schedule-publish-log';
+/**
+ * Breaks. One document whose fields are spans keyed `2026/12/19-2027/1/3`.
+ *
+ * Deliberately NOT expanded into `schedules/special`. The app reads spans from here directly,
+ * and expanding one summer would write ninety day documents that all say the same thing.
+ */
+export const BREAK_DOC = 'schedules/break';
 
 export class FirestoreScheduleStore implements ScheduleStore {
   constructor(private readonly db: Firestore) {}
@@ -47,5 +54,42 @@ export class FirestoreScheduleStore implements ScheduleStore {
     const snapshot = await this.db.doc(CANONICAL_DOC).get();
     const data = snapshot.data() ?? {};
     return (data[toCanonicalKey(isoDate)] as ScheduleDay | undefined) ?? null;
+  }
+}
+
+/**
+ * The production RangeStore.
+ *
+ * `merge: true` on the break document, because it holds every span there is and a plain set
+ * would delete the other twelve. That is the same trap as `schedules/special`, and the same
+ * answer.
+ *
+ * Provenance goes to its own collection rather than onto the break document, for the reason
+ * spelled out in publish.ts: the shipped app iterates every field of these documents and
+ * force-casts each one, so an `updatedAt` at the top level crashes it on launch.
+ */
+export class FirestoreRangeStore implements RangeStore {
+  constructor(private readonly db: Firestore) {}
+
+  async readRanges(): Promise<Record<string, { reason: string }>> {
+    const snapshot = await this.db.doc(BREAK_DOC).get();
+    return (snapshot.data() ?? {}) as Record<string, { reason: string }>;
+  }
+
+  async commitRange(plan: RangePublishPlan): Promise<void> {
+    const batch = this.db.batch();
+
+    batch.set(this.db.doc(BREAK_DOC), { [plan.breakKey]: { reason: plan.range.reason } }, { merge: true });
+
+    batch.set(this.db.collection(PUBLISH_LOG_COLLECTION).doc(`break-${plan.breakKey.replace(/\//g, '-')}`), {
+      breakKey: plan.breakKey,
+      startDate: plan.range.startDate,
+      endDate: plan.range.endDate,
+      reason: plan.range.reason,
+      dayCount: plan.dayCount,
+      ...plan.provenance,
+    });
+
+    await batch.commit();
   }
 }
