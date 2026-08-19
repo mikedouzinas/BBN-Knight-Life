@@ -1286,11 +1286,6 @@ PODS:
   - GoogleDataTransport (10.1.0):
     - nanopb (~> 3.30910.0)
     - PromisesObjC (~> 2.4)
-  - GoogleMaps (9.1.0):
-    - GoogleMaps/Maps (= 9.1.0)
-  - GoogleMaps/Base (9.1.0)
-  - GoogleMaps/Maps (9.1.0):
-    - GoogleMaps/Base
   - GoogleSignIn (8.0.0):
     - AppAuth (< 2.0, >= 1.7.3)
     - AppCheckCore (~> 11.0)
@@ -1440,7 +1435,6 @@ DEPENDENCIES:
   - Firebase/Messaging
   - Firebase/Storage
   - FSCalendar
-  - GoogleMaps
   - GoogleSignIn
   - InitialsImageView
   - ProgressHUD
@@ -1471,7 +1465,6 @@ SPEC REPOS:
     - FSCalendar
     - GoogleAppMeasurement
     - GoogleDataTransport
-    - GoogleMaps
     - GoogleSignIn
     - GoogleUtilities
     - "gRPC-C++"
@@ -1510,7 +1503,6 @@ SPEC CHECKSUMS:
   FSCalendar: 2d1d0d9398f12d439f55c1fe0f01525b151b8260
   GoogleAppMeasurement: 6e49ffac7d3f2c3ded9cc663f912a13b67bbd0de
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
-  GoogleMaps: c74e02e00db0be27b165516bde753826e2652b9c
   GoogleSignIn: ce8c89bb9b37fb624b92e7514cc67335d1e277e4
   GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
   "gRPC-C++": 049b3605db691c85d65fbde5b0750b5f54ce9b26
@@ -1526,6 +1518,6 @@ SPEC CHECKSUMS:
   SideMenu: f583187d21c5b1dd04c72002be544b555a2627a2
   SkeletonView: 5a050f6411e697abd4cda0a8d767013399dccd69
 
-PODFILE CHECKSUM: 0e78f89f83bd6608c2c617e59895e41818515ae6
+PODFILE CHECKSUM: 4ba02ebe797af40db9a7522c356813185aaa9080
 
 COCOAPODS: 1.17.0

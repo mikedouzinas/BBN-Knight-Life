@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:assets": "node scripts/check-assets.mjs",
-    "check:basepath": "node scripts/check-base-path.mjs"
+    "check:basepath": "node scripts/check-base-path.mjs",
+    "test:emulator": "bash ../scripts/test-emulator.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.118.0",

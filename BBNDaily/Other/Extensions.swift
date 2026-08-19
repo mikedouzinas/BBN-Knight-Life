@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import Firebase
+import ProgressHUD
 
 extension UIViewController {
     func hideKeyboardWhenTappedAround() {
@@ -748,42 +749,20 @@ extension UIViewController {
             completion!()
         })
     }
-    func getScheduleFor(date: Date) -> CustomWeekday {
-        let formatter1 = DateFormatter()
-        formatter1.dateFormat = "yyyy-MM-dd"
-        formatter1.dateStyle = .full
-        let stringDate = formatter1.string(from: date)
-        let index = stringDate.firstIndex(of: ",")
-        let weekday = stringDate.prefix(upTo: index!).lowercased()
-        var currentDay = [block]()
-//        let lunchDays = getLunchDays(weekDay: weekday)
-        let lunchDays = getRegularSchedule(weekday: weekday)
-        currentDay = lunchDays.blocks
-//        if date.isBetweenTimeFrame(date1: "11 Jun 2022 04:00".startOrEndDate(isStart: true) ?? Date(), date2: "02 Sep 2022 04:00".startOrEndDate(isStart: false) ?? Date()) {
-//            currentDay = [block]()
-//            return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date)
-//        }
-        for x in LoginVC.specialSchedules {
-            if x.key.isInThroughDate(date: date) {
-                currentDay = [block]()
-                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date, hasImage: false)
-            }
-            if x.key.lowercased() == stringDate.lowercased() {
-                if !((LoginVC.blocks["l-\(weekday)"] as? String) ?? "").lowercased().contains("2") {
-                    currentDay = x.value.specialSchedulesL1
-                }
-                else {
-                    currentDay = x.value.specialSchedules
-                }
-                var hasImage = false
-                if let _ = x.value.imageUrl {
-                    hasImage = true
-                }
-                return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date, hasImage: hasImage)
-            }
-        }
-        return CustomWeekday(blocks: currentDay, weekday: String(weekday), date: date, hasImage: false)
-    }
+    // getScheduleFor lived here and is gone. HQ-607.
+    //
+    // It was the v1 way of working out a day, superseded by resolveDay, and it had zero
+    // callers anywhere in the project. It also carried a locale crash that could never fire
+    // precisely because nothing called it: it set `dateFormat` and then `dateStyle`, which
+    // silently discards the format, then force-unwrapped `stringDate.firstIndex(of: ",")`.
+    // In any locale whose full date has no comma -- French renders `lundi 15 septembre 2025`
+    // -- that unwrap is nil.
+    //
+    // The lesson is worth more than the code: NEVER DERIVE MEANING FROM A FORMATTED DISPLAY
+    // STRING. The same mistake, made in SecretSchedule, is why every legacy schedule document
+    // is keyed on a locale-dependent sentence and why that collection cannot be range-queried
+    // (HQ-603). resolveDay takes its weekday from a DateFormatter with an explicit "EEEE"
+    // format and never reads a display string for meaning.
     
     /*
      func getLunchDays(weekDay: String) -> (blocks: [block], selectedDay: Int) {
@@ -857,6 +836,53 @@ extension UIViewController {
     //
     // Everything that needs a day now goes through here, so a disagreement of that kind cannot
     // be expressed. Adding a new consumer must not mean adding a fourth resolver.
+    /// The legacy `special-schedules` collection, loaded ON DEMAND rather than on launch.
+    ///
+    /// This was the single most expensive thing the app did. It listed the entire collection
+    /// every time anyone opened the app: **82 documents of a 101-read launch**, measured
+    /// against production on 2026-08-19.
+    ///
+    /// Almost nothing consumed it. `getScheduleFor` had zero callers and is deleted (HQ-607),
+    /// the loop in `CalendarVC` sits inside a `/* */` block, and what remains is
+    /// `SecretSchedule`, the in-app schedule editor that only an admin can open and that the
+    /// web tool replaces. So 638 students each paid 82 reads per launch to populate data for a
+    /// screen 8 of them can reach.
+    ///
+    /// Calling it twice is cheap and safe: it overwrites `LoginVC.specialSchedules` wholesale.
+    func loadLegacySpecialSchedules(completion: @escaping (Swift.Result<[String: SpecialSchedule], Error>) -> Void) {
+        let db = Firestore.firestore()
+        db.collection("special-schedules").getDocuments { (snapshot, error) in
+            if let error = error {
+                ProgressHUD.failed("Failed to find 'special-schedules'")
+                completion(.failure(error))
+                return
+            }
+            var tempArray = [String: SpecialSchedule]()
+            for document in (snapshot?.documents ?? []) {
+                let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
+                var blocksl1 = [block]()
+                for x in arrayl1 {
+                    blocksl1.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
+                }
+
+                let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
+                var blocks = [block]()
+                for x in array {
+                    blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
+                }
+                let date = document.data()["date"] as? String ?? "N/A"
+                let reason = document.data()["reason"] as? String ?? "N/A"
+                let imageUrl = document.data()["imageUrl"] as? String ?? "N/A"
+                if blocksl1.isEmpty {
+                    blocksl1 = blocks
+                }
+                tempArray[date] = SpecialSchedule(specialSchedules: blocks, specialSchedulesL1: blocksl1, reason: reason, date: date, imageUrl: imageUrl, image: nil)
+            }
+            LoginVC.specialSchedules = tempArray
+            completion(.success(tempArray))
+        }
+    }
+
     func resolveDay(date: Date) -> ResolvedDay {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/M/d" // v2 keys are not zero padded
