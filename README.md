@@ -11,6 +11,9 @@ Built by BB&N students, and open to students who want to work on it.
 - [Firebase](docs/FIREBASE.md) covers the data, the admins collection, and the security rules.
 - [Releasing](docs/RELEASING.md) covers shipping an update through App Store Connect.
 
+The admin tool that publishes schedule changes lives in [`web/`](web/README.md). It is a
+small Next.js app, deployed separately, and it needs no access to the iOS project.
+
 ## Quick start
 
 ```bash

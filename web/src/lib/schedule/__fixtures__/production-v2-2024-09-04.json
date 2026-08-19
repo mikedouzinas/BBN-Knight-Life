@@ -1,0 +1,91 @@
+{
+  "blocks": [
+    {
+      "name": "E",
+      "block": "e",
+      "startTime": "8:15 am",
+      "endTime": "9:00 am",
+      "type": "block"
+    },
+    {
+      "name": "C",
+      "block": "c",
+      "startTime": "9:05 am",
+      "endTime": "9:50 am",
+      "type": "block"
+    },
+    {
+      "name": "Class Meeting",
+      "block": "other",
+      "startTime": "9:55 am",
+      "endTime": "10:30 am",
+      "type": "block"
+    },
+    {
+      "name": "D",
+      "block": "d",
+      "startTime": "10:35 am",
+      "endTime": "11:20 am",
+      "type": "block"
+    },
+    {
+      "filter": [
+        "L1"
+      ],
+      "contents": [
+        {
+          "startTime": "11:25 am",
+          "endTime": "12:05 pm",
+          "type": "lunch"
+        },
+        {
+          "name": "G2",
+          "block": "g",
+          "startTime": "12:10 pm",
+          "endTime": "12:55 pm",
+          "type": "block"
+        }
+      ],
+      "lunchBlock": "g",
+      "type": "specific",
+      "matchMode": "any"
+    },
+    {
+      "filter": [
+        "L2"
+      ],
+      "contents": [
+        {
+          "name": "G1",
+          "block": "g",
+          "startTime": "11:25 am",
+          "endTime": "12:10 pm",
+          "type": "block"
+        },
+        {
+          "startTime": "12:15 pm",
+          "endTime": "12:55 pm",
+          "type": "lunch"
+        }
+      ],
+      "lunchBlock": "g",
+      "type": "specific",
+      "matchMode": "any"
+    },
+    {
+      "name": "Dessert in the Courtyard",
+      "block": "other",
+      "startTime": "1:00 pm",
+      "endTime": "1:30 pm",
+      "type": "block"
+    },
+    {
+      "name": "Student Leadership Workshop",
+      "block": "other",
+      "startTime": "1:30 pm",
+      "endTime": "2:30 pm",
+      "type": "block"
+    }
+  ],
+  "type": "blocks"
+}

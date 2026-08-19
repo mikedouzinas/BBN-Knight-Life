@@ -1,0 +1,68 @@
+{
+  "date": "Tuesday, September 3, 2024",
+  "blocks-l1": [],
+  "imageUrl": "",
+  "reason": "Orientation Week",
+  "blocks": [
+    {
+      "name": "Gr. 10-12 Advisory",
+      "startTime": "9:05 am",
+      "block": "N/A",
+      "endTime": "09:25 am"
+    },
+    {
+      "name": "Assembly",
+      "block": "N/A",
+      "startTime": "09:35 am",
+      "endTime": "09:50 am"
+    },
+    {
+      "name": "A",
+      "startTime": "10:00 am",
+      "block": "A",
+      "endTime": "10:10 am"
+    },
+    {
+      "name": "B",
+      "startTime": "10:15 am",
+      "block": "B",
+      "endTime": "10:25 am"
+    },
+    {
+      "name": "C",
+      "block": "C",
+      "startTime": "10:30 am",
+      "endTime": "10:40 am"
+    },
+    {
+      "name": "D",
+      "block": "D",
+      "startTime": "10:45 am",
+      "endTime": "10:55 am"
+    },
+    {
+      "name": "E",
+      "startTime": "11:00 am",
+      "block": "E",
+      "endTime": "11:10 am"
+    },
+    {
+      "name": "F",
+      "block": "F",
+      "startTime": "11:15 am",
+      "endTime": "11:25 am"
+    },
+    {
+      "name": "G",
+      "block": "G",
+      "startTime": "11:30 am",
+      "endTime": "11:40 am"
+    },
+    {
+      "name": "Lunch",
+      "startTime": "11:45 am",
+      "block": "N/A",
+      "endTime": "12:45 pm"
+    }
+  ]
+}

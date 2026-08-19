@@ -51,6 +51,15 @@ service cloud.firestore {
     match /default-schedules/{doc} { allow read: if signedIn(); allow write: if isAdmin(); }
     match /ifstatements/{doc}      { allow read: if signedIn(); allow write: if isAdmin(); }
 
+    // Who published which schedule, written by the admin tool in web/ through the
+    // Admin SDK (which bypasses these rules). Nothing in the app reads it, so it stays
+    // closed to clients; `write: if false` means it can only ever be written by a
+    // server holding the service account, which is what makes it evidence.
+    match /schedule-publish-log/{day} {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
+
     // Student records.
     //   get   - allowed, because ClassPopupVC shows who else is in your class.
     //   list  - admins only. Nothing in the app lists this collection
