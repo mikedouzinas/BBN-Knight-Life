@@ -2,10 +2,15 @@ rules_version = '2';
 
 // Knight Life Firestore rules.
 //
-// Before this file, the entire database was `allow read, write: if request.auth != null`,
+// Before HQ-601, the entire database was `allow read, write: if request.auth != null`,
 // meaning any of ~645 signed-in accounts could rewrite the school schedule or read every
 // student record. These rules keep every access pattern the shipped 2.4.1 app relies on
 // and close everything else.
+//
+// Admins are documents in the `admins` collection, keyed by lowercase email. Adding a
+// maintainer is a Firestore write, not a code change and a deploy, because handing this
+// project to the next student is the path that most needs to stay easy. It also keeps
+// student email addresses out of a public repository.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -14,16 +19,25 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function hasEmail() {
+      return signedIn() && request.auth.token.email != null;
+    }
+
+    function email() {
+      return request.auth.token.email.lower();
+    }
+
     function isAdmin() {
-      return signedIn()
-        && request.auth.token.email != null
-        && request.auth.token.email.lower() in [
-             'mveson@bbns.org',      // Mike Veson
-             'kveson@bbns.org',      // Kai Veson
-             'lho@bbns.org',         // Lucas Ho - taking over
-             'yzhao@bbns.org',
-             'amoro-araujo@bbns.org'
-           ];
+      return hasEmail()
+        && exists(/databases/$(database)/documents/admins/$(email()));
+    }
+
+    // Who can publish schedules. Readable only by admins, so the maintainer list is not
+    // a directory any signed-in student can pull. Written through the Firebase console
+    // or the Admin SDK, never by the app.
+    match /admins/{adminEmail} {
+      allow read:  if isAdmin();
+      allow write: if false;
     }
 
     // Schedule data. Every student reads it; only admins change it.

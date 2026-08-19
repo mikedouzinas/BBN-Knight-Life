@@ -164,11 +164,63 @@ students have been shown stale schedules. This is a present bug.
 Reconcile first, while the divergence is still visible as two named collections. Migrating
 unreconciled data into a clean schema launders the inconsistency somewhere harder to see.
 
-Every mismatch gets classified, not merged blindly:
+#### Measured 2026-08-19
 
-- in v2 only → v2 is newer, carry forward
-- in v1 only → check whether v2 deliberately dropped it
-- in both, differing → needs a human; the schedule for a real date was wrong in one of them
+111 distinct dates across both schemas:
+
+| Bucket | Count | What it is |
+| --- | ---: | --- |
+| v2 only | 43 | Real gaps in v1 |
+| v1 only | 32 | **All on or before 2024-06-04.** Un-backfilled history, not drift. |
+| both, equivalent | 24 | Agree |
+| both, **different** | **12** | 3 disagree on whether it was a school day, 6 on content, 1 on order, 2 on the reason string only |
+
+Only **2** of the 12 need a human: `2024-09-05` (F block ends 09:50 vs 09:55) and `2025-12-12`
+(the two schemas describe different afternoons, and v1 also carries a junk `Test 4:00pm` row).
+
+**v2 wins 8 of the 9 non-cosmetic disagreements, for a structural reason:** v1 has no grade
+dimension, so every grade-differentiated day gets flattened or truncated on the way into it. The
+disagreements cluster exactly on orientation week, PSAT day, and community-programming days.
+**v2 is canonical.**
+
+#### The shipped app has a split brain
+
+The 2.4.1 calendar reads **v2 only** — the v1 loop in `CalendarVC.swift` is commented out at
+lines 536–573. But `setNotifications()` is live, called from six places, and it calls
+`getScheduleFor`, which reads **v1**.
+
+So on the 12 diverged days, **what a student sees and what they are notified about come from
+different schemas that disagree.** This is a present bug in the shipped app, not a migration risk.
+
+It is worse on two entries where v1 was deliberately blanked and its `reason` set to an upgrade
+prompt:
+
+| v1 key | reason | v1 blocks | v2 |
+| --- | --- | ---: | --- |
+| `Tuesday, September 2, 2025-Friday, September 5, 2025` | "KnightLife Migration. Please update app" | 0 | full schedules |
+| `Wednesday, October 1, 2025` | "Special Schedule - Please update KnightLife" | 0 | 5 blocks |
+
+Blanking v1 was a deliberate nag aimed at pre-2.4.1 builds, whose calendars still read v1. It
+worked for that. The unintended cost is that 2.4.1 users got **no notifications** on those five
+real school days, because notifications read the blanked v1.
+
+#### What this changes
+
+- **v2 is canonical.** Migrate from v2, not from a merge of both.
+- **The 32 v1-only dates are 2022–24 history.** Backfilling them is optional and low priority.
+- **Dual-write to v1 is for notifications and pre-2.4.1 builds**, not for the 2.4.1 calendar,
+  which is already on v2. That narrows §4.2's risk considerably.
+- **Neither schema holds a single date after 2026-03-03.** There is no 2026-27 data at all, so
+  the new schema starts on an empty year. That is a clean window and it will close when BB&N
+  publishes the fall calendar.
+
+#### Data quality to fix during migration
+
+Three am/pm typos in v1 that resolve to midnight or 11:50pm; `blocks: {}` as an empty map rather
+than an array on 2025-10-01; a `Test 4:00pm` junk row; narrow no-break spaces inside time strings;
+a v2 full school day dated to Sunday 2025-10-05 with no Monday 10-06 entry anywhere (likely
+off-by-one); and `schedules/break` labelling 2025/3/15–3/30 "Winter Break" where v1 says "Spring
+Break".
 
 ### 4.2 Dual-write, with legacy as a generated projection
 
@@ -216,16 +268,33 @@ Now in `firebase/firestore.rules` and `firebase/storage.rules`:
 
 Verified in production against real admin and non-admin ID tokens.
 
-### 5.2 The allowlist becomes data (HQ-615)
+### 5.2 The allowlist became data (HQ-615, shipped 2026-08-19)
 
-Hardcoding admins in the rules file means every handoff is a code change and a deploy. That is
-friction on the path that most needs to stay easy.
+Hardcoding admins in the rules file meant every handoff was a code change and a deploy, which is
+friction on the path that most needs to stay easy. It also published five `@bbns.org` addresses,
+two belonging to current high schoolers, into a public repository.
 
-Move to `admins/{uid}` documents that the rules read, or Firebase custom claims. **The web admin
-tool reads the same source**, so the tool and the rules agree by construction rather than by
-someone remembering to update both.
+Admins are now `admins/{lowercase-email}` documents in Firestore. Firestore rules read them with
+`exists()`; Storage rules read the same collection with `firestore.exists()`, so **one list
+governs both and they cannot drift**. The collection is admin-readable only, so the maintainer
+list is not a directory any signed-in student can pull, and `allow write: if false` means it is
+changed through the console or the Admin SDK, never by the app.
+
+Keyed by email rather than uid deliberately: a maintainer can be granted access before they have
+ever signed in, which is exactly the moment you want to add someone.
+
+Deployed in two releases so no one could lose access mid-transition. Release one accepted either
+the Firestore lookup or the old hardcoded list. Only after a test email present *only* in the
+collection was proven to gain access, and to lose it again when the document was deleted, was the
+hardcoded list removed in release two.
+
+**Adding a maintainer is now one Firestore write.** That is the mechanism this project has been
+missing everywhere.
 
 New collections get explicit rules. The catch-all stays `allow read, write: if false`.
+
+Note for §6: the web admin tool reads this same collection, so the tool and the rules agree by
+construction rather than by someone remembering to update both.
 
 ---
 
