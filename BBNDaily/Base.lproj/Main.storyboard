@@ -686,12 +686,6 @@
                                     <action selector="signIn:" destination="D97-9g-UUh" eventType="touchUpInside" id="EIn-yT-zrC"/>
                                 </connections>
                             </view>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Sign in with your BB&amp;N school account (name@bbns.org), not a personal one" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hQ6-47-acc">
-                                <rect key="frame" x="23" y="687" width="344" height="20"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
-                                <color key="textColor" name="white"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="CPd-We-JYf"/>
                         <color key="backgroundColor" name="blue"/>
@@ -700,9 +694,6 @@
                             <constraint firstItem="4cK-BE-d5J" firstAttribute="top" secondItem="CPd-We-JYf" secondAttribute="top" constant="113" id="7ZT-HS-Goc"/>
                             <constraint firstItem="4cK-BE-d5J" firstAttribute="centerX" secondItem="CPd-We-JYf" secondAttribute="centerX" id="Vt4-Y5-jcS"/>
                             <constraint firstItem="CPd-We-JYf" firstAttribute="bottom" secondItem="fhl-b4-s9d" secondAttribute="bottom" constant="75" id="YQM-D2-9fr"/>
-                            <constraint firstItem="hQ6-47-acc" firstAttribute="leading" secondItem="CPd-We-JYf" secondAttribute="leading" constant="23" id="hQ6-47-lea"/>
-                            <constraint firstItem="CPd-We-JYf" firstAttribute="trailing" secondItem="hQ6-47-acc" secondAttribute="trailing" constant="23" id="hQ6-47-tra"/>
-                            <constraint firstItem="fhl-b4-s9d" firstAttribute="top" secondItem="hQ6-47-acc" secondAttribute="bottom" constant="12" id="hQ6-47-bot"/>
                         </constraints>
                     </view>
                     <connections>
