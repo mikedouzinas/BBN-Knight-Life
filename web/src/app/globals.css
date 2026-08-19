@@ -482,3 +482,28 @@ table.schedule.small td { padding: 5px 4px; font-size: 13px; }
   max-height: 150px;
   overflow-y: auto;
 }
+
+/* ---------- links and inline code in body copy ---------------------------- */
+/* Gold, because it is the one accent this design spends and a link is worth spending it
+   on: it is the only text on the page that does something. */
+.note a,
+p a {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(var(--gold-rgb), 0.35);
+  padding-bottom: 1px;
+  transition: border-color 180ms ease, color 180ms ease;
+}
+.note a:hover,
+p a:hover { border-bottom-color: var(--gold); }
+
+code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.92em;
+  background: var(--well);
+  border: 1px solid var(--hair);
+  border-radius: 5px;
+  padding: 1px 5px;
+  color: var(--text);
+  word-break: break-word;
+}

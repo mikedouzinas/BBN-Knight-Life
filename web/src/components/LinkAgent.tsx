@@ -15,6 +15,14 @@ import { useState } from 'react';
 import { clientAuth } from '@/lib/firebase/client';
 import { Glow } from './Glow';
 
+/**
+ * The setup instructions live in the repository rather than being restated here, because
+ * they change with the code and a copy on this page would go stale silently. Linked rather
+ * than named: "the instructions are in mcp/README.md" tells someone a filename and leaves
+ * them to go find it.
+ */
+const SETUP_URL = 'https://github.com/mikedouzinas/BBN-Knight-Life/blob/main/mcp/README.md#setting-it-up';
+
 export function LinkAgent() {
   const [token, setToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -36,8 +44,16 @@ export function LinkAgent() {
       <summary>Link an AI agent</summary>
       <p className="note">
         Connect Claude, or any MCP client, so you can publish by describing the change instead of
-        filling in this page. Your agent still has to show you the schedule and get your yes before
-        anything is published.
+        filling in this page. Say &ldquo;no school Thursday and Friday, snow&rdquo;, or forward the
+        email, and it reads the source and shows you the days. It cannot publish anything until you
+        say yes.
+      </p>
+      <p className="note">
+        Two steps: show your token below, then point your client at the Knight Life MCP server.{' '}
+        <a href={SETUP_URL} target="_blank" rel="noreferrer">
+          Setup instructions
+        </a>{' '}
+        take about a minute.
       </p>
 
       {token === null ? (
@@ -57,8 +73,12 @@ export function LinkAgent() {
             {copied ? 'Copied' : 'Copy token'}
           </button>
           <p className="note">
-            Paste it into your MCP client as KNIGHT_LIFE_REFRESH_TOKEN. Setup instructions are in
-            mcp/README.md in the Knight Life repository.
+            Paste it into your MCP client as <code>KNIGHT_LIFE_REFRESH_TOKEN</code>, following the{' '}
+            <a href={SETUP_URL} target="_blank" rel="noreferrer">
+              setup instructions
+            </a>
+            . Then ask your agent to run <code>whoami</code>; it should answer with your school
+            email.
           </p>
         </>
       )}
