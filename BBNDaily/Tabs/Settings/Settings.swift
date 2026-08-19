@@ -633,8 +633,11 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         dismiss(animated: true, completion: nil)
     }
     @objc func openSecretSchedule() {
-        // admin access to schedule changing
-        if LoginVC.email.contains("mveson") || LoginVC.email.contains("amoro-araujo") || LoginVC.email.contains("yzhao") {
+        // Admin access to schedule changing. Sourced from the admins collection in
+        // Firestore rather than a hardcoded list. The previous check substring-matched
+        // three addresses, all belonging to people who had left, so the two maintainers
+        // taking the project over had write permission and no button.
+        if LoginVC.isAdmin {
             self.performSegue(withIdentifier: "secretSchedule", sender: nil)
         }
         

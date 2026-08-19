@@ -54,7 +54,10 @@ class DaySelectVC: UIViewController {
                     
                     let data2 = ["monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
                     let data = ["name":"\(finalString)", "owner":"\(creator)", "isEditable":isEditable, "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn, "members":array, "homework":homeworkText, "block":"\(oldRow.Block.uppercased())"] as [String : Any]
-                    if !isEditable || LoginVC.email.lowercased() != creator.lowercased() && LoginVC.email.lowercased() != "mveson@bbns.org" && LoginVC.email.lowercased() != "yzhao@bbns.org" {
+                    // Deny unless the class is editable and the user either created it or
+                    // is an admin. Admin status comes from the admins collection in
+                    // Firestore, not from hardcoded addresses that outlive their owners.
+                    if !isEditable || (LoginVC.email.lowercased() != creator.lowercased() && !LoginVC.isAdmin) {
                         hideLoader(completion: {
                             ProgressHUD.colorAnimation = .red
                             ProgressHUD.failed("Sorry, you do not have permission to edit this class.")

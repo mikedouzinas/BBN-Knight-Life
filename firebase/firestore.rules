@@ -32,11 +32,16 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/admins/$(email()));
     }
 
-    // Who can publish schedules. Readable only by admins, so the maintainer list is not
-    // a directory any signed-in student can pull. Written through the Firebase console
-    // or the Admin SDK, never by the app.
+    // Who can publish schedules.
+    //
+    //   get   - your own row, or any row if you are an admin. The app reads its own row on
+    //           launch to decide whether to show the schedule editor. Learning your own
+    //           status leaks nothing you did not already know.
+    //   list  - admins only, so the maintainer list is not a directory students can pull.
+    //   write - never from a client. Changed through the console or the Admin SDK.
     match /admins/{adminEmail} {
-      allow read:  if isAdmin();
+      allow get:   if isAdmin() || (hasEmail() && adminEmail == email());
+      allow list:  if isAdmin();
       allow write: if false;
     }
 

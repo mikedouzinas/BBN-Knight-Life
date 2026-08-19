@@ -199,6 +199,7 @@ class AuthVC: CustomLoader {
         LoginVC.email = FirebaseAuth.Auth.auth().currentUser?.email ?? ""
         LoginVC.phoneNum = FirebaseAuth.Auth.auth().currentUser?.phoneNumber ?? ""
         let db = Firestore.firestore()
+        refreshAdminStatus(db: db)
         db.collection("ifstatements").document("ifstatements").getDocument(completion: {(snapshot, error) in
             if error != nil {
                 ProgressHUD.failed("Failed to find 'ifstatements'")
@@ -344,6 +345,26 @@ class AuthVC: CustomLoader {
         }
     }
     
+    // Look up whether this account may publish schedules.
+    //
+    // The list lives in the admins collection in Firestore, keyed by lowercase email, which is
+    // the same source the security rules read. Before this, Settings.swift substring-matched
+    // three hardcoded addresses that all belonged to people who had left, so the maintainers
+    // taking the project over had write permission and no way to reach the editor.
+    //
+    // Any failure means not an admin. The editor is hidden, the rules still enforce the truth,
+    // and nothing else in the app depends on this.
+    func refreshAdminStatus(db: Firestore) {
+        let email = LoginVC.email.lowercased()
+        guard !email.isEmpty else {
+            LoginVC.isAdmin = false
+            return
+        }
+        db.collection("admins").document(email).getDocument { (snapshot, error) in
+            LoginVC.isAdmin = (error == nil) && (snapshot?.exists ?? false)
+        }
+    }
+
     func convertToEvent(scheduleBlock: [String: Any]) -> Event {
         var ev = Event(type: scheduleBlock["type"]! as! String)
         
