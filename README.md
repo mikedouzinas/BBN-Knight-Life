@@ -1,10 +1,8 @@
 # Knight Life
 
 The BB&N app. Your schedule, your classes, special schedules, and the lunch menu.
-About 645 people have accounts, and students open it in the morning to find out what block
-it is.
 
-Students built it. **If you want to work on it, you can.** → [How to start](docs/CONTRIBUTING.md)
+Students built it. **If you want to work on it, you should; nowadays if you have any idea its easier than ever to make your changes here and help everyone around you, too.** → [How to start](docs/CONTRIBUTING.md)
 
 ---
 
