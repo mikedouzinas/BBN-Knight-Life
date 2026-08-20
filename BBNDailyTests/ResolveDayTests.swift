@@ -118,6 +118,86 @@ final class ResolveDayTests: XCTestCase {
         XCTAssertFalse(vc.resolveDay(date: date("2027/6/9")).hasClasses, "the day after the last day")
     }
 
+    // MARK: - What setNotifications actually asks
+
+    /// `setNotifications` walks the next 14 days and fires only where `hasClasses` is true.
+    /// So "does the app notify during summer" is answerable without a device, a push
+    /// certificate, or waiting until 8am: it is a question about fourteen ResolvedDays.
+    ///
+    /// This is the test for HQ-634. The bug was that notifications fired straight through
+    /// summer, and the only way anyone found out was Mike looking at his own phone in August.
+    ///
+    /// FALSIFIED 2026-08-19, and it took two goes, which is the useful part. Disabling the
+    /// outside-term rule alone did NOT fail it: the summer break RANGE still covers August, so
+    /// two independent mechanisms have to be removed before a student gets an alarm. Removing
+    /// both printed the exact days that would have fired:
+    ///     XCTAssertEqual failed: ("["2026/8/19", "2026/8/20", "2026/8/21", "2026/8/24",
+    ///     "2026/8/25", "2026/8/26", "2026/8/27", "2026/8/28", "2026/8/31", "2026/9/1"]")
+    ///     is not equal to ("[]")
+    /// Ten August mornings. That is the bug, named.
+    func testNoDayInTheNextTwoWeeksHasClassesDuringSummer() {
+        LoginVC.term = Term(startDate: "2026/9/8", endDate: "2027/6/8", reason: "Summer break")
+        LoginVC.breaks = [Break(reason: "Summer break", startDate: "2026/6/15", endDate: "2026/9/7")]
+
+        // Mid-August, the window that produced the seven-block Wednesday.
+        let start = date("2026/8/19")
+        var withClasses: [String] = []
+        for offset in 0...13 {
+            let day = Calendar.current.date(byAdding: .day, value: offset, to: start)!
+            if vc.resolveDay(date: day).hasClasses {
+                withClasses.append(describe(day))
+            }
+        }
+
+        XCTAssertEqual(withClasses, [],
+                       "setNotifications fires on exactly these days, so any entry here is an "
+                       + "alarm during summer break")
+    }
+
+    /// The other half, and the one that would catch an over-correction: once term starts, the
+    /// same walk MUST produce school days. A change that silenced summer by silencing
+    /// everything would pass the test above and fail this one.
+    func testTheSameWalkDoesFindClassesOnceTermStarts() {
+        LoginVC.term = Term(startDate: "2026/9/8", endDate: "2027/6/8", reason: "Summer break")
+        LoginVC.breaks = [Break(reason: "Summer break", startDate: "2026/6/15", endDate: "2026/9/7")]
+
+        let start = date("2026/9/8")
+        var withClasses = 0
+        for offset in 0...13 {
+            let day = Calendar.current.date(byAdding: .day, value: offset, to: start)!
+            if vc.resolveDay(date: day).hasClasses { withClasses += 1 }
+        }
+
+        // Two weeks from the first day of school: ten weekdays, none of them published as
+        // special in this fixture.
+        XCTAssertEqual(withClasses, 10, "two school weeks should carry ten days of classes")
+    }
+
+    /// Thanksgiving: the window straddles a break, so some days notify and some do not. A
+    /// resolver that got precedence wrong would return all fourteen or none.
+    func testAWindowStraddlingABreakNotifiesOnlyTheSchoolDays() {
+        LoginVC.term = Term(startDate: "2026/9/8", endDate: "2027/6/8", reason: "Summer break")
+        LoginVC.breaks = [Break(reason: "Thanksgiving break", startDate: "2026/11/25", endDate: "2026/11/29")]
+
+        let start = date("2026/11/23")   // the Monday before
+        var withClasses: [String] = []
+        for offset in 0...13 {
+            let day = Calendar.current.date(byAdding: .day, value: offset, to: start)!
+            if vc.resolveDay(date: day).hasClasses { withClasses.append(describe(day)) }
+        }
+
+        XCTAssertFalse(withClasses.contains("2026/11/25"), "first day of the break")
+        XCTAssertFalse(withClasses.contains("2026/11/29"), "last day of the break")
+        XCTAssertTrue(withClasses.contains("2026/11/23"), "the Monday before is a school day")
+        XCTAssertTrue(withClasses.contains("2026/11/30"), "classes resume the Monday after")
+    }
+
+    private func describe(_ d: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy/M/d"
+        return f.string(from: d)
+    }
+
     // MARK: - Precedence, which is the part a future change is most likely to break
 
     func testAPublishedDayWinsOverTheTerm() {
