@@ -125,7 +125,8 @@ final class ResolveDayTests: XCTestCase {
     /// certificate, or waiting until 8am: it is a question about fourteen ResolvedDays.
     ///
     /// This is the test for HQ-634. The bug was that notifications fired straight through
-    /// summer, and the only way anyone found out was Mike looking at his own phone in August.
+    /// summer, and the only way it surfaced was somebody noticing alarms on their own phone in
+    /// August. That is not a test strategy.
     ///
     /// FALSIFIED 2026-08-19, and it took two goes, which is the useful part. Disabling the
     /// outside-term rule alone did NOT fail it: the summer break RANGE still covers August, so
