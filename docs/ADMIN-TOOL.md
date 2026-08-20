@@ -1,14 +1,14 @@
-# Publishing a schedule
+# Changing the schedule
 
-Everything about getting a schedule change onto students' phones: the web tool, the AI agent
-setup, and what to do when it goes wrong.
+Everything about getting a schedule change onto students' phones: the website, the AI setup,
+and what to do when it goes wrong.
 
 ## The short version
 
 Go to **[mikeveson.com/knight-life/admin](https://mikeveson.com/knight-life/admin)**, sign in
 with your school Google account, paste the email BB&N sent, check what it shows you, publish.
 
-## Who can publish
+## Who is allowed to do this
 
 Anyone with a document in the `admins` collection in Firestore, keyed by their lowercase email.
 Nothing else. There is no list of addresses in the code and no separate password.
@@ -24,7 +24,7 @@ through an agent, with no deploy.
 This is deliberately the easiest thing in the project to do. Handing this app to the next
 student is the step most likely to fail, and it should never require a developer.
 
-## Publishing in the browser
+## Doing it on the website
 
 1. Sign in.
 2. Give it the source: paste the text, or upload the PDF or photo. Anything works, including a
@@ -53,7 +53,7 @@ notification** — notifications today are scheduled locally on each device, so 
 does not open the app is not told. That is [HQ-639](https://mikeveson.com/dev), and it is the
 biggest remaining gap in this system.
 
-## Publishing from an AI agent
+## Doing it by talking to an AI
 
 Same permissions, same validation, same log. You describe the change or forward the email, the
 agent shows you what it plans to publish, and you approve it.
@@ -64,7 +64,7 @@ The short version of the safety model: the agent cannot publish as a side effect
 something, and everything it does still runs through your admin account and the Firestore
 rules. The confirmation step only protects anyone if you actually read the times.
 
-## Breaks and the school year
+## Vacations and the school year
 
 Paste the break announcement like anything else. A vacation comes back as **one break**
 covering the whole span, not a card per day.
@@ -95,7 +95,7 @@ than a confident wrong schedule. If that document is missing the app behaves as 
 before, which is deliberate: a failed read must never tell the school there is no class
 today.
 
-## When something is wrong
+## When something goes wrong
 
 **Someone cannot sign in.** They are not in `admins`, or they used a personal Google account
 instead of their school one. The error names the address it saw; check it matches the document
@@ -111,7 +111,7 @@ both entries, which is the point.
 **Everything returns 401.** The deploy is missing its Firebase credentials, or your sign-in
 expired. Sign out and back in first; if it persists it is the server.
 
-## Running it locally
+## Running the website on your own computer
 
 ```bash
 cd web
@@ -131,7 +131,7 @@ goes in the repo, in any branch, private or not.
 | `NEXT_PUBLIC_FIREBASE_*` | Public client config. Not secrets. |
 | `DEMO_ENABLED` | `/demo` sandbox, which never touches Firestore. Off unless exactly `true`. |
 
-## Deploying
+## Putting a new version online
 
 The tool is a Next app in `web/`, deployed as its own Vercel project and served under
 mikeveson.com by a rewrite, so it shares an address with the rest of the site without sharing
@@ -150,7 +150,7 @@ portfolio, which reads as a broken build rather than a routing mistake.
 4. Add `mikeveson.com` to Firebase Auth → Settings → **Authorized domains**, or Google sign-in
    fails on the real address while working fine on localhost.
 
-## Consoles
+## Links
 
 - [Firebase](https://console.firebase.google.com/u/0/project/bbn-daily/overview) — Firestore, Auth, rules
 - [App Store Connect](https://appstoreconnect.apple.com/apps/1585503654/distribution) — releases

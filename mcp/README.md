@@ -1,12 +1,15 @@
-# Knight Life MCP server
+# Letting an AI publish schedule changes
 
-Publish BB&N schedule changes by describing them to an AI agent, instead of filling in a form.
+Instead of filling in the admin form, you tell Claude what changed and it does the rest.
+
+("MCP" is just the standard that lets Claude talk to outside tools. You do not need to know
+anything about it to use this.)
 
 You say *"there's no school Thursday and Friday, snow"*, or you forward the email BB&N sent.
 The agent reads it, shows you the days it plans to publish, and waits. Nothing reaches a
 student's phone until you say yes.
 
-## What it can do
+## What you can ask it to do
 
 | Tool | What it does |
 | --- | --- |
@@ -23,7 +26,7 @@ classes Friday the 18th, classes resume Monday the 4th"* becomes a single span, 
 proposal spells out the last day off and the day classes resume, because reading the resume
 date as the end date takes an extra day of school off the calendar for everybody.
 
-## Setting it up
+## Setting it up (about a minute)
 
 You need to already be a Knight Life admin. If you are not, an existing admin adds you by
 creating a document at `admins/<your-email>` in Firestore, and this will not work until they do.
@@ -98,7 +101,7 @@ Set `KNIGHT_LIFE_URL` to `http://localhost:3000/knight-life` to point at a local
 The app carries a `/knight-life` base path in development too, so the two addresses have the
 same shape and a URL that works locally works deployed.
 
-## How the safety actually works
+## What actually stops it going wrong
 
 Worth being precise about, because "it asks first" is not by itself a security property.
 

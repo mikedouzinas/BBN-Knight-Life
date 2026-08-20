@@ -1,23 +1,21 @@
 # Contributing to Knight Life
 
-Knight Life is the BB&N student app. It shows you your schedule, your classes, special
-schedules, and the lunch menu. Around 645 people have accounts and students open it on
-school mornings to find out what block it is.
+Knight Life is the BB&N app. It shows your schedule, your classes, special schedules, and the
+lunch menu. About 645 people have accounts, and students open it in the morning to find out
+what block it is.
 
-It is an iOS app written in Swift, and it was built by BB&N students.
+It is an iPhone app, written in Swift, built by BB&N students.
 
-## You are invited to work on this
+## You can work on this
 
-From Mike, who maintains it:
+This is deliberately open. It is an app made for students, so if you have a vision for what it
+should be, build it.
 
-> I want to make it very open that people can work on Knight Life. If they have ideas for
-> what they want to see in this then reach out and let's get you developing. It's an app
-> made for students so if you have a vision for this then build it.
+You do not need to have shipped an app before. You do not need permission to start. Clone it,
+get it building, change something, and open a pull request. If you want to talk through an idea
+first, open an issue.
 
-You do not need to have shipped an app before. You do not need permission to start. Clone
-it, get it building, change something, and open a pull request.
-
-## What you need
+## What you need first
 
 - A Mac. iOS development only works on macOS.
 - Xcode, free from the Mac App Store. It is a large download, so start it before you need it.
@@ -40,7 +38,7 @@ pod --version
 
 If `pod --version` prints a version number, you are set.
 
-## Getting the code running
+## Getting it running
 
 ```bash
 git clone https://github.com/mikedouzinas/BBN-Knight-Life.git
@@ -72,7 +70,7 @@ clones from scratch, runs `pod install`, and builds. If that workflow is green, 
 builds. If yours does not, it is something local, and the troubleshooting section below is the
 place to start.
 
-## How the project is laid out
+## Where everything is
 
 ```
 BBNDaily/              the app itself
@@ -89,7 +87,7 @@ docs/                  this documentation
 Podfile                the list of dependencies
 ```
 
-## Working with pods
+## Pods (the third-party code)
 
 A pod is somebody else's code that you get to use instead of writing your own. Knight Life
 uses pods for Firebase, Google Sign In, the calendar view, the bubble tab bar, and more. The
@@ -133,7 +131,7 @@ Read `docs/FIREBASE.md` before touching anything in the Firebase console.
 
 See `docs/RELEASING.md`.
 
-## Picking something to work on
+## What to work on
 
 The old version of this guide ended with a to-do list. That list is now tracked as tickets so
 it does not silently rot again. Ask a current maintainer for the Knight Life backlog. The
@@ -187,20 +185,20 @@ went stale for a year, because everything anyone had learned lived in a text thr
 else could read. A fix written into this file is visible to whoever picks this up next. A
 fix in a message is not.
 
-## Keeping this document true
+## Keeping this page honest
 
 If a step here does not work, that is a bug in this file. Fix it in the same pull request as
 whatever you were doing. This guide used to live in a Google Doc only one person could edit,
 which is how it got a year out of date. It is in the repo now so that anyone who trips over a
 wrong step can correct it.
 
-## Where the project is going
+## Where this is going
 
 `docs/REBUILD.md` is the design for the SwiftUI rebuild, and it argues for an order: schema,
 then resolver, then views. Read it before starting anything large. It is a position, not a
 decree, and disagreeing with it in a pull request is a perfectly good contribution.
 
-## Environment traps, found the hard way
+## Annoying setup problems, and the fixes
 
 Written down because each of these cost real time and none of them says what it is.
 

@@ -36,7 +36,7 @@ chooses between a cleaner design and a design a student can take over, it choose
 ## 2. Constraints
 
 **Never break the shipped app.** Students run 2.4.1 and cannot be forced to update. Every schema
-change is additive. Approach A, confirmed by Mike 2026-08-19.
+change is additive. Approach A, chosen 2026-08-19.
 
 **A wrong schedule is worse than no schedule.** Students trust it and miss class. Any automated
 authoring path ends in a human confirming a rendered result.
@@ -402,9 +402,7 @@ ones to `knight-life`, and where the fix is small enough opens a PR against the 
 
 ## 9. Contribution (HQ-611, HQ-624)
 
-Mike, 2026-08-19: *"I want to make it very open that people can work on Knight Life. If they have
-ideas for what they want to see in this then reach out and let's get you developing. It's an app
-made for students so if you have a vision for this then build it."*
+The project is deliberately open to student contributors.
 
 This is the structural fix, not a nice-to-have. Requires:
 
