@@ -16,7 +16,7 @@
 import { z } from 'zod';
 import type { LegacyDayDoc, ScheduleDay } from './types';
 import { datedScheduleDaySchema, issueLines, scheduleRangeSchema, type ScheduleRange } from './schema';
-import { toBreakKey, toCanonicalKey, daysBetween } from './dates';
+import { toBreakKey, toCanonicalKey, toLegacyBreakId, daysBetween } from './dates';
 import { deriveLegacyDay } from './derive';
 
 export type PublishSource = 'manual' | 'ingest';
@@ -100,6 +100,14 @@ export interface RangePublishRequest {
 export interface RangePublishPlan {
   /** `schedules/break` field key, e.g. `2026/12/19-2027/1/3`. */
   breakKey: string;
+  /**
+   * `special-schedules` document id, e.g. `Saturday, December 19, 2026-Sunday, January 3, 2027`.
+   *
+   * Derived, never authored. The shipped 2.4.1 app reads THIS, not breakKey, when deciding
+   * whether to schedule notifications, so publishing a break without it silences the calendar
+   * and leaves the alarms.
+   */
+  legacyBreakId: string;
   range: ScheduleRange;
   /** Inclusive, so a reviewer can see "16 days" rather than count. */
   dayCount: number;
@@ -120,6 +128,7 @@ export function planRangePublish(request: RangePublishRequest): RangePublishPlan
   const range = parsed.data;
   return {
     breakKey: toBreakKey(range.startDate, range.endDate),
+    legacyBreakId: toLegacyBreakId(range.startDate, range.endDate),
     range,
     dayCount: daysBetween(range.startDate, range.endDate),
     provenance: {
