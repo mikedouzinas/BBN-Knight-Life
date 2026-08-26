@@ -68,27 +68,32 @@ class TaskCell: UITableViewCell {
         backview.backgroundColor = UIColor(named: "current-cell")?.withAlphaComponent(0.1)
         return backview
     } ()
-//    public let checkBox: UIImageView = {
-//        let img = UIImageView()
-//        img.image = UIImage(named: "incomplete")
-//        img.translatesAutoresizingMaskIntoConstraints = false
-//        img.isSkeletonable = true
-//        img.skeletonCornerRadius = 8
-//        img.tintColor = UIColor(named: "inverse")
-//        return img
-//    } ()
+    public let checkBox: UIButton = {
+        let button = UIButton(type: .custom)
+        button.setImage(UIImage(named: "incomplete"), for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.isSkeletonable = true
+        button.skeletonCornerRadius = 8
+        button.tintColor = UIColor(named: "inverse")
+        return button
+    } ()
     public var isComplete = false
+    public var onCheckBoxTapped: (() -> Void)?
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         contentView.addSubview(backView)
-//        contentView.addSubview(checkBox)
+        contentView.addSubview(checkBox)
         contentView.addSubview(TitleLabel)
         contentView.addSubview(DescriptionLabel)
         contentView.addSubview(DateLabel)
         contentView.backgroundColor = UIColor(named: "background")
-        
+        checkBox.addTarget(self, action: #selector(checkBoxTapped), for: .touchUpInside)
+
         isSkeletonable = true
         contentView.isSkeletonable = true
+    }
+    @objc private func checkBoxTapped() {
+        onCheckBoxTapped?()
     }
     required init?(coder: NSCoder) {
         fatalError()
@@ -102,12 +107,12 @@ class TaskCell: UITableViewCell {
         backView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5).isActive = true
         backView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5).isActive = true
         
-        TitleLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20).isActive = true
-//        checkBox.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20).isActive = true
-//        checkBox.rightAnchor.constraint(equalTo: TitleLabel.leftAnchor, constant: -10).isActive = true
-//        checkBox.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
-//        checkBox.heightAnchor.constraint(equalToConstant: 30).isActive = true
-//        checkBox.widthAnchor.constraint(equalTo: checkBox.heightAnchor).isActive = true
+        checkBox.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20).isActive = true
+        checkBox.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
+        checkBox.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        checkBox.widthAnchor.constraint(equalTo: checkBox.heightAnchor).isActive = true
+
+        TitleLabel.leftAnchor.constraint(equalTo: checkBox.rightAnchor, constant: 10).isActive = true
         
         TitleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10).isActive = true
         TitleLabel.centerXAnchor.constraint(equalTo: DescriptionLabel.centerXAnchor).isActive = true
@@ -134,5 +139,16 @@ class TaskCell: UITableViewCell {
         TitleLabel.text = "\(viewModel.title)"
         DateLabel.text = "\(viewModel.dueDate.stringDateFromMultipleFormats(preferredFormat: 6) ?? "")"
         DescriptionLabel.text = viewModel.description
+    }
+
+    // HQ-779: checked homework fades rather than disappearing - still there to reopen and
+    // edit, just visually out of the way once it's done.
+    func configure(with entry: HomeworkEntry) {
+        isComplete = entry.completed
+        TitleLabel.text = entry.subject
+        DateLabel.text = "Block \(entry.block)"
+        DescriptionLabel.text = entry.text.isEmpty ? "Tap to add homework" : entry.text
+        checkBox.setImage(UIImage(named: entry.completed ? "complete" : "incomplete"), for: .normal)
+        contentView.alpha = entry.completed ? 0.4 : 1.0
     }
 }

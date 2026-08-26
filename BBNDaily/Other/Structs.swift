@@ -70,6 +70,18 @@ struct SchoolTask {
     var index: Int
 }
 
+// HQ-779: one row in the rebuilt Tasks tab - a class meeting on the next school day,
+// with whatever homework the student has typed in for it. `date` is "yyyy/M/d", the
+// same key format resolveDay/isDateInTerm already use, so this never needs its own
+// date parsing.
+struct HomeworkEntry {
+    var block: String
+    var subject: String
+    var date: String
+    var text: String
+    var completed: Bool
+}
+
 struct settingsBlock {
     let blockName: String
     let className: String
