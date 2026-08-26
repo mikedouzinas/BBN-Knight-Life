@@ -36,6 +36,98 @@ class AuthVC: CustomLoader {
         }
     }
     
+    // HQ-649: let a student clear their own A-G classes and start over.
+    //
+    // A class lives in two places — the student's own `A`-`G` fields, and that class's
+    // `members` array in `classes/{key}`. Clearing only the first leaves the student on
+    // rosters for classes they can no longer see in-app (ClassPopupVC reads `members` to
+    // show who else is in a class), which is how a school of ~600 ended up with 638 user
+    // records and 374 class documents carrying stale membership.
+    //
+    // Blocks are processed one at a time, in order, and a letter in `users/{uid}` is only
+    // cleared *after* that class's roster removal succeeds. That ordering is what makes
+    // this resumable: if it fails partway, every letter before the failure is fully clean
+    // (doc and roster both), every letter at or after it is fully untouched — never a student
+    // stuck on a roster for a class their own document no longer lists. Calling it again
+    // just continues from where it stopped; re-clearing an already-empty letter, or
+    // re-removing an already-absent member, is a no-op either way.
+    func resetClasses(completion: @escaping (Swift.Result<Void, Error>) -> Void) {
+        guard let uid = LoginVC.blocks["uid"] as? String, !uid.isEmpty else {
+            completion(.failure(NSError(domain: "KnightLife", code: 1, userInfo: [NSLocalizedDescriptionKey: "No signed-in account"])))
+            return
+        }
+        resetNextBlock(letters: ["A", "B", "C", "D", "E", "F", "G"], uid: uid, completion: completion)
+    }
+
+    private func resetNextBlock(letters: [String], uid: String, completion: @escaping (Swift.Result<Void, Error>) -> Void) {
+        guard let letter = letters.first else {
+            completion(.success(()))
+            return
+        }
+        let remaining = Array(letters.dropFirst())
+        let advance: () -> Void = { self.resetNextBlock(letters: remaining, uid: uid, completion: completion) }
+
+        // Same guard setLoginInfo() uses elsewhere to recognize a real "Subject~Teacher~Room~Block"
+        // assignment versus an empty or malformed field.
+        let classKey = (LoginVC.blocks[letter] as? String) ?? ""
+        guard classKey.contains("~"), !classKey.contains("/") else {
+            // Nothing really assigned here - already clear, nothing to remove from a roster.
+            clearLetterLocally(letter: letter, uid: uid) { result in
+                switch result {
+                case .success: advance()
+                case .failure(let error): completion(.failure(error))
+                }
+            }
+            return
+        }
+
+        let db = Firestore.firestore()
+        let classDoc = db.collection("classes").document(classKey)
+        classDoc.getDocument { [self] snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let snapshot = snapshot, snapshot.exists else {
+                // The class doc is already gone - nothing to remove this student from.
+                clearLetterLocally(letter: letter, uid: uid) { result in
+                    switch result {
+                    case .success: advance()
+                    case .failure(let error): completion(.failure(error))
+                    }
+                }
+                return
+            }
+            var members = (snapshot.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
+            // Matched on uid, not name - two students can share a name, only one shares a uid.
+            members.removeAll { ($0["uid"] ?? "") == uid }
+            classDoc.setData(["members": members], merge: true) { error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                clearLetterLocally(letter: letter, uid: uid) { result in
+                    switch result {
+                    case .success: advance()
+                    case .failure(let error): completion(.failure(error))
+                    }
+                }
+            }
+        }
+    }
+
+    private func clearLetterLocally(letter: String, uid: String, completion: @escaping (Swift.Result<Void, Error>) -> Void) {
+        let db = Firestore.firestore()
+        db.collection("users").document(uid).updateData([letter: ""]) { error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            LoginVC.blocks[letter] = ""
+            completion(.success(()))
+        }
+    }
+
     func setAppearance(input: String?) {
         let userDefaults = UserDefaults.standard
         var preference = ""
