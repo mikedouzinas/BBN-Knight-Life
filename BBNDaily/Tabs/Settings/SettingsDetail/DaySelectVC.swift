@@ -50,14 +50,25 @@ class DaySelectVC: UIViewController {
                     let array = (document.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
                     let homeworkText = (document.data()?["homework"] as? String) ?? ""
                     let isEditable = (document.data()?["isEditable"] as? Bool) ?? true
-                    let creator = (document.data()?["owner"] as? String) ?? "mveson@bbns.org"
-                    
+                    // HQ-660: no fallback identity. A class with no recorded owner is
+                    // unclaimed, not owned by whoever this hardcoded string used to name -
+                    // that address belonged to a graduated student and satisfies nobody's
+                    // sign-in, which silently locked every unclaimed class to admins only.
+                    let creator = (document.data()?["owner"] as? String) ?? ""
+                    // An unclaimed class becomes owned by whoever edits it first, rather
+                    // than ever writing a placeholder identity into a document that didn't
+                    // have one.
+                    let ownerToSave = creator.isEmpty ? LoginVC.email : creator
+
                     let data2 = ["monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn] as [String : Any]
-                    let data = ["name":"\(finalString)", "owner":"\(creator)", "isEditable":isEditable, "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn, "members":array, "homework":homeworkText, "block":"\(oldRow.Block.uppercased())"] as [String : Any]
-                    // Deny unless the class is editable and the user either created it or
-                    // is an admin. Admin status comes from the admins collection in
-                    // Firestore, not from hardcoded addresses that outlive their owners.
-                    if !isEditable || (LoginVC.email.lowercased() != creator.lowercased() && !LoginVC.isAdmin) {
+                    let data = ["name":"\(finalString)", "owner":"\(ownerToSave)", "isEditable":isEditable, "monday":MondaySwitch.isOn, "tuesday":TuesdaySwitch.isOn, "wednesday":WednesdaySwitch.isOn, "thursday":ThursdaySwitch.isOn, "friday":FridaySwitch.isOn, "members":array, "homework":homeworkText, "block":"\(oldRow.Block.uppercased())"] as [String : Any]
+                    // Deny only if the class isn't editable, or it has a recorded owner
+                    // that isn't this user and this user isn't an admin. A missing owner
+                    // (creator.isEmpty) is not treated as owned by anyone, so it's never a
+                    // reason to deny - that was the bug. Admin status comes from the admins
+                    // collection in Firestore, not from hardcoded addresses that outlive
+                    // their owners.
+                    if !isEditable || (!creator.isEmpty && LoginVC.email.lowercased() != creator.lowercased() && !LoginVC.isAdmin) {
                         hideLoader(completion: {
                             ProgressHUD.colorAnimation = .red
                             ProgressHUD.failed("Sorry, you do not have permission to edit this class.")
