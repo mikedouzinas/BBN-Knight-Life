@@ -10,7 +10,10 @@ import UIKit
 
 class TextFieldVC: UIViewController, UIGestureRecognizerDelegate, UITextFieldDelegate {
     let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(UIViewController.dismissKeyboard))
-    var maxLength = 10
+    // HQ-659: a deliberate default (matches the smallest limit anyone actually chose on
+    // purpose) rather than the old 10, which a forgetful subclass got by accident and
+    // which looked like a real limit instead of a bug.
+    var maxLength = FieldLimits.defaultLimit
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let maxLength = maxLength
         let currentString = (textField.text ?? "") as NSString

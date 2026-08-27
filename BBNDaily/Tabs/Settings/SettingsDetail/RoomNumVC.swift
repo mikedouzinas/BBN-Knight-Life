@@ -53,7 +53,7 @@ class RoomNumVC: TextFieldVC {
     override func viewDidLoad() {
         super.viewDidLoad()
         hideKeyboardWhenTappedAbove()
-        maxLength = 25
+        maxLength = FieldLimits.roomNumber
         TextField.delegate = self
         TextField.text = ClassesOptionsPopupVC.newClass.Room
     }
