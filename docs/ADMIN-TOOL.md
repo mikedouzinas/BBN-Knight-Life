@@ -111,6 +111,60 @@ both entries, which is the point.
 **Everything returns 401.** The deploy is missing its Firebase credentials, or your sign-in
 expired. Sign out and back in first; if it persists it is the server.
 
+**Signing in on the website says "admin approval required," but the iOS app never asks.**
+([HQ-648](https://mikeveson.com/dev)) Not a bug — the two apps use different OAuth clients, and
+BB&N's Google Workspace only trusts one of them so far.
+
+| | Client ID | Type |
+| --- | --- | --- |
+| iOS app (`BBNDaily/GoogleService-Info.plist`) | `...5g3lkl7pjqpnvm5q2lbkspqt0cpdo4g5` | iOS |
+| Web sign-in (Firebase Auth's Google provider) | `...70vufjqd54bcm5hs219qve7n1ct9ag32` | Web |
+
+Both belong to the same Firebase project (`bbn-daily`). The iOS client has been signing students
+in since 2021 and bbns.org trusts it; the web client is new to the workspace, so a browser
+sign-in hits BB&N's third-party app restriction and shows the admin-approval screen instead of
+completing sign-in. Nothing about the app changed — this is the workspace's allowlist, not our
+code.
+
+**If you hit this:** it means your bbns.org account has not been individually approved for the
+web client yet, and requesting approval yourself sends a bare, unexplained app name to BB&N IT.
+Don't do that cold — see the note below first, and ask a current maintainer whether BB&N IT has
+already trusted `...70vufjqd54bcm5hs219qve7n1ct9ag32` domain-wide before you request anything.
+
+**Status as of 2026-08-27: still open.** BB&N IT has not yet been asked to trust the web client.
+Until they do, the admin tool at mikeveson.com/knight-life/admin only works for a bbns.org
+account BB&N has individually approved, which blocks handing it to a new maintainer. The note
+below is ready to send; it still needs someone signed into a bbns.org account to (a) read back
+the exact consent-screen text so IT can match it to their logs, and (b) send it to BB&N IT
+through whatever channel BB&N actually uses for that (helpdesk ticket, not a cold email).
+
+<details>
+<summary>Draft note for BB&N IT</summary>
+
+> Subject: Trusting a second OAuth client for the Knight Life app
+>
+> Hi — I maintain Knight Life, the student schedule app BB&N students have used since 2021
+> (App Store: "BB&N's Knight Life"). It signs in with a bbns.org Google account.
+>
+> We recently added a web-based admin tool (mikeveson.com/knight-life/admin) that lets the
+> two or three student maintainers publish schedule changes without an Xcode rebuild. It signs
+> in the same way, through the same Firebase project (`bbn-daily`), but a website needs its own
+> OAuth client, separate from the iOS app's.
+>
+> Your workspace already trusts the iOS app's client:
+> `...5g3lkl7pjqpnvm5q2lbkspqt0cpdo4g5` (iOS).
+>
+> Could you add the web client to the same trust list?
+> `...70vufjqd54bcm5hs219qve7n1ct9ag32` (Web application).
+>
+> Happy to answer anything about the app or send more detail — thanks for taking a look.
+
+</details>
+
+Fill in the full client IDs from the table above before sending — they're truncated here on
+purpose. Whoever sends this should paste it from a bbns.org account so IT can see the exact
+consent screen it's replying to.
+
 ## Running the website on your own computer
 
 ```bash
