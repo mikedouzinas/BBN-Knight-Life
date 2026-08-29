@@ -49,9 +49,9 @@ export interface IngestResult {
 
 export class IngestError extends Error {}
 
-const IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
+export const IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
 
-function attachmentBlock(attachment: IngestAttachment): Anthropic.ContentBlockParam {
+export function attachmentBlock(attachment: IngestAttachment): Anthropic.ContentBlockParam {
   if (attachment.mediaType === 'application/pdf') {
     return {
       type: 'document',

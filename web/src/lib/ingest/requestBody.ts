@@ -31,3 +31,9 @@ export const rangeBodySchema = z.object({
 });
 
 export type IngestBody = z.infer<typeof ingestBodySchema>;
+
+/** HQ-656: a student's own schedule photo/PDF. No text/hintDate - a personal schedule has no date to hint at. */
+export const studentClassesBodySchema = z.object({
+  attachments: z.array(attachmentSchema).min(1).max(4),
+  notes: z.string().max(500).optional(),
+});
