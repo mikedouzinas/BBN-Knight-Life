@@ -109,7 +109,10 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             else if indexPath.row == 2 { // apple calendar add
                 imgName = "calendar.circle.fill"
             }
-            else if indexPath.row == 3 { // HQ-649: clear my classes
+            else if indexPath.row == 3 { // HQ-656: scan your schedule
+                imgName = "camera.viewfinder"
+            }
+            else if indexPath.row == 4 { // HQ-649: clear my classes
                 imgName = "trash"
             }
             let imageview = UIImageView(image: UIImage(systemName: imgName)!)
@@ -438,6 +441,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 addItemToCalendar(pref: 0)
             case 2: // apple calendar
                 addItemToCalendar(pref: 1)
+            case 3: // HQ-656: scan your schedule
+                navigationController?.pushViewController(ScheduleScanVC(), animated: true)
             default: // HQ-649: clear my classes
                 confirmResetClasses()
             }
@@ -575,6 +580,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             settingsBlock(blockName: "Share Your Classes", className: "", isAction: true),
             settingsBlock(blockName: "Add Schedule to Google Calendar", className: "", isAction: true),
             settingsBlock(blockName: "Add Schedule to Apple Calendar", className: "", isAction: true),
+            settingsBlock(blockName: "Scan Your Schedule", className: "", isAction: true),
+            // Destructive, so it sits last rather than next to the thing that fills classes in.
             settingsBlock(blockName: "Clear My Classes", className: "", isAction: true)
         ]
         tableView = UITableView(frame: .zero, style: .grouped)
