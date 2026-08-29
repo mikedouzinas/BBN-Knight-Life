@@ -112,6 +112,9 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             else if indexPath.row == 3 { // HQ-649: clear my classes
                 imgName = "trash"
             }
+            else if indexPath.row == 4 { // HQ-656: scan your schedule
+                imgName = "camera.viewfinder"
+            }
             let imageview = UIImageView(image: UIImage(systemName: imgName)!)
             imageview.tintColor = UIColor(named: "inverse")
             cell.accessoryView = imageview
@@ -438,8 +441,10 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 addItemToCalendar(pref: 0)
             case 2: // apple calendar
                 addItemToCalendar(pref: 1)
-            default: // HQ-649: clear my classes
+            case 3: // HQ-649: clear my classes
                 confirmResetClasses()
+            default: // HQ-656: scan your schedule
+                navigationController?.pushViewController(ScheduleScanVC(), animated: true)
             }
         }
     }
@@ -575,7 +580,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             settingsBlock(blockName: "Share Your Classes", className: "", isAction: true),
             settingsBlock(blockName: "Add Schedule to Google Calendar", className: "", isAction: true),
             settingsBlock(blockName: "Add Schedule to Apple Calendar", className: "", isAction: true),
-            settingsBlock(blockName: "Clear My Classes", className: "", isAction: true)
+            settingsBlock(blockName: "Clear My Classes", className: "", isAction: true),
+            settingsBlock(blockName: "Scan Your Schedule", className: "", isAction: true)
         ]
         tableView = UITableView(frame: .zero, style: .grouped)
         view.addSubview(tableView)
