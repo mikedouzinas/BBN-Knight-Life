@@ -34,7 +34,24 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         return currentDay.count
     }
     var xc = 0
+    // HQ-628. The old version of setTimes rescheduled itself every second, forever, redoing
+    // the full block resolution and a table reload each time -- even though the schedule can
+    // only actually change at a block boundary (a block starting or ending), and those instants
+    // are known in advance from the times resolved below. `scheduleRecomputeTimer` now fires
+    // exactly once per boundary instead of 86400 times a day.
+    //
+    // The one thing that still needs to move every second is the countdown text ("3m left in
+    // English"), so that ticks on its own `countdownTimer`, driven by `countdownTarget` /
+    // `countdownPrefix` / `countdownName` -- state this function resolves once per boundary,
+    // not once per second.
+    private var scheduleRecomputeTimer: Timer?
+    private var countdownTimer: Timer?
+    private var countdownTarget: Date?
+    private var countdownPrefix = ""
+    private var countdownName = ""
     func setTimes(recursive: Bool) {
+        var nextBoundary: Date?
+        var foundCurrentBlock = false
         if isActive {
             xc+=1
             var i = 0
@@ -51,7 +68,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                 if now.isBetweenTimeFrame(date1: t, date2: t2) {
                     currentBlock = x
                     var name = ""
-                    
+
                     if currentBlock.block != "N/A" {
                         var className = (LoginVC.blocks[currentBlock.block] as? String) ?? ""
                         if className == "" {
@@ -69,24 +86,29 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                     else {
                         name = "\(currentBlock.name)"
                     }
-                    let formatter = DateComponentsFormatter()
-                    formatter.unitsStyle = .abbreviated
-                    formatter.zeroFormattingBehavior = .dropAll
-                    formatter.allowedUnits = [.day, .hour, .minute, .second]
-                    formatter.maximumUnitCount = 2
+                    foundCurrentBlock = true
+                    countdownName = name
                     if now.isBetweenTimeFrame(date1: t, date2: t1) {
-                        let interval = Date().getTimeBetween(to: t1)
-                        self.navigationItem.title = "\(formatter.string(from: interval)!) Until \(name)"
+                        countdownPrefix = "Until"
+                        countdownTarget = t1
+                        nextBoundary = t1
                     }
                     else {
-                        let interval = Date().getTimeBetween(to: t2)
-                        self.navigationItem.title = "\(formatter.string(from: interval)!) left in \(name)"
+                        countdownPrefix = "left in"
+                        countdownTarget = t2
+                        nextBoundary = t2
                     }
                 }
                 i+=1
             }
+            // Format the label immediately from what was just resolved, exactly once -- the
+            // same as the old inline formatting, just moved into the shared helper the
+            // per-second ticker below also calls.
+            if foundCurrentBlock {
+                updateCountdownLabel()
+            }
             setOld()
-            
+
             if currentWeekday.blocks.isEmpty && currentWeekday.hasImage == false { // i need to check if the active day is an image
                 var z = 0
                 var currDate = Date()
@@ -118,11 +140,27 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
             ScheduleCalendar.refreshControl?.endRefreshing()
         }
         if recursive && (LoginVC.blocks["uid"] as? String) != "" {
-            Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [self] timer in
-                setTimes(recursive: true)
-                if isActive {
-//                    print("reloading...")
-                    ScheduleCalendar.reloadData()
+            // Replace whatever this instance had running before recomputing again -- otherwise
+            // a boundary firing while an old countdownTimer is still ticking leaves two
+            // per-second timers alive at once. A plain `recursive: false` call (pull-to-refresh,
+            // one-off reloads) never reaches this branch, so it can't touch a chain it didn't
+            // start.
+            scheduleRecomputeTimer?.invalidate()
+            countdownTimer?.invalidate()
+            countdownTimer = nil
+            // No boundary means no schedule for today at all (an empty calendar day): recheck
+            // periodically rather than either spinning every second or never checking again.
+            let fireInterval = max(1, (nextBoundary ?? Date().addingTimeInterval(60)).timeIntervalSinceNow)
+            scheduleRecomputeTimer = Timer.scheduledTimer(withTimeInterval: fireInterval, repeats: false) { [weak self] _ in
+                guard let self = self else { return }
+                if self.isActive {
+                    self.ScheduleCalendar.reloadData()
+                }
+                self.setTimes(recursive: true)
+            }
+            if foundCurrentBlock {
+                countdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                    self?.updateCountdownLabel()
                 }
             }
         }
@@ -130,14 +168,31 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
             ScheduleCalendar.reloadData()
         }
     }
+    private func updateCountdownLabel() {
+        guard let target = countdownTarget else { return }
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .abbreviated
+        formatter.zeroFormattingBehavior = .dropAll
+        formatter.allowedUnits = [.day, .hour, .minute, .second]
+        formatter.maximumUnitCount = 2
+        let interval = Date().getTimeBetween(to: target)
+        self.navigationItem.title = "\(formatter.string(from: interval) ?? "0s") \(countdownPrefix) \(countdownName)"
+    }
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         print("isActive = false")
         isActive = false
+        // The whole point of splitting these out: there is now something concrete to stop
+        // when the screen isn't visible, instead of a self-rescheduling closure that kept
+        // firing every second in the background regardless of `isActive`.
+        scheduleRecomputeTimer?.invalidate()
+        countdownTimer?.invalidate()
     }
     @objc func leaveApp() {
         print("isActive = false")
         isActive = false
+        scheduleRecomputeTimer?.invalidate()
+        countdownTimer?.invalidate()
     }
     var isActive = true
     var dayOverBlocks = [block]()
@@ -362,7 +417,11 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
             }
             else {
                 setCurrentday(date: realCurrentDate, shouldEdit: false, completion: { [self]_ in
-                    setTimes(recursive: false)
+                    // `recursive: true`, not `false`: viewDidDisappear/leaveApp now actually
+                    // stop the boundary and countdown timers (see HQ-628), so reactivating this
+                    // screen has to be what restarts them, or the countdown freezes for good
+                    // after the first time this tab is backgrounded or switched away from.
+                    setTimes(recursive: true)
                     print("normal reload")
                     ScheduleCalendar.reloadData()
                 })
