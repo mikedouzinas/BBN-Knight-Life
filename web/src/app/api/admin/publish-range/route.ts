@@ -11,10 +11,12 @@
  */
 import { NextResponse } from 'next/server';
 import { UnauthorizedError, requireAdmin } from '@/lib/firebase/requireAdmin';
-import { adminDb } from '@/lib/firebase/admin';
+import { adminDb, adminMessaging } from '@/lib/firebase/admin';
 import { FirestoreRangeStore } from '@/lib/firebase/firestoreStore';
 import { ScheduleValidationError, publishRange } from '@/lib/schedule/publish';
 import { rangeBodySchema } from '@/lib/ingest/requestBody';
+import { FcmNotifier } from '@/lib/notify/fcmNotifier';
+import { notifyRangePublished } from '@/lib/notify/scheduleNotify';
 
 export const runtime = 'nodejs';
 
@@ -32,6 +34,8 @@ export async function POST(request: Request) {
       updatedBy: identity.email,
       source: 'ingest',
     });
+
+    await notifyRangePublished(new FcmNotifier(adminMessaging()), plan);
 
     return NextResponse.json({
       published: {

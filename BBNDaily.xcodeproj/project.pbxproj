@@ -52,6 +52,7 @@
 		478DFB7C41816FBC4FAC25CA /* Pods_BBNDaily.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2484BAF33C53EE45734AEB6 /* Pods_BBNDaily.framework */; };
 		8704E96E26EEA5B9001826F8 /* LoginVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E96D26EEA5B9001826F8 /* LoginVC.swift */; };
 		8704E97026EEA5E9001826F8 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E96F26EEA5E9001826F8 /* Extensions.swift */; };
+		BA55B946A81E3E1DD80A75D0 /* ScheduleNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E7B751B8219FF77FD32E747 /* ScheduleNotifications.swift */; };
 		8704E97226EEA617001826F8 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97126EEA617001826F8 /* Settings.swift */; };
 		8704E97426EEA663001826F8 /* LaunchVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97326EEA663001826F8 /* LaunchVC.swift */; };
 		8704E97626EEA686001826F8 /* CalendarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97526EEA686001826F8 /* CalendarVC.swift */; };
@@ -172,6 +173,7 @@
 		6F24F5F20F8704E743C7BFB5 /* Pods-BBNDailyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDailyTests.debug.xcconfig"; path = "Target Support Files/Pods-BBNDailyTests/Pods-BBNDailyTests.debug.xcconfig"; sourceTree = "<group>"; };
 		8704E96D26EEA5B9001826F8 /* LoginVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginVC.swift; sourceTree = "<group>"; };
 		8704E96F26EEA5E9001826F8 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		3E7B751B8219FF77FD32E747 /* ScheduleNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleNotifications.swift; sourceTree = "<group>"; };
 		8704E97126EEA617001826F8 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		8704E97326EEA663001826F8 /* LaunchVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchVC.swift; sourceTree = "<group>"; };
 		8704E97526EEA686001826F8 /* CalendarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarVC.swift; sourceTree = "<group>"; };
@@ -401,6 +403,7 @@
 			isa = PBXGroup;
 			children = (
 				8704E96F26EEA5E9001826F8 /* Extensions.swift */,
+				3E7B751B8219FF77FD32E747 /* ScheduleNotifications.swift */,
 				27B0DB80288B0DBD009C32B8 /* Structs.swift */,
 				27AEED54288B32E400C6176C /* TextEditVC.swift */,
 				27AEED73288B35B500C6176C /* TextFieldVC.swift */,
@@ -741,6 +744,7 @@
 				278AFAFB288C1F1400E64F23 /* ImageVC.swift in Sources */,
 				27B0DB7F288B025D009C32B8 /* AuthVC.swift in Sources */,
 				8704E97026EEA5E9001826F8 /* Extensions.swift in Sources */,
+				BA55B946A81E3E1DD80A75D0 /* ScheduleNotifications.swift in Sources */,
 				27AEED74288B35B500C6176C /* TextFieldVC.swift in Sources */,
 				87507FC726E6ADEB005DDFB4 /* AppDelegate.swift in Sources */,
 				27B8BCDD285CA60400892509 /* SideMenuVC.swift in Sources */,
