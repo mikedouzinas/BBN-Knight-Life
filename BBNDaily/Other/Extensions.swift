@@ -883,6 +883,41 @@ extension UIViewController {
         }
     }
 
+    // HQ-661: reads sideMenu/publications, falling back to SideMenuEntry.defaultPublications
+    // on any failure - no document, a read error, or every entry in it failing to parse.
+    // A malformed individual entry is dropped rather than crashing the whole fetch, same
+    // reasoning as resolveDay's malformed-day handling elsewhere in this file: one bad row
+    // is a menu missing one row, not a broken menu.
+    func fetchSideMenuPublications(completion: @escaping ([SideMenuEntry]) -> Void) {
+        Firestore.firestore().collection("sideMenu").document("publications").getDocument { snapshot, error in
+            guard error == nil, let rawEntries = snapshot?.data()?["entries"] as? [[String: Any]], !rawEntries.isEmpty else {
+                completion(SideMenuEntry.defaultPublications)
+                return
+            }
+            let parsed = rawEntries.compactMap { dict -> SideMenuEntry? in
+                guard let title = dict["title"] as? String, !title.isEmpty,
+                      let urlString = dict["url"] as? String, !urlString.isEmpty else { return nil }
+                return SideMenuEntry(
+                    title: title,
+                    iconName: (dict["iconName"] as? String) ?? "link",
+                    textImageName: dict["textImageName"] as? String,
+                    urlString: urlString,
+                    order: (dict["order"] as? Int) ?? Int.max,
+                    visible: (dict["visible"] as? Bool) ?? true
+                )
+            }
+            let visible = parsed.filter { $0.visible }.sorted { $0.order < $1.order }
+            completion(visible.isEmpty ? SideMenuEntry.defaultPublications : visible)
+        }
+    }
+
+    // Asset catalog first (the bundled publication logos), then an SF Symbol of the same
+    // name, then a generic fallback - so a Firestore entry naming an icon that doesn't
+    // exist gets a plain link icon instead of crashing on a force-unwrapped UIImage.
+    func resolveSideMenuIcon(_ name: String) -> UIImage {
+        UIImage(named: name) ?? UIImage(systemName: name) ?? UIImage(systemName: "link")!
+    }
+
     func resolveDay(date: Date) -> ResolvedDay {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/M/d" // v2 keys are not zero padded
