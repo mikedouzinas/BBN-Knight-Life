@@ -211,20 +211,14 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     }
     @objc func pressedPhotoSwitch(_ switcher: UISwitch) {
         if switcher.isOn {
-            let db = Firestore.firestore()
-            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-            LoginVC.blocks["googlePhoto"] = "true"
-            currDoc.setData(LoginVC.blocks)
+            LoginVC.updateField("googlePhoto", to: "true")
             setProfileImage(useGoogle: true, width: UInt(view.frame.width), completion: { [self]_ in
                 setHeader()
 //                SettingsVC.ProfileLink.headerImageView.image = LoginVC.profilePhoto.image
             })
         }
         else {
-            let db = Firestore.firestore()
-            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-            LoginVC.blocks["googlePhoto"] = "false"
-            currDoc.setData(LoginVC.blocks)
+            LoginVC.updateField("googlePhoto", to: "false")
             setProfileImage(useGoogle: false, width: UInt(view.frame.width), completion: { [self]_ in
                 setHeader()
 //                SettingsVC.ProfileLink.headerImageView.image = LoginVC.profilePhoto.image
@@ -239,32 +233,10 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         return newString.count <= maxLength
     }
     @objc func pressedPublicClasses(_ switcher: UISwitch) {
-        if switcher.isOn {
-            let db = Firestore.firestore()
-            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-            LoginVC.blocks["publicClasses"] = "true"
-            currDoc.setData(LoginVC.blocks)
-        }
-        else {
-            let db = Firestore.firestore()
-            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-            LoginVC.blocks["publicClasses"] = "false"
-            currDoc.setData(LoginVC.blocks)
-        }
+        LoginVC.updateField("publicClasses", to: switcher.isOn ? "true" : "false")
     }
     @objc func pressedSwitch(_ switcher: UISwitch) {
-        if switcher.isOn {
-            let db = Firestore.firestore()
-            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-            LoginVC.blocks["notifs"] = "true"
-            currDoc.setData(LoginVC.blocks)
-        }
-        else {
-            let db = Firestore.firestore()
-            let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-            LoginVC.blocks["notifs"] = "false"
-            currDoc.setData(LoginVC.blocks)
-        }
+        LoginVC.updateField("notifs", to: switcher.isOn ? "true" : "false")
         setNotifications()
     }
     // remove all cases of user when joining class too
@@ -285,44 +257,28 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 
                 // add the buttons/actions to the view controller
                 let freshman = UIAlertAction(title: "Freshman", style: .default) { _ in
-                    LoginVC.blocks["grade"] = "9"
+                    LoginVC.updateField("grade", to: "9")
                     self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "9")
-                    //                self.pr
-                    let db = Firestore.firestore()
-                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                    currDoc.setData(LoginVC.blocks)
                     tableView.reloadRows(at: [indexPath], with: .fade)
                 }
                 let sophmore = UIAlertAction(title: "Sophmore", style: .default) { _ in
-                    LoginVC.blocks["grade"] = "10"
+                    LoginVC.updateField("grade", to: "10")
                     self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "10")
-                    let db = Firestore.firestore()
-                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                    currDoc.setData(LoginVC.blocks)
                     tableView.reloadRows(at: [indexPath], with: .fade)
                 }
                 let junior = UIAlertAction(title: "Junior", style: .default) { _ in
-                    LoginVC.blocks["grade"] = "11"
+                    LoginVC.updateField("grade", to: "11")
                     self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "11")
-                    let db = Firestore.firestore()
-                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                    currDoc.setData(LoginVC.blocks)
                     tableView.reloadRows(at: [indexPath], with: .fade)
                 }
                 let senior = UIAlertAction(title: "Senior", style: .default) { _ in
-                    LoginVC.blocks["grade"] = "12"
+                    LoginVC.updateField("grade", to: "12")
                     self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "12")
-                    let db = Firestore.firestore()
-                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                    currDoc.setData(LoginVC.blocks)
                     tableView.reloadRows(at: [indexPath], with: .fade)
                 }
                 let teacher = UIAlertAction(title: "Teacher", style: .default) { _ in
-                    LoginVC.blocks["grade"] = "Teacher"
+                    LoginVC.updateField("grade", to: "Teacher")
                     self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: "Teacher")
-                    let db = Firestore.firestore()
-                    let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                    currDoc.setData(LoginVC.blocks)
                     tableView.reloadRows(at: [indexPath], with: .fade)
                 }
                 let cancel = UIAlertAction(title: "Cancel", style: .cancel) { _ in
@@ -397,11 +353,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                         else {
                             name = "room-advisory"
                         }
-                        LoginVC.blocks["\(name)"] = inputName
+                        LoginVC.updateField(name, to: inputName ?? "")
                         self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "\(self.preferenceBlocks[indexPath.row-3].blockName)", className: inputName!)
-                        let db = Firestore.firestore()
-                        let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                        currDoc.setData(LoginVC.blocks)
                     }
                     else {
                         let userDefaults = UserDefaults.standard
@@ -443,11 +396,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             }
             let alertController = UIAlertController(title: "Lunch", message: "Please enter your lunch preference for \(name.count == 1 ? name.capitalized + " Block" : name.capitalized). You may need to restart the app to save your changes.", preferredStyle: .actionSheet)
             let lunch1 = UIAlertAction(title: "1st Lunch", style: .default) { _ in
-                LoginVC.blocks["l-\(name)"] = "1st Lunch"
+                LoginVC.updateField("l-\(name)", to: "1st Lunch")
                 self.lunchBlocks[indexPath.row] = settingsBlock(blockName: "\(self.lunchBlocks[indexPath.row].blockName)", className: "1st Lunch")
-                let db = Firestore.firestore()
-                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                currDoc.setData(LoginVC.blocks)
                 //                CalendarVC.isLunch1 = true
                 if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
                     UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
@@ -456,11 +406,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 tableView.reloadRows(at: [indexPath], with: .fade)
             }
             let lunch2 = UIAlertAction(title: "2nd Lunch", style: .default) { _ in
-                LoginVC.blocks["l-\(name)"] = "2nd Lunch"
+                LoginVC.updateField("l-\(name)", to: "2nd Lunch")
                 self.lunchBlocks[indexPath.row] = settingsBlock(blockName: "\(self.lunchBlocks[indexPath.row].blockName)", className: "2nd Lunch")
-                let db = Firestore.firestore()
-                let currDoc = db.collection("users").document("\(LoginVC.blocks["uid"] ?? "")")
-                currDoc.setData(LoginVC.blocks)
                 if ((LoginVC.blocks["notifs"] ?? "") as! String) == "true" {
                     UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
                     self.setNotifications()

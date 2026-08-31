@@ -22,6 +22,14 @@ class LoginVC: AuthVC {
     static var appearance = ""
     static var busNumber = 16175930396
     static var blocks: [String: Any] = ["A":"","B":"","C":"","D":"","E":"","F":"","G":"","grade":"","l-monday":"2nd Lunch","l-tuesday":"2nd Lunch","l-wednesday":"2nd Lunch","l-thursday":"2nd Lunch","l-friday":"2nd Lunch","l-a":"","l-b":"","l-c":"","l-d":"","l-e":"","l-f":"","l-g":"","googlePhoto":"false","lockerNum":"","notifs":"true","room-advisory":"","uid":""]
+    /// Writes exactly the field that changed, not `blocks` in whole. HQ-631: every settings
+    /// edit used to mutate one key and `setData` the entire dictionary back, which replaces
+    /// the whole Firestore document - any field this client hasn't loaded, or that changed
+    /// elsewhere since, is silently dropped. A field-level write can't lose data it never touched.
+    static func updateField(_ key: String, to value: Any) {
+        blocks[key] = value
+        Firestore.firestore().collection("users").document("\(blocks["uid"] ?? "")").updateData([key: value])
+    }
     static var specialSchedules = [String: SpecialSchedule]()
     static var specialDays = [String: Day]()
     static var breaks = [Break]()
