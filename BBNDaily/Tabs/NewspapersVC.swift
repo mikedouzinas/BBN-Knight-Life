@@ -25,6 +25,10 @@ class PublicationVC: CustomLoader, WKNavigationDelegate {
     public var urlString = "https://vanguard.bbns.org/"
     override func viewDidLoad() {
         super.viewDidLoad()
+        // HQ-629: deliberate constant white, not a light/dark bug - this is the color
+        // shown for an instant before the web page itself loads and paints over it. The
+        // pages this loads don't respect the app's theme either way, so there's no
+        // adaptive value that would be more correct here.
         view.backgroundColor = UIColor.white
         webView.backgroundColor = UIColor.white
         view.addSubview(webView)

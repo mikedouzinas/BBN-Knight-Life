@@ -147,8 +147,13 @@ class MainViewController: UIViewController {
             }
         }, completion: completion)
     }
+    // HQ-629: this used to be a fixed .lightContent - correct over the dark half of
+    // backgroundCol, invisible white-on-near-white the moment light mode puts the near-white
+    // half behind it. .default resolves against the current trait collection instead of
+    // committing to one appearance, the same fix as the adaptive bar-item color a few lines
+    // above.
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+        return .default
     }
 }
 //MARK: Side Menu
