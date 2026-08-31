@@ -42,6 +42,22 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 100
     }
+    // HQ-116. `SchoolTask.index` is this task's position in the unfiltered
+    // LoginVC.blocks["tasks"] array (see sortTasks below), which is how a row in the
+    // filtered, sorted display list maps back to the raw array entry to remove.
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        guard editingStyle == .delete else { return }
+        let removedIndex = tasks[indexPath.row].index
+        var rawTasks = (LoginVC.blocks["tasks"] as? [[String: Any]]) ?? []
+        guard removedIndex >= 0, removedIndex < rawTasks.count else { return }
+        rawTasks.remove(at: removedIndex)
+        LoginVC.blocks["tasks"] = rawTasks
+        Firestore.firestore().collection("users").document("\(LoginVC.blocks["uid"] ?? "")").updateData(["tasks": rawTasks])
+        // Re-derive from the array just written rather than removing this one row by hand,
+        // so every other task's `index` (now shifted) is correct before the next delete.
+        sortTasks()
+        tableView.reloadData()
+    }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         selectedTask = tasks[indexPath.row]
         selectedIndex = indexPath.row
