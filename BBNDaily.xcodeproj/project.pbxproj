@@ -17,8 +17,6 @@
 		272BA654282D40E0009BA067 /* BuildFile in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2767E70129DF6C5C006DBE86 /* WelcomeVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2767E70029DF6C5C006DBE86 /* WelcomeVC.swift */; };
 		2767E70429DF845F006DBE86 /* SelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2767E70329DF845F006DBE86 /* SelectionView.swift */; };
-		278AFAF9288C1C2800E64F23 /* ThroughDateVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */; };
-		278AFAFB288C1F1400E64F23 /* ImageVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278AFAFA288C1F1400E64F23 /* ImageVC.swift */; };
 		2792D7C128B4562800DBA403 /* BusScheduleVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2792D7C028B4562800DBA403 /* BusScheduleVC.swift */; };
 		27AEED53288B32C600C6176C /* defaultVariables.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED52288B32C600C6176C /* defaultVariables.swift */; };
 		27AEED55288B32E400C6176C /* TextEditVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED54288B32E400C6176C /* TextEditVC.swift */; };
@@ -57,7 +55,6 @@
 		8704E97626EEA686001826F8 /* CalendarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97526EEA686001826F8 /* CalendarVC.swift */; };
 		8704E97826EEA6F2001826F8 /* NewspapersVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97726EEA6F2001826F8 /* NewspapersVC.swift */; };
 		8704E97A26EEA6FC001826F8 /* NewsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E97926EEA6FC001826F8 /* NewsVC.swift */; };
-		8738377727EA48DE00CABF47 /* SecretSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8738377627EA48DE00CABF47 /* SecretSchedule.swift */; };
 		87507FC726E6ADEB005DDFB4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FC626E6ADEB005DDFB4 /* AppDelegate.swift */; };
 		87507FC926E6ADEB005DDFB4 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FC826E6ADEB005DDFB4 /* SceneDelegate.swift */; };
 		87507FCE26E6ADEB005DDFB4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87507FCC26E6ADEB005DDFB4 /* Main.storyboard */; };
@@ -136,8 +133,6 @@
 		2709F92428CD73E10022B4D3 /* hearts.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = hearts.gif; sourceTree = "<group>"; };
 		2767E70029DF6C5C006DBE86 /* WelcomeVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeVC.swift; sourceTree = "<group>"; };
 		2767E70329DF845F006DBE86 /* SelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionView.swift; sourceTree = "<group>"; };
-		278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThroughDateVC.swift; sourceTree = "<group>"; };
-		278AFAFA288C1F1400E64F23 /* ImageVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVC.swift; sourceTree = "<group>"; };
 		2792D7C028B4562800DBA403 /* BusScheduleVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusScheduleVC.swift; sourceTree = "<group>"; };
 		27AEED52288B32C600C6176C /* defaultVariables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = defaultVariables.swift; sourceTree = "<group>"; };
 		27AEED54288B32E400C6176C /* TextEditVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextEditVC.swift; sourceTree = "<group>"; };
@@ -180,7 +175,6 @@
 		87078D2726F0DCC00061E9AF /* BBNDaily.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BBNDaily.entitlements; sourceTree = "<group>"; };
 		870CBB1227090AEC00363BF4 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		870CBB1427090AEC00363BF4 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		8738377627EA48DE00CABF47 /* SecretSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretSchedule.swift; sourceTree = "<group>"; };
 		87507FC326E6ADEB005DDFB4 /* BBNDaily.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BBNDaily.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		87507FC626E6ADEB005DDFB4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		87507FC826E6ADEB005DDFB4 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -307,15 +301,6 @@
 			path = SettingsDetail;
 			sourceTree = "<group>";
 		};
-		27AEED68288B34D500C6176C /* SecretScheduleDetail */ = {
-			isa = PBXGroup;
-			children = (
-				278AFAF8288C1C2800E64F23 /* ThroughDateVC.swift */,
-				278AFAFA288C1F1400E64F23 /* ImageVC.swift */,
-			);
-			path = SecretScheduleDetail;
-			sourceTree = "<group>";
-		};
 		27AEED7F288B373400C6176C /* Tasks */ = {
 			isa = PBXGroup;
 			children = (
@@ -415,9 +400,7 @@
 				8704E97126EEA617001826F8 /* Settings.swift */,
 				27AEED77288B360900C6176C /* AboutUsVC.swift */,
 				27AEED79288B363300C6176C /* CreditsVC.swift */,
-				8738377627EA48DE00CABF47 /* SecretSchedule.swift */,
 				27AEED67288B34CC00C6176C /* SettingsDetail */,
-				27AEED68288B34D500C6176C /* SecretScheduleDetail */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -736,9 +719,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				278AFAF9288C1C2800E64F23 /* ThroughDateVC.swift in Sources */,
 				27B0DB81288B0DBD009C32B8 /* Structs.swift in Sources */,
-				278AFAFB288C1F1400E64F23 /* ImageVC.swift in Sources */,
 				27B0DB7F288B025D009C32B8 /* AuthVC.swift in Sources */,
 				8704E97026EEA5E9001826F8 /* Extensions.swift in Sources */,
 				27AEED74288B35B500C6176C /* TextFieldVC.swift in Sources */,
@@ -753,7 +734,6 @@
 				87507FC926E6ADEB005DDFB4 /* SceneDelegate.swift in Sources */,
 				27AEED6C288B352100C6176C /* ClassNameVC.swift in Sources */,
 				27AEED81288B374A00C6176C /* detailedWorkVC.swift in Sources */,
-				8738377727EA48DE00CABF47 /* SecretSchedule.swift in Sources */,
 				27AEED72288B359100C6176C /* DaySelectVC.swift in Sources */,
 				8704E97626EEA686001826F8 /* CalendarVC.swift in Sources */,
 				27AEED53288B32C600C6176C /* defaultVariables.swift in Sources */,

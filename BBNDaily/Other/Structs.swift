@@ -106,11 +106,6 @@ struct ClassModel {
     var Block: String
 }
 
-struct customBlock {
-    var isFirstLunch: Bool
-    var fullBlock: block
-}
-
 struct block {
     var name: String
     var startTime: String
@@ -153,15 +148,6 @@ struct CustomWeekday {
     var hasImage: Bool
 }
 
-struct SpecialSchedule {
-    var specialSchedules: [block]
-    var specialSchedulesL1: [block]
-    var reason: String?
-    var date: String?
-    var imageUrl: String?
-    var image: UIImage?
-}
-
 struct SideMenuModel {
     var icon: UIImage
     var title: String
@@ -194,11 +180,6 @@ struct SideMenuEntry {
         SideMenuEntry(title: "POV", iconName: "POVLogo", textImageName: "povTextLogo", urlString: "https://pov.bbns.org/", order: 5, visible: true),
         SideMenuEntry(title: "Merch Store", iconName: "bag.circle.fill", textImageName: nil, urlString: "https://www.amerasport.com/Buckingham-Browne-Nichols-BBN-BBN/departments/1029/", order: 6, visible: true),
     ]
-}
-
-struct Weekday {
-    var L1: [block]
-    var L2: [block]
 }
 
 // MARK: New schedule v2 format

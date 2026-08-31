@@ -562,45 +562,6 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         } else {
             ScheduleCalendar.restore()
         }
-
-        /*
-        for x in LoginVC.specialSchedules { // loops through special schedule dates to see if we are in that period
-            if x.key.isInThroughDate(date: date) {
-                currentDay = [block]()
-                ScheduleCalendar.restore()
-                ScheduleCalendar.setEmptyMessage("No Class - \(x.value.reason ?? "Break")")
-                completion(.success(currentDay))
-                return
-            }
-            if x.key.lowercased() == stringDate.lowercased() {
-                if !((LoginVC.blocks["l-\(weekDay.lowercased())"] as? String) ?? "").lowercased().contains("2") {
-                    self.currentDay = x.value.specialSchedulesL1 
-                }
-                else {
-                    self.currentDay = x.value.specialSchedules 
-                }
-                if self.currentDay.isEmpty {
-                    if let urlstring = x.value.imageUrl, urlstring != "", urlstring != "N/A" {
-                        ScheduleCalendar.isHidden = true
-                        webView.isHidden = false
-//                        scheduleImageView.image = UIImage(named: "mustachejohn")
-                        if let url = URL(string: urlstring) {
-                            webView.load(URLRequest(url: url))
-                            if shouldEdit {
-                                currentWeekday.hasImage = true
-                            }
-                        }
-                    }
-                    else {
-                        ScheduleCalendar.restore()
-                        ScheduleCalendar.setEmptyMessage("No Class - \(x.value.reason ?? "No Reason")")
-                    }
-                }
-                completion(.success(self.currentDay))
-                return
-            }
-        }
-        */
         completion(.success(self.currentDay))
         return
     }

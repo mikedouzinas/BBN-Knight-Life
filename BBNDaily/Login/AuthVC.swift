@@ -279,7 +279,7 @@ class AuthVC: CustomLoader {
             window?.overrideUserInterfaceStyle = .light
         }
     }
-    func updateSpecialSchedules(completion: @escaping (Swift.Result<[String: SpecialSchedule], Error>) -> Void) {
+    func updateSpecialSchedules(completion: @escaping (Swift.Result<Void, Error>) -> Void) {
         let db = Firestore.firestore()
         // Every read here is independent, so they run together and the completion waits on all
         // of them. Before this the callback was attached to whichever read happened to be
@@ -389,7 +389,7 @@ class AuthVC: CustomLoader {
         // run before `specialDays`, `breaks` or `term` had arrived, and worked only because
         // that scan was the slowest.
         group.notify(queue: .main) {
-            completion(.success([:]))
+            completion(.success(()))
         }
     }
     func setProfileImage(useGoogle: Bool, width: UInt, completion: @escaping (Swift.Result<UIImageView, Error>) -> Void) {
@@ -464,30 +464,6 @@ class AuthVC: CustomLoader {
                 print("failed to find \(error)")
             } else {
                 if ((snapshot?.data()?["shouldUseOnlineClasses"] as? Bool) ?? false) {
-                    db.collection("default-schedules").getDocuments(completion: {(snap, err) in
-                        if err != nil {
-                            ProgressHUD.failed("Failed to find 'default schedules'")
-                        }
-                        else {
-                            for document in (snap?.documents)! {
-                                //                                document.documentID
-                                let arrayl1 = document.data()["L1"] as? [[String: String]] ?? [[String: String]]()
-                                var blocksl1 = [block]()
-                                for x in arrayl1 {
-                                    blocksl1.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
-                                }
-                                
-                                let array = document.data()["L2"] as? [[String: String]] ?? [[String: String]]()
-                                var blocks = [block]()
-                                for x in array {
-                                    blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
-                                }
-                                print("changed!")
-                                defaultSchedules["\(document.documentID)"]?.L1 = blocksl1
-                                defaultSchedules["\(document.documentID)"]?.L2 = blocks
-                            }
-                        }
-                    })
                     db.collection("schedules").document("regular").getDocument(completion: {(snap, err) in
                         if (err != nil) {
                             ProgressHUD.failed("Failed to find regular schedules")
