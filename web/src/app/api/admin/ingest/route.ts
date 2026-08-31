@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       days: result.days.map((day) => ({
         ...day,
         display: displayDate(day.date),
-        warnings: dayWarnings(day.day),
+        warnings: dayWarnings(day.date, day.day),
       })),
       // Spans carry their own day count so the review card can say "16 days" without
       // recomputing a date difference in the browser.
