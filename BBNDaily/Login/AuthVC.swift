@@ -128,6 +128,132 @@ class AuthVC: CustomLoader {
         }
     }
 
+    // HQ-620: prompt a returning student when their classes were set for an earlier
+    // school year than the one that's actually running now.
+    //
+    // "Which year is it" is deliberately not computed here. `schedules/term` already
+    // carries the current year's start/end date, kept current by whoever runs the admin
+    // schedule tool, because the rest of the app already depends on it being current
+    // (it's how the app decides whether a weekday is inside the school year at all). This
+    // reads that same value fresh rather than trusting `LoginVC.term`, which is loaded by
+    // a separate, unrelated call in setLoginInfo() with no guaranteed ordering against this.
+    //
+    // Never blocks getting into the app: called after the student is already in the tab
+    // bar, and any read failure here just means no prompt this launch - same as `LoginVC.term`
+    // itself, where a failed read leaves the rule not applied rather than the app broken.
+    func checkNewYearSetup() {
+        let hasAnyClass = ["A", "B", "C", "D", "E", "F", "G"].contains {
+            ((LoginVC.blocks[$0] as? String) ?? "").contains("~")
+        }
+        guard hasAnyClass else { return } // nothing set yet to roll over - not this ticket's case
+
+        Firestore.firestore().collection("schedules").document("term").getDocument { snapshot, error in
+            guard error == nil, let start = snapshot?.data()?["start"] as? String else { return }
+            let recordedFor = LoginVC.blocks["classesSetForTermStart"] as? String
+            guard recordedFor != start else { return } // already set up for the current term
+
+            // `recordedFor` is nil for EVERY student the first time this ships, because
+            // nothing has ever written the field. Prompting on nil alone would ask the whole
+            // school to wipe their classes on their next launch, whenever that happened to
+            // be, with no new school year involved at all.
+            //
+            // So a missing record is not evidence of a rollover, and the term's own start
+            // date is. Prompt only when the year genuinely just began; otherwise record the
+            // current term silently, which costs this one launch and makes every following
+            // year work off a real recorded value rather than an absence.
+            guard Self.termStartedRecently(start) else {
+                Self.recordTermSetup(start)
+                return
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.presentNewYearPrompt(termStart: start)
+            }
+        }
+    }
+
+    /// Whether a `yyyy/M/d` term start is inside the window where "a new year just started"
+    /// is actually true. Unparseable reads FALSE: an unreadable date is a broken read, and a
+    /// broken read must never turn into a prompt asking a student to delete their schedule.
+    private static func termStartedRecently(_ start: String, within days: Int = 30) -> Bool {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/M/d"
+        guard let startDate = formatter.date(from: start) else { return false }
+        let calendar = Calendar.current
+        guard let offset = calendar.dateComponents([.day],
+                                                   from: calendar.startOfDay(for: Date()),
+                                                   to: calendar.startOfDay(for: startDate)).day else { return false }
+        // The window is symmetric, and the "before" half is the one that matters.
+        //
+        // A one-sided "started within the last 30 days" test looks right and is wrong in
+        // practice, because the term document is published BEFORE the year begins. Production
+        // on 2026-09-01 read start = 2026/9/8: seven days out. A one-sided test treats that as
+        // "no rollover", records 2026/9/8 as the term this student is already set up for, and
+        // then on 9/8 recordedFor == start, so the prompt never fires at all. The student
+        // walks into the new year holding last year's schedule, which is the exact case this
+        // whole ticket exists to catch.
+        //
+        // Anyone opening the app in the run-up to a new year is precisely who should be asked.
+        return abs(offset) <= days
+    }
+
+    /// Records the term this student's classes are considered set up for, without prompting.
+    private static func recordTermSetup(_ termStart: String) {
+        LoginVC.blocks["classesSetForTermStart"] = termStart
+        guard let uid = LoginVC.blocks["uid"] as? String, !uid.isEmpty else { return }
+        Firestore.firestore().collection("users").document(uid)
+            .setData(["classesSetForTermStart": termStart], merge: true)
+    }
+
+    private func topPresenter() -> UIViewController? {
+        var top = UIApplication.shared.keyWindow?.rootViewController
+        while let presented = top?.presentedViewController {
+            top = presented
+        }
+        return top
+    }
+
+    private func presentNewYearPrompt(termStart: String) {
+        guard let presenter = topPresenter() else { return }
+        let alert = UIAlertController(
+            title: "New School Year",
+            message: "Looks like a new year started. Want to clear last year's classes and set up your new ones?",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Not Now", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Set Up Now", style: .default, handler: { [weak self] _ in
+            self?.startNewYearSetup(termStart: termStart)
+        }))
+        presenter.present(alert, animated: true)
+    }
+
+    private func startNewYearSetup(termStart: String) {
+        guard let presenter = topPresenter() else { return }
+        presenter.showLoader(text: "Clearing last year's classes...")
+        resetClasses { [weak self] result in
+            guard let self = self else { return }
+            self.topPresenter()?.hideLoader(completion: {
+                switch result {
+                case .success:
+                    // Recorded only on success, so a reset that fails partway (already left
+                    // in a consistent state by resetClasses' own per-block ordering) gets
+                    // asked again next launch rather than silently marked done.
+                    // One writer for this field, so the prompted path and the silent path
+                    // cannot disagree about how it is stored. setData(merge:) inside, because
+                    // updateData fails outright on a record that does not exist yet.
+                    Self.recordTermSetup(termStart)
+                    // HQ-656 (read classes from a photo of your schedule) plugs in exactly
+                    // here once it exists, replacing this message with that flow. Until then,
+                    // the existing manual picker in Settings is the real setup path.
+                    ProgressHUD.colorAnimation = .green
+                    ProgressHUD.succeed("Classes cleared - head to Settings to set your new ones")
+                case .failure:
+                    ProgressHUD.colorAnimation = .red
+                    ProgressHUD.failed("Didn't finish - you can also clear classes any time from Settings")
+                }
+            })
+        }
+    }
+
     func setAppearance(input: String?) {
         let userDefaults = UserDefaults.standard
         var preference = ""
@@ -465,9 +591,11 @@ class AuthVC: CustomLoader {
                         guard let Login = (self as? LoginVC) else {
                             //                                        print("not LoginVC")
                             self.performSegue(withIdentifier: "SignedIn", sender: nil)
+                            self.checkNewYearSetup()
                             return
                         }
                         Login.callTabBar()
+                        self.checkNewYearSetup()
                     })
                 }
                 return
