@@ -60,7 +60,18 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // homework - type it, tap out, done. Not a separate detail screen.
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        guard entries.indices.contains(indexPath.row), entries[indexPath.row].holdsHomework else { return }
         presentHomeworkEntry(at: indexPath.row)
+    }
+
+    // A keyword match on the subject, not a real classification - there is no dedicated
+    // "does this subject assign homework" flag anywhere in the class data today. Good
+    // enough for the one case asked for (art classes); worth becoming a real field on the
+    // class document if the list of no-homework subjects grows past this.
+    private static let noHomeworkKeywords = ["art", "ceramics", "painting", "drawing", "sculpture", "photography", "studio"]
+    private static func isArtClass(_ subject: String) -> Bool {
+        let lowered = subject.lowercased()
+        return noHomeworkKeywords.contains { lowered.contains($0) }
     }
 
     private var entries = [HomeworkEntry]()
@@ -111,6 +122,12 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             return
         }
 
+        // "Tomorrow" when the resolved day really is tomorrow (the common case); the
+        // weekday name instead when a weekend or a break pushed it further out, so the
+        // title never says "Tomorrow" about a day that isn't.
+        let isTomorrow = calendar.isDate(resolved.date, inSameDayAs: calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date())
+        navigationItem.title = isTomorrow ? "Tomorrow" : resolved.weekdayName.capitalized
+
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/M/d" // same key format resolveDay itself uses
         resolvedDateKey = dateFormatter.string(from: resolved.date)
@@ -123,6 +140,14 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             let assignment = (LoginVC.blocks[letter] as? String) ?? ""
             // Only this student's own classes - not every block the school runs that day.
             guard assignment.contains("~") else { continue }
+            // Free that day: this student has a class in this letter block, but
+            // classMeetingDays says it doesn't meet on this specific weekday. Nothing to
+            // do homework for, so no row - not a row that opens an empty prompt.
+            if resolved.weekdayIndex >= 0 && resolved.weekdayIndex <= 4,
+               let meetsThisWeekday = LoginVC.classMeetingDays[letter.lowercased()]?[resolved.weekdayIndex],
+               !meetsThisWeekday {
+                continue
+            }
             let subject = assignment.getValues()[0]
             let existing = stored.first { ($0["block"] as? String) == letter && ($0["date"] as? String) == resolvedDateKey }
             built.append(HomeworkEntry(
@@ -130,7 +155,8 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
                 subject: subject,
                 date: resolvedDateKey,
                 text: (existing?["text"] as? String) ?? "",
-                completed: (existing?["completed"] as? Bool) ?? false
+                completed: (existing?["completed"] as? Bool) ?? false,
+                holdsHomework: !Self.isArtClass(subject)
             ))
         }
 

@@ -80,6 +80,10 @@ struct HomeworkEntry {
     var date: String
     var text: String
     var completed: Bool
+    // False for a class that doesn't assign homework (art, so far) - the row and its
+    // checkbox still show, but tapping it does nothing instead of opening a prompt for
+    // homework that was never going to exist.
+    var holdsHomework: Bool = true
 }
 
 struct settingsBlock {

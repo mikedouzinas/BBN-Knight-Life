@@ -147,7 +147,13 @@ class TaskCell: UITableViewCell {
         isComplete = entry.completed
         TitleLabel.text = entry.subject
         DateLabel.text = "Block \(entry.block)"
-        DescriptionLabel.text = entry.text.isEmpty ? "Tap to add homework" : entry.text
+        if !entry.holdsHomework {
+            // Never "Tap to add homework" here - tapping this row does nothing, since
+            // WorkVC only opens the entry prompt when holdsHomework is true.
+            DescriptionLabel.text = "No homework for this class"
+        } else {
+            DescriptionLabel.text = entry.text.isEmpty ? "Tap to add homework" : entry.text
+        }
         checkBox.setImage(UIImage(named: entry.completed ? "complete" : "incomplete"), for: .normal)
         contentView.alpha = entry.completed ? 0.4 : 1.0
     }
