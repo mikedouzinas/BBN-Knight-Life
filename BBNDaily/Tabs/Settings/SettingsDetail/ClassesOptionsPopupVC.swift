@@ -81,14 +81,12 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
             } else {
                 print("Document does not exist, no need to remove it! document \(doc)")
             }
-            LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = realDef
             guard let uid: String = (LoginVC.blocks["uid"] as? String), uid != "" else {
                 ProgressHUD.colorAnimation = .red
                 ProgressHUD.failed("Please Sign Out To Fix Your Account")
                 return
             }
-            let currDoc = db.collection("users").document("\(uid)")
-            currDoc.setData(LoginVC.blocks)
+            LoginVC.updateField("\(ClassesOptionsPopupVC.currentBlock)", to: realDef)
             let memberDoc = memberDocs.document("\(realDef)")
             memberDoc.getDocument(completion: { (document, error) in
                 if let document = document, document.exists {
