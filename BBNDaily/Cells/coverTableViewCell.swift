@@ -49,6 +49,24 @@ class coverTableViewCell: calendarTableViewCell {
         RightLabel.font = .systemFont(ofSize: 13, weight: .semibold)
         RightLabel.textColor = UIColor(named: "inverse")
         RightLabel.textAlignment = .left
+
+        // Long course names have to shrink and then truncate, never wrap.
+        //
+        // These two labels are stacked in a fixed-height row: RightLabel sits 10pt above
+        // centre and BottomRightLabel 10pt below it. Neither had a line policy, so a name
+        // longer than the column spilled onto a second line and ran straight through the row
+        // underneath - which is why "210" (a room number, the tail of BottomRightLabel's
+        // "name | room") appeared to be its own list item in B block.
+        //
+        // Not a rare case: real BB&N course names reach 57 characters, and five of them are
+        // over 44. Shrink first so most names stay fully readable, then tail-truncate, so the
+        // failure is an ellipsis rather than two rows of overlapping text.
+        for label in [RightLabel, BottomRightLabel] {
+            label.numberOfLines = 1
+            label.lineBreakMode = .byTruncatingTail
+            label.adjustsFontSizeToFitWidth = true
+            label.minimumScaleFactor = 0.75
+        }
     }
     required init?(coder: NSCoder) {
         fatalError()

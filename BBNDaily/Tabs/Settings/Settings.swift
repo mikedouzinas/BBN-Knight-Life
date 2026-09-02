@@ -569,10 +569,12 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             //            settingsBlock(blockName: "E Block", className: "\(LoginVC.blocks["l-e"] as? String ?? "")"),
         ]
         other = [
-            settingsBlock(blockName: "Share Your Classes", className: ""),
-            settingsBlock(blockName: "Add Schedule to Google Calendar", className: ""),
-            settingsBlock(blockName: "Add Schedule to Apple Calendar", className: ""),
-            settingsBlock(blockName: "Clear My Classes", className: "")
+            // Every row here DOES something rather than showing a value, so each is marked
+            // isAction and its right-hand label stays empty. See settingsBlock in Structs.
+            settingsBlock(blockName: "Share Your Classes", className: "", isAction: true),
+            settingsBlock(blockName: "Add Schedule to Google Calendar", className: "", isAction: true),
+            settingsBlock(blockName: "Add Schedule to Apple Calendar", className: "", isAction: true),
+            settingsBlock(blockName: "Clear My Classes", className: "", isAction: true)
         ]
         tableView = UITableView(frame: .zero, style: .grouped)
         view.addSubview(tableView)

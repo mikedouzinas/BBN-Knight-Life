@@ -16,7 +16,16 @@ import UIKit
 // anyone actually picked on purpose (className/room, 25), not an arbitrary small
 // number nobody chose.
 enum FieldLimits {
-    static let className = 25
+    // 60, measured against production rather than guessed. The longest course name actually
+    // in the classes collection is 57 characters ("English 12 Shakespearean Power,
+    // Shakespearean Hierarchies"), and four more are above 44. At the previous limit of 25 a
+    // student could not type the real name of their own class: they would truncate it,
+    // producing a near-duplicate of a course that already exists under its full name, which
+    // is the exact data mess this collection is already full of.
+    //
+    // Checked 2026-09-01 over all 378 class documents. If BB&N adds a longer course name than
+    // this, that is a data question, not a UI one - raise it here and nowhere else.
+    static let className = 60
     static let teacherName = 50
     static let roomNumber = 25
     static let homeworkTitle = 60
@@ -64,6 +73,16 @@ struct SchoolTask {
 struct settingsBlock {
     let blockName: String
     let className: String
+    /// True for a row that DOES something when tapped rather than showing a value:
+    /// "Share Your Classes", "Clear My Classes", the calendar exports. Such a row has no
+    /// value, so its right-hand label stays empty instead of reading "Not Set".
+    ///
+    /// A flag, not a name match. The cell used to decide this by looking for "share",
+    /// "apple" or "google" in the title, so every action row added afterwards inherited
+    /// "Not Set" — which is what "Clear My Classes" showed on the device, and what
+    /// "Scan Your Schedule" would have shown next. Defaults to false, so the 38 existing
+    /// call sites are unchanged.
+    var isAction: Bool = false
 }
 
 struct ProfileCell {

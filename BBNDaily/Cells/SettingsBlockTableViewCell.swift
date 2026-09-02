@@ -65,13 +65,11 @@ class SettingsBlockTableViewCell: UITableViewCell {
         }
         else {
             if viewModel.blockName.count > 1 {
-                // sets the right label text to empty if it is a share, google, or apple function.
-                if viewModel.blockName.lowercased().contains("share") || viewModel.blockName.lowercased().contains("apple") || viewModel.blockName.lowercased().contains("google") {
-                    DataLabel.text = ""
-                }
-                else {
-                    DataLabel.text = "Not Set"
-                }
+                // An action row has nothing to display on the right. This reads the row's own
+                // isAction flag rather than sniffing its title for "share"/"apple"/"google",
+                // which is why "Clear My Classes" rendered as "Not Set": it was an action row
+                // whose name nobody had added to that list.
+                DataLabel.text = viewModel.isAction ? "" : "Not Set"
             }
             else if viewModel.blockName.lowercased().contains("lunch") {
                 DataLabel.text = "2nd Lunch"
