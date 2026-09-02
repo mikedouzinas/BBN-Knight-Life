@@ -126,7 +126,7 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         // weekday name instead when a weekend or a break pushed it further out, so the
         // title never says "Tomorrow" about a day that isn't.
         let isTomorrow = calendar.isDate(resolved.date, inSameDayAs: calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date())
-        navigationItem.title = isTomorrow ? "Tomorrow" : resolved.weekdayName.capitalized
+        navigationItem.title = isTomorrow ? "Tomorrow's Classes" : "\(resolved.weekdayName.capitalized)'s Classes"
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/M/d" // same key format resolveDay itself uses
