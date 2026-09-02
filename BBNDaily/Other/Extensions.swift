@@ -649,16 +649,25 @@ extension UIViewController {
         self.present(alert, animated: true, completion: nil)
     }
     func showLoader(text: String) {
-        let alert = UIAlertController(title: nil, message: "\(text)", preferredStyle: .alert)
-        
-        let loadingIndicator = UIActivityIndicatorView(frame: CGRect(x: 10, y: 5, width: 50, height: 50))
+        // The leading newline reserves the row the spinner occupies. Without it the spinner
+        // is drawn on top of the message text.
+        let alert = UIAlertController(title: nil, message: "\n\(text)", preferredStyle: .alert)
+
+        let loadingIndicator = UIActivityIndicatorView(style: .medium)
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
         loadingIndicator.hidesWhenStopped = true
-        loadingIndicator.style = UIActivityIndicatorView.Style.medium
-        loadingIndicator.startAnimating();
-        
+        loadingIndicator.startAnimating()
+
         alert.view.addSubview(loadingIndicator)
-        present(alert, animated: true, completion: {
-        })
+        // Constrained rather than a hardcoded frame. It was CGRect(x: 10, y: 5, 50x50), which
+        // pins the spinner near the alert's top-LEFT while the message under it is centred:
+        // visibly off, and off by a different amount at every message length and Dynamic Type
+        // size, because the alert sizes itself to its content.
+        NSLayoutConstraint.activate([
+            loadingIndicator.centerXAnchor.constraint(equalTo: alert.view.centerXAnchor),
+            loadingIndicator.topAnchor.constraint(equalTo: alert.view.topAnchor, constant: 20),
+        ])
+        present(alert, animated: true)
     }
     func showConfirmation(title: String, message: String) {
         

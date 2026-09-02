@@ -102,14 +102,17 @@ class AddClassVC: UIViewController, UITextFieldDelegate {
         return row
     }
 
-    // One screen, three fields, three different length limits - TextFieldVC's single
-    // maxLength only fits one field per screen, so this implements the same idea by hand.
+    // One screen, three fields, three limits - TextFieldVC's single maxLength only fits one
+    // field per screen, so the same idea is applied by hand here. The NUMBERS still come from
+    // FieldLimits, which is the whole point of HQ-659: these were typed in as literals (25,
+    // 50, 25), so raising className to fit a real 57-character course name would have moved
+    // every other screen and silently left this one behind.
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let limit: Int
         switch textField {
-        case subjectField: limit = 25
-        case teacherField: limit = 50
-        default: limit = 25
+        case subjectField: limit = FieldLimits.className
+        case teacherField: limit = FieldLimits.teacherName
+        default: limit = FieldLimits.roomNumber
         }
         let newString = ((textField.text ?? "") as NSString).replacingCharacters(in: range, with: string)
         return newString.count <= limit
