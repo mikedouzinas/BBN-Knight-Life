@@ -1040,27 +1040,57 @@ extension UIViewController {
 
         return nextWeekday
     }
+    // HQ-639. Local, per-block reminders stay as the offline fallback: a push (HQ-112) tells
+    // a closed app that the schedule changed, but only a local notification can remind someone
+    // mid-day about a block that hasn't changed. Push covers "the schedule is different than
+    // you think"; this covers "it's almost time for the thing you already knew about."
+    //
+    // The old version walked a fixed 14 days and broke mid-day once 64 requests were used,
+    // which meant a busy stretch silently ate the budget: whichever day happened to fill it
+    // got every block, and every day after got nothing - not because it mattered less, but
+    // because of where it fell in the loop. A day could also end up HALF scheduled, missing
+    // whichever blocks came after the cap, which is its own kind of wrong: a student reminded
+    // for first block and silently not for the rest reads as "nothing else today," not as
+    // "the count ran out."
+    //
+    // This walks the same way but stops BEFORE a day that would go over budget, so the window
+    // is whatever the schedule can fully afford rather than a guess. Every day that gets
+    // notifications gets all of them.
     func setNotifications() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         let calendar = Calendar.current
-        let dateFormatter = DateFormatter()
-        dateFormatter.timeZone = .current
-        dateFormatter.dateFormat = "MM-dd-yyyy hh:mm a Z"
         LoginVC.upcomingDays = [ResolvedDay]()
-        var z = 0
+        var scheduled = 0
+        var budgetFull = false
         let notifsOn = ((LoginVC.blocks["notifs"] as? String) ?? "") == "true"
-        for i in 0...13 {
+        let maxLookaheadDays = 14
+        let requestBudget = 64
+        for i in 0..<maxLookaheadDays {
             let tempDate = calendar.date(byAdding: .day, value: i, to: Date())!
             // resolveDay is the same call the calendar makes, so a notification can no longer
             // describe a different day from the one on screen.
             let day = resolveDay(date: tempDate)
             LoginVC.upcomingDays.append(day)
-            guard notifsOn, day.hasClasses else { continue }
-            for x in day.blocks {
-                if z >= 64 { break }
-                addNotif(x: x, weekDay: day.weekdayName, date: day.date)
-                z += 1
+            guard notifsOn, day.hasClasses, !budgetFull else { continue }
+            // `continue`, never `break`. This loop has a second job: every iteration appends
+            // to LoginVC.upcomingDays, which CalendarVC walks to find "Next Day of Classes",
+            // and setNotifications is the only thing that ever writes it. Leaving the loop
+            // early to stop scheduling would also stop filling that list, so a student with
+            // notifications ON would get a shorter calendar lookahead than one with them
+            // off - a notification budget silently truncating an unrelated feature.
+            //
+            // budgetFull latches rather than being re-tested per day, so the window stays
+            // contiguous. Without the latch a later, lighter day could slip under the cap
+            // after a heavier one was skipped, which is exactly the "days silently missing
+            // from the middle" shape this ticket set out to remove.
+            guard scheduled + day.blocks.count <= requestBudget else {
+                budgetFull = true
+                continue
             }
+            for x in day.blocks {
+                addNotif(x: x, weekDay: day.weekdayName, date: day.date)
+            }
+            scheduled += day.blocks.count
         }
     }
     func getBlockOnDate(date: Date, time: String) -> Date {
