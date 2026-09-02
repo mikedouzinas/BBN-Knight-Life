@@ -102,3 +102,23 @@ export class FirestoreRangeStore implements RangeStore {
     await batch.commit();
   }
 }
+
+/**
+ * `schedules/term`: the school year's start and end. Field names (`start`/`end`, not
+ * `startDate`/`endDate`) match what `AuthVC.swift` actually reads - this store is read-only,
+ * so there is no publish path here to keep that in sync with; it just has to match reality.
+ */
+export const TERM_DOC = 'schedules/term';
+
+export interface TermStore {
+  readTerm(): Promise<{ end: string } | null>;
+}
+
+export class FirestoreTermStore implements TermStore {
+  constructor(private readonly db: Firestore) {}
+
+  async readTerm(): Promise<{ end: string } | null> {
+    const data = (await this.db.doc(TERM_DOC).get()).data();
+    return typeof data?.end === 'string' ? { end: data.end } : null;
+  }
+}
