@@ -41,6 +41,8 @@ class LunchMenuVC: CustomLoader, WKNavigationDelegate {
                     return
                 }
                 
+                // HQ-629: deliberate constant white, same reasoning as PublicationVC and
+                // LatestNewsVC - a placeholder before the menu page itself paints over it.
                 self.webView.backgroundColor = UIColor.white
                 self.view.addSubview(self.webView)
                 self.webView.frame = self.view.bounds
