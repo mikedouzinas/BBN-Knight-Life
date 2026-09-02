@@ -122,8 +122,29 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         scanImage(image)
     }
 
+    /// The longest edge the photo is resized to before encoding.
+    ///
+    /// A full-resolution iPhone photo is around 4000x3000. At quality 0.7 that is roughly
+    /// 3-5 MB, and base64 inflates it by a further third, so the request body lands near or
+    /// past BOTH limits it has to clear: the route's own 6 MB cap on the encoded string, and
+    /// Vercel's 4.5 MB serverless request-body limit, which rejects before any of this code's
+    /// error handling is reached. The student would just see "check your connection".
+    ///
+    /// 2000px on the long edge keeps printed schedule text comfortably legible to the model
+    /// while putting the encoded body around 1 MB, well inside both.
+    private static let maxUploadEdge: CGFloat = 2000
+
+    private func downscaled(_ image: UIImage) -> UIImage {
+        let longest = max(image.size.width, image.size.height)
+        guard longest > Self.maxUploadEdge else { return image }
+        let scale = Self.maxUploadEdge / longest
+        let target = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: target)
+        return renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: target)) }
+    }
+
     private func scanImage(_ image: UIImage) {
-        guard let data = image.jpegData(compressionQuality: 0.7) else {
+        guard let data = downscaled(image).jpegData(compressionQuality: 0.7) else {
             ProgressHUD.colorAnimation = .red
             ProgressHUD.failed("Couldn't read that photo. Try another one.")
             return
@@ -277,24 +298,57 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
 
         let row = results[index]
-        let teacher = row.teacher.isEmpty ? "N/A" : row.teacher
-        let room = row.room.isEmpty ? "N/A" : row.room
-        let classKey = "\(row.subject)~\(teacher)~\(room)~\(row.block.uppercased())"
+        // A blank teacher or room stays BLANK, exactly as AddClassVC does. "N/A" is a display
+        // convention applied when a key is parsed (String.setNotAvailable), never stored.
+        // Writing it here produced `Subject~N/A~N/A~A`, while ClassesOptionsPopupVC strips
+        // "N/A" before looking a class up, so the document created and the document later
+        // selected were two different keys.
+        let classKey = "\(row.subject)~\(row.teacher)~\(row.room)~\(row.block.uppercased())"
 
         let db = Firestore.firestore()
         let classDoc = db.collection("classes").document(classKey)
-        classDoc.getDocument { [weak self] snapshot, _ in
+        classDoc.getDocument { [weak self] snapshot, error in
             guard let self = self else { return }
+            if let error = error {
+                self.abortSave(at: index, reason: error)
+                return
+            }
             var members = (snapshot?.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
             if !members.contains(where: { ($0["uid"] ?? "") == uid }) {
                 members.append(["name": LoginVC.fullName, "email": LoginVC.email, "uid": uid])
             }
-            classDoc.setData(["members": members, "block": row.block.uppercased()], merge: true, completion: { _ in
-                db.collection("users").document(uid).updateData([row.block.uppercased(): classKey], completion: { _ in
-                    LoginVC.blocks[row.block.uppercased()] = classKey
-                    self.saveNextClass(index: index + 1)
-                })
+            // Every write is checked. Both completions used to be `{ _ in }`, so a refused or
+            // failed write carried on to the next block and the screen still reported
+            // "Classes saved" - the one outcome a student must never be told wrongly, because
+            // they then stop and their schedule is silently not set.
+            classDoc.setData(["members": members, "block": row.block.uppercased()], merge: true, completion: { error in
+                if let error = error {
+                    self.abortSave(at: index, reason: error)
+                    return
+                }
+                db.collection("users").document(uid)
+                    .setData([row.block.uppercased(): classKey], merge: true, completion: { error in
+                        if let error = error {
+                            self.abortSave(at: index, reason: error)
+                            return
+                        }
+                        LoginVC.blocks[row.block.uppercased()] = classKey
+                        self.saveNextClass(index: index + 1)
+                    })
             })
         }
+    }
+
+    /// Stops the chain and says how far it got. Blocks before `index` are already durably
+    /// saved (each one commits before the next begins), so naming the count is accurate and
+    /// re-running finishes the rest.
+    private func abortSave(at index: Int, reason: Error) {
+        print("schedule scan save failed at block \(index): \(reason)")
+        hideLoader(completion: { [weak self] in
+            ProgressHUD.colorAnimation = .red
+            ProgressHUD.failed(index == 0
+                ? "Couldn't save your classes. Try again."
+                : "Saved \(index) of \(self?.results.count ?? 0) classes, then stopped. Try again to finish.")
+        })
     }
 }
