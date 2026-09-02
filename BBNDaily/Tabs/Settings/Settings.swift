@@ -109,6 +109,9 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             else if indexPath.row == 2 { // apple calendar add
                 imgName = "calendar.circle.fill"
             }
+            else if indexPath.row == 3 { // HQ-649: clear my classes
+                imgName = "trash"
+            }
             let imageview = UIImageView(image: UIImage(systemName: imgName)!)
             imageview.tintColor = UIColor(named: "inverse")
             cell.accessoryView = imageview
@@ -432,8 +435,10 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 }
             case 1: // google calendar
                 addItemToCalendar(pref: 0)
-            default: // apple calendar
+            case 2: // apple calendar
                 addItemToCalendar(pref: 1)
+            default: // HQ-649: clear my classes
+                confirmResetClasses()
             }
         }
     }
@@ -441,6 +446,43 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         self.setAppearance(input: input)
         self.preferenceBlocks[indexPath.row-3] = settingsBlock(blockName: "Appearance", className: "\(LoginVC.appearance)")
         tableView.reloadRows(at: [indexPath], with: .fade)
+    }
+
+    // HQ-649: confirm before wiping, and say what is about to be lost.
+    func confirmResetClasses() {
+        let alert = UIAlertController(
+            title: "Clear My Classes?",
+            message: "This removes all 7 of your blocks (A-G) and takes you off their class rosters. This can't be undone — you'll need to set your classes again from scratch.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Clear", style: .destructive, handler: { [weak self] _ in
+            self?.performResetClasses()
+        }))
+        present(alert, animated: true)
+    }
+
+    private func performResetClasses() {
+        showLoader(text: "Clearing your classes...")
+        resetClasses { [weak self] result in
+            guard let self = self else { return }
+            self.hideLoader(completion: {
+                switch result {
+                case .success:
+                    ProgressHUD.colorAnimation = .green
+                    ProgressHUD.succeed("Classes cleared")
+                    self.setBlocks()
+                    self.tableView.reloadSections(IndexSet(integer: 1), with: .fade)
+                case .failure:
+                    // Whatever got through before the failure is already durable (each block is
+                    // committed before moving to the next), so this is safe to just retry.
+                    ProgressHUD.colorAnimation = .red
+                    ProgressHUD.failed("Didn't finish — some classes may still be set. Try again.")
+                    self.setBlocks()
+                    self.tableView.reloadSections(IndexSet(integer: 1), with: .fade)
+                }
+            })
+        }
     }
     private var blocks = [settingsBlock]()
     private var preferenceBlocks = [settingsBlock]()
@@ -529,7 +571,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         other = [
             settingsBlock(blockName: "Share Your Classes", className: ""),
             settingsBlock(blockName: "Add Schedule to Google Calendar", className: ""),
-            settingsBlock(blockName: "Add Schedule to Apple Calendar", className: "")
+            settingsBlock(blockName: "Add Schedule to Apple Calendar", className: ""),
+            settingsBlock(blockName: "Clear My Classes", className: "")
         ]
         tableView = UITableView(frame: .zero, style: .grouped)
         view.addSubview(tableView)
