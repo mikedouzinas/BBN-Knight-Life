@@ -40,7 +40,7 @@ class HomeworkTitleVC: TextFieldVC {
     override func viewDidLoad() {
         super.viewDidLoad()
         hideKeyboardWhenTappedAbove()
-        maxLength = 60
+        maxLength = FieldLimits.homeworkTitle
         TextField.delegate = self
     }
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {

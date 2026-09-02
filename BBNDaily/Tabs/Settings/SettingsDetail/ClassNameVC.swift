@@ -49,7 +49,7 @@ class ClassNameVC: TextFieldVC {
     override func viewDidLoad() {
         super.viewDidLoad()
         hideKeyboardWhenTappedAbove()
-        maxLength = 25
+        maxLength = FieldLimits.className
         TextField.delegate = self
         TextField.text = ClassesOptionsPopupVC.newClass.Subject
     }

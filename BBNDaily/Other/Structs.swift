@@ -8,6 +8,40 @@
 import Foundation
 import UIKit
 
+// HQ-659: one constant per text field, in one file, instead of a magic number typed
+// into each screen's viewDidLoad. The old default (TextFieldVC.maxLength = 10) was
+// never a real decision - a screen that forgot to set its own limit silently got a
+// ten-character field, and ten characters looks like a working limit rather than a
+// mistake. defaultLimit below is a deliberate choice: same as the smallest limit
+// anyone actually picked on purpose (className/room, 25), not an arbitrary small
+// number nobody chose.
+enum FieldLimits {
+    // 60, measured against production rather than guessed. The longest course name actually
+    // in the classes collection is 57 characters ("English 12 Shakespearean Power,
+    // Shakespearean Hierarchies"), and four more are above 44. At the previous limit of 25 a
+    // student could not type the real name of their own class: they would truncate it,
+    // producing a near-duplicate of a course that already exists under its full name, which
+    // is the exact data mess this collection is already full of.
+    //
+    // Checked 2026-09-01 over all 378 class documents. If BB&N adds a longer course name than
+    // this, that is a data question, not a UI one - raise it here and nowhere else.
+    static let className = 60
+    static let teacherName = 50
+    static let roomNumber = 25
+    static let homeworkTitle = 60
+    static let homeworkBody = 300
+    static let scheduleBlockName = 150
+    // TimesVC's own limit - it has no visible UITextField in the file (its UI is date
+    // pickers), so this looks vestigial rather than protecting real input. Kept as-is,
+    // not investigated further here - out of this ticket's actual scope, which is class
+    // names specifically.
+    static let secretScheduleTimes = 100
+    // Shared by the locker number and locker code fields.
+    static let lockerField = 10
+
+    static let defaultLimit = className
+}
+
 struct WatchClass {
     let Title: String
     let StartTime: String
@@ -39,6 +73,16 @@ struct SchoolTask {
 struct settingsBlock {
     let blockName: String
     let className: String
+    /// True for a row that DOES something when tapped rather than showing a value:
+    /// "Share Your Classes", "Clear My Classes", the calendar exports. Such a row has no
+    /// value, so its right-hand label stays empty instead of reading "Not Set".
+    ///
+    /// A flag, not a name match. The cell used to decide this by looking for "share",
+    /// "apple" or "google" in the title, so every action row added afterwards inherited
+    /// "Not Set" — which is what "Clear My Classes" showed on the device, and what
+    /// "Scan Your Schedule" would have shown next. Defaults to false, so the 38 existing
+    /// call sites are unchanged.
+    var isAction: Bool = false
 }
 
 struct ProfileCell {
@@ -122,6 +166,34 @@ struct SideMenuModel {
     var icon: UIImage
     var title: String
     var textImage: UIImage?
+}
+
+// HQ-661: a side menu publication entry as data, so adding one back or hiding one that
+// went quiet is a Firestore edit, not a code change and a release. "Schedule" is not one
+// of these - it's a fixed, always-first native destination, not something a student
+// maintainer edits.
+struct SideMenuEntry {
+    var title: String
+    var iconName: String       // an asset-catalog image name, checked first, or an SF Symbol name
+    var textImageName: String?
+    var urlString: String?
+    var order: Int
+    var visible: Bool
+
+    // Today's six publications, exactly as they were hardcoded before this ticket. Used
+    // both as the instant-display default (so the menu is never empty while Firestore is
+    // still loading) and as the fallback if the document doesn't exist yet, is empty, or
+    // fails to read - so a vault with nobody having touched the new collection yet, or a
+    // student maintainer typo, degrades to "looks exactly like it did before," never to a
+    // blank or broken menu.
+    static let defaultPublications: [SideMenuEntry] = [
+        SideMenuEntry(title: "The Vanguard", iconName: "vanguardLogo", textImageName: "vanguardTextLogo", urlString: "https://vanguard.bbns.org/", order: 1, visible: true),
+        SideMenuEntry(title: "The Spectator", iconName: "spectatorLogo", textImageName: "spectatorTextLogo", urlString: "https://www.spectatorbbn.org/", order: 2, visible: true),
+        SideMenuEntry(title: "The Benchwarmer", iconName: "benchwarmerLogo", textImageName: "benchwarmerTextLogo", urlString: "https://bbnbenchwarmer.org/", order: 3, visible: true),
+        SideMenuEntry(title: "CHASM", iconName: "bonjour", textImageName: nil, urlString: "https://bbnchasm.com/", order: 4, visible: true),
+        SideMenuEntry(title: "POV", iconName: "POVLogo", textImageName: "povTextLogo", urlString: "https://pov.bbns.org/", order: 5, visible: true),
+        SideMenuEntry(title: "Merch Store", iconName: "bag.circle.fill", textImageName: nil, urlString: "https://www.amerasport.com/Buckingham-Browne-Nichols-BBN-BBN/departments/1029/", order: 6, visible: true),
+    ]
 }
 
 struct Weekday {

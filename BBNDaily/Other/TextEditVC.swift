@@ -45,7 +45,8 @@ class TextEditVC: UIViewController, UITextViewDelegate {
         }
     }
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        let maxLength = 300
+        // Same field as HomeworkInfoVC's - this is just the other editing surface for it.
+        let maxLength = FieldLimits.homeworkBody
         let currentString = (textView.text ?? "") as NSString
         let newString = currentString.replacingCharacters(in: range, with: text)
         

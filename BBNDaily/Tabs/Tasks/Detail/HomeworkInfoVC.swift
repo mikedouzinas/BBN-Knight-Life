@@ -42,7 +42,7 @@ class HomeworkInfoVC: TextFieldVC {
     override func viewDidLoad() {
         super.viewDidLoad()
         hideKeyboardWhenTappedAbove()
-        maxLength = 300
+        maxLength = FieldLimits.homeworkBody
         TextField.delegate = self
     }
     @IBOutlet weak var TextField: UITextField!

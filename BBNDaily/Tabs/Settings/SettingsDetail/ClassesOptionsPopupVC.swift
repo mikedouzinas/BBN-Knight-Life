@@ -19,11 +19,17 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         return editClassTableViewCell.identifier
     }
     var classIsEditing = false
+    // HQ-658: adding a class is one screen now (AddClassVC), not the four-screen
+    // Name -> Teacher -> Room -> DaySelect chain. Editing an existing class still goes
+    // through that chain via editCell(viewModel:indexPath:) below - unchanged, since its
+    // rename-migration logic is already correct and out of this ticket's scoped-down
+    // version.
     @IBAction func addClass(_ sender: UIBarButtonItem) {
         ClassesOptionsPopupVC.newClass = ClassModel(Subject: "", Teacher: "", Room: "", Block: ClassesOptionsPopupVC.newClass.Block)
         classIsEditing = false
-        presentTextfield()
-        
+        let vc = AddClassVC()
+        vc.link = self
+        navigationController?.pushViewController(vc, animated: true)
     }
     func presentTextfield() {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
@@ -81,14 +87,12 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
             } else {
                 print("Document does not exist, no need to remove it! document \(doc)")
             }
-            LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] = realDef
             guard let uid: String = (LoginVC.blocks["uid"] as? String), uid != "" else {
                 ProgressHUD.colorAnimation = .red
                 ProgressHUD.failed("Please Sign Out To Fix Your Account")
                 return
             }
-            let currDoc = db.collection("users").document("\(uid)")
-            currDoc.setData(LoginVC.blocks)
+            LoginVC.updateField("\(ClassesOptionsPopupVC.currentBlock)", to: realDef)
             let memberDoc = memberDocs.document("\(realDef)")
             memberDoc.getDocument(completion: { (document, error) in
                 if let document = document, document.exists {

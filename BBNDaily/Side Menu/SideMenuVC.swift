@@ -160,36 +160,41 @@ class MainViewController: UIViewController {
 extension MainViewController: SideMenuViewControllerDelegate {
     func selectedCell(_ row: Int) {
         CalendarVC.hasPressedSideMenu = true
-        switch row {
-        case 0:
+        if row == 0 {
             self.showViewController(viewController: UINavigationController.self, storyboardId: "ScheduleNavID")
-        case 1:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "VanguardNavID")
-        case 2:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "SpectatorNavID")
-        case 3:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "BenchwarmerNavID")
-        case 4:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "CHASMNavID")
-        case 5:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "POVNavID")
-        case 6:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "MerchNavID")
-        default:
-            break
+        } else {
+            // HQ-661: publications are data now, not one switch case per storyboard scene.
+            // A row past the end of the current list - the fetch in SideMenuViewController
+            // returning a shorter list than what's on screen, or a stale tap - is simply
+            // ignored, never a crash.
+            let index = row - 1
+            if LoginVC.sideMenuPublications.indices.contains(index) {
+                let entry = LoginVC.sideMenuPublications[index]
+                let publicationVC = PublicationVC()
+                publicationVC.urlString = entry.urlString ?? ""
+                publicationVC.title = entry.title
+                self.showViewController(UINavigationController(rootViewController: publicationVC))
+            }
         }
         // Collapse side menu with animation
         DispatchQueue.main.async { self.sideMenuState(expanded: false) }
     }
     func showViewController<T: UIViewController>(viewController: T.Type, storyboardId: String) -> () {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: storyboardId) as! T
+        showViewController(vc)
+    }
+
+    // HQ-661: same body as the storyboard-ID version above, for a view controller that's
+    // already built rather than one instantiated from a scene - what a Firestore-driven
+    // publication entry needs, since it has no dedicated storyboard scene of its own.
+    func showViewController(_ vc: UIViewController) {
         // Remove the previous View
         for subview in view.subviews {
             if subview.tag == 99 {
                 subview.removeFromSuperview()
             }
         }
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let vc = storyboard.instantiateViewController(withIdentifier: storyboardId) as! T
         vc.view.tag = 99
         view.insertSubview(vc.view, at: self.revealSideMenuOnTop ? 0 : 1)
         addChild(vc)
@@ -336,15 +341,22 @@ class SideMenuViewController: AuthVC {
     var currentIndexPath = IndexPath(row: 0, section: 0)
     var delegate: SideMenuViewControllerDelegate?
     var defaultHighlightedCell: Int = 0
-    var menu: [SideMenuModel] = [
-        SideMenuModel(icon: UIImage(systemName: "calendar")!, title: "Schedule"),
-        SideMenuModel(icon: UIImage(named: "vanguardLogo")!, title: "The Vanguard", textImage: UIImage(named: "vanguardTextLogo")),
-        SideMenuModel(icon: UIImage(named: "spectatorLogo")!, title: "The Spectator", textImage: UIImage(named: "spectatorTextLogo")),
-        SideMenuModel(icon: UIImage(named: "benchwarmerLogo")!, title: "The Benchwarmer", textImage: UIImage(named: "benchwarmerTextLogo")),
-        SideMenuModel(icon: UIImage(systemName: "bonjour")!, title: "CHASM"),
-        SideMenuModel(icon: UIImage(named: "POVLogo")!, title: "POV", textImage: UIImage(named: "povTextLogo")),
-        SideMenuModel(icon: UIImage(systemName: "bag.circle.fill")!, title: "Merch Store")
-    ]
+    // HQ-661: "Schedule" is the one fixed native entry; everything after it is built from
+    // LoginVC.sideMenuPublications, which starts as the same six defaults and is replaced
+    // once the Firestore fetch in viewDidLoad completes. Computed, not stored, so a
+    // reloadData() after that fetch always reflects the current list without this class
+    // needing to know when the data changed underneath it.
+    var menu: [SideMenuModel] {
+        var items = [SideMenuModel(icon: UIImage(systemName: "calendar")!, title: "Schedule")]
+        items += LoginVC.sideMenuPublications.map { entry in
+            SideMenuModel(
+                icon: resolveSideMenuIcon(entry.iconName),
+                title: entry.title,
+                textImage: entry.textImageName.flatMap { UIImage(named: $0) }
+            )
+        }
+        return items
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         // TableView
@@ -397,6 +409,16 @@ class SideMenuViewController: AuthVC {
         self.sideMenuTableView.register(SideMenuCell.nib, forCellReuseIdentifier: SideMenuCell.identifier)
         // Update TableView with the data
         self.sideMenuTableView.reloadData()
+
+        // HQ-661: refresh from Firestore. The menu already shows the correct defaults
+        // above, so this is a silent update if the list has actually changed, not a
+        // loading state anyone waits on.
+        fetchSideMenuPublications { [weak self] entries in
+            LoginVC.sideMenuPublications = entries
+            DispatchQueue.main.async {
+                self?.sideMenuTableView.reloadData()
+            }
+        }
     }
     @objc func profilePressed(_ sender: Any) {
 //        SettingsVC.ProfileLink = self
@@ -468,18 +490,41 @@ extension SideMenuViewController: UITableViewDataSource {
         cell.iconImageView.tintColor = UIColor(named: "inverse")
         cell.textImageView.tintColor = UIColor(named: "inverse")
         let myCustomSelectionColorView = UIView()
-        if indexPath.row == 0 {
+        // The highlight is set on EVERY path, not only the selected one. Without the else a
+        // reused cell keeps whatever background it had last, and because this row is styled
+        // by index rather than by the cell's own state, a cell that had been row 0 stays
+        // highlighted when it comes back as row 1.
+        //
+        // That is visible on a normal launch: HQ-661 loads the publication list from
+        // Firestore, the read completes (or fails to the hardcoded defaults) after the table
+        // has already drawn once, and the reloadData that follows recycles cells. Both
+        // Schedule and The Vanguard then appear selected at once, and tapping elsewhere does
+        // not clear it because nothing ever resets a row this function did not touch.
+        //
+        // Keyed off currentIndexPath rather than a literal 0, so the highlight follows the
+        // actual selection instead of asserting that row 0 is always selected.
+        if indexPath == currentIndexPath {
             cell.background.backgroundColor = UIColor(named: "inverse-light")
-            cell.titleLabel.textColor = UIColor(named: "inverse")
-            cell.iconImageView.tintColor = UIColor(named: "inverse")
+        } else {
+            cell.background.backgroundColor = .clear
         }
+        cell.titleLabel.textColor = UIColor(named: "inverse")
+        cell.iconImageView.tintColor = UIColor(named: "inverse")
         cell.selectedBackgroundView = myCustomSelectionColorView
         return cell
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        deselect(cell: tableView.cellForRow(at: currentIndexPath) as! SideMenuCell)
-        select(cell: tableView.cellForRow(at: indexPath) as! SideMenuCell)
+        // cellForRow returns nil for a row that is not on screen, and the previous selection
+        // very often is not, so `as! SideMenuCell` was a force-unwrap of nil waiting to
+        // happen. Conditional here; cellForRowAt above restyles the row from
+        // currentIndexPath anyway, so an off-screen row is still correct when it scrolls back.
+        if let previous = tableView.cellForRow(at: currentIndexPath) as? SideMenuCell {
+            deselect(cell: previous)
+        }
+        if let selected = tableView.cellForRow(at: indexPath) as? SideMenuCell {
+            select(cell: selected)
+        }
         currentIndexPath = indexPath
         self.delegate?.selectedCell(indexPath.row)
     }

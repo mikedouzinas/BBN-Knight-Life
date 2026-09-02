@@ -333,85 +333,104 @@ extension String {
     }
 }
 
-extension UIImageView {
-    
-    public func loadGif(name: String) {
-        DispatchQueue.global().async {
-            let image = UIImage.gif(name: name)
-            DispatchQueue.main.async {
-                self.image = image
-            }
-        }
-    }
-    
-    @available(iOS 9.0, *)
-    public func loadGif(asset: String) {
-        DispatchQueue.global().async {
-            let image = UIImage.gif(asset: asset)
-            DispatchQueue.main.async {
-                self.image = image
-            }
-        }
-    }
-    
-}
+/// HQ-606. The old path decoded every GIF frame up front via `UIImage.animatedImage(with:)`,
+/// which for the seasonal launch-screen GIFs measured 90-131 MB of simultaneous in-memory
+/// frames, every launch. This decodes exactly one frame at a time from the `CGImageSource`,
+/// on a timer matched to that frame's own delay, so peak memory is one frame instead of the
+/// whole animation.
+///
+/// Owned by the `UIImageView` it animates via an associated object, so `loadGif` keeps its
+/// original call shape (`imageView.loadGif(name:)`) and nothing above this file changes.
+private final class GifFramePlayer {
+    private let source: CGImageSource
+    private let frameCount: Int
+    private let delaysMs: [Int]
+    private weak var imageView: UIImageView?
+    private var index = 0
+    private var timer: Timer?
 
-extension UIImage {
-    
-    public class func gif(data: Data) -> UIImage? {
-        // Create billSource from data
-        guard let billSource = CGImageSourceCreateWithData(data as CFData, nil) else {
+    init?(data: Data, imageView: UIImageView) {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
             print("SwiftGif: billSource for the image does not exist")
             return nil
         }
-        
-        return UIImage.animatedImageWithSource(billSource)
+        let count = CGImageSourceGetCount(source)
+        guard count > 0 else { return nil }
+        self.source = source
+        self.frameCount = count
+        self.delaysMs = (0..<count).map { Int(UIImage.delayForImageAtIndex($0, billSource: source) * 1000) }
+        self.imageView = imageView
     }
-    
-    public class func gif(url: String) -> UIImage? {
-        // Validate URL
-        guard let bundleURL = URL(string: url) else {
-            print("SwiftGif: This image named \"\(url)\" does not exist")
-            return nil
-        }
-        
-        // Validate data
-        guard let imageData = try? Data(contentsOf: bundleURL) else {
-            print("SwiftGif: Cannot turn image named \"\(url)\" into NSData")
-            return nil
-        }
-        
-        return gif(data: imageData)
+
+    func start() {
+        showFrame(at: 0)
+        scheduleNext()
     }
-    
-    public class func gif(name: String) -> UIImage? {
-        // Check for existance of gif
-        guard let bundleURL = Bundle.main
-                .url(forResource: name, withExtension: "gif") else {
-            print("SwiftGif: This image named \"\(name)\" does not exist")
-            return nil
-        }
-        
-        // Validate data
-        guard let imageData = try? Data(contentsOf: bundleURL) else {
-            print("SwiftGif: Cannot turn image named \"\(name)\" into NSData")
-            return nil
-        }
-        
-        return gif(data: imageData)
+
+    func stop() {
+        timer?.invalidate()
+        timer = nil
     }
-    
+
+    deinit {
+        timer?.invalidate()
+    }
+
+    private func showFrame(at index: Int) {
+        guard let cgImage = CGImageSourceCreateImageAtIndex(source, index, nil) else { return }
+        imageView?.image = UIImage(cgImage: cgImage)
+    }
+
+    private func scheduleNext() {
+        let delaySeconds = Double(max(delaysMs[index], 10)) / 1000.0
+        timer = Timer.scheduledTimer(withTimeInterval: delaySeconds, repeats: false) { [weak self] _ in
+            guard let self else { return }
+            self.index = (self.index + 1) % self.frameCount
+            self.showFrame(at: self.index)
+            self.scheduleNext()
+        }
+    }
+}
+
+extension UIImageView {
+    private static var gifPlayerKey: UInt8 = 0
+
+    private var gifPlayer: GifFramePlayer? {
+        get { objc_getAssociatedObject(self, &UIImageView.gifPlayerKey) as? GifFramePlayer }
+        set { objc_setAssociatedObject(self, &UIImageView.gifPlayerKey, newValue, .OBJC_ASSOCIATION_RETAIN) }
+    }
+
+    public func loadGif(name: String) {
+        DispatchQueue.global().async {
+            guard let bundleURL = Bundle.main.url(forResource: name, withExtension: "gif"),
+                  let imageData = try? Data(contentsOf: bundleURL) else {
+                print("SwiftGif: This image named \"\(name)\" does not exist")
+                return
+            }
+            DispatchQueue.main.async { self.startGif(data: imageData) }
+        }
+    }
+
     @available(iOS 9.0, *)
-    public class func gif(asset: String) -> UIImage? {
-        // Create billSource from assets catalog
-        guard let dataAsset = NSDataAsset(name: asset) else {
-            print("SwiftGif: Cannot turn image named \"\(asset)\" into NSDataAsset")
-            return nil
+    public func loadGif(asset: String) {
+        DispatchQueue.global().async {
+            guard let imageData = NSDataAsset(name: asset)?.data else {
+                print("SwiftGif: Cannot turn image named \"\(asset)\" into NSDataAsset")
+                return
+            }
+            DispatchQueue.main.async { self.startGif(data: imageData) }
         }
-        
-        return gif(data: dataAsset.data)
     }
-    
+
+    private func startGif(data: Data) {
+        gifPlayer?.stop()
+        gifPlayer = GifFramePlayer(data: data, imageView: self)
+        gifPlayer?.start()
+    }
+}
+
+extension UIImage {
+
     internal class func delayForImageAtIndex(_ index: Int, billSource: CGImageSource!) -> Double {
         var delay = 0.1
         
@@ -442,106 +461,6 @@ extension UIImage {
         
         return delay
     }
-    
-    internal class func gcdForPair(_ a: Int?, _ b: Int?) -> Int {
-        var a = a
-        var b = b
-        // Check if one of them is nil
-        if b == nil || a == nil {
-            if b != nil {
-                return b!
-            } else if a != nil {
-                return a!
-            } else {
-                return 0
-            }
-        }
-        
-        // Swap for modulo
-        if a! < b! {
-            let c = a
-            a = b
-            b = c
-        }
-        
-        // Get greatest common divisor
-        var rest: Int
-        while true {
-            rest = a! % b!
-            
-            if rest == 0 {
-                return b! // Found it
-            } else {
-                a = b
-                b = rest
-            }
-        }
-    }
-    
-    internal class func gcdForArray(_ array: Array<Int>) -> Int {
-        if array.isEmpty {
-            return 1
-        }
-        
-        var gcd = array[0]
-        
-        for val in array {
-            gcd = UIImage.gcdForPair(val, gcd)
-        }
-        
-        return gcd
-    }
-    internal class func animatedImageWithSource(_ billSource: CGImageSource) -> UIImage? {
-        let count = CGImageSourceGetCount(billSource)
-        var images = [CGImage]()
-        var delays = [Int]()
-        
-        // Fill arrays
-        for i in 0..<count {
-            // Add image
-            if let image = CGImageSourceCreateImageAtIndex(billSource, i, nil) {
-                images.append(image)
-            }
-            
-            // At it's delay in cs
-            let delaySeconds = UIImage.delayForImageAtIndex(Int(i),
-                                                            billSource: billSource)
-            delays.append(Int(delaySeconds * 1000.0)) // Seconds to ms
-        }
-        
-        // Calculate full duration
-        let duration: Int = {
-            var sum = 0
-            
-            for val: Int in delays {
-                sum += val
-            }
-            
-            return sum
-        }()
-        
-        // Get frames
-        let gcd = gcdForArray(delays)
-        var frames = [UIImage]()
-        
-        var frame: UIImage
-        var frameCount: Int
-        for i in 0..<count {
-            frame = UIImage(cgImage: images[Int(i)])
-            frameCount = Int(delays[Int(i)] / gcd)
-            
-            for _ in 0..<frameCount {
-                frames.append(frame)
-            }
-        }
-        
-        // Heyhey
-        let animation = UIImage.animatedImage(with: frames,
-                                              duration: Double(duration) / 1000.0)
-        
-        return animation
-    }
-    
 }
 
 extension UIImageView {
@@ -730,16 +649,25 @@ extension UIViewController {
         self.present(alert, animated: true, completion: nil)
     }
     func showLoader(text: String) {
-        let alert = UIAlertController(title: nil, message: "\(text)", preferredStyle: .alert)
-        
-        let loadingIndicator = UIActivityIndicatorView(frame: CGRect(x: 10, y: 5, width: 50, height: 50))
+        // The leading newline reserves the row the spinner occupies. Without it the spinner
+        // is drawn on top of the message text.
+        let alert = UIAlertController(title: nil, message: "\n\(text)", preferredStyle: .alert)
+
+        let loadingIndicator = UIActivityIndicatorView(style: .medium)
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
         loadingIndicator.hidesWhenStopped = true
-        loadingIndicator.style = UIActivityIndicatorView.Style.medium
-        loadingIndicator.startAnimating();
-        
+        loadingIndicator.startAnimating()
+
         alert.view.addSubview(loadingIndicator)
-        present(alert, animated: true, completion: {
-        })
+        // Constrained rather than a hardcoded frame. It was CGRect(x: 10, y: 5, 50x50), which
+        // pins the spinner near the alert's top-LEFT while the message under it is centred:
+        // visibly off, and off by a different amount at every message length and Dynamic Type
+        // size, because the alert sizes itself to its content.
+        NSLayoutConstraint.activate([
+            loadingIndicator.centerXAnchor.constraint(equalTo: alert.view.centerXAnchor),
+            loadingIndicator.topAnchor.constraint(equalTo: alert.view.topAnchor, constant: 20),
+        ])
+        present(alert, animated: true)
     }
     func showConfirmation(title: String, message: String) {
         
@@ -881,6 +809,41 @@ extension UIViewController {
             LoginVC.specialSchedules = tempArray
             completion(.success(tempArray))
         }
+    }
+
+    // HQ-661: reads sideMenu/publications, falling back to SideMenuEntry.defaultPublications
+    // on any failure - no document, a read error, or every entry in it failing to parse.
+    // A malformed individual entry is dropped rather than crashing the whole fetch, same
+    // reasoning as resolveDay's malformed-day handling elsewhere in this file: one bad row
+    // is a menu missing one row, not a broken menu.
+    func fetchSideMenuPublications(completion: @escaping ([SideMenuEntry]) -> Void) {
+        Firestore.firestore().collection("sideMenu").document("publications").getDocument { snapshot, error in
+            guard error == nil, let rawEntries = snapshot?.data()?["entries"] as? [[String: Any]], !rawEntries.isEmpty else {
+                completion(SideMenuEntry.defaultPublications)
+                return
+            }
+            let parsed = rawEntries.compactMap { dict -> SideMenuEntry? in
+                guard let title = dict["title"] as? String, !title.isEmpty,
+                      let urlString = dict["url"] as? String, !urlString.isEmpty else { return nil }
+                return SideMenuEntry(
+                    title: title,
+                    iconName: (dict["iconName"] as? String) ?? "link",
+                    textImageName: dict["textImageName"] as? String,
+                    urlString: urlString,
+                    order: (dict["order"] as? Int) ?? Int.max,
+                    visible: (dict["visible"] as? Bool) ?? true
+                )
+            }
+            let visible = parsed.filter { $0.visible }.sorted { $0.order < $1.order }
+            completion(visible.isEmpty ? SideMenuEntry.defaultPublications : visible)
+        }
+    }
+
+    // Asset catalog first (the bundled publication logos), then an SF Symbol of the same
+    // name, then a generic fallback - so a Firestore entry naming an icon that doesn't
+    // exist gets a plain link icon instead of crashing on a force-unwrapped UIImage.
+    func resolveSideMenuIcon(_ name: String) -> UIImage {
+        UIImage(named: name) ?? UIImage(systemName: name) ?? UIImage(systemName: "link")!
     }
 
     func resolveDay(date: Date) -> ResolvedDay {
@@ -1121,27 +1084,57 @@ extension UIViewController {
 
         return nextWeekday
     }
+    // HQ-639. Local, per-block reminders stay as the offline fallback: a push (HQ-112) tells
+    // a closed app that the schedule changed, but only a local notification can remind someone
+    // mid-day about a block that hasn't changed. Push covers "the schedule is different than
+    // you think"; this covers "it's almost time for the thing you already knew about."
+    //
+    // The old version walked a fixed 14 days and broke mid-day once 64 requests were used,
+    // which meant a busy stretch silently ate the budget: whichever day happened to fill it
+    // got every block, and every day after got nothing - not because it mattered less, but
+    // because of where it fell in the loop. A day could also end up HALF scheduled, missing
+    // whichever blocks came after the cap, which is its own kind of wrong: a student reminded
+    // for first block and silently not for the rest reads as "nothing else today," not as
+    // "the count ran out."
+    //
+    // This walks the same way but stops BEFORE a day that would go over budget, so the window
+    // is whatever the schedule can fully afford rather than a guess. Every day that gets
+    // notifications gets all of them.
     func setNotifications() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         let calendar = Calendar.current
-        let dateFormatter = DateFormatter()
-        dateFormatter.timeZone = .current
-        dateFormatter.dateFormat = "MM-dd-yyyy hh:mm a Z"
         LoginVC.upcomingDays = [ResolvedDay]()
-        var z = 0
+        var scheduled = 0
+        var budgetFull = false
         let notifsOn = ((LoginVC.blocks["notifs"] as? String) ?? "") == "true"
-        for i in 0...13 {
+        let maxLookaheadDays = 14
+        let requestBudget = 64
+        for i in 0..<maxLookaheadDays {
             let tempDate = calendar.date(byAdding: .day, value: i, to: Date())!
             // resolveDay is the same call the calendar makes, so a notification can no longer
             // describe a different day from the one on screen.
             let day = resolveDay(date: tempDate)
             LoginVC.upcomingDays.append(day)
-            guard notifsOn, day.hasClasses else { continue }
-            for x in day.blocks {
-                if z >= 64 { break }
-                addNotif(x: x, weekDay: day.weekdayName, date: day.date)
-                z += 1
+            guard notifsOn, day.hasClasses, !budgetFull else { continue }
+            // `continue`, never `break`. This loop has a second job: every iteration appends
+            // to LoginVC.upcomingDays, which CalendarVC walks to find "Next Day of Classes",
+            // and setNotifications is the only thing that ever writes it. Leaving the loop
+            // early to stop scheduling would also stop filling that list, so a student with
+            // notifications ON would get a shorter calendar lookahead than one with them
+            // off - a notification budget silently truncating an unrelated feature.
+            //
+            // budgetFull latches rather than being re-tested per day, so the window stays
+            // contiguous. Without the latch a later, lighter day could slip under the cap
+            // after a heavier one was skipped, which is exactly the "days silently missing
+            // from the middle" shape this ticket set out to remove.
+            guard scheduled + day.blocks.count <= requestBudget else {
+                budgetFull = true
+                continue
             }
+            for x in day.blocks {
+                addNotif(x: x, weekDay: day.weekdayName, date: day.date)
+            }
+            scheduled += day.blocks.count
         }
     }
     func getBlockOnDate(date: Date, time: String) -> Date {
