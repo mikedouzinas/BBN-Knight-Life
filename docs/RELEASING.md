@@ -5,6 +5,30 @@ hour of waiting spread across a few steps, plus a few days for Apple's review.
 
 You need to be on the Knight Life App Store Connect team to do this. Ask Mike.
 
+## 0. The access you need, which is more specific than "being on the team"
+
+Being added to the team is not enough on its own, and the way it fails is confusing: everything
+works until **Archive → Distribute**, which then refuses because it cannot create a
+distribution certificate. The role and the two permissions below are what actually matter.
+
+Ask for, in App Store Connect → **Users and Access** → your name:
+
+- Role: **App Manager** (Admin also works, but is more than this needs)
+- **Access to Certificates, Identifiers & Profiles** — a separate checkbox on that screen
+- **Access to Cloud Managed Distribution Certificate** — also a separate checkbox
+
+App Manager alone does not include either of those. They are what let Xcode's automatic
+signing create the distribution certificate during Archive, which is the step everything else
+depends on.
+
+**Check it yourself before you need it**, rather than discovering it the evening you plan to
+ship. Go to [developer.apple.com/account](https://developer.apple.com/account) → Certificates,
+Identifiers & Profiles → **Certificates** → **+**. If **Apple Distribution** is selectable,
+you are set. If it is missing or greyed out, the permissions have not been granted yet.
+
+You will also want **Firebase** access (project `bbn-daily`, at least **Editor**) if you are
+touching push notifications or Firestore, though not for a plain release.
+
 ## 1. Bump the version number
 
 In Xcode, select the project in the left sidebar, then the `BBNDaily` target, then
