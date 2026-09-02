@@ -25,6 +25,9 @@ class LatestNewsVC: CustomLoader, WKNavigationDelegate {
     let urlString = "https://www.bbns.org/news-events/latest-news-from-bbn"
     override func viewDidLoad() {
         super.viewDidLoad()
+        // HQ-629: deliberate constant white, same reasoning as PublicationVC - a
+        // placeholder shown for an instant before the web page paints over it, and the
+        // page itself doesn't respect the app's theme either way.
         view.backgroundColor = UIColor.white
         webView.backgroundColor = UIColor.white
         view.addSubview(webView)
