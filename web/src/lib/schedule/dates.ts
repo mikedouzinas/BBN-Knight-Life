@@ -42,6 +42,12 @@ export function toLegacyKey(iso: string): string {
   return `${WEEKDAYS[weekday]}, ${MONTHS[m - 1]} ${d}, ${y}`;
 }
 
+/** HQ-644: Saturday or Sunday, computed the same UTC-safe way toLegacyKey already does. */
+export function isWeekend(iso: string): boolean {
+  const { weekday } = parts(iso);
+  return weekday === 0 || weekday === 6;
+}
+
 /**
  * The break document's field key: `2026/12/19-2027/1/3`.
  *
