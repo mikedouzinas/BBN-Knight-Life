@@ -28,7 +28,23 @@ class LoginVC: AuthVC {
     /// elsewhere since, is silently dropped. A field-level write can't lose data it never touched.
     static func updateField(_ key: String, to value: Any) {
         blocks[key] = value
-        Firestore.firestore().collection("users").document("\(blocks["uid"] ?? "")").updateData([key: value])
+        // An empty uid interpolates to document(""), which Firestore treats as a fatal
+        // programmer error, not a failed write. Nothing above this guarantees the account
+        // has loaded, so check rather than interpolate.
+        guard let uid = blocks["uid"] as? String, !uid.isEmpty else {
+            print("updateField(\(key)): no uid loaded, nothing written")
+            return
+        }
+        // setData(merge:), not updateData: updateData FAILS on a document that does not
+        // exist yet, and the setData(blocks) calls this replaces created it as a side
+        // effect. Without merge a student whose record had never been written would
+        // silently stop being able to change any setting at all. merge:true keeps this
+        // ticket's whole point - only the changed field is sent, so nothing this client
+        // never loaded can be dropped.
+        Firestore.firestore().collection("users").document(uid)
+            .setData([key: value], merge: true) { error in
+                if let error = error { print("updateField(\(key)) failed: \(error)") }
+            }
     }
     static var specialSchedules = [String: SpecialSchedule]()
     static var specialDays = [String: Day]()
