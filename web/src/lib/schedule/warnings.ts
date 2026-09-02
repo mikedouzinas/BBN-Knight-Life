@@ -6,6 +6,7 @@
  * thirty identical-looking ones.
  */
 import type { ScheduleDay } from './types';
+import { displayDate, isWeekend } from './dates';
 import { parseTime12 } from './time';
 import { renderForAudience, type Audience, type Grade, type LunchWave } from './render';
 
@@ -18,8 +19,23 @@ function audienceName(audience: Audience): string {
   return `${grade}${wave}`;
 }
 
-export function dayWarnings(day: ScheduleDay): string[] {
+export function dayWarnings(isoDate: string, day: ScheduleDay): string[] {
   const warnings: string[] = [];
+
+  // HQ-644: dayWarnings used to return early for anything that wasn't a "blocks" day,
+  // which is exactly backwards for this check - a no-school day published on a weekend
+  // is harmless (the app already treats weekends as no school), but nothing stopped a
+  // full seven-block schedule being published for a Saturday or Sunday. Checked before
+  // the blocks-only early return below, and louder for a blocks day specifically, since
+  // that one is almost certainly a mistake rather than a deliberate weekend event.
+  if (isWeekend(isoDate)) {
+    if (day.type === 'blocks') {
+      warnings.push(`${displayDate(isoDate)} is a weekend, and this publishes a full schedule for it - almost certainly wrong.`);
+    } else {
+      warnings.push(`${displayDate(isoDate)} is a weekend.`);
+    }
+  }
+
   if (day.type !== 'blocks') return warnings;
 
   const audiences: Audience[] = [];
