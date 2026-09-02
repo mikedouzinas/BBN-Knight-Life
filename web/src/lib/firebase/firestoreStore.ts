@@ -81,6 +81,15 @@ export class FirestoreRangeStore implements RangeStore {
 
     batch.set(this.db.doc(BREAK_DOC), { [plan.breakKey]: { reason: plan.range.reason } }, { merge: true });
 
+    // The legacy projection, and it is not optional while 2.4.1 is in anyone's pocket. That
+    // build resolves the CALENDAR from `schedules/break` but resolves NOTIFICATIONS from a
+    // through-date document here, so writing only the line above produces an app that shows
+    // "No Class" and wakes you for first period anyway.
+    batch.set(this.db.collection(LEGACY_COLLECTION).doc(plan.legacyBreakId), {
+      date: plan.legacyBreakId,
+      reason: plan.range.reason,
+    });
+
     batch.set(this.db.collection(PUBLISH_LOG_COLLECTION).doc(`break-${plan.breakKey.replace(/\//g, '-')}`), {
       breakKey: plan.breakKey,
       startDate: plan.range.startDate,
