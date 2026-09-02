@@ -587,11 +587,6 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         tableView.showsVerticalScrollIndicator = false
         tableView.delegate = self
         tableView.dataSource = self
-        let secretButton = UIButton(frame: CGRect(x: 0, y: 0, width: 30, height: 30))
-        secretButton.setTitle("", for: .normal)
-        secretButton.setImage(UIImage(systemName: "star.circle"), for: .normal)
-        secretButton.tintColor = UIColor(named: "inverse")
-        secretButton.addTarget(self, action: #selector(openSecretSchedule), for: .touchUpInside)
         let button = UIButton(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 20))
         button.setTitle(" About", for: .normal)
         button.setTitleColor(UIColor(named: "inverse"), for: .normal)
@@ -599,14 +594,10 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         button.tintColor = UIColor(named: "inverse")
         button.addTarget(self, action: #selector(openCredits), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
-        secretButton.translatesAutoresizingMaskIntoConstraints = false
-        let smallview = UIView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 80))
+        let smallview = UIView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 40))
         smallview.addSubview(button)
-        smallview.addSubview(secretButton)
-        secretButton.centerXAnchor.constraint(equalTo: smallview.centerXAnchor).isActive = true
         button.centerXAnchor.constraint(equalTo: smallview.centerXAnchor).isActive = true
         button.topAnchor.constraint(equalTo: smallview.topAnchor).isActive = true
-        secretButton.topAnchor.constraint(equalTo: button.bottomAnchor, constant: 5).isActive = true
         tableView.tableFooterView = smallview
         tableView.register(ProfileTableViewCell.self, forCellReuseIdentifier: ProfileTableViewCell.identifier)
         tableView.register(SettingsBlockTableViewCell.self, forCellReuseIdentifier: SettingsBlockTableViewCell.identifier)
@@ -624,20 +615,6 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     }
     @IBAction func closeClass(_ sender: Any) {
         dismiss(animated: true, completion: nil)
-    }
-    @objc func openSecretSchedule() {
-        // Admin access to schedule changing. Sourced from the admins collection in
-        // Firestore rather than a hardcoded list. The previous check substring-matched
-        // three addresses, all belonging to people who had left, so the two maintainers
-        // taking the project over had write permission and no button.
-        if LoginVC.isAdmin {
-            self.performSegue(withIdentifier: "secretSchedule", sender: nil)
-        }
-        
-        // normal users
-        else {
-            showMessage(title: "You found the secret button!", subTitle: "On the calendar page, press on the top right corner for a cool trick...")
-        }
     }
     func setHeader() {
         let header = StretchyTableHeaderView(frame: CGRect(x: 0, y: 0, width: view.frame.size.width, height: view.frame.size.width-50))

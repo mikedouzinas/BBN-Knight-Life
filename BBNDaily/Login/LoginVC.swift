@@ -50,7 +50,6 @@ class LoginVC: AuthVC {
                 if let error = error { print("updateField(\(key)) failed: \(error)") }
             }
     }
-    static var specialSchedules = [String: SpecialSchedule]()
     static var specialDays = [String: Day]()
     static var breaks = [Break]()
     // nil until read, and nil is meaningful: it means the app does not know the school

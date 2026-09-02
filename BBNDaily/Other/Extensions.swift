@@ -38,19 +38,6 @@ extension String {
 //            of: Date())!
 //        return t2
 //    }
-    func isInThroughDate(date: Date) -> Bool {
-        let index = self.distance(of: "-")
-        guard let ind = index else {
-            return false
-        }
-        
-        let date1 = self.prefix(ind)
-        let date2 = self.suffix(self.count-(ind+1))
-        if date.isBetweenTimeFrame(date1: "\(date1)".startOrEndDate(isStart: true, year: nil) ?? Date(), date2: "\(date2)".startOrEndDate(isStart: false, year: nil) ?? Date()) {
-            return true
-        }
-        return false
-    }
     func getValues() -> [String]{
         var fullName = self
         let subject = String(fullName.prefix(upTo: fullName.firstIndex(of: "~") ?? fullName.startIndex)).setNotAvailable()
@@ -692,62 +679,6 @@ extension UIViewController {
     // (HQ-603). resolveDay takes its weekday from a DateFormatter with an explicit "EEEE"
     // format and never reads a display string for meaning.
     
-    /*
-     func getLunchDays(weekDay: String) -> (blocks: [block], selectedDay: Int) {
-        var weekdayBlocks = [block]()
-        var selectedDay = 0
-//        print("weekday: \(weekDay)")
-        let lowercaseWeekday = weekDay.lowercased()
-        switch lowercaseWeekday {
-        case "monday":
-            if ((LoginVC.blocks["l-monday"] as? String) ?? "").lowercased().contains("2") {
-                weekdayBlocks = defaultSchedules["monday"]?.L2 ?? [block]()
-            }
-            else {
-                weekdayBlocks = defaultSchedules["monday"]?.L1 ?? [block]()
-            }
-            selectedDay = 0
-            
-        case "tuesday":
-            if ((LoginVC.blocks["l-tuesday"] as? String) ?? "").lowercased().contains("2") {
-                weekdayBlocks = defaultSchedules["tuesday"]?.L2 ?? [block]()
-            }
-            else {
-                weekdayBlocks = defaultSchedules["tuesday"]?.L1 ?? [block]()
-            }
-            selectedDay = 1
-        case "wednesday":
-            if ((LoginVC.blocks["l-wednesday"] as? String) ?? "").lowercased().contains("2") {
-                weekdayBlocks = defaultSchedules["wednesday"]?.L2 ?? [block]()
-            }
-            else {
-                weekdayBlocks = defaultSchedules["wednesday"]?.L1 ?? [block]()
-            }
-            selectedDay = 2
-        case "thursday":
-            if ((LoginVC.blocks["l-thursday"] as? String) ?? "").lowercased().contains("2") {
-                weekdayBlocks = defaultSchedules["thursday"]?.L2 ?? [block]()
-            }
-            else {
-                weekdayBlocks = defaultSchedules["thursday"]?.L1 ?? [block]()
-            }
-            selectedDay = 3
-        case "friday":
-            if ((LoginVC.blocks["l-friday"] as? String) ?? "").lowercased().contains("2") {
-                weekdayBlocks = defaultSchedules["friday"]?.L2 ?? [block]()
-            }
-            else {
-                weekdayBlocks = defaultSchedules["friday"]?.L1 ?? [block]()
-            }
-            selectedDay = 4
-        default:
-            weekdayBlocks = [block]()
-            selectedDay = 10
-        }
-        return (weekdayBlocks, selectedDay)
-    }
-     */
-    
     // MARK: The single answer to "what does this date look like"
     //
     // Before this existed there were three resolvers that each knew different things:
@@ -764,53 +695,6 @@ extension UIViewController {
     //
     // Everything that needs a day now goes through here, so a disagreement of that kind cannot
     // be expressed. Adding a new consumer must not mean adding a fourth resolver.
-    /// The legacy `special-schedules` collection, loaded ON DEMAND rather than on launch.
-    ///
-    /// This was the single most expensive thing the app did. It listed the entire collection
-    /// every time anyone opened the app: **82 documents of a 101-read launch**, measured
-    /// against production on 2026-08-19.
-    ///
-    /// Almost nothing consumed it. `getScheduleFor` had zero callers and is deleted (HQ-607),
-    /// the loop in `CalendarVC` sits inside a `/* */` block, and what remains is
-    /// `SecretSchedule`, the in-app schedule editor that only an admin can open and that the
-    /// web tool replaces. So 638 students each paid 82 reads per launch to populate data for a
-    /// screen 8 of them can reach.
-    ///
-    /// Calling it twice is cheap and safe: it overwrites `LoginVC.specialSchedules` wholesale.
-    func loadLegacySpecialSchedules(completion: @escaping (Swift.Result<[String: SpecialSchedule], Error>) -> Void) {
-        let db = Firestore.firestore()
-        db.collection("special-schedules").getDocuments { (snapshot, error) in
-            if let error = error {
-                ProgressHUD.failed("Failed to find 'special-schedules'")
-                completion(.failure(error))
-                return
-            }
-            var tempArray = [String: SpecialSchedule]()
-            for document in (snapshot?.documents ?? []) {
-                let arrayl1 = document.data()["blocks-l1"] as? [[String: String]] ?? [[String: String]]()
-                var blocksl1 = [block]()
-                for x in arrayl1 {
-                    blocksl1.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
-                }
-
-                let array = document.data()["blocks"] as? [[String: String]] ?? [[String: String]]()
-                var blocks = [block]()
-                for x in array {
-                    blocks.append(block(name: x["name"] ?? "", startTime: x["startTime"] ?? "", endTime: x["endTime"] ?? "", block: x["block"] ?? ""))
-                }
-                let date = document.data()["date"] as? String ?? "N/A"
-                let reason = document.data()["reason"] as? String ?? "N/A"
-                let imageUrl = document.data()["imageUrl"] as? String ?? "N/A"
-                if blocksl1.isEmpty {
-                    blocksl1 = blocks
-                }
-                tempArray[date] = SpecialSchedule(specialSchedules: blocks, specialSchedulesL1: blocksl1, reason: reason, date: date, imageUrl: imageUrl, image: nil)
-            }
-            LoginVC.specialSchedules = tempArray
-            completion(.success(tempArray))
-        }
-    }
-
     // HQ-661: reads sideMenu/publications, falling back to SideMenuEntry.defaultPublications
     // on any failure - no document, a read error, or every entry in it failing to parse.
     // A malformed individual entry is dropped rather than crashing the whole fetch, same
