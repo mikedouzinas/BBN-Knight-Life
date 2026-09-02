@@ -441,7 +441,7 @@ class BlockNameVC: TextFieldVC {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-        maxLength = 150
+        maxLength = FieldLimits.scheduleBlockName
         hideKeyboardWhenTappedAbove()
         TextField.delegate = self
     }
@@ -486,7 +486,7 @@ class TimesVC: TextFieldVC {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
-        maxLength = 100
+        maxLength = FieldLimits.secretScheduleTimes
     }
 }
 

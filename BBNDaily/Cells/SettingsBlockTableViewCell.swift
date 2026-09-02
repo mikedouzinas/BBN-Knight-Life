@@ -23,6 +23,12 @@ class SettingsBlockTableViewCell: UITableViewCell {
         label.font = .systemFont(ofSize: 14, weight: .regular)
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textAlignment = .right
+        // HQ-659: explicit rather than relying on UILabel's default (which happens to
+        // already be 1 line / truncating tail) - this is where a class's full name
+        // ("Subject Teacher") shows in the block list, and it's the one label in this
+        // ticket's four required render spots that isn't shared with unrelated content.
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     } ()
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {

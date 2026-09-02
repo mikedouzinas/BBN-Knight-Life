@@ -8,6 +8,31 @@
 import Foundation
 import UIKit
 
+// HQ-659: one constant per text field, in one file, instead of a magic number typed
+// into each screen's viewDidLoad. The old default (TextFieldVC.maxLength = 10) was
+// never a real decision - a screen that forgot to set its own limit silently got a
+// ten-character field, and ten characters looks like a working limit rather than a
+// mistake. defaultLimit below is a deliberate choice: same as the smallest limit
+// anyone actually picked on purpose (className/room, 25), not an arbitrary small
+// number nobody chose.
+enum FieldLimits {
+    static let className = 25
+    static let teacherName = 50
+    static let roomNumber = 25
+    static let homeworkTitle = 60
+    static let homeworkBody = 300
+    static let scheduleBlockName = 150
+    // TimesVC's own limit - it has no visible UITextField in the file (its UI is date
+    // pickers), so this looks vestigial rather than protecting real input. Kept as-is,
+    // not investigated further here - out of this ticket's actual scope, which is class
+    // names specifically.
+    static let secretScheduleTimes = 100
+    // Shared by the locker number and locker code fields.
+    static let lockerField = 10
+
+    static let defaultLimit = className
+}
+
 struct WatchClass {
     let Title: String
     let StartTime: String
