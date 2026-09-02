@@ -95,7 +95,18 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                     if z != 0 {
                         currDate = Calendar.current.date(byAdding: .day, value: 1, to: currDate) ?? Date()
                         let currVal = "Next Day of Classes: \(x.weekdayName.capitalized)"
-                        if x.hasClasses {
+                        // HQ-616: hasClasses is deliberately false for a .image day, by
+                        // design (notification scheduling should not fire for one, since
+                        // its block times are not reliably known - see the comment on
+                        // DayKind). Reusing it here for "does this day have anything
+                        // worth jumping to" was wrong: an image day is a real published
+                        // schedule, whether or not resolveDay could also parse structured
+                        // blocks out of it, and this check made the app skip straight
+                        // past it to the next day after - the "day gets skipped" was
+                        // never the image failing to render, it was this scan never
+                        // landing on it in the first place.
+                        let isImageDay: Bool = { if case .image = x.kind { return true } else { return false } }()
+                        if !x.blocks.isEmpty || isImageDay {
                             if currTitle != currVal {
                                 currentWeekday.blocks = x.blocks
                                 dayOverBlocks = x.blocks
