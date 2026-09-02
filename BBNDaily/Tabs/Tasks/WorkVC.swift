@@ -15,22 +15,29 @@ import FSCalendar
 import WebKit
 import SkeletonView
 
+// HQ-779: Tasks is now the classes meeting on the next school day, not a freeform
+// to-do list. "Next school day" is worked out with resolveDay(date:) - the one
+// resolver the rest of the app already uses for the calendar and notifications -
+// rather than a second, separate notion of the school calendar living here.
 class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return tasks.count
+        return entries.count
     }
+    // Repurposed from the old "add a task" flow (which no longer applies - there's
+    // nothing to add, the list is the day's actual classes) into a manual refresh,
+    // in case the app has been open across midnight and the "next school day" has
+    // quietly become today.
     @IBAction func addClass(_ sender: UIBarButtonItem) {
-        HomeworkTitleVC.link = self
-        HomeworkInfoVC.link = self
-        HomeworkDueDateVC.link = self
-        self.performSegue(withIdentifier: "newhomework", sender: nil)
+        loadNextSchoolDay()
     }
-    static var newHomework = SchoolTask(title: "Homework", description: "Nothing!", dueDate: "12/21/2005", isCompleted: false, index: 0)
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: TaskCell.identifier, for: indexPath) as? TaskCell else {
             fatalError()
         }
-        cell.configure(with: tasks[indexPath.row])
+        cell.configure(with: entries[indexPath.row])
+        cell.onCheckBoxTapped = { [weak self] in
+            self?.toggleCompleted(at: indexPath.row)
+        }
         return cell
     }
     public var tableView: UITableView = {
@@ -42,52 +49,36 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 100
     }
-    // HQ-116. `SchoolTask.index` is this task's position in the unfiltered
-    // LoginVC.blocks["tasks"] array (see sortTasks below), which is how a row in the
-    // filtered, sorted display list maps back to the raw array entry to remove.
-    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        guard editingStyle == .delete else { return }
-        // Checked, not interpolated: an empty uid becomes document(""), which Firestore
-        // treats as a fatal programmer error rather than a failed write. Checked BEFORE the
-        // local array is mutated, so a delete that cannot be persisted does not vanish from
-        // the screen and come back on the next launch.
-        guard let uid = LoginVC.blocks["uid"] as? String, !uid.isEmpty else {
-            ProgressHUD.colorAnimation = .red
-            ProgressHUD.failed("Please sign out and back in to fix your account")
-            return
-        }
-        let removedIndex = tasks[indexPath.row].index
-        var rawTasks = (LoginVC.blocks["tasks"] as? [[String: Any]]) ?? []
-        guard removedIndex >= 0, removedIndex < rawTasks.count else { return }
-        rawTasks.remove(at: removedIndex)
-        LoginVC.blocks["tasks"] = rawTasks
-        // setData(merge:) rather than updateData, which fails outright on a record that has
-        // not been created yet, and a completion handler so a failed delete says so instead
-        // of reappearing at the next launch with no explanation.
-        Firestore.firestore().collection("users").document(uid)
-            .setData(["tasks": rawTasks], merge: true) { error in
-                guard let error = error else { return }
-                print("task delete failed: \(error)")
-                ProgressHUD.colorAnimation = .red
-                ProgressHUD.failed("Couldn't delete that task. It may come back.")
-            }
-        // Re-derive from the array just written rather than removing this one row by hand,
-        // so every other task's `index` (now shifted) is correct before the next delete.
-        sortTasks()
-        tableView.reloadData()
-    }
+    // HQ-116's swipe-to-delete doesn't carry over: it removed a user-created entry from
+    // LoginVC.blocks["tasks"], which HQ-779 replaces entirely with per-class homework
+    // entries derived from the day's schedule - there's no "task" a student added and
+    // can remove. Clearing a class's homework text already reaches the same end state:
+    // persistEntries() below only keeps entries with real content, so an emptied entry
+    // isn't written back either.
+    //
+    // Tapping the row (anywhere but the checkbox) opens quick entry for that class's
+    // homework - type it, tap out, done. Not a separate detail screen.
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        selectedTask = tasks[indexPath.row]
-        selectedIndex = indexPath.row
-        detailedWorkVC.link = self
-        self.performSegue(withIdentifier: "largeWork", sender: nil)
+        tableView.deselectRow(at: indexPath, animated: true)
+        guard entries.indices.contains(indexPath.row), entries[indexPath.row].holdsHomework else { return }
+        presentHomeworkEntry(at: indexPath.row)
     }
-    public var selectedIndex = 0
-    public var selectedTask = SchoolTask(title: "", description: "", dueDate: "", isCompleted: false, index: 0)
-    public var tasks = [SchoolTask]()
+
+    // A keyword match on the subject, not a real classification - there is no dedicated
+    // "does this subject assign homework" flag anywhere in the class data today. Good
+    // enough for the one case asked for (art classes); worth becoming a real field on the
+    // class document if the list of no-homework subjects grows past this.
+    private static let noHomeworkKeywords = ["art", "ceramics", "painting", "drawing", "sculpture", "photography", "studio"]
+    private static func isArtClass(_ subject: String) -> Bool {
+        let lowered = subject.lowercased()
+        return noHomeworkKeywords.contains { lowered.contains($0) }
+    }
+
+    private var entries = [HomeworkEntry]()
+    private var resolvedDateKey = ""
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        // make this a to do list instead
         view.backgroundColor = UIColor(named: "background")
         tableView.backgroundColor = UIColor(named: "background")
         view.addSubview(tableView)
@@ -95,51 +86,136 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.separatorStyle = .none
-        sortTasks()
+        loadNextSchoolDay()
     }
-    func sortTasks() {
-        tasks = [SchoolTask]()
-        let tempTasks = LoginVC.blocks["tasks"] as? [[String: Any]]
-        // checkIfEmpty() BEFORE returning. A student who has never made a task has no `tasks`
-        // field at all, so this cast returns nil and the early return skipped the empty-state
-        // message: the list rendered blank with nothing explaining why. The message only
-        // appeared after a first delete, because deleting writes an empty ARRAY, which is
-        // non-nil and reaches checkIfEmpty at the bottom. "Never had a task" and "deleted my
-        // last task" look identical to a student, so they have to behave identically here.
-        guard tempTasks != nil else {
-            checkIfEmpty()
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Cheap and idempotent - re-running this if the tab is just being re-shown
+        // the same day produces the same list, and catches a midnight rollover if
+        // the app was left open.
+        loadNextSchoolDay()
+    }
+
+    // Walks forward from tomorrow using resolveDay(date:) until it finds a day with
+    // real blocks. Capped at 14 days so a schedule-data gap fails loud (an empty list
+    // with a message) instead of looping or hanging - a school year is never actually
+    // out that long without at least one resolvable day.
+    func loadNextSchoolDay() {
+        let calendar = Calendar.current
+        var checkDate = calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+        var resolved: ResolvedDay?
+        for _ in 0..<14 {
+            let candidate = resolveDay(date: checkDate)
+            if !candidate.blocks.isEmpty {
+                resolved = candidate
+                break
+            }
+            checkDate = calendar.date(byAdding: .day, value: 1, to: checkDate) ?? checkDate
+        }
+
+        guard let resolved = resolved else {
+            entries = []
+            resolvedDateKey = ""
+            tableView.reloadData()
+            tableView.setEmptyMessage("Couldn't find an upcoming school day with classes.")
             return
         }
-        let dateformatter = DateFormatter()
-        dateformatter.dateFormat = "MM/dd/yyyy"
-        var index = 0
-        for x in tempTasks! {
-            let dueDate = (x["dueDate"] as? String) ?? "N/A"
-            let convertedDate = dateformatter.date(from: dueDate) ?? Date()
-            let todayString = dateformatter.string(from: Date())
-            let todayDate = dateformatter.date(from: todayString) ?? Date()
-            if convertedDate >= todayDate {
-                tasks.append(SchoolTask(title: (x["title"] as? String) ?? "No Title", description: (x["description"] as? String) ?? "", dueDate: (x["dueDate"] as? String) ?? "N/A", isCompleted: (x["isCompleted"] as? Bool) ?? false, index: index))
+
+        // "Tomorrow" when the resolved day really is tomorrow (the common case); the
+        // weekday name instead when a weekend or a break pushed it further out, so the
+        // title never says "Tomorrow" about a day that isn't.
+        let isTomorrow = calendar.isDate(resolved.date, inSameDayAs: calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date())
+        navigationItem.title = isTomorrow ? "Tomorrow's Classes" : "\(resolved.weekdayName.capitalized)'s Classes"
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy/M/d" // same key format resolveDay itself uses
+        resolvedDateKey = dateFormatter.string(from: resolved.date)
+
+        let stored = (LoginVC.blocks["classHomework"] as? [[String: Any]]) ?? []
+
+        var built = [HomeworkEntry]()
+        for scheduleBlock in resolved.blocks {
+            let letter = scheduleBlock.block.uppercased()
+            let assignment = (LoginVC.blocks[letter] as? String) ?? ""
+            // Only this student's own classes - not every block the school runs that day.
+            guard assignment.contains("~") else { continue }
+            // Free that day: this student has a class in this letter block, but
+            // classMeetingDays says it doesn't meet on this specific weekday. Nothing to
+            // do homework for, so no row - not a row that opens an empty prompt.
+            if resolved.weekdayIndex >= 0 && resolved.weekdayIndex <= 4,
+               let meetsThisWeekday = LoginVC.classMeetingDays[letter.lowercased()]?[resolved.weekdayIndex],
+               !meetsThisWeekday {
+                continue
             }
-            index += 1
+            let subject = assignment.getValues()[0]
+            let existing = stored.first { ($0["block"] as? String) == letter && ($0["date"] as? String) == resolvedDateKey }
+            built.append(HomeworkEntry(
+                block: letter,
+                subject: subject,
+                date: resolvedDateKey,
+                text: (existing?["text"] as? String) ?? "",
+                completed: (existing?["completed"] as? Bool) ?? false,
+                holdsHomework: !Self.isArtClass(subject)
+            ))
         }
-        tasks = tasks.sorted {first, second -> Bool in
-            let convertedDate1 = dateformatter.date(from: first.dueDate) ?? Date()
-            let convertedDate2 = dateformatter.date(from: second.dueDate) ?? Date()
-            return convertedDate1 < convertedDate2
-        }
-        checkIfEmpty()
-    }
-    func checkIfEmpty() {
-        if tasks.isEmpty {
-            tableView.setEmptyMessage("No Tasks! Add one by pressing the plus in the top right corner.")
-        }
-        else {
+
+        applySortedEntries(built)
+
+        if entries.isEmpty {
+            tableView.setEmptyMessage("No classes set up yet - add them in Settings.")
+        } else {
             tableView.restore()
             tableView.separatorStyle = .none
         }
     }
+
+    // Incomplete first (block order), completed ones dropped to the bottom and faded -
+    // still there to reopen, just out of the way once they're done.
+    private func applySortedEntries(_ built: [HomeworkEntry]) {
+        entries = built.sorted { a, b in
+            if a.completed != b.completed { return !a.completed }
+            return a.block < b.block
+        }
+        tableView.reloadData()
+    }
+
+    private func toggleCompleted(at index: Int) {
+        guard entries.indices.contains(index) else { return }
+        entries[index].completed.toggle()
+        persistEntries()
+        applySortedEntries(entries)
+    }
+
+    private func presentHomeworkEntry(at index: Int) {
+        guard entries.indices.contains(index) else { return }
+        let entry = entries[index]
+        let alert = UIAlertController(title: entry.subject, message: "Homework for Block \(entry.block)", preferredStyle: .alert)
+        alert.addTextField { textField in
+            textField.text = entry.text
+            textField.placeholder = "What's due?"
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Save", style: .default, handler: { [weak self] _ in
+            guard let self = self, self.entries.indices.contains(index) else { return }
+            self.entries[index].text = alert.textFields?.first?.text ?? ""
+            self.persistEntries()
+            self.tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .fade)
+        }))
+        present(alert, animated: true)
+    }
+
+    // Only entries with real content are worth keeping, and only this date's entries
+    // are being replaced - other dates' history stays untouched.
+    private func persistEntries() {
+        guard !resolvedDateKey.isEmpty else { return }
+        var stored = (LoginVC.blocks["classHomework"] as? [[String: Any]]) ?? []
+        stored.removeAll { ($0["date"] as? String) == resolvedDateKey }
+        for entry in entries where !entry.text.isEmpty || entry.completed {
+            stored.append(["date": entry.date, "block": entry.block, "text": entry.text, "completed": entry.completed])
+        }
+        LoginVC.blocks["classHomework"] = stored
+        guard let uid = LoginVC.blocks["uid"] as? String, !uid.isEmpty else { return }
+        Firestore.firestore().collection("users").document(uid).updateData(["classHomework": stored])
+    }
 }
-
-
-

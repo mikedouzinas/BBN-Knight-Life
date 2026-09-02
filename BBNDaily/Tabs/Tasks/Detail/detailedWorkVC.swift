@@ -9,36 +9,17 @@ import Foundation
 import UIKit
 import Firebase
 
+// HQ-779: dead code as of the Tasks rebuild - this screen showed/deleted an entry from
+// the old freeform task list, which no longer exists (WorkVC.tasks, .selectedTask,
+// .sortTasks() are all gone). Nothing segues here anymore ("largeWork" is unused), so
+// this is unreachable. Kept as a harmless stub, not deleted outright, because the
+// storyboard scene and its outlet/action connections still reference this class name -
+// removing the file without also removing that scene (a separate, lower-risk edit to
+// do directly in Interface Builder rather than by hand here) would break the storyboard.
 class detailedWorkVC: UIViewController {
     @IBOutlet var dateLabel: UILabel!
     @IBOutlet var detailedTextView: UITextView!
-    static var link: WorkVC!
     @IBAction func removeTask(_ sender: Any) {
-        let refreshAlert = UIAlertController(title: "Delete Task", message: "Are you sure? This action cannot be undone.", preferredStyle: .alert)
-        refreshAlert.addAction(UIAlertAction(title: "Delete", style: .default, handler: { (action: UIAlertAction!) in
-            let tempTasks = LoginVC.blocks["tasks"] as? [[String: Any]]
-            let index = detailedWorkVC.link.selectedTask.index
-            if var tempTasks = tempTasks {
-                tempTasks.remove(at: index)
-                LoginVC.blocks["tasks"] = tempTasks
-                let db = Firestore.firestore()
-                let currDoc = db.collection("users").document((LoginVC.blocks["uid"] as? String) ?? "")
-                currDoc.setData(["tasks": tempTasks], merge: true)
-                detailedWorkVC.link.sortTasks()
-                detailedWorkVC.link.tableView.reloadData()
-                self.navigationController?.popViewController(animated: true)
-            }
-        }))
-        refreshAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (action: UIAlertAction!) in
-        }))
-        present(refreshAlert, animated: true, completion: nil)
-    }
-    override func viewDidLoad() {
-        super.viewDidLoad()
-//        print("\(detailedWorkVC.link.selectedTask.dueDate)")
-        dateLabel.text = "Due \(detailedWorkVC.link.selectedTask.dueDate.stringDateFromMultipleFormats(preferredFormat: 7) ?? "")"
-
-        detailedTextView.text = "\(detailedWorkVC.link.selectedTask.description)"
-        self.title = "\(detailedWorkVC.link.selectedTask.title)"
+        navigationController?.popViewController(animated: true)
     }
 }
