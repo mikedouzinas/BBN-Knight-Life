@@ -1364,6 +1364,9 @@ final class StretchyTableHeaderView: UIView {
     public let nameLabel: PaddingLabel = {
         let label = PaddingLabel()
         label.font = .systemFont(ofSize: 22, weight: .bold)
+        // HQ-629: deliberate constant white, not a light/dark bug - this sits on a fixed
+        // black overlay (below) for legibility over a photo, not on the app's adaptive
+        // background, so it never needs to change with the system appearance.
         label.textColor = UIColor.white
         label.translatesAutoresizingMaskIntoConstraints = false
         label.backgroundColor = UIColor.black.withAlphaComponent(0.3)
