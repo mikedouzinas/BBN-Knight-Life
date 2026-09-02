@@ -10,11 +10,13 @@
  */
 import { NextResponse } from 'next/server';
 import { UnauthorizedError, requireAdmin } from '@/lib/firebase/requireAdmin';
-import { adminDb } from '@/lib/firebase/admin';
+import { adminDb, adminMessaging } from '@/lib/firebase/admin';
 import { FirestoreScheduleStore } from '@/lib/firebase/firestoreStore';
 import { ScheduleValidationError, publishDay } from '@/lib/schedule/publish';
 import type { ScheduleDay } from '@/lib/schedule/types';
 import { publishBodySchema } from '@/lib/ingest/requestBody';
+import { FcmNotifier } from '@/lib/notify/fcmNotifier';
+import { notifyDayPublished } from '@/lib/notify/scheduleNotify';
 
 export const runtime = 'nodejs';
 
@@ -34,6 +36,8 @@ export async function POST(request: Request) {
       updatedBy: identity.email,
       source: 'ingest',
     });
+
+    await notifyDayPublished(new FcmNotifier(adminMessaging()), plan);
 
     return NextResponse.json({
       published: {

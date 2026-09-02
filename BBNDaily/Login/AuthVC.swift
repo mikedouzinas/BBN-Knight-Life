@@ -528,6 +528,7 @@ class AuthVC: CustomLoader {
                 }
                 //                            isCreated = true
                 LoginVC.blocks = document?.data() ?? [String: Any]()
+                ScheduleNotifications.syncSubscription()
                 let array = ["a":LoginVC.blocks["A"], "b":LoginVC.blocks["B"], "c":LoginVC.blocks["C"], "d":LoginVC.blocks["D"], "e":LoginVC.blocks["E"], "f":LoginVC.blocks["F"], "g":LoginVC.blocks["G"]]
                 var i = 0
                 let myGroup = DispatchGroup()

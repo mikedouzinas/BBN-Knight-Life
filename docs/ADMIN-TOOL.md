@@ -48,10 +48,11 @@ A third document goes to `schedule-publish-log`, recording who published, when, 
 kind of source. That is the answer to "who changed this?", and it is the reason the log exists
 rather than a comment in a spreadsheet.
 
-The app picks up the change the next time a student opens it. **It does not push a
-notification** — notifications today are scheduled locally on each device, so a student who
-does not open the app is not told. That is [HQ-639](https://mikeveson.com/dev), and it is the
-biggest remaining gap in this system.
+The app picks up the change the next time a student opens it, and as of
+[HQ-112](https://mikeveson.com/dev) it also sends a push: every publish (a day or a break) sends
+one FCM message to the `schedule-updates` topic, which every device with notifications on has
+subscribed to. See "Push notifications for schedule changes" below for the one manual step this
+still needs before it reaches a real phone.
 
 ## Doing it by talking to an AI
 
@@ -63,6 +64,35 @@ Setup and the full safety model: **[mcp/README.md](../mcp/README.md)**.
 The short version of the safety model: the agent cannot publish as a side effect of reading
 something, and everything it does still runs through your admin account and the Firestore
 rules. The confirmation step only protects anyone if you actually read the times.
+
+## Push notifications for schedule changes
+
+[HQ-112](https://mikeveson.com/dev). Both write routes — `publish` (a day) and `publish-range`
+(a break) — send one push after a successful publish, through `notifyDayPublished` /
+`notifyRangePublished` in `web/src/lib/notify/scheduleNotify.ts`.
+
+**Why a topic, not a device-token list.** A schedule change affects every student the same
+way, so there is no one to target individually. The app subscribes every device to the FCM
+topic `schedule-updates` (`ScheduleNotifications.swift`), and the server sends one message to
+that topic. Nothing about a device — its token, its owner — is stored anywhere for this; there
+is no new Firestore collection and no new security rule.
+
+**It reuses the existing "Notifications" switch in Settings**, the same one that already
+turns the per-block local reminders on and off, rather than adding a second toggle. Turning it
+off unsubscribes from the topic; turning it on (the default) subscribes.
+
+**The send is best-effort.** If FCM is unreachable or misconfigured, `notifyDayPublished` /
+`notifyRangePublished` log the error and return normally — a failed push never fails, blocks,
+or retries the publish that already succeeded. The write to Firestore is the source of truth;
+the notification is a courtesy on top of it.
+
+**The one manual step this still needs, and it isn't done yet:** FCM cannot reach a real
+iPhone until an APNs Auth Key is uploaded for this project — Firebase console → Project
+Settings → Cloud Messaging → Apple app configuration → upload the `.p8` key from the Apple
+Developer account this app is built under. Without it, `notifier.send()` will fail (silently,
+by design, per the paragraph above) for every subscribed device. This is a one-time console
+action, not a code change, and nobody has confirmed it is done as of 2026-08-29 — check the
+Cloud Messaging tab before assuming a push actually arrives.
 
 ## Vacations and the school year
 

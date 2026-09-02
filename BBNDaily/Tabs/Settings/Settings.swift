@@ -242,6 +242,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     @objc func pressedSwitch(_ switcher: UISwitch) {
         LoginVC.updateField("notifs", to: switcher.isOn ? "true" : "false")
         setNotifications()
+        ScheduleNotifications.syncSubscription()
     }
     // remove all cases of user when joining class too
     override func viewDidAppear(_ animated: Bool) {

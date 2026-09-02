@@ -32,16 +32,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         return true
     }
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        messaging.token { token, _ in
-            guard let token = token else {
-                return
-            }
-            print("Token \(token)")
-        }
+        ScheduleNotifications.syncSubscription()
+    }
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken
     }
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any]) async -> UIBackgroundFetchResult {
 //        print("got one")
         return UIBackgroundFetchResult.newData
+    }
+    // Without this, a push that arrives while the app is open is delivered silently:
+    // no banner, no sound, nothing the student sees.
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .sound, .badge])
+    }
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        completionHandler()
     }
     func requestAuthForNotifications(){
         notificationCenter.delegate = self
