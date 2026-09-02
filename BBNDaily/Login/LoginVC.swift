@@ -15,6 +15,10 @@ import FSCalendar
 import WebKit
 
 class LoginVC: AuthVC {
+    // HQ-661: the side menu's publication list, Firestore-backed. Starts as the same six
+    // defaults that used to be hardcoded, so the menu renders correctly before the fetch
+    // in SideMenuViewController.viewDidLoad ever completes.
+    static var sideMenuPublications: [SideMenuEntry] = SideMenuEntry.defaultPublications
     static var fullName = ""
     static var email = ""
     static var phoneNum = ""

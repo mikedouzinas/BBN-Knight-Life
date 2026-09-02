@@ -160,36 +160,41 @@ class MainViewController: UIViewController {
 extension MainViewController: SideMenuViewControllerDelegate {
     func selectedCell(_ row: Int) {
         CalendarVC.hasPressedSideMenu = true
-        switch row {
-        case 0:
+        if row == 0 {
             self.showViewController(viewController: UINavigationController.self, storyboardId: "ScheduleNavID")
-        case 1:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "VanguardNavID")
-        case 2:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "SpectatorNavID")
-        case 3:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "BenchwarmerNavID")
-        case 4:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "CHASMNavID")
-        case 5:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "POVNavID")
-        case 6:
-            self.showViewController(viewController: UINavigationController.self, storyboardId: "MerchNavID")
-        default:
-            break
+        } else {
+            // HQ-661: publications are data now, not one switch case per storyboard scene.
+            // A row past the end of the current list - the fetch in SideMenuViewController
+            // returning a shorter list than what's on screen, or a stale tap - is simply
+            // ignored, never a crash.
+            let index = row - 1
+            if LoginVC.sideMenuPublications.indices.contains(index) {
+                let entry = LoginVC.sideMenuPublications[index]
+                let publicationVC = PublicationVC()
+                publicationVC.urlString = entry.urlString ?? ""
+                publicationVC.title = entry.title
+                self.showViewController(UINavigationController(rootViewController: publicationVC))
+            }
         }
         // Collapse side menu with animation
         DispatchQueue.main.async { self.sideMenuState(expanded: false) }
     }
     func showViewController<T: UIViewController>(viewController: T.Type, storyboardId: String) -> () {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: storyboardId) as! T
+        showViewController(vc)
+    }
+
+    // HQ-661: same body as the storyboard-ID version above, for a view controller that's
+    // already built rather than one instantiated from a scene - what a Firestore-driven
+    // publication entry needs, since it has no dedicated storyboard scene of its own.
+    func showViewController(_ vc: UIViewController) {
         // Remove the previous View
         for subview in view.subviews {
             if subview.tag == 99 {
                 subview.removeFromSuperview()
             }
         }
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let vc = storyboard.instantiateViewController(withIdentifier: storyboardId) as! T
         vc.view.tag = 99
         view.insertSubview(vc.view, at: self.revealSideMenuOnTop ? 0 : 1)
         addChild(vc)
@@ -336,15 +341,22 @@ class SideMenuViewController: AuthVC {
     var currentIndexPath = IndexPath(row: 0, section: 0)
     var delegate: SideMenuViewControllerDelegate?
     var defaultHighlightedCell: Int = 0
-    var menu: [SideMenuModel] = [
-        SideMenuModel(icon: UIImage(systemName: "calendar")!, title: "Schedule"),
-        SideMenuModel(icon: UIImage(named: "vanguardLogo")!, title: "The Vanguard", textImage: UIImage(named: "vanguardTextLogo")),
-        SideMenuModel(icon: UIImage(named: "spectatorLogo")!, title: "The Spectator", textImage: UIImage(named: "spectatorTextLogo")),
-        SideMenuModel(icon: UIImage(named: "benchwarmerLogo")!, title: "The Benchwarmer", textImage: UIImage(named: "benchwarmerTextLogo")),
-        SideMenuModel(icon: UIImage(systemName: "bonjour")!, title: "CHASM"),
-        SideMenuModel(icon: UIImage(named: "POVLogo")!, title: "POV", textImage: UIImage(named: "povTextLogo")),
-        SideMenuModel(icon: UIImage(systemName: "bag.circle.fill")!, title: "Merch Store")
-    ]
+    // HQ-661: "Schedule" is the one fixed native entry; everything after it is built from
+    // LoginVC.sideMenuPublications, which starts as the same six defaults and is replaced
+    // once the Firestore fetch in viewDidLoad completes. Computed, not stored, so a
+    // reloadData() after that fetch always reflects the current list without this class
+    // needing to know when the data changed underneath it.
+    var menu: [SideMenuModel] {
+        var items = [SideMenuModel(icon: UIImage(systemName: "calendar")!, title: "Schedule")]
+        items += LoginVC.sideMenuPublications.map { entry in
+            SideMenuModel(
+                icon: resolveSideMenuIcon(entry.iconName),
+                title: entry.title,
+                textImage: entry.textImageName.flatMap { UIImage(named: $0) }
+            )
+        }
+        return items
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         // TableView
@@ -397,6 +409,16 @@ class SideMenuViewController: AuthVC {
         self.sideMenuTableView.register(SideMenuCell.nib, forCellReuseIdentifier: SideMenuCell.identifier)
         // Update TableView with the data
         self.sideMenuTableView.reloadData()
+
+        // HQ-661: refresh from Firestore. The menu already shows the correct defaults
+        // above, so this is a silent update if the list has actually changed, not a
+        // loading state anyone waits on.
+        fetchSideMenuPublications { [weak self] entries in
+            LoginVC.sideMenuPublications = entries
+            DispatchQueue.main.async {
+                self?.sideMenuTableView.reloadData()
+            }
+        }
     }
     @objc func profilePressed(_ sender: Any) {
 //        SettingsVC.ProfileLink = self

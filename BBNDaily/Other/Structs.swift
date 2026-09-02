@@ -149,6 +149,34 @@ struct SideMenuModel {
     var textImage: UIImage?
 }
 
+// HQ-661: a side menu publication entry as data, so adding one back or hiding one that
+// went quiet is a Firestore edit, not a code change and a release. "Schedule" is not one
+// of these - it's a fixed, always-first native destination, not something a student
+// maintainer edits.
+struct SideMenuEntry {
+    var title: String
+    var iconName: String       // an asset-catalog image name, checked first, or an SF Symbol name
+    var textImageName: String?
+    var urlString: String?
+    var order: Int
+    var visible: Bool
+
+    // Today's six publications, exactly as they were hardcoded before this ticket. Used
+    // both as the instant-display default (so the menu is never empty while Firestore is
+    // still loading) and as the fallback if the document doesn't exist yet, is empty, or
+    // fails to read - so a vault with nobody having touched the new collection yet, or a
+    // student maintainer typo, degrades to "looks exactly like it did before," never to a
+    // blank or broken menu.
+    static let defaultPublications: [SideMenuEntry] = [
+        SideMenuEntry(title: "The Vanguard", iconName: "vanguardLogo", textImageName: "vanguardTextLogo", urlString: "https://vanguard.bbns.org/", order: 1, visible: true),
+        SideMenuEntry(title: "The Spectator", iconName: "spectatorLogo", textImageName: "spectatorTextLogo", urlString: "https://www.spectatorbbn.org/", order: 2, visible: true),
+        SideMenuEntry(title: "The Benchwarmer", iconName: "benchwarmerLogo", textImageName: "benchwarmerTextLogo", urlString: "https://bbnbenchwarmer.org/", order: 3, visible: true),
+        SideMenuEntry(title: "CHASM", iconName: "bonjour", textImageName: nil, urlString: "https://bbnchasm.com/", order: 4, visible: true),
+        SideMenuEntry(title: "POV", iconName: "POVLogo", textImageName: "povTextLogo", urlString: "https://pov.bbns.org/", order: 5, visible: true),
+        SideMenuEntry(title: "Merch Store", iconName: "bag.circle.fill", textImageName: nil, urlString: "https://www.amerasport.com/Buckingham-Browne-Nichols-BBN-BBN/departments/1029/", order: 6, visible: true),
+    ]
+}
+
 struct Weekday {
     var L1: [block]
     var L2: [block]

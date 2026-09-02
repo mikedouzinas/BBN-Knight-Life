@@ -37,6 +37,17 @@ class PublicationVC: CustomLoader, WKNavigationDelegate {
         webView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         webView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         webView.navigationDelegate = self
+        // HQ-661: built here instead of relying on a storyboard-wired IBOutlet, so a
+        // Firestore-defined publication with no dedicated scene of its own (the whole
+        // point of making the side menu data) still gets a working menu button. The old
+        // per-publication subclasses below that wire this through Interface Builder only
+        // ever worked for the six publications whose scenes already existed.
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "line.3.horizontal"),
+            style: .plain,
+            target: revealViewController(),
+            action: #selector(revealViewController()?.revealSideMenu)
+        )
         guard let url = URL(string: urlString) else {
             return
         }
