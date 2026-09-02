@@ -179,10 +179,21 @@ class AuthVC: CustomLoader {
         formatter.dateFormat = "yyyy/M/d"
         guard let startDate = formatter.date(from: start) else { return false }
         let calendar = Calendar.current
-        guard let elapsed = calendar.dateComponents([.day],
-                                                    from: calendar.startOfDay(for: startDate),
-                                                    to: calendar.startOfDay(for: Date())).day else { return false }
-        return elapsed >= 0 && elapsed <= days
+        guard let offset = calendar.dateComponents([.day],
+                                                   from: calendar.startOfDay(for: Date()),
+                                                   to: calendar.startOfDay(for: startDate)).day else { return false }
+        // The window is symmetric, and the "before" half is the one that matters.
+        //
+        // A one-sided "started within the last 30 days" test looks right and is wrong in
+        // practice, because the term document is published BEFORE the year begins. Production
+        // on 2026-09-01 read start = 2026/9/8: seven days out. A one-sided test treats that as
+        // "no rollover", records 2026/9/8 as the term this student is already set up for, and
+        // then on 9/8 recordedFor == start, so the prompt never fires at all. The student
+        // walks into the new year holding last year's schedule, which is the exact case this
+        // whole ticket exists to catch.
+        //
+        // Anyone opening the app in the run-up to a new year is precisely who should be asked.
+        return abs(offset) <= days
     }
 
     /// Records the term this student's classes are considered set up for, without prompting.
