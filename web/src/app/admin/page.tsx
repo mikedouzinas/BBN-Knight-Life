@@ -21,6 +21,7 @@ type Status =
 
 export default function AdminPage() {
   const [status, setStatus] = useState<Status>({ kind: 'loading' });
+  const [termWarning, setTermWarning] = useState<string | null>(null);
 
   const getToken = useCallback(async () => {
     const user = clientAuth().currentUser;
@@ -48,6 +49,23 @@ export default function AdminPage() {
       void check();
     });
   }, [check]);
+
+  useEffect(() => {
+    if (status.kind !== 'admin') return;
+    let cancelled = false;
+    void (async () => {
+      const token = await getToken();
+      if (!token) return;
+      const res = await fetch(withBasePath('/api/admin/term-coverage'), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json().catch(() => ({}))) as { warning?: string | null };
+      if (!cancelled) setTermWarning(res.ok ? (data.warning ?? null) : null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [status.kind, getToken]);
 
   if (status.kind === 'unconfigured') {
     return (
@@ -91,6 +109,11 @@ export default function AdminPage() {
           Sign out
         </button>
       </div>
+      {termWarning && (
+        <ul className="warnings">
+          <li>{termWarning}</li>
+        </ul>
+      )}
       <IngestTool options={{ getToken }} />
       <LinkAgent />
     </>
