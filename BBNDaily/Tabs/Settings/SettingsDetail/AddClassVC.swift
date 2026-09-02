@@ -128,8 +128,19 @@ class AddClassVC: UIViewController, UITextFieldDelegate {
             return
         }
 
-        let teacher = teacherInput.isEmpty ? "N/A" : teacherInput
-        let room = roomInput.isEmpty ? "N/A" : roomInput
+        // A blank teacher or room stays BLANK in the key. "N/A" is a display convention
+        // applied when a key is parsed (String.setNotAvailable, used by getValues), never a
+        // value that is stored.
+        //
+        // Writing it into the key breaks the round trip. DaySelectVC, the original create
+        // path, joins the raw fields with no substitution, and ClassesOptionsPopupVC's
+        // didSelectRowAt strips "N/A" back out before it looks the document up. So a class
+        // created here as `Math~N/A~N/A~A` is selected as `Math~~~A`, which does not exist:
+        // the lookup falls into an `else` that only prints, the screen never dismisses, and
+        // the student's users/{uid} record has already been pointed at the missing document.
+        // Silent, and it corrupts the record rather than failing.
+        let teacher = teacherInput
+        let room = roomInput
 
         if let match = findExistingMatch(subject: subject, teacher: teacher, room: room) {
             confirmJoinExisting(match: match, typedSubject: subject, typedTeacher: teacher, typedRoom: room)
