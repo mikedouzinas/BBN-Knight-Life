@@ -100,7 +100,14 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     func sortTasks() {
         tasks = [SchoolTask]()
         let tempTasks = LoginVC.blocks["tasks"] as? [[String: Any]]
+        // checkIfEmpty() BEFORE returning. A student who has never made a task has no `tasks`
+        // field at all, so this cast returns nil and the early return skipped the empty-state
+        // message: the list rendered blank with nothing explaining why. The message only
+        // appeared after a first delete, because deleting writes an empty ARRAY, which is
+        // non-nil and reaches checkIfEmpty at the bottom. "Never had a task" and "deleted my
+        // last task" look identical to a student, so they have to behave identically here.
         guard tempTasks != nil else {
+            checkIfEmpty()
             return
         }
         let dateformatter = DateFormatter()
