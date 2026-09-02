@@ -42,6 +42,40 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 100
     }
+    // HQ-116. `SchoolTask.index` is this task's position in the unfiltered
+    // LoginVC.blocks["tasks"] array (see sortTasks below), which is how a row in the
+    // filtered, sorted display list maps back to the raw array entry to remove.
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        guard editingStyle == .delete else { return }
+        // Checked, not interpolated: an empty uid becomes document(""), which Firestore
+        // treats as a fatal programmer error rather than a failed write. Checked BEFORE the
+        // local array is mutated, so a delete that cannot be persisted does not vanish from
+        // the screen and come back on the next launch.
+        guard let uid = LoginVC.blocks["uid"] as? String, !uid.isEmpty else {
+            ProgressHUD.colorAnimation = .red
+            ProgressHUD.failed("Please sign out and back in to fix your account")
+            return
+        }
+        let removedIndex = tasks[indexPath.row].index
+        var rawTasks = (LoginVC.blocks["tasks"] as? [[String: Any]]) ?? []
+        guard removedIndex >= 0, removedIndex < rawTasks.count else { return }
+        rawTasks.remove(at: removedIndex)
+        LoginVC.blocks["tasks"] = rawTasks
+        // setData(merge:) rather than updateData, which fails outright on a record that has
+        // not been created yet, and a completion handler so a failed delete says so instead
+        // of reappearing at the next launch with no explanation.
+        Firestore.firestore().collection("users").document(uid)
+            .setData(["tasks": rawTasks], merge: true) { error in
+                guard let error = error else { return }
+                print("task delete failed: \(error)")
+                ProgressHUD.colorAnimation = .red
+                ProgressHUD.failed("Couldn't delete that task. It may come back.")
+            }
+        // Re-derive from the array just written rather than removing this one row by hand,
+        // so every other task's `index` (now shifted) is correct before the next delete.
+        sortTasks()
+        tableView.reloadData()
+    }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         selectedTask = tasks[indexPath.row]
         selectedIndex = indexPath.row
