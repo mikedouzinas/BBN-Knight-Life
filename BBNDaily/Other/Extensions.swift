@@ -1142,6 +1142,7 @@ extension UIViewController {
         let calendar = Calendar.current
         LoginVC.upcomingDays = [ResolvedDay]()
         var scheduled = 0
+        var budgetFull = false
         let notifsOn = ((LoginVC.blocks["notifs"] as? String) ?? "") == "true"
         let maxLookaheadDays = 14
         let requestBudget = 64
@@ -1151,8 +1152,22 @@ extension UIViewController {
             // describe a different day from the one on screen.
             let day = resolveDay(date: tempDate)
             LoginVC.upcomingDays.append(day)
-            guard notifsOn, day.hasClasses else { continue }
-            guard scheduled + day.blocks.count <= requestBudget else { break }
+            guard notifsOn, day.hasClasses, !budgetFull else { continue }
+            // `continue`, never `break`. This loop has a second job: every iteration appends
+            // to LoginVC.upcomingDays, which CalendarVC walks to find "Next Day of Classes",
+            // and setNotifications is the only thing that ever writes it. Leaving the loop
+            // early to stop scheduling would also stop filling that list, so a student with
+            // notifications ON would get a shorter calendar lookahead than one with them
+            // off - a notification budget silently truncating an unrelated feature.
+            //
+            // budgetFull latches rather than being re-tested per day, so the window stays
+            // contiguous. Without the latch a later, lighter day could slip under the cap
+            // after a heavier one was skipped, which is exactly the "days silently missing
+            // from the middle" shape this ticket set out to remove.
+            guard scheduled + day.blocks.count <= requestBudget else {
+                budgetFull = true
+                continue
+            }
             for x in day.blocks {
                 addNotif(x: x, weekDay: day.weekdayName, date: day.date)
             }
