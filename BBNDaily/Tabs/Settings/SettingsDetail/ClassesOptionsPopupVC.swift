@@ -19,11 +19,17 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         return editClassTableViewCell.identifier
     }
     var classIsEditing = false
+    // HQ-658: adding a class is one screen now (AddClassVC), not the four-screen
+    // Name -> Teacher -> Room -> DaySelect chain. Editing an existing class still goes
+    // through that chain via editCell(viewModel:indexPath:) below - unchanged, since its
+    // rename-migration logic is already correct and out of this ticket's scoped-down
+    // version.
     @IBAction func addClass(_ sender: UIBarButtonItem) {
         ClassesOptionsPopupVC.newClass = ClassModel(Subject: "", Teacher: "", Room: "", Block: ClassesOptionsPopupVC.newClass.Block)
         classIsEditing = false
-        presentTextfield()
-        
+        let vc = AddClassVC()
+        vc.link = self
+        navigationController?.pushViewController(vc, animated: true)
     }
     func presentTextfield() {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)

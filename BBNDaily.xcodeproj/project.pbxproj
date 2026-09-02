@@ -33,6 +33,7 @@
 		27AEED6C288B352100C6176C /* ClassNameVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED6B288B352100C6176C /* ClassNameVC.swift */; };
 		27AEED6E288B353D00C6176C /* TeacherNameVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED6D288B353D00C6176C /* TeacherNameVC.swift */; };
 		27AEED70288B355900C6176C /* RoomNumVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED6F288B355900C6176C /* RoomNumVC.swift */; };
+		6723B259041C156451B03A1E /* AddClassVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D999875B0353C697F5D83E /* AddClassVC.swift */; };
 		27AEED72288B359100C6176C /* DaySelectVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED71288B359100C6176C /* DaySelectVC.swift */; };
 		27AEED74288B35B500C6176C /* TextFieldVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED73288B35B500C6176C /* TextFieldVC.swift */; };
 		27AEED76288B35DD00C6176C /* AboutTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED75288B35DD00C6176C /* AboutTableViewCell.swift */; };
@@ -151,6 +152,7 @@
 		27AEED6B288B352100C6176C /* ClassNameVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassNameVC.swift; sourceTree = "<group>"; };
 		27AEED6D288B353D00C6176C /* TeacherNameVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeacherNameVC.swift; sourceTree = "<group>"; };
 		27AEED6F288B355900C6176C /* RoomNumVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomNumVC.swift; sourceTree = "<group>"; };
+		C2D999875B0353C697F5D83E /* AddClassVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddClassVC.swift; sourceTree = "<group>"; };
 		27AEED71288B359100C6176C /* DaySelectVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaySelectVC.swift; sourceTree = "<group>"; };
 		27AEED73288B35B500C6176C /* TextFieldVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldVC.swift; sourceTree = "<group>"; };
 		27AEED75288B35DD00C6176C /* AboutTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutTableViewCell.swift; sourceTree = "<group>"; };
@@ -299,6 +301,7 @@
 				27AEED6B288B352100C6176C /* ClassNameVC.swift */,
 				27AEED6D288B353D00C6176C /* TeacherNameVC.swift */,
 				27AEED6F288B355900C6176C /* RoomNumVC.swift */,
+				C2D999875B0353C697F5D83E /* AddClassVC.swift */,
 				27AEED71288B359100C6176C /* DaySelectVC.swift */,
 			);
 			path = SettingsDetail;
@@ -771,6 +774,7 @@
 				A1KTBC0000000000000002 /* KnightTabBarController.swift in Sources */,
 				27AEED88288B37B700C6176C /* HomeworkTitleVC.swift in Sources */,
 				27AEED70288B355900C6176C /* RoomNumVC.swift in Sources */,
+				6723B259041C156451B03A1E /* AddClassVC.swift in Sources */,
 				27AEED5B288B338500C6176C /* ClassPopupVC.swift in Sources */,
 				8704E97A26EEA6FC001826F8 /* NewsVC.swift in Sources */,
 				27AEED66288B34A200C6176C /* editClassTableViewCell.swift in Sources */,
