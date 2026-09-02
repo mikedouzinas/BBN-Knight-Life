@@ -32,6 +32,12 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/admins/$(email()));
     }
 
+    // Fields on a student's own record that the student must never write, because a server
+    // reads them back as a limit. See the `users` rule and `student-budgets` below.
+    function serverOwnedUserFields() {
+      return ['classSetupSubmissionsRemaining', 'classSetupBudgetResetsAt'];
+    }
+
     // Who can publish schedules.
     //
     //   get   - your own row, or any row if you are an admin. The app reads its own row on
@@ -67,16 +73,49 @@ service cloud.firestore {
     //           and stops one query from returning every student's locker number.
     //   write - your own document, or the A-G block fields of a classmate's document,
     //           which is what DaySelectVC does when a class is renamed.
+    //
+    // The one thing a student may NOT write on their own record is a field the server reads
+    // back as a limit. HQ-656 put a schedule-scan counter here, on the document its own
+    // subject is allowed to write, so the student being rate-limited could raise their own
+    // limit and spend the project's Anthropic budget without bound. The counter has since
+    // moved to `student-budgets` below; this exclusion stays as the standing rule that a
+    // server-authoritative value never lives on a client-writable document.
     match /users/{uid} {
       allow get:  if signedIn();
       allow list: if isAdmin();
 
-      allow create, delete: if signedIn() && request.auth.uid == uid;
+      allow delete: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid
+        && !request.resource.data.keys().hasAny(serverOwnedUserFields());
       allow update: if signedIn() && (
-        request.auth.uid == uid
+        (request.auth.uid == uid
+          && !request.resource.data.diff(resource.data).affectedKeys()
+                .hasAny(serverOwnedUserFields()))
         || request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
       );
+    }
+
+    // How many schedule scans a student has left this year (HQ-656). Server-authoritative:
+    // written only by the Admin SDK, which bypasses these rules, and never readable or
+    // writable by the student it governs. A limit stored anywhere its subject can reach is
+    // not a limit, and `users/{uid}` is exactly such a place.
+    match /student-budgets/{uid} {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
+
+    // The side menu's publication list (HQ-661), so adding a paper back or hiding one that
+    // went quiet is a Firestore edit rather than a code change and an App Store release.
+    // Every student reads it on launch; only a maintainer changes it.
+    //
+    // Without this rule the catch-all below denies the read, and the app's fallback to its
+    // hardcoded list makes that denial look like nothing happened at all: the menu renders
+    // correctly and the feature is inert. That is the failure this rule exists to prevent,
+    // and `rules.emulator.test.ts` is what keeps it from coming back.
+    match /sideMenu/{doc} {
+      allow read:  if signedIn();
+      allow write: if isAdmin();
     }
 
     // Class rosters. Students create and join classes, and ClassesOptionsPopupVC
