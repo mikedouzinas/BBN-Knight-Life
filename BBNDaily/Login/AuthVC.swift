@@ -148,20 +148,30 @@ class AuthVC: CustomLoader {
         guard hasAnyClass else { return } // nothing set yet to roll over - not this ticket's case
 
         Firestore.firestore().collection("schedules").document("term").getDocument { snapshot, error in
-            guard error == nil, let start = snapshot?.data()?["start"] as? String else { return }
+            guard error == nil, let data = snapshot?.data(),
+                  let start = data["start"] as? String else { return }
             let recordedFor = LoginVC.blocks["classesSetForTermStart"] as? String
             guard recordedFor != start else { return } // already set up for the current term
 
-            // `recordedFor` is nil for EVERY student the first time this ships, because
-            // nothing has ever written the field. Prompting on nil alone would ask the whole
-            // school to wipe their classes on their next launch, whenever that happened to
-            // be, with no new school year involved at all.
+            // WHEN to ask is a school-calendar decision, so it lives in schedules/term with
+            // the rest of the school calendar rather than as a constant compiled into the
+            // app. An admin moves it; nobody ships a release.
             //
-            // So a missing record is not evidence of a rollover, and the term's own start
-            // date is. Prompt only when the year genuinely just began; otherwise record the
-            // current term silently, which costs this one launch and makes every following
-            // year work off a real recorded value rather than an absence.
-            guard Self.termStartedRecently(start) else {
+            //   rolloverPromptFrom   "yyyy/M/d", optional. The day the prompt starts
+            //                        appearing. Defaults to the term's own start date, so
+            //                        with no admin action at all the app asks on the first
+            //                        day of school and not before.
+            //   rolloverPromptUntil  "yyyy/M/d", optional. The day it stops. Defaults to 30
+            //                        days after the window opens, so a student who does not
+            //                        open the app in September is not asked in April.
+            //
+            // Nothing is recorded while the window is still shut, and that is the point.
+            // Recording early was the bug: it marked a student as set up for a term that had
+            // not begun, so when it did begin recordedFor == start and the prompt never fired.
+            guard let window = Self.rolloverWindow(from: data, termStart: start) else { return }
+            let today = Calendar.current.startOfDay(for: Date())
+            guard today >= window.opens else { return }   // too early: wait, record nothing
+            guard today <= window.closes else {           // long past: not a rollover
                 Self.recordTermSetup(start)
                 return
             }
@@ -171,31 +181,25 @@ class AuthVC: CustomLoader {
         }
     }
 
-    /// Whether a `yyyy/M/d` term start is inside the window where "a new year just started"
-    /// is actually true. Unparseable reads FALSE: an unreadable date is a broken read, and a
-    /// broken read must never turn into a prompt asking a student to delete their schedule.
-    private static func termStartedRecently(_ start: String, within days: Int = 30) -> Bool {
+    /// The dates between which the new-year prompt may appear, read from `schedules/term`.
+    ///
+    /// Returns nil when the term's own start date cannot be parsed, and nil means do nothing.
+    /// An unreadable school calendar must never turn into a dialog asking a student to delete
+    /// their schedule.
+    private static func rolloverWindow(from data: [String: Any], termStart: String) -> (opens: Date, closes: Date)? {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/M/d"
-        guard let startDate = formatter.date(from: start) else { return false }
         let calendar = Calendar.current
-        guard let offset = calendar.dateComponents([.day],
-                                                   from: calendar.startOfDay(for: Date()),
-                                                   to: calendar.startOfDay(for: startDate)).day else { return false }
-        // The window is symmetric, and the "before" half is the one that matters.
-        //
-        // A one-sided "started within the last 30 days" test looks right and is wrong in
-        // practice, because the term document is published BEFORE the year begins. Production
-        // on 2026-09-01 read start = 2026/9/8: seven days out. A one-sided test treats that as
-        // "no rollover", records 2026/9/8 as the term this student is already set up for, and
-        // then on 9/8 recordedFor == start, so the prompt never fires at all. The student
-        // walks into the new year holding last year's schedule, which is the exact case this
-        // whole ticket exists to catch.
-        //
-        // Anyone opening the app in the run-up to a new year is precisely who should be asked.
-        return abs(offset) <= days
-    }
+        guard let startDate = formatter.date(from: termStart) else { return nil }
 
+        let opens = (data["rolloverPromptFrom"] as? String).flatMap { formatter.date(from: $0) } ?? startDate
+        let defaultClose = calendar.date(byAdding: .day, value: 30, to: opens) ?? opens
+        let closes = (data["rolloverPromptUntil"] as? String).flatMap { formatter.date(from: $0) } ?? defaultClose
+        // A window that closes before it opens is a typo in the calendar, not an instruction.
+        guard opens <= closes else { return nil }
+
+        return (calendar.startOfDay(for: opens), calendar.startOfDay(for: closes))
+    }
     /// Records the term this student's classes are considered set up for, without prompting.
     private static func recordTermSetup(_ termStart: String) {
         LoginVC.blocks["classesSetForTermStart"] = termStart
