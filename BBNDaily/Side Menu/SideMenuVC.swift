@@ -490,18 +490,41 @@ extension SideMenuViewController: UITableViewDataSource {
         cell.iconImageView.tintColor = UIColor(named: "inverse")
         cell.textImageView.tintColor = UIColor(named: "inverse")
         let myCustomSelectionColorView = UIView()
-        if indexPath.row == 0 {
+        // The highlight is set on EVERY path, not only the selected one. Without the else a
+        // reused cell keeps whatever background it had last, and because this row is styled
+        // by index rather than by the cell's own state, a cell that had been row 0 stays
+        // highlighted when it comes back as row 1.
+        //
+        // That is visible on a normal launch: HQ-661 loads the publication list from
+        // Firestore, the read completes (or fails to the hardcoded defaults) after the table
+        // has already drawn once, and the reloadData that follows recycles cells. Both
+        // Schedule and The Vanguard then appear selected at once, and tapping elsewhere does
+        // not clear it because nothing ever resets a row this function did not touch.
+        //
+        // Keyed off currentIndexPath rather than a literal 0, so the highlight follows the
+        // actual selection instead of asserting that row 0 is always selected.
+        if indexPath == currentIndexPath {
             cell.background.backgroundColor = UIColor(named: "inverse-light")
-            cell.titleLabel.textColor = UIColor(named: "inverse")
-            cell.iconImageView.tintColor = UIColor(named: "inverse")
+        } else {
+            cell.background.backgroundColor = .clear
         }
+        cell.titleLabel.textColor = UIColor(named: "inverse")
+        cell.iconImageView.tintColor = UIColor(named: "inverse")
         cell.selectedBackgroundView = myCustomSelectionColorView
         return cell
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        deselect(cell: tableView.cellForRow(at: currentIndexPath) as! SideMenuCell)
-        select(cell: tableView.cellForRow(at: indexPath) as! SideMenuCell)
+        // cellForRow returns nil for a row that is not on screen, and the previous selection
+        // very often is not, so `as! SideMenuCell` was a force-unwrap of nil waiting to
+        // happen. Conditional here; cellForRowAt above restyles the row from
+        // currentIndexPath anyway, so an off-screen row is still correct when it scrolls back.
+        if let previous = tableView.cellForRow(at: currentIndexPath) as? SideMenuCell {
+            deselect(cell: previous)
+        }
+        if let selected = tableView.cellForRow(at: indexPath) as? SideMenuCell {
+            select(cell: selected)
+        }
         currentIndexPath = indexPath
         self.delegate?.selectedCell(indexPath.row)
     }
