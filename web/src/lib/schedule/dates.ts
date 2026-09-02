@@ -66,6 +66,23 @@ export function toBreakKey(startIso: string, endIso: string): string {
   return key;
 }
 
+/**
+ * The LEGACY through-date document id: `Monday, June 15, 2026-Monday, September 7, 2026`.
+ *
+ * Two full date strings joined by a hyphen, which is what the shipped 2.4.1 app looks for when
+ * it works out NOTIFICATIONS. That build resolves alerts through `getScheduleFor`, which scans
+ * `special-schedules` for an id whose two halves bracket the date. It does NOT read
+ * `schedules/break`, so writing only the modern span fixes the calendar and leaves the alarms
+ * firing.
+ *
+ * Found on 2026-08-19 the hard way: the calendar correctly said "No Class - Summer break" for
+ * every student while 2.4.1 was still scheduling class notifications through August, because
+ * the last summer through-date anyone wrote was June 2025.
+ */
+export function toLegacyBreakId(startIso: string, endIso: string): string {
+  return `${toLegacyKey(startIso)}-${toLegacyKey(endIso)}`;
+}
+
 /** `2026/12/19-2027/1/3` back to a pair of ISO dates. */
 export function fromBreakKey(key: string): { start: string; end: string } {
   const parts = key.split('-');

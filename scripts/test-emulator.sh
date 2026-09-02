@@ -34,6 +34,12 @@
 # one. Both counters are now checked against the literal coloured line Actions produced:
 #     coloured "10 passed"  -> passed=10 skipped=0
 #     coloured "10 skipped" -> passed=0  skipped=10
+#
+# Third case, 2026-08-19: a run with a genuine failure printed
+#     Tests  1 failed | 11 passed (12)
+# which the pattern could not read, so it reported "CHECKED 0 emulator tests executed" and
+# blamed the emulator for a run where twelve tests ran and one caught a real bug. Counting by
+# the word after each number reports 12 executed (11 passed, 1 failed).
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -96,11 +102,21 @@ set -e
 # WHOSE TESTS ALL PASSED, which is the opposite failure and the more corrosive one: a check
 # that cries wolf is a check somebody deletes.
 CLEAN=$(sed -E $'s/\033\[[0-9;]*[a-zA-Z]//g' "$LOG")
-PASSED=$(printf '%s' "$CLEAN" | grep -oE 'Tests +[0-9]+ passed' | tail -1 | grep -oE '[0-9]+' || echo 0)
-SKIPPED=$(printf '%s' "$CLEAN" | grep -oE '[0-9]+ skipped' | tail -1 | grep -oE '[0-9]+' || echo 0)
-echo "CHECKED $PASSED emulator tests executed, $SKIPPED skipped"
+# The summary line takes several shapes, and reading only the happy one is how this reported
+# "CHECKED 0 emulator tests executed" for a run where twelve tests ran and one failed:
+#     Tests  10 passed (10)
+#     Tests  1 failed | 11 passed (12)
+#     Tests  10 skipped (10)
+# So count each number by the word that follows it, wherever it appears on the summary line,
+# rather than assuming it comes straight after "Tests".
+SUMMARY=$(printf '%s' "$CLEAN" | grep -E '^ *Tests +[0-9]' | tail -1)
+PASSED=$(printf '%s'  "$SUMMARY" | grep -oE '[0-9]+ passed'  | grep -oE '[0-9]+' || echo 0)
+FAILED=$(printf '%s'  "$SUMMARY" | grep -oE '[0-9]+ failed'  | grep -oE '[0-9]+' || echo 0)
+SKIPPED=$(printf '%s' "$SUMMARY" | grep -oE '[0-9]+ skipped' | grep -oE '[0-9]+' || echo 0)
+EXECUTED=$(( ${PASSED:-0} + ${FAILED:-0} ))
+echo "CHECKED $EXECUTED emulator tests executed ($PASSED passed, $FAILED failed), $SKIPPED skipped"
 
-if [ "${PASSED:-0}" -lt 1 ]; then
+if [ "${EXECUTED:-0}" -lt 1 ]; then
   echo "::error::Ran $PASSED emulator tests. Zero is a broken run, not a pass: the suite skips itself when FIRESTORE_EMULATOR_HOST is unset."
   rm -f "$LOG"
   exit 1

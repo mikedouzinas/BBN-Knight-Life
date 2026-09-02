@@ -13,7 +13,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { deleteApp, initializeApp } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
-import { FirestoreRangeStore, BREAK_DOC, PUBLISH_LOG_COLLECTION } from './firestoreStore';
+import { FirestoreRangeStore, BREAK_DOC, LEGACY_COLLECTION, PUBLISH_LOG_COLLECTION } from './firestoreStore';
 import { ScheduleValidationError, publishRange } from '@/lib/schedule/publish';
 
 const emulated = process.env.FIRESTORE_EMULATOR_HOST ? describe : describe.skip;
@@ -55,6 +55,39 @@ emulated('FirestoreRangeStore', () => {
     expect(key.split('-')).toHaveLength(2);
     expect(typeof doc[key].reason).toBe('string');
     expect(key.split('-')[0] <= key.split('-')[1]).toBe(true);
+  });
+
+  /**
+   * The shipped 2.4.1 app resolves the CALENDAR from schedules/break and NOTIFICATIONS from a
+   * through-date document in special-schedules. Writing only the first produces an app that
+   * says "No Class" and wakes a student for first period anyway, which is exactly what
+   * happened for the whole of August 2026 before anybody noticed.
+   */
+  it('ALSO writes the through-date the shipped app reads for notifications', async () => {
+    await publishRange(store, request('2026-12-19', '2027-01-03', 'Winter break'));
+
+    const id = 'Saturday, December 19, 2026-Sunday, January 3, 2027';
+    const legacy = await db.collection(LEGACY_COLLECTION).doc(id).get();
+
+    expect(legacy.exists, `special-schedules/${id} is what 2.4.1 checks before notifying`).toBe(true);
+    expect(legacy.data()).toEqual({ date: id, reason: 'Winter break' });
+    // The id must contain exactly one hyphen: the old app splits on the first one.
+    expect(id.split('-')).toHaveLength(2);
+  });
+
+  it('writes both destinations or neither', async () => {
+    await expect(publishRange(store, request('2027-05-10', '2027-05-01', 'Backwards')))
+      .rejects.toThrow(ScheduleValidationError);
+
+    const breaks = (await db.doc(BREAK_DOC).get()).data() ?? {};
+    expect(Object.keys(breaks)).toEqual(['2026/11/25-2026/11/29']);
+
+    // The specific document, not the collection's size. Other tests in this file write legacy
+    // docs of their own, so a size assertion measures them rather than this publish. Same
+    // mistake was made once already in this file and is worth not making twice.
+    const legacy = await db.collection(LEGACY_COLLECTION)
+      .doc('Monday, May 10, 2027-Saturday, May 1, 2027').get();
+    expect(legacy.exists).toBe(false);
   });
 
   it('MERGES rather than replacing, so publishing one break does not delete the others', async () => {
