@@ -20,6 +20,15 @@ struct ScannedClass {
     var room: String
 }
 
+/// One auto-detected non-class fact from the same scan: lunch wave, grade, or advisory
+/// room. `key` picks which field it writes back to on save; `value` is exactly what
+/// Settings.swift stores for that field, so it round-trips without translation.
+struct ScannedDetail {
+    var key: String // "lunch" | "grade" | "advisory"
+    var label: String
+    var value: String
+}
+
 class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITableViewDelegate, UITableViewDataSource {
 
     private let imageView: UIImageView = {
@@ -49,6 +58,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     }()
 
     private var results = [ScannedClass]()
+    private var detailRows = [ScannedDetail]()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -221,29 +231,106 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             return
         }
 
+        // Whichever of these the model found on the same schedule. Each is optional and
+        // independent - a sheet showing lunch but not advisory still reports the lunch.
+        // Values are stored exactly as Settings.swift stores them (e.g. "2nd Lunch", "10"),
+        // so applyDetails() below can write them straight through with no translation.
+        detailRows = []
+        if let lunch = json["lunch"] as? String, !lunch.isEmpty {
+            detailRows.append(ScannedDetail(key: "lunch", label: "Lunch", value: lunch))
+        }
+        if let grade = json["grade"] as? String, !grade.isEmpty {
+            detailRows.append(ScannedDetail(key: "grade", label: "Grade", value: grade))
+        }
+        if let advisory = json["advisory"] as? String, !advisory.isEmpty {
+            detailRows.append(ScannedDetail(key: "advisory", label: "Advisory Room", value: advisory))
+        }
+
         navigationItem.rightBarButtonItem?.isEnabled = true
         tableView.reloadData()
     }
 
     // MARK: - Review list
 
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { results.count }
+    // Section 0: auto-detected lunch/grade/advisory (only the ones this scan actually
+    // found). Section 1: classes, one row per block - same as before this section existed.
+    func numberOfSections(in tableView: UITableView) -> Int { 2 }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        section == 0 ? detailRows.count : results.count
+    }
+
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if section == 0 { return detailRows.isEmpty ? nil : "Also Detected" }
+        return results.isEmpty ? nil : "Classes"
+    }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "scanRow", for: indexPath)
-        let row = results[indexPath.row]
         cell.backgroundColor = UIColor(named: "background")
         cell.textLabel?.textColor = UIColor(named: "inverse")
         cell.detailTextLabel?.textColor = .systemGray
-        cell.textLabel?.text = "Block \(row.block.uppercased()): \(row.subject)"
-        cell.detailTextLabel?.text = [row.teacher, row.room].filter { !$0.isEmpty }.joined(separator: " · ")
         cell.accessoryType = .disclosureIndicator
+        if indexPath.section == 0 {
+            let row = detailRows[indexPath.row]
+            cell.textLabel?.text = row.label
+            cell.detailTextLabel?.text = row.value
+        } else {
+            let row = results[indexPath.row]
+            cell.textLabel?.text = "Block \(row.block.uppercased()): \(row.subject)"
+            cell.detailTextLabel?.text = [row.teacher, row.room].filter { !$0.isEmpty }.joined(separator: " · ")
+        }
         return cell
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        editRow(at: indexPath.row)
+        if indexPath.section == 0 {
+            editDetailRow(at: indexPath.row)
+        } else {
+            editRow(at: indexPath.row)
+        }
+    }
+
+    private func editDetailRow(at index: Int) {
+        let row = detailRows[index]
+        switch row.key {
+        case "lunch":
+            let alert = UIAlertController(title: "Lunch", message: "Detected from your schedule. Fix it if it's wrong, or remove it.", preferredStyle: .actionSheet)
+            alert.addAction(UIAlertAction(title: "1st Lunch", style: .default, handler: { [weak self] _ in self?.setDetail(at: index, to: "1st Lunch") }))
+            alert.addAction(UIAlertAction(title: "2nd Lunch", style: .default, handler: { [weak self] _ in self?.setDetail(at: index, to: "2nd Lunch") }))
+            alert.addAction(UIAlertAction(title: "Remove", style: .destructive, handler: { [weak self] _ in self?.removeDetail(at: index) }))
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            present(alert, animated: true)
+        case "grade":
+            let alert = UIAlertController(title: "Grade", message: "Detected from your schedule. Fix it if it's wrong, or remove it.", preferredStyle: .actionSheet)
+            for (label, value) in [("Freshman", "9"), ("Sophomore", "10"), ("Junior", "11"), ("Senior", "12")] {
+                alert.addAction(UIAlertAction(title: label, style: .default, handler: { [weak self] _ in self?.setDetail(at: index, to: value) }))
+            }
+            alert.addAction(UIAlertAction(title: "Remove", style: .destructive, handler: { [weak self] _ in self?.removeDetail(at: index) }))
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            present(alert, animated: true)
+        default: // advisory
+            let alert = UIAlertController(title: "Advisory Room", message: "Detected from your schedule. Fix it if it's wrong, or remove it.", preferredStyle: .alert)
+            alert.addTextField { field in field.text = row.value; field.placeholder = "Advisory Room" }
+            alert.addAction(UIAlertAction(title: "Remove", style: .destructive, handler: { [weak self] _ in self?.removeDetail(at: index) }))
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            alert.addAction(UIAlertAction(title: "Save", style: .default, handler: { [weak self] _ in
+                self?.setDetail(at: index, to: alert.textFields?[0].text ?? row.value)
+            }))
+            present(alert, animated: true)
+        }
+    }
+
+    private func setDetail(at index: Int, to value: String) {
+        guard !value.isEmpty else { return }
+        detailRows[index].value = value
+        tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .fade)
+    }
+
+    private func removeDetail(at index: Int) {
+        detailRows.remove(at: index)
+        tableView.reloadData()
     }
 
     private func editRow(at index: Int) {
@@ -264,7 +351,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             self.results[index].subject = alert.textFields?[0].text ?? row.subject
             self.results[index].teacher = alert.textFields?[1].text ?? row.teacher
             self.results[index].room = alert.textFields?[2].text ?? row.room
-            self.tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .fade)
+            self.tableView.reloadRows(at: [IndexPath(row: index, section: 1)], with: .fade)
         }))
         present(alert, animated: true)
     }
@@ -277,14 +364,42 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         saveNextClass(index: 0)
     }
 
+    /// Writes whatever detail rows the student confirmed. Fire-and-forget through
+    /// LoginVC.updateField, same as every edit in Settings.swift - not chained with the
+    /// class saves above it because these three fields don't share a document key, so a
+    /// failure in one can't leave another half-written the way abortSave protects classes.
+    private func applyDetails() {
+        guard !detailRows.isEmpty else { return }
+        for row in detailRows {
+            switch row.key {
+            case "lunch":
+                // One wave for all 5 lunch blocks - a single schedule scan has no way to
+                // tell the app a student's lunch differs by day, so it sets the same
+                // value everywhere Settings.swift's per-day lunch picker would.
+                for blockKey in ["l-d", "l-c", "l-g", "l-a", "l-f"] {
+                    LoginVC.updateField(blockKey, to: row.value)
+                }
+            case "grade":
+                LoginVC.updateField("grade", to: row.value)
+            default: // advisory
+                LoginVC.updateField("room-advisory", to: row.value)
+            }
+        }
+        if ((LoginVC.blocks["notifs"] as? String) ?? "") == "true" {
+            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+            setNotifications()
+        }
+    }
+
     // One block at a time, same reasoning as resetClasses (HQ-649): each write is
     // self-contained, so a failure partway through leaves everything before it durably
     // saved rather than losing the whole batch.
     private func saveNextClass(index: Int) {
         guard index < results.count else {
+            applyDetails()
             hideLoader(completion: { [weak self] in
                 ProgressHUD.colorAnimation = .green
-                ProgressHUD.succeed("Classes saved")
+                ProgressHUD.succeed((self?.detailRows.isEmpty ?? true) ? "Classes saved" : "Classes and schedule info saved")
                 self?.navigationController?.popViewController(animated: true)
             })
             return

@@ -41,6 +41,9 @@ export async function POST(request: Request) {
     const result = await extractStudentClasses(parsed.data);
     return NextResponse.json({
       classes: result.classes,
+      lunch: result.details?.lunch ?? null,
+      grade: result.details?.grade ?? null,
+      advisory: result.details?.advisory ?? null,
       message: result.message,
       rejected: result.rejected,
       attempts: result.attempts,

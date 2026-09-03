@@ -9,7 +9,11 @@ import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import type { IngestAttachment } from './extract';
 import { IMAGE_TYPES, IngestError, attachmentBlock } from './extract';
-import { EMIT_STUDENT_CLASSES_TOOL, STUDENT_CLASSES_SYSTEM_PROMPT } from './studentClassesTool';
+import {
+  EMIT_STUDENT_CLASSES_TOOL,
+  EMIT_STUDENT_DETAILS_TOOL,
+  STUDENT_CLASSES_SYSTEM_PROMPT,
+} from './studentClassesTool';
 
 export const STUDENT_INGEST_MODEL = 'claude-opus-5';
 const MAX_ATTEMPTS = 3;
@@ -24,6 +28,17 @@ export const studentClassSchema = z.object({
 
 export type StudentClass = z.infer<typeof studentClassSchema>;
 
+// Every field independent and optional - a sheet showing lunch but not advisory still
+// reports the lunch. Unlike classes, there is only ever one of these per scan, so a
+// later valid call simply replaces the earlier one rather than accumulating.
+export const studentDetailsSchema = z.object({
+  lunch: z.enum(['1st Lunch', '2nd Lunch']).optional(),
+  grade: z.enum(['9', '10', '11', '12']).optional(),
+  advisory: z.string().min(1).max(60).optional(),
+});
+
+export type StudentDetails = z.infer<typeof studentDetailsSchema>;
+
 export interface ExtractStudentClassesInput {
   attachments: IngestAttachment[];
   notes?: string;
@@ -31,6 +46,7 @@ export interface ExtractStudentClassesInput {
 
 export interface ExtractStudentClassesResult {
   classes: StudentClass[];
+  details: StudentDetails | null;
   message: string;
   rejected: { input: unknown; issues: string[] }[];
   attempts: number;
@@ -67,7 +83,9 @@ export async function extractStudentClasses(
 
   const messages: Anthropic.MessageParam[] = [{ role: 'user', content: firstBlocks }];
   const classes: StudentClass[] = [];
-  const rejected: { input: unknown; issues: string[] }[] = [];
+  let details: StudentDetails | null = null;
+  const rejectedClasses: { input: unknown; issues: string[] }[] = [];
+  const rejectedDetails: { input: unknown; issues: string[] }[] = [];
   let message = '';
   let attempts = 0;
 
@@ -78,7 +96,7 @@ export async function extractStudentClasses(
       max_tokens: MAX_TOKENS,
       thinking: { type: 'adaptive' },
       system: STUDENT_CLASSES_SYSTEM_PROMPT,
-      tools: [EMIT_STUDENT_CLASSES_TOOL],
+      tools: [EMIT_STUDENT_CLASSES_TOOL, EMIT_STUDENT_DETAILS_TOOL],
       messages: [...messages],
     });
 
@@ -89,9 +107,10 @@ export async function extractStudentClasses(
       .join('\n\n');
     if (prose) message = prose;
 
-    const calls = response.content.filter(
-      (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use' && block.name === EMIT_STUDENT_CLASSES_TOOL.name,
-    );
+    // Both tools can appear in the same turn. Every tool_use here needs a matching
+    // tool_result below regardless of which tool it was - the API rejects a turn that
+    // leaves one dangling.
+    const calls = response.content.filter((block): block is Anthropic.ToolUseBlock => block.type === 'tool_use');
     if (!calls.length) break;
 
     const results: Anthropic.ToolResultBlockParam[] = [];
@@ -99,6 +118,26 @@ export async function extractStudentClasses(
 
     for (const call of calls) {
       const raw = call.input as Record<string, unknown>;
+      if (call.name === EMIT_STUDENT_DETAILS_TOOL.name) {
+        const parsed = studentDetailsSchema.safeParse(raw);
+        if (parsed.success) {
+          // Only one student - a later call replaces the earlier one rather than merging.
+          details = parsed.data;
+          results.push({ type: 'tool_result', tool_use_id: call.id, content: 'Accepted.' });
+        } else {
+          anyInvalid = true;
+          const issues = issueLines(parsed.error);
+          rejectedDetails.push({ input: raw, issues });
+          results.push({
+            type: 'tool_result',
+            tool_use_id: call.id,
+            is_error: true,
+            content: `Rejected. Fix these and call emit_student_details again:\n${issues.join('\n')}`,
+          });
+        }
+        continue;
+      }
+
       const parsed = studentClassSchema.safeParse(raw);
       if (parsed.success) {
         // A later call for the same block replaces the earlier one - the model correcting
@@ -110,7 +149,7 @@ export async function extractStudentClasses(
       } else {
         anyInvalid = true;
         const issues = issueLines(parsed.error);
-        rejected.push({ input: raw, issues });
+        rejectedClasses.push({ input: raw, issues });
         results.push({
           type: 'tool_result',
           tool_use_id: call.id,
@@ -126,11 +165,15 @@ export async function extractStudentClasses(
   }
 
   const accepted = new Set(classes.map((c) => c.block));
-  const stillRejected = rejected.filter((entry) => {
+  const stillRejectedClasses = rejectedClasses.filter((entry) => {
     const block = (entry.input as { block?: unknown }).block;
     return typeof block !== 'string' || !accepted.has(block as StudentClass['block']);
   });
+  // Only one details record total - if it ended up accepted, every earlier rejected
+  // attempt was a correction along the way, not a separate lingering failure.
+  const stillRejectedDetails = details ? [] : rejectedDetails;
+  const stillRejected = [...stillRejectedClasses, ...stillRejectedDetails];
 
   classes.sort((a, b) => a.block.localeCompare(b.block));
-  return { classes, message, rejected: stillRejected, attempts };
+  return { classes, details, message, rejected: stillRejected, attempts };
 }

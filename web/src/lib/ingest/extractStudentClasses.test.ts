@@ -12,6 +12,10 @@ function toolUse(id: string, input: unknown) {
   return { type: 'tool_use' as const, id, name: 'emit_student_classes', input };
 }
 
+function detailsUse(id: string, input: unknown) {
+  return { type: 'tool_use' as const, id, name: 'emit_student_details', input };
+}
+
 function stubClient(responses: { content: unknown[] }[]) {
   const create = vi.fn();
   for (const response of responses) create.mockResolvedValueOnce(response);
@@ -102,5 +106,52 @@ describe('extractStudentClasses', () => {
     const result = await extractStudentClasses(PHOTO, client);
     expect(result.classes).toHaveLength(1);
     expect(result.classes[0].subject).toBe('Corrected Name');
+  });
+
+  it('is null when the model never calls emit_student_details', async () => {
+    const { client } = stubClient([{ content: [toolUse('a', GOOD)] }]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.details).toBeNull();
+  });
+
+  it('captures lunch, grade, and advisory from a details call alongside classes in the same turn', async () => {
+    const { client, create } = stubClient([
+      {
+        content: [
+          toolUse('a', GOOD),
+          detailsUse('b', { lunch: '2nd Lunch', grade: '10', advisory: 'Rm 204' }),
+        ],
+      },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(result.classes).toHaveLength(1);
+    expect(result.details).toEqual({ lunch: '2nd Lunch', grade: '10', advisory: 'Rm 204' });
+  });
+
+  it('accepts a details call with only some fields set', async () => {
+    const { client } = stubClient([{ content: [detailsUse('a', { grade: '9' })] }]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.details).toEqual({ grade: '9' });
+  });
+
+  it('rejects an invalid details call, retries, and accepts the correction without leaving a dangling tool_use', async () => {
+    const { client, create } = stubClient([
+      { content: [detailsUse('a', { lunch: '3rd Lunch' })] },
+      { content: [detailsUse('b', { lunch: '2nd Lunch' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(result.details).toEqual({ lunch: '2nd Lunch' });
+    expect(result.rejected).toEqual([]);
+
+    const followUp = create.mock.calls[1][0] as Anthropic.MessageCreateParamsNonStreaming;
+    const toolResults = followUp.messages.at(-1)!.content as { tool_use_id?: string; is_error?: boolean }[];
+    // The first turn's tool_use must have a matching tool_result, or the real API rejects
+    // the whole request - this is what would catch a dropped result for the second tool.
+    expect(toolResults).toHaveLength(1);
+    expect(toolResults[0].is_error).toBe(true);
   });
 });
