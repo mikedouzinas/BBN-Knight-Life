@@ -4,15 +4,17 @@
  * on its own - pointed at a different output: one student's seven blocks plus their five
  * lunch waves, instead of a day of bell times.
  *
- * The non-class rejection below is deliberately duplicated with the system prompt. The prompt
- * is a rule and rules hold most of the time; this is the mechanism, and it holds every time.
+ * A FREE BLOCK IS KEPT, a non-block row is not, and the difference is the whole shape of the
+ * filter below. "Unscheduled (Block F)" means the student has F open - that is an answer, and
+ * Mike wants it visible, because seeing who else is free in your block is the point. "Lunch-2nd
+ * (Block L2)" is not a block at all and must never become a class.
  *
- * It is insurance rather than a fix: measured against the real sheet four times, on a clean
- * PDF and on the original crooked phone photo, the model never once emitted a free period as a
- * class. It is here because the cost is asymmetric. A class document is keyed by its display
- * text, so ONE student whose scan emits "Unscheduled" for a free F block creates an
- * `Unscheduled~~~F` document that every other student with a free F block then joins - one
- * shared roster across ~645 accounts, from one slip, needing a manual cleanup to undo.
+ * So NON_BLOCK_ROWS rejects the second kind only, and FREE_SUBJECTS normalises the first kind
+ * onto one spelling. The prompt says the same things; this is the mechanism behind it, because
+ * a prompt is a rule and rules hold most of the time. The cost of one slip is not a bad row on
+ * a screen: a class is keyed by its text, so a single scan emitting the sheet's own wording
+ * ("Unscheduled") instead of "Free" starts a SECOND shared roster alongside the real one, and
+ * the two never merge.
  */
 import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
@@ -22,6 +24,7 @@ import { IMAGE_TYPES, IngestError, attachmentBlock } from './extract';
 import {
   EMIT_LUNCH_WAVE_TOOL,
   EMIT_STUDENT_CLASSES_TOOL,
+  EMIT_STUDENT_DETAILS_TOOL,
   STUDENT_CLASSES_SYSTEM_PROMPT,
 } from './studentClassesTool';
 
@@ -39,73 +42,56 @@ const MAX_TOKENS = 4000;
  * fragment of something here, so this compares normalised whole strings plus a small number
  * of explicit prefixes.
  */
-const NON_CLASS_SUBJECTS = new Set([
-  // Free periods. The sheet prints these WITH a block letter, which is why they need naming.
-  'unscheduled',
-  'free',
-  'free period',
-  'free block',
-  'study hall',
-  'studyhall',
-  'flex',
-  'open',
-  'none',
-  'n a',
+const NON_BLOCK_ROWS = new Set([
   // Lunch. Handled by emit_lunch_wave instead.
-  'lunch',
-  'lunch 1st',
-  'lunch 2nd',
-  'lunch 1',
-  'lunch 2',
-  'first lunch',
-  'second lunch',
-  '1st lunch',
-  '2nd lunch',
-  // Everything else the school puts in a block that is not a course.
-  'advisory',
-  'advising',
-  'assembly',
-  'assembly special programs',
-  'special programs',
-  'special programming',
-  'community activity',
-  'cab',
-  'optional cab',
-  'class mtg',
-  'class meeting',
-  'long passing',
-  'passing',
-  'after school',
-  'afterschool',
-  'attendance',
-  'faculty time',
-  'faculty meeting',
-  // Defensive: not on the sheet that was read, but the same kind of row.
-  'chapel',
-  'office hours',
-  'homeroom',
-  'recess',
-  'break',
+  'lunch', 'lunch 1st', 'lunch 2nd', 'lunch 1', 'lunch 2',
+  'first lunch', 'second lunch', '1st lunch', '2nd lunch',
+  'l1', 'l2',
+  // School-wide activities that carry a block-shaped label but are not lettered blocks.
+  'advisory', 'advising', 'adv',
+  'assembly', 'assembly special programs', 'special programs', 'special programming', 'sp',
+  'community activity', 'cab', 'optional cab',
+  'class mtg', 'class meeting',
+  'long passing', 'passing',
+  'after school', 'afterschool', 'aft', 'attendance',
+  'faculty time', 'faculty meeting',
+  // Not on the sheet that was read, but the same kind of row.
+  'chapel', 'office hours', 'homeroom', 'recess', 'break', 'flex block', 'activity period',
 ]);
 
-/** Prefixes that make a row non-course whatever follows them. */
-const NON_CLASS_PREFIXES = ['lunch', 'assembly', 'advisory', 'community activity', 'after school'];
+/** Prefixes that make a row non-block whatever follows them. */
+const NON_BLOCK_PREFIXES = ['lunch', 'assembly', 'advisory', 'community activity', 'after school'];
+
+/**
+ * Every wording a sheet uses for "this block is open", normalised onto one.
+ *
+ * The canonical spelling is exactly `Free`, and that matters more than it looks: the class
+ * document is keyed by its subject text, so students whose sheets said "Unscheduled" and
+ * "Study Hall" would otherwise land on two different rosters for the same empty block.
+ */
+const FREE_SUBJECTS = new Set([
+  'free', 'free period', 'free block', 'unscheduled', 'unassigned',
+  'study hall', 'studyhall', 'study', 'open', 'none', 'n a', 'no class', 'flex',
+]);
+
+export const FREE_SUBJECT = 'Free';
 
 /** Lowercase, strip punctuation and collapse whitespace, so one entry covers its spellings. */
 export function normalizeSubject(subject: string): string {
-  return subject
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
+  return subject.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
-export function isNonClassSubject(subject: string): boolean {
+/** A row that is not a lettered block at all, and must never become a class. */
+export function isNonBlockRow(subject: string): boolean {
   const normalized = normalizeSubject(subject);
   if (!normalized) return true;
-  if (NON_CLASS_SUBJECTS.has(normalized)) return true;
-  return NON_CLASS_PREFIXES.some(
-    (prefix) => normalized === prefix || normalized.startsWith(`${prefix} `),
-  );
+  if (NON_BLOCK_ROWS.has(normalized)) return true;
+  return NON_BLOCK_PREFIXES.some((p) => normalized === p || normalized.startsWith(`${p} `));
+}
+
+/** A block the sheet shows as open. Kept, and reported under one spelling. */
+export function isFreeSubject(subject: string): boolean {
+  return FREE_SUBJECTS.has(normalizeSubject(subject));
 }
 
 /**
@@ -148,12 +134,18 @@ export const studentClassSchema = z.object({
   room: z.string().max(60).optional(),
 });
 
+export const studentDetailsSchema = z.object({
+  grade: z.enum(['9', '10', '11', '12']).optional(),
+  advisory: z.string().max(60).optional(),
+});
+
 export const lunchWaveSchema = z.object({
   day: z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday']),
   wave: z.union([z.literal(1), z.literal(2)]),
 });
 
 export type StudentClass = z.infer<typeof studentClassSchema>;
+export type StudentDetails = z.infer<typeof studentDetailsSchema>;
 export type LunchWave = z.infer<typeof lunchWaveSchema>;
 export type LunchWaves = Partial<Record<LunchWave['day'], 1 | 2>>;
 
@@ -165,9 +157,11 @@ export interface ExtractStudentClassesInput {
 export interface ExtractStudentClassesResult {
   classes: StudentClass[];
   lunch: LunchWaves;
+  /** Grade and advisory room, when the sheet's header states them. */
+  details: StudentDetails;
   message: string;
   rejected: { input: unknown; issues: string[] }[];
-  /** Non-class rows the model emitted as classes anyway, kept so a bad prompt is visible. */
+  /** Non-block rows the model emitted as classes anyway, kept so a bad prompt is visible. */
   skipped: { block: string; subject: string }[];
   attempts: number;
 }
@@ -206,6 +200,7 @@ export async function extractStudentClasses(
   const messages: Anthropic.MessageParam[] = [{ role: 'user', content: firstBlocks }];
   const classes: StudentClass[] = [];
   const lunch: LunchWaves = {};
+  let details: StudentDetails = {};
   const rejected: { input: unknown; issues: string[] }[] = [];
   const skipped: { block: string; subject: string }[] = [];
   let message = '';
@@ -218,7 +213,7 @@ export async function extractStudentClasses(
       max_tokens: MAX_TOKENS,
       thinking: { type: 'adaptive' },
       system: STUDENT_CLASSES_SYSTEM_PROMPT,
-      tools: [EMIT_STUDENT_CLASSES_TOOL, EMIT_LUNCH_WAVE_TOOL],
+      tools: [EMIT_STUDENT_CLASSES_TOOL, EMIT_LUNCH_WAVE_TOOL, EMIT_STUDENT_DETAILS_TOOL],
       messages: [...messages],
     });
 
@@ -232,7 +227,9 @@ export async function extractStudentClasses(
     const calls = response.content.filter(
       (block): block is Anthropic.ToolUseBlock =>
         block.type === 'tool_use' &&
-        (block.name === EMIT_STUDENT_CLASSES_TOOL.name || block.name === EMIT_LUNCH_WAVE_TOOL.name),
+        (block.name === EMIT_STUDENT_CLASSES_TOOL.name ||
+          block.name === EMIT_LUNCH_WAVE_TOOL.name ||
+          block.name === EMIT_STUDENT_DETAILS_TOOL.name),
     );
     if (!calls.length) break;
 
@@ -241,6 +238,27 @@ export async function extractStudentClasses(
 
     for (const call of calls) {
       const raw = call.input as Record<string, unknown>;
+
+      if (call.name === EMIT_STUDENT_DETAILS_TOOL.name) {
+        const parsedDetails = studentDetailsSchema.safeParse(raw);
+        if (parsedDetails.success) {
+          // Merged rather than replaced, so a second call adding advisory does not drop the
+          // grade the first one found.
+          details = { ...details, ...parsedDetails.data };
+          results.push({ type: 'tool_result', tool_use_id: call.id, content: 'Accepted student details.' });
+        } else {
+          anyInvalid = true;
+          const issues = issueLines(parsedDetails.error);
+          rejected.push({ input: raw, issues });
+          results.push({
+            type: 'tool_result',
+            tool_use_id: call.id,
+            is_error: true,
+            content: `Rejected. Fix these and call emit_student_details again:\n${issues.join('\n')}`,
+          });
+        }
+        continue;
+      }
 
       if (call.name === EMIT_LUNCH_WAVE_TOOL.name) {
         const parsedLunch = lunchWaveSchema.safeParse(raw);
@@ -279,27 +297,32 @@ export async function extractStudentClasses(
         continue;
       }
 
-      // The mechanism behind the prompt. A free period or a lunch row is not a class, and
-      // this is NOT retried: there is nothing for the model to correct, the right outcome is
-      // a blank block, and telling it to "try again" invites it to invent something to fill
-      // the space.
-      if (isNonClassSubject(parsed.data.subject)) {
+      // A row that is not a lettered block at all. NOT retried: there is nothing for the model
+      // to correct, the right outcome is that the row simply is not a class, and telling it to
+      // "try again" invites it to invent something to fill the space.
+      if (isNonBlockRow(parsed.data.subject)) {
         skipped.push({ block: parsed.data.block, subject: parsed.data.subject });
         results.push({
           type: 'tool_result',
           tool_use_id: call.id,
           content:
-            `Not a class - "${parsed.data.subject}" is a free period or a non-course row, so block ` +
-            `${parsed.data.block.toUpperCase()} is left blank on purpose. Do not emit it again and do not ` +
-            `substitute another class for it.`,
+            `Not a block - "${parsed.data.subject}" is lunch or a school-wide activity, not one of ` +
+            `this student's lettered blocks. Dropped. Do not emit it again and do not substitute ` +
+            `another class for block ${parsed.data.block.toUpperCase()}.`,
         });
         continue;
       }
 
-      const { teacher, room } = splitTeacherAndRoom(parsed.data.teacher, parsed.data.room);
+      // A free block IS an answer, and it is normalised onto one spelling so that two students
+      // whose sheets said "Unscheduled" and "Study Hall" land on the same roster rather than
+      // starting two.
+      const free = isFreeSubject(parsed.data.subject);
+      const { teacher, room } = free
+        ? { teacher: undefined, room: undefined }
+        : splitTeacherAndRoom(parsed.data.teacher, parsed.data.room);
       const accepted: StudentClass = {
         block: parsed.data.block,
-        subject: parsed.data.subject.trim(),
+        subject: free ? FREE_SUBJECT : parsed.data.subject.trim(),
         teacher,
         room,
       };
@@ -327,5 +350,5 @@ export async function extractStudentClasses(
   });
 
   classes.sort((a, b) => a.block.localeCompare(b.block));
-  return { classes, lunch, message, rejected: stillRejected, skipped, attempts };
+  return { classes, lunch, details, message, rejected: stillRejected, skipped, attempts };
 }

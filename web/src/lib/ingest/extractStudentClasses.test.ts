@@ -8,7 +8,8 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { IngestError } from './extract';
 import {
   extractStudentClasses,
-  isNonClassSubject,
+  isFreeSubject,
+  isNonBlockRow,
   splitTeacherAndRoom,
 } from './extractStudentClasses';
 
@@ -18,6 +19,10 @@ function toolUse(id: string, input: unknown) {
 
 function lunchUse(id: string, input: unknown) {
   return { type: 'tool_use' as const, id, name: 'emit_lunch_wave', input };
+}
+
+function detailsUse(id: string, input: unknown) {
+  return { type: 'tool_use' as const, id, name: 'emit_student_details', input };
 }
 
 function stubClient(responses: { content: unknown[] }[]) {
@@ -118,14 +123,10 @@ describe('extractStudentClasses', () => {
  * transcribed in `__fixtures__/real-schedule-2025.md`. The tests above stub the model, so none
  * of them could ever have caught what that sheet actually contains.
  */
-describe('a row that is not a class', () => {
-  // The exact strings a BB&N sheet prints, with the block letter it prints beside them.
+describe('a row that is not a lettered block', () => {
+  // Lunch and school-wide activities. These carry block-shaped labels on a real sheet
+  // (L1, L2, SP, CAB, Adv, Aft) and must never become one of the student's seven classes.
   it.each([
-    ['Unscheduled', 'the free-period label on the real sheet, printed WITH a block letter'],
-    ['unscheduled', 'case'],
-    ['Free', 'other schools word it this way'],
-    ['Free Period', ''],
-    ['Study Hall', ''],
     ['Lunch-2nd', 'as printed, hyphenated'],
     ['Lunch - 1st', 'spaced'],
     ['LUNCH 2ND', 'case and spacing'],
@@ -137,12 +138,11 @@ describe('a row that is not a class', () => {
     ['Long Passing', ''],
     ['After school', ''],
     ['', 'nothing at all'],
-  ])('rejects %s', (subject) => {
-    expect(isNonClassSubject(subject)).toBe(true);
+  ])('drops %s', (subject) => {
+    expect(isNonBlockRow(subject)).toBe(true);
   });
 
-  // The other half, and the more important one: a real course must never be rejected for
-  // containing a fragment of something on the list.
+  // A real course must never be dropped for containing a fragment of something on the list.
   it.each([
     'Precalculus',
     'AP English Masks',
@@ -156,49 +156,123 @@ describe('a row that is not a class', () => {
     'Community Organizing in America',
     'Passing Through: Modern Poetry',
   ])('keeps %s', (subject) => {
-    expect(isNonClassSubject(subject)).toBe(false);
+    expect(isNonBlockRow(subject)).toBe(false);
   });
 
-  it('is dropped rather than saved, and the block is left blank', async () => {
-    const { client } = stubClient([
-      {
-        content: [
-          toolUse('a', { block: 'a', subject: 'Precalculus', teacher: 'Ms. Lieberman', room: '285' }),
-          toolUse('b', { block: 'f', subject: 'Unscheduled' }),
-          toolUse('c', { block: 'g', subject: 'Unscheduled' }),
-        ],
-      },
+  it('is dropped without costing a retry, because there is nothing to correct', async () => {
+    const { client, create } = stubClient([
+      { content: [toolUse('a', GOOD), toolUse('b', { block: 'c', subject: 'Lunch-2nd' })] },
     ]);
-    const result = await extractStudentClasses(PHOTO, client);
-
-    expect(result.classes.map((c) => c.block)).toEqual(['a']);
-    expect(result.skipped).toEqual([
-      { block: 'f', subject: 'Unscheduled' },
-      { block: 'g', subject: 'Unscheduled' },
-    ]);
-  });
-
-  it('does not cost a retry, because there is nothing for the model to correct', async () => {
-    const { client, create } = stubClient([{ content: [toolUse('a', { block: 'f', subject: 'Unscheduled' })] }]);
     const result = await extractStudentClasses(PHOTO, client);
 
     expect(create).toHaveBeenCalledTimes(1);
-    expect(result.attempts).toBe(1);
+    expect(result.classes.map((c) => c.block)).toEqual(['b']);
+    expect(result.skipped).toEqual([{ block: 'c', subject: 'Lunch-2nd' }]);
     expect(result.rejected).toEqual([]);
   });
 
-  it('is told not to substitute another class for the blank block', async () => {
+  it('is told not to substitute another class for the dropped block', async () => {
     const { client, create } = stubClient([
-      { content: [toolUse('a', { block: 'f', subject: 'Unscheduled' }), toolUse('b', { block: 'b', subject: '' })] },
+      { content: [toolUse('a', { block: 'f', subject: 'Advisory' }), toolUse('b', { block: 'b', subject: '' })] },
       { content: [toolUse('c', { block: 'b', subject: 'AP English Masks' })] },
     ]);
     await extractStudentClasses(PHOTO, client);
 
     const followUp = create.mock.calls[1][0] as Anthropic.MessageCreateParamsNonStreaming;
     const toolResults = followUp.messages.at(-1)!.content as { is_error?: boolean; content?: string }[];
-    expect(toolResults[0].content).toMatch(/left blank on purpose/);
-    expect(toolResults[0].content).toMatch(/do not\s+substitute another class/i);
+    expect(toolResults[0].content).toMatch(/not a block/i);
+    expect(toolResults[0].content).toMatch(/do not substitute/i);
     expect(toolResults[0].is_error).toBeUndefined();
+  });
+});
+
+/**
+ * A free block is an ANSWER, not a gap, and it is kept on purpose: seeing who else is free in
+ * your block is the point of recording it. What matters is that every sheet's wording lands on
+ * ONE spelling, because the class document is keyed by its subject text - "Unscheduled" and
+ * "Study Hall" would otherwise be two rosters for the same empty block.
+ */
+describe('a free block', () => {
+  it.each([
+    'Unscheduled',
+    'unscheduled',
+    'Free',
+    'Free Period',
+    'Free Block',
+    'Study Hall',
+    'Open',
+    'No Class',
+    'N/A',
+  ])('recognises %s as free', (subject) => {
+    expect(isFreeSubject(subject)).toBe(true);
+  });
+
+  it.each(['Precalculus', 'Free Speech in America', 'Advanced Study Hall Design'])(
+    'does not treat %s as free',
+    (subject) => {
+      expect(isFreeSubject(subject)).toBe(false);
+    },
+  );
+
+  it('is kept as a class, under the canonical spelling', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'f', subject: 'Unscheduled' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toEqual([{ block: 'f', subject: 'Free', teacher: undefined, room: undefined }]);
+    expect(result.skipped).toEqual([]);
+  });
+
+  it('collapses different sheets\' wordings onto one roster', async () => {
+    const { client: c1 } = stubClient([{ content: [toolUse('a', { block: 'f', subject: 'Unscheduled' })] }]);
+    const { client: c2 } = stubClient([{ content: [toolUse('a', { block: 'f', subject: 'Study Hall' })] }]);
+    const [a, b] = [await extractStudentClasses(PHOTO, c1), await extractStudentClasses(PHOTO, c2)];
+    expect(a.classes[0].subject).toBe(b.classes[0].subject);
+    expect(a.classes[0].subject).toBe('Free');
+  });
+
+  it('carries no teacher or room, even if the model supplies them', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'g', subject: 'Free', teacher: 'Ms. Nobody', room: '101' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].teacher).toBeUndefined();
+    expect(result.classes[0].room).toBeUndefined();
+  });
+});
+
+describe('grade and advisory room', () => {
+  it('are collected from the sheet header', async () => {
+    const { client } = stubClient([
+      { content: [detailsUse('a', { grade: '11', advisory: '134' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.details).toEqual({ grade: '11', advisory: '134' });
+  });
+
+  it('merge rather than replace, so a second call keeps the first call\'s field', async () => {
+    const { client } = stubClient([
+      { content: [detailsUse('a', { grade: '11' }), detailsUse('b', { advisory: '134' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.details).toEqual({ grade: '11', advisory: '134' });
+  });
+
+  it('are left out when the sheet does not state them', async () => {
+    const { client } = stubClient([{ content: [toolUse('a', GOOD)] }]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.details).toEqual({});
+  });
+
+  it('reject a grade outside 9-12 and ask again', async () => {
+    const { client, create } = stubClient([
+      { content: [detailsUse('a', { grade: '13' })] },
+      { content: [detailsUse('b', { grade: '12' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(result.details).toEqual({ grade: '12' });
   });
 });
 
@@ -312,7 +386,7 @@ describe('teacher and room arriving fused', () => {
  * five lunch waves, and nothing named "Unscheduled" anywhere.
  */
 describe('the real Grade 11 sheet, end to end', () => {
-  it('produces five classes, two blank blocks and five lunch waves', async () => {
+  it('produces five courses, two free blocks and five lunch waves', async () => {
     const { client } = stubClient([
       {
         content: [
@@ -345,9 +419,12 @@ describe('the real Grade 11 sheet, end to end', () => {
       { block: 'c', subject: 'Physics', teacher: 'Ms. Courtemanche', room: '134' },
       { block: 'd', subject: 'Spanish III', teacher: 'Ms. Rose', room: '380' },
       { block: 'e', subject: 'United States History (Honors)', teacher: 'Mr. Turnbull', room: '283' },
+      { block: 'f', subject: 'Free', teacher: undefined, room: undefined },
+      { block: 'g', subject: 'Free', teacher: undefined, room: undefined },
     ]);
     expect(result.lunch).toEqual({ monday: 2, tuesday: 2, wednesday: 2, thursday: 2, friday: 2 });
-    expect(result.skipped.map((s) => s.block)).toEqual(['f', 'g']);
+    expect(result.skipped).toEqual([]);
+    // The sheet's own wording never survives - F and G come back as the canonical "Free".
     expect(result.classes.some((c) => c.subject === 'Unscheduled')).toBe(false);
   });
 });

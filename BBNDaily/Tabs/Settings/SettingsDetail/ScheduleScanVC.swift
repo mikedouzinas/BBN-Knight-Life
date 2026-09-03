@@ -413,8 +413,37 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         // Writing it here produced `Subject~N/A~N/A~A`, while ClassesOptionsPopupVC strips
         // "N/A" before looking a class up, so the document created and the document later
         // selected were two different keys.
-        let classKey = "\(row.subject)~\(row.teacher)~\(row.room)~\(row.block.uppercased())"
+        //
+        // Canonical, so that two students scanning the same class compute the SAME key and
+        // therefore write to the same document. See ClassIdentity for why that is also what
+        // makes fifty simultaneous scans safe.
+        let canonicalKey = ClassIdentity.canonicalClassKey(
+            subject: row.subject, teacher: row.teacher, room: row.room, block: row.block)
 
+        // Look for the class before making one. A canonical key agrees with other SCANS; it
+        // cannot agree with a document typed by hand last year, which is not in canonical
+        // form. This is the half that finds those.
+        let db = Firestore.firestore()
+        db.collection("classes")
+            .whereField("block", isEqualTo: row.block.uppercased())
+            .getDocuments { [weak self] snapshot, error in
+                guard let self = self else { return }
+                // A failed search is not a failed save. Fall back to the canonical key, which
+                // is still correct - it just might create a document that a match would have
+                // found. Better than stopping the student's setup on a flaky read.
+                if let error = error {
+                    print("schedule scan: class lookup failed for block \(row.block), using canonical key: \(error)")
+                }
+                let existing = snapshot?.documents.map({ $0.documentID }).first(where: {
+                    ClassIdentity.matchesExistingClass(
+                        existingKey: $0, subject: row.subject, teacher: row.teacher, block: row.block)
+                })
+                self.joinClass(key: existing ?? canonicalKey, row: row, index: index, uid: uid)
+            }
+    }
+
+    /// Adds this student to one class document and points their block at it.
+    private func joinClass(key classKey: String, row: ScannedClass, index: Int, uid: String) {
         let db = Firestore.firestore()
         let classDoc = db.collection("classes").document(classKey)
         classDoc.getDocument { [weak self] snapshot, error in
@@ -425,7 +454,15 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             }
             var members = (snapshot?.data()?["members"] as? [[String: String]]) ?? [[String: String]]()
             if !members.contains(where: { ($0["uid"] ?? "") == uid }) {
-                members.append(["name": LoginVC.fullName, "email": LoginVC.email, "uid": uid])
+                // A free block's roster is everyone in the school with that block open, so it
+                // is a much larger audience than a class of fifteen. Name and uid are what
+                // "who else is free" needs; the email is not, and ClassPopupVC renders it
+                // straight onto the row. Course rosters are unchanged.
+                if ClassIdentity.isFree(row.subject) {
+                    members.append(["name": LoginVC.fullName, "uid": uid])
+                } else {
+                    members.append(["name": LoginVC.fullName, "email": LoginVC.email, "uid": uid])
+                }
             }
             // Every write is checked. Both completions used to be `{ _ in }`, so a refused or
             // failed write carried on to the next block and the screen still reported

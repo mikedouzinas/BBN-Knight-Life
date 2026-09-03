@@ -4,39 +4,44 @@
  * mode of emit_schedule - a student's schedule has no dates, no grade filters, and a wrong
  * field here changes one person's data, not the whole school's.
  *
- * Rewritten 2026-09-02 against a real BB&N printout rather than an imagined one. What an
- * actual sheet turned out to contain:
+ * Rewritten 2026-09-02 against a real BB&N printout rather than an imagined one:
  *
  *   Precalculus         8:15 - 9:00   (Block A)    Ms. Lieberman - 285
  *   Unscheduled        10:35 - 11:20  (Block F)
  *   Lunch-2nd          12:15 - 12:45  (Block L2)
  *   Community Activity  2:00 - 2:35   (Block CAB)
  *
- * ONE REAL GAP, and it is structural rather than a matter of prompting: THE SHEET NAMES THE
- * LUNCH WAVE AND THERE WAS NOWHERE TO PUT IT. Five weekdays, five waves, printed on the page
- * being photographed, and students have always had to set all five by hand in Settings. The
- * old tool had no field for one, so no amount of prompt tuning could have captured it. That is
- * what emit_lunch_wave is for.
+ * THAT SHEET IS A YEAR OLD (printed 09/02/2025) and it is ONE student, ONE grade, ONE
+ * trimester. Mike: "it was just a reference for how to process that but it's pretty much the
+ * same each year. It just might have some slightly different things." So the rules below are
+ * written against the SHAPE a BB&N sheet has - a labelled row, a time range, a parenthesised
+ * block - and never against the specific strings on that one page. Where a literal appears it
+ * is an example inside a category ("Unscheduled", "Free", "Study Hall" are all free periods),
+ * so a row this sheet happens not to contain still lands in the right bucket. A prompt that
+ * only works on last year's paper is a prompt that breaks in week one.
  *
- * The rest of what changed here is INSURANCE, not a bug fix, and the difference is worth
- * keeping straight. Two things looked dangerous on paper - a free period printed as
- * "Unscheduled (Block F)" being read as a class, and "Ms. Lieberman - 285" arriving fused into
- * one field - and the old prompt was measured against the real sheet four times, on both a
- * clean PDF and the original crooked phone photo. It got both right every time: five classes,
- * no free periods emitted, teacher and room correctly split.
+ * THREE THINGS THE SHEET DECIDED:
  *
- * They are still spelled out below, because the cost is asymmetric rather than because the
- * model was getting them wrong. A class document is keyed by its display text, so ONE student
- * whose scan emits "Unscheduled" for a free F block creates an `Unscheduled~~~F` document that
- * every other student with a free F block then joins - one shared roster, from one slip, across
- * ~645 accounts. Writing the rule down costs a paragraph. Being wrong once costs a cleanup.
+ * 1. LUNCH IS PRINTED PER WEEKDAY AND THE APP STORES FIVE VALUES. Not one. A student can be
+ *    first wave one day and second another, so emit_lunch_wave is called per weekday. One
+ *    detected value written to all five days is confidently wrong on the days it differs.
+ *
+ * 2. A FREE BLOCK IS A REAL ANSWER, NOT A GAP. The sheet prints "Unscheduled (Block F)" - the
+ *    letter is right there, and the student genuinely has that block open. Mike wants this
+ *    kept and visible: the point is seeing who else is free in your block. So it is emitted
+ *    as subject "Free", and only a block the sheet does not mention at all is left out.
+ *
+ * 3. TEACHER AND ROOM ARRIVE FUSED, as "Ms. Lieberman - 285". Measured four times on the real
+ *    sheet, the model split them correctly every time, so the split rule here is a guard
+ *    rather than a repair. It stays because a class is identified by its teacher, so a fused
+ *    string silently makes a second document for a class that already exists.
  */
 import type Anthropic from '@anthropic-ai/sdk';
 
 export const EMIT_STUDENT_CLASSES_TOOL: Anthropic.Tool = {
   name: 'emit_student_classes',
   description:
-    'Emit one REAL CLASS from a student\'s personal schedule, for one lettered block. Call it once per lettered block that holds an actual course - at most seven times, one per block a-g. Never call it for a free period, lunch, advisory, assembly, community activity, or any other non-course row, even when the sheet prints a block letter next to it.',
+    'Emit what one lettered block holds for this student - a course, or the exact string "Free" if the sheet shows that block as unscheduled. Call it once per lettered block the sheet shows, at most seven times (a-g). Never call it for lunch, advisory, assembly, community activity or any other non-block row, even though the sheet prints a block-like label next to those.',
   input_schema: {
     type: 'object' as const,
     additionalProperties: false,
@@ -50,7 +55,7 @@ export const EMIT_STUDENT_CLASSES_TOOL: Anthropic.Tool = {
       subject: {
         type: 'string',
         description:
-          'The course name exactly as the source shows it, with nothing added or expanded, e.g. "AP English Masks", "United States History (Honors)", "Spanish III".',
+          'The course name exactly as the source shows it, with nothing added or expanded, e.g. "AP English Masks", "United States History (Honors)", "Spanish III". Use the exact string "Free" - nothing else - when the sheet shows this block but marks it unscheduled, blank, "Free", "Study Hall", "Open" or similar.',
       },
       teacher: {
         type: 'string',
@@ -90,26 +95,61 @@ export const EMIT_LUNCH_WAVE_TOOL: Anthropic.Tool = {
   },
 };
 
+/**
+ * Grade and advisory room, which a BB&N sheet prints in its header. Kai's idea (PR 57) and a
+ * good one: they are on the page, the app has fields for both, and a student otherwise types
+ * them by hand.
+ *
+ * Lunch is deliberately NOT here even though PR 57 put it here. Lunch is not one fact about a
+ * student - the app stores five, one per weekday - so it belongs on a per-weekday tool.
+ */
+export const EMIT_STUDENT_DETAILS_TOOL: Anthropic.Tool = {
+  name: 'emit_student_details',
+  description:
+    'Emit the student\'s grade level and advisory room if the sheet states them, usually in its header. Call it at most once. Omit any field the sheet does not state - do not guess.',
+  input_schema: {
+    type: 'object' as const,
+    additionalProperties: false,
+    properties: {
+      grade: {
+        type: 'string',
+        enum: ['9', '10', '11', '12'],
+        description: 'The student\'s grade level, only if the sheet states it.',
+      },
+      advisory: {
+        type: 'string',
+        description:
+          'The advisory ROOM, only if the sheet states one. A room, not a person: a sheet naming an advisor but no room has no advisory room to report.',
+      },
+    },
+  },
+};
+
 export const STUDENT_CLASSES_SYSTEM_PROMPT = `You read one BB&N student's personal class schedule - a printed sheet, a screenshot, a photo of a page - and transcribe it into structured data.
 
 Transcribe only. Do not fill in a subject, teacher, or room from memory, and do not expand an abbreviation into what you think it stands for. A block you invented sends that student a notification for a class they are not actually in.
 
-## What is a class and what is not
+## What goes in a lettered block
 
-A BB&N sheet prints a block letter next to almost every row, including rows that are not courses. The letter is not what makes something a class.
+A BB&N sheet prints a block-like label next to almost every row, including rows that are not blocks at all. The label is not what makes something a class.
 
-Emit a class ONLY for a row naming an actual course - "Precalculus", "AP English Masks", "Physics", "United States History (Honors)", "Spanish III".
+Each lettered block a-g holds at most one thing. Call emit_student_classes once per lettered block the sheet shows, and put in "subject" either:
 
-NEVER emit a class for any of these, even though the sheet gives them a block:
-- "Unscheduled", "Free", "Free Period", "Study Hall", "Flex" - these are free periods. The student has no class that block. Leave the block out entirely.
-- "Lunch", "Lunch-1st", "Lunch-2nd" - use emit_lunch_wave instead.
-- "Advisory", "Assembly", "Special Programs", "Community Activity", "Class Mtg", "Class Meeting", "Long Passing", "After school", "Attendance", "CAB", "Chapel", "Office Hours".
+- **the course name**, exactly as printed - "Precalculus", "AP English Masks", "United States History (Honors)". Do not expand an abbreviation into what you think it stands for.
+- **the exact string "Free"**, when the sheet shows that block but marks it unscheduled. Sheets word this differently - "Unscheduled", "Free", "Free Period", "Study Hall", "Open", or simply blank - and all of them mean the same thing. Always report it as "Free", never as the sheet's own wording, and give it no teacher and no room.
 
-The blocks that carry those rows - SP, CAB, Adv, Aft, L1, L2 - are not lettered blocks and there is nothing to emit for them.
+A free block is a real answer, not a missing one. Report it.
 
-Each lettered block a-g holds at most one class. A class usually appears on several weekdays; that is one class, so emit it once. If two different courses genuinely appear under the same letter, emit the one that appears most often and say so in text.
+NEVER call emit_student_classes for a row that is not a lettered block at all, even though the sheet gives it a block-shaped label:
 
-A letter you do not emit is simply left blank for the student to fill in by hand. That is the correct outcome for a free period, and it is a much better outcome than a wrong guess.
+- lunch, however written - "Lunch", "Lunch-1st", "Lunch-2nd", "(Block L1)", "(Block L2)". Use emit_lunch_wave instead.
+- advisory, assembly, special programs, community activity, CAB, class meeting, long passing, after school, attendance, chapel, office hours, faculty time, and anything else that is a school-wide activity rather than one student's course.
+
+Those rows carry labels like SP, CAB, Adv, Aft, L1, L2. None of them is a lettered block and there is nothing to emit for them.
+
+The one case to leave out entirely is a letter the sheet **never mentions**. That is different from a letter shown as free: the sheet simply does not cover it, and guessing "Free" there would be as much an invention as guessing a course. Leave it blank for the student to fill in.
+
+A course usually appears on several weekdays. That is one class, so emit it once. If two genuinely different courses appear under the same letter, emit the one appearing most often and say so in text.
 
 ## Teacher and room
 
@@ -118,6 +158,10 @@ They are usually printed together on one line, as "Ms. Lieberman - 285" or "Mr. 
 ## Lunch
 
 BB&N runs two lunch waves. The sheet shows one lunch row per weekday, printed as "Lunch-1st" or "Lunch-2nd", sometimes with "(Block L1)" or "(Block L2)". Call emit_lunch_wave once for each weekday you can read one for. Read every weekday column separately - a student can have first lunch on one day and second on another, and the days are not always the same.
+
+## Grade and advisory room
+
+A sheet usually names the student's grade and often an advisory room, in its header. Call emit_student_details once with whichever it states. Leave out anything it does not state rather than guessing - a wrong value here silently overwrites something the student already set. An advisory ROOM is a room; a sheet that names an advisor but no room has no room to report.
 
 ## When you cannot read it
 
