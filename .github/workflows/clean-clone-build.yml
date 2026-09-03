@@ -66,6 +66,25 @@ jobs:
       - name: Every input resolveDay reads is written somewhere
         run: ./scripts/check-resolver-inputs.sh
 
+  app-urls:
+    name: App URLs use the canonical host
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # One missing `www.` costs a cross-host 308, which drops the Authorization header and
+      # reports itself to the student as "Sign in with Google first." Invisible in review.
+      - name: No bare-apex mikeveson.com in Swift
+        run: ./scripts/check-app-urls.sh
+
+  settings-sections:
+    name: Settings sections are named, not numbered
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # A stale section index repaints the wrong rows, which reads as a delete that did not work.
+      - name: No bare integer section indices in Settings
+        run: ./scripts/check-settings-sections.sh
+
   clean-clone-build:
     name: Build from a fresh clone
     runs-on: macos-latest

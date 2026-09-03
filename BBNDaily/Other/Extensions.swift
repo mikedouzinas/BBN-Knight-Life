@@ -635,34 +635,34 @@ extension UIViewController {
         
         self.present(alert, animated: true, completion: nil)
     }
+    /// The blocking "working on it" indicator.
+    ///
+    /// ProgressHUD, not a hand-built UIAlertController. The alert version put a spinner into an
+    /// alert's view with its own constraints while UIKit laid out the message independently, so
+    /// the spinner and the text were positioned by two different systems that never agreed -
+    /// which is why it read as off-centre with the spinner floating above the words, and why it
+    /// was off by a different amount at every message length and Dynamic Type size.
+    ///
+    /// ProgressHUD is what every other status in this app already uses (`ProgressHUD.succeed`,
+    /// `.failed`), so this also makes the loading state look like the states either side of it
+    /// instead of like a different app.
     func showLoader(text: String) {
-        // The leading newline reserves the row the spinner occupies. Without it the spinner
-        // is drawn on top of the message text.
-        let alert = UIAlertController(title: nil, message: "\n\(text)", preferredStyle: .alert)
-
-        let loadingIndicator = UIActivityIndicatorView(style: .medium)
-        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
-        loadingIndicator.hidesWhenStopped = true
-        loadingIndicator.startAnimating()
-
-        alert.view.addSubview(loadingIndicator)
-        // Constrained rather than a hardcoded frame. It was CGRect(x: 10, y: 5, 50x50), which
-        // pins the spinner near the alert's top-LEFT while the message under it is centred:
-        // visibly off, and off by a different amount at every message length and Dynamic Type
-        // size, because the alert sizes itself to its content.
-        NSLayoutConstraint.activate([
-            loadingIndicator.centerXAnchor.constraint(equalTo: alert.view.centerXAnchor),
-            loadingIndicator.topAnchor.constraint(equalTo: alert.view.topAnchor, constant: 20),
-        ])
-        present(alert, animated: true)
+        ProgressHUD.animationType = .circleStrokeSpin
+        ProgressHUD.colorAnimation = UIColor(named: "inverse") ?? .label
+        ProgressHUD.animate(text, interaction: false)
     }
     func showConfirmation(title: String, message: String) {
         
     }
+    /// Dismisses whatever `showLoader` put up, then runs the follow-on.
+    ///
+    /// The completion is invoked directly rather than through `dismiss(animated:completion:)`,
+    /// because ProgressHUD is not a presented view controller - calling `dismiss` here would
+    /// dismiss whatever screen the caller is ON. That is also why the completion is optional
+    /// now: the old version force-unwrapped it and crashed on `hideLoader(completion: nil)`.
     func hideLoader(completion: (() -> Void)?) {
-        dismiss(animated: true, completion: {
-            completion!()
-        })
+        ProgressHUD.dismiss()
+        completion?()
     }
     // getScheduleFor lived here and is gone. HQ-607.
     //

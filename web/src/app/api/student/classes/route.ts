@@ -66,6 +66,11 @@ export async function POST(request: Request) {
       // Which lunch wave on which weekday, read off the same photo. This is why a student no
       // longer has to set five lunch preferences by hand in Settings.
       lunch: result.lunch,
+      // The grade off the sheet's header. `extractStudentClasses` has always returned this and
+      // this route used to drop it on the floor, so `emit_student_details` ran, validated, and
+      // spent tokens on a value that never left the server. The app reads `details.grade` and
+      // showed nothing, which looked like a missing UI section rather than a missing key.
+      details: result.details,
       // Non-course rows the model tried to save as classes. The app never shows these; they
       // are returned so a prompt starting to drift is visible in a log rather than only in
       // some student's schedule.

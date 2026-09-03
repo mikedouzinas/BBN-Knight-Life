@@ -32,7 +32,11 @@ struct ScannedLunch {
     var block: String
     var wave: Int
 
-    var displayName: String { "\(weekday.capitalized) lunch" }
+    /// Leads with the DAY, because that is what a student is confirming. The block letter is
+    /// secondary context - Mike, on the first version: "it said lunch, like D-block, which I
+    /// was confused about."
+    var displayName: String { "\(weekday.capitalized)s" }
+    var blockNote: String { "\(block) block" }
     /// The exact strings Settings has always written, so a scanned value and a typed one are
     /// the same value and the schedule's `filter: ["L1"]` / `["L2"]` keeps matching.
     var storedValue: String { wave == 1 ? "1st Lunch" : "2nd Lunch" }
@@ -68,10 +72,15 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
 
     private var results = [ScannedClass]()
     private var lunchResults = [ScannedLunch]()
+    /// The grade read off the sheet's header, shown for confirmation like everything else.
+    /// The server detected this from the start and the app used to discard it silently, so a
+    /// student confirmed their classes and their lunches and never saw the third thing that
+    /// was about to be written to their record.
+    private var gradeResult: String?
 
     /// Nothing was read, or the student removed every row. Either way there is nothing to save
     /// and no reason to keep them on a blank review screen.
-    private var hasNothingToSave: Bool { results.isEmpty && lunchResults.isEmpty }
+    private var hasNothingToSave: Bool { results.isEmpty && lunchResults.isEmpty && gradeResult == nil }
 
     /// Closes this screen whichever way it was opened.
     ///
@@ -201,8 +210,22 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         })
     }
 
+    /// The scan endpoint, on the CANONICAL host.
+    ///
+    /// `www.` is load-bearing and not a style choice. `mikeveson.com` answers with a 308 to
+    /// `www.mikeveson.com`, and a redirect to a DIFFERENT HOST makes URLSession drop the
+    /// `Authorization` header - that is the spec, not a bug, and every correct HTTP client
+    /// does it. The server then sees a request with no token and answers "Sign in with Google
+    /// first.", which is indistinguishable from being signed out. It cost a whole round of
+    /// testing on 2026-09-03: the account was fine, the token was fine, and the header was
+    /// being thrown away one hop before it arrived.
+    ///
+    /// Anything else this app posts to mikeveson.com has to use `www.` for the same reason.
+    /// `scripts/check-app-urls.sh` fails the build if one does not.
+    static let scanEndpoint = "https://www.mikeveson.com/knight-life/api/student/classes"
+
     private func postScan(token: String, imageData: Data) {
-        guard let url = URL(string: "https://mikeveson.com/knight-life/api/student/classes") else { return }
+        guard let url = URL(string: Self.scanEndpoint) else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -262,7 +285,12 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             return ScannedLunch(weekday: pair.weekday, block: block, wave: wave)
         }
 
-        guard !results.isEmpty || !lunchResults.isEmpty else {
+        if let details = json["details"] as? [String: Any], let grade = details["grade"] as? String,
+           ["9", "10", "11", "12"].contains(grade) {
+            gradeResult = grade
+        }
+
+        guard !hasNothingToSave else {
             let message = (json["message"] as? String) ?? "Couldn't read any classes from that photo."
             ProgressHUD.colorAnimation = .red
             ProgressHUD.failed(message)
@@ -278,14 +306,15 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
 
     // Two sections, because a class and a lunch wave are edited differently: a class has
     // three free-text fields, a lunch wave has exactly two possible values.
-    private enum Section: Int, CaseIterable { case classes, lunch }
+    private enum Section: Int, CaseIterable { case classes, lunch, grade }
 
     func numberOfSections(in tableView: UITableView) -> Int { Section.allCases.count }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch Section(rawValue: section) {
         case .classes: return results.isEmpty ? nil : "Classes"
-        case .lunch:   return lunchResults.isEmpty ? nil : "Lunch"
+        case .lunch:   return lunchResults.isEmpty ? nil : "Which lunch you have"
+        case .grade:   return gradeResult == nil ? nil : "Grade"
         default:       return nil
         }
     }
@@ -294,6 +323,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         switch Section(rawValue: section) {
         case .classes: return results.count
         case .lunch:   return lunchResults.count
+        case .grade:   return gradeResult == nil ? 0 : 1
         default:       return 0
         }
     }
@@ -306,9 +336,12 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         cell.accessoryType = .disclosureIndicator
 
         switch Section(rawValue: indexPath.section) {
+        case .grade:
+            cell.textLabel?.text = "Grade"
+            cell.detailTextLabel?.text = gradeResult
         case .lunch:
             let row = lunchResults[indexPath.row]
-            cell.textLabel?.text = "\(row.displayName) (\(row.block) Block)"
+            cell.textLabel?.text = "\(row.displayName)  ·  \(row.blockNote)"
             cell.detailTextLabel?.text = row.storedValue
         default:
             let row = results[indexPath.row]
@@ -321,6 +354,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         switch Section(rawValue: indexPath.section) {
+        case .grade: editGrade()
         case .lunch: editLunch(at: indexPath.row)
         default:     editRow(at: indexPath.row)
         }
@@ -379,14 +413,34 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         present(alert, animated: true)
     }
 
+    /// Four values, so a picker rather than a text field - same reasoning as the lunch row.
+    private func editGrade() {
+        let alert = UIAlertController(title: "Grade", message: "Read from the top of your schedule.", preferredStyle: .actionSheet)
+        for grade in ["9", "10", "11", "12"] {
+            let action = UIAlertAction(title: "Grade \(grade)", style: .default, handler: { [weak self] _ in
+                self?.gradeResult = grade
+                self?.tableView.reloadData()
+            })
+            if gradeResult == grade { action.setValue(true, forKey: "checked") }
+            alert.addAction(action)
+        }
+        alert.addAction(UIAlertAction(title: "Don't Set My Grade", style: .destructive, handler: { [weak self] _ in
+            self?.gradeResult = nil
+            self?.tableView.reloadData()
+            self?.updateSaveButton()
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+
     private func updateSaveButton() {
-        navigationItem.rightBarButtonItem?.isEnabled = !results.isEmpty || !lunchResults.isEmpty
+        navigationItem.rightBarButtonItem?.isEnabled = !hasNothingToSave
     }
 
     // MARK: - Confirm and save
 
     @objc private func saveAll() {
-        guard !results.isEmpty || !lunchResults.isEmpty else { return }
+        guard !hasNothingToSave else { return }
         showLoader(text: "Saving your classes...")
         saveNextClass(index: 0)
     }
@@ -546,7 +600,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     /// survivable there because Settings has just loaded the document; here the student may
     /// have been on this screen for a while, so only the keys being changed are sent.
     private func saveLunchPreferences() {
-        guard !lunchResults.isEmpty else {
+        guard !lunchResults.isEmpty || gradeResult != nil else {
             finishSave()
             return
         }
@@ -562,6 +616,9 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         for lunch in lunchResults {
             payload[lunchPreferenceKey(forBlock: lunch.block)] = lunch.storedValue
         }
+        // Same merge write as the lunch waves - it is the same document and the same kind of
+        // preference, so there is no reason to spend a second round trip on it.
+        if let grade = gradeResult { payload["grade"] = grade }
 
         Firestore.firestore().collection("users").document(uid).setData(payload, merge: true, completion: { [weak self] error in
             guard let self = self else { return }

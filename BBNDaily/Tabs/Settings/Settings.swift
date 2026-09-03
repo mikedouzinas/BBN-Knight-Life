@@ -16,25 +16,39 @@ import SkeletonView
 import WebKit
 import EventKit
 
+/// The Settings sections, in the order they appear.
+///
+/// Named rather than numbered because the order CHANGED (HQ-656 added Manage Schedule as the
+/// second section) and the old code compared `indexPath.section` against bare integers in
+/// sixteen places. Renumbering those by hand is how a row ends up wired to the wrong action -
+/// and a mis-wired row here runs "Clear My Classes" when somebody taps "Share".
+enum SettingsSection: Int, CaseIterable {
+    case personalInfo = 0
+    /// Scan and Clear, together, directly under Personal Info - the two actions that SET UP a
+    /// schedule, where a student looks for them, rather than buried at the bottom under Other.
+    case manageSchedule
+    case blocks
+    case preferences
+    case lunch
+    case other
+}
+
 class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollViewDelegate, UITextFieldDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if section == 0 {
-            return profileCells.count
+        switch SettingsSection(rawValue: section) {
+        case .personalInfo:    return profileCells.count
+        case .manageSchedule:  return manageSchedule.count
+        case .blocks:          return blocks.count
+        case .lunch:           return lunchBlocks.count
+        case .other:           return other.count
+        default:               return 3 + preferenceBlocks.count
         }
-        else if section == 1 {
-            return blocks.count
-        }
-        else if section == 3 {
-            return lunchBlocks.count
-        }
-        else if section == 4 {
-            return other.count
-        }
-        return (3 + preferenceBlocks.count)
     }
     private var other = [settingsBlock]()
+    /// Scan Your Schedule, then Clear My Classes. Destructive last.
+    private var manageSchedule = [settingsBlock]()
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 5
+        return SettingsSection.allCases.count
     }
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 30
@@ -49,20 +63,13 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         label.leftAnchor.constraint(equalTo: backview.leftAnchor, constant: 10).isActive = true
         label.centerYAnchor.constraint(equalTo: backview.centerYAnchor).isActive = true
         label.rightAnchor.constraint(equalTo: backview.rightAnchor, constant: -5).isActive = true
-        if section == 0 {
-            label.text = "Personal Info"
-        }
-        else if section == 1 {
-            label.text = "Blocks"
-        }
-        else if section == 3 {
-            label.text = "Lunch Configurations"
-        }
-        else if section == 4 {
-            label.text = "Other"
-        }
-        else {
-            label.text = "Preferences"
+        switch SettingsSection(rawValue: section) {
+        case .personalInfo:   label.text = "Personal Info"
+        case .manageSchedule: label.text = "Manage Schedule"
+        case .blocks:         label.text = "Blocks"
+        case .lunch:          label.text = "Lunch Configurations"
+        case .other:          label.text = "Other"
+        default:              label.text = "Preferences"
         }
         return backview
     }
@@ -70,7 +77,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         return 50
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath.section == 0 {
+        if indexPath.section == SettingsSection.personalInfo.rawValue {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: ProfileTableViewCell.identifier, for: indexPath) as? ProfileTableViewCell else {
                 fatalError()
             }
@@ -78,7 +85,20 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             cell.selectionStyle = .none
             return cell
         }
-        else if indexPath.section == 1 {
+        else if indexPath.section == SettingsSection.manageSchedule.rawValue {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
+                fatalError()
+            }
+            // Scan first, Clear second - and the destructive one is the only red row in
+            // Settings, so it does not look like the other two.
+            let imgName = indexPath.row == 0 ? "camera.viewfinder" : "trash"
+            let imageview = UIImageView(image: UIImage(systemName: imgName)!)
+            imageview.tintColor = indexPath.row == 0 ? UIColor(named: "inverse") : .systemRed
+            cell.accessoryView = imageview
+            cell.configure(with: manageSchedule[indexPath.row])
+            return cell
+        }
+        else if indexPath.section == SettingsSection.blocks.rawValue {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
                 fatalError()
             }
@@ -88,7 +108,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             cell.configure(with: blocks[indexPath.row])
             return cell
         }
-        else if indexPath.section == 3 {
+        else if indexPath.section == SettingsSection.lunch.rawValue {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
                 fatalError()
             }
@@ -98,7 +118,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             cell.configure(with: lunchBlocks[indexPath.row])
             return cell
         }
-        else if indexPath.section == 4 {
+        else if indexPath.section == SettingsSection.other.rawValue {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
                 fatalError()
             }
@@ -254,12 +274,20 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         tableView.reloadData()
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if indexPath.section == 1 {
+        if indexPath.section == SettingsSection.manageSchedule.rawValue {
+            tableView.deselectRow(at: indexPath, animated: true)
+            if indexPath.row == 0 {
+                navigationController?.pushViewController(ScheduleScanVC(), animated: true)
+            } else {
+                confirmResetClasses()
+            }
+        }
+        else if indexPath.section == SettingsSection.blocks.rawValue {
             tableView.deselectRow(at: indexPath, animated: true)
             ClassesOptionsPopupVC.currentBlock = "\(self.blocks[indexPath.row].blockName)"
             self.performSegue(withIdentifier: "options", sender: nil)
         }
-        else if indexPath.section == 2 {
+        else if indexPath.section == SettingsSection.preferences.rawValue {
             if indexPath.row == 3 {
                 let alertController = UIAlertController(title: "Grade", message: "Please enter your grade to better configure your schedule", preferredStyle: .actionSheet)
                 
@@ -376,7 +404,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 present(alertController, animated: true, completion: nil)
             }
         }
-        else if indexPath.section == 3 {
+        else if indexPath.section == SettingsSection.lunch.rawValue {
             // Which block carries lunch on which weekday comes from the schedule itself
             // (`lunchWeekdaysInOrder`, derived from `regularSchedule`) rather than from a
             // hardcoded row-number switch. The rows and the schedule cannot disagree, and a
@@ -413,7 +441,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             alertController.addAction(cancel)
             present(alertController, animated: true, completion: nil)
         }
-        else if indexPath.section == 4 {
+        else if indexPath.section == SettingsSection.other.rawValue {
             tableView.deselectRow(at: indexPath, animated: true)
             switch indexPath.row {
             case 0: // share
@@ -422,12 +450,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 }
             case 1: // google calendar
                 addItemToCalendar(pref: 0)
-            case 2: // apple calendar
+            default: // apple calendar
                 addItemToCalendar(pref: 1)
-            case 3: // HQ-656: scan your schedule
-                navigationController?.pushViewController(ScheduleScanVC(), animated: true)
-            default: // HQ-649: clear my classes
-                confirmResetClasses()
             }
         }
     }
@@ -451,6 +475,18 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         present(alert, animated: true)
     }
 
+    /// Redraws the seven A-G rows from `LoginVC.blocks`.
+    ///
+    /// Named rather than written inline with a section number, because that number was `1` in two
+    /// places and `1` stopped meaning Blocks the moment Manage Schedule was inserted above it. The
+    /// wipe worked, the rows kept showing the cleared classes, and they only corrected when the
+    /// student navigated into a block and back - which redraws the whole table for a different
+    /// reason. It looked like a failed delete and was a repaint aimed at the wrong section.
+    private func reloadBlockRows() {
+        setBlocks()
+        tableView.reloadSections(IndexSet(integer: SettingsSection.blocks.rawValue), with: .fade)
+    }
+
     private func performResetClasses() {
         showLoader(text: "Clearing your classes...")
         resetClasses { [weak self] result in
@@ -460,15 +496,13 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 case .success:
                     ProgressHUD.colorAnimation = .green
                     ProgressHUD.succeed("Classes cleared")
-                    self.setBlocks()
-                    self.tableView.reloadSections(IndexSet(integer: 1), with: .fade)
+                    self.reloadBlockRows()
                 case .failure:
                     // Whatever got through before the failure is already durable (each block is
                     // committed before moving to the next), so this is safe to just retry.
                     ProgressHUD.colorAnimation = .red
                     ProgressHUD.failed("Didn't finish — some classes may still be set. Try again.")
-                    self.setBlocks()
-                    self.tableView.reloadSections(IndexSet(integer: 1), with: .fade)
+                    self.reloadBlockRows()
                 }
             })
         }
@@ -558,9 +592,13 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             // isAction and its right-hand label stays empty. See settingsBlock in Structs.
             settingsBlock(blockName: "Share Your Classes", className: "", isAction: true),
             settingsBlock(blockName: "Add Schedule to Google Calendar", className: "", isAction: true),
-            settingsBlock(blockName: "Add Schedule to Apple Calendar", className: "", isAction: true),
+            settingsBlock(blockName: "Add Schedule to Apple Calendar", className: "", isAction: true)
+        ]
+        // Kai's idea (PR 57), and the right one: the two actions that SET UP a schedule belong
+        // together near the top, not at the bottom of a list that starts with "Share".
+        // Destructive last, so a mis-tap on Scan is not a wipe.
+        manageSchedule = [
             settingsBlock(blockName: "Scan Your Schedule", className: "", isAction: true),
-            // Destructive, so it sits last rather than next to the thing that fills classes in.
             settingsBlock(blockName: "Clear My Classes", className: "", isAction: true)
         ]
         tableView = UITableView(frame: .zero, style: .grouped)
