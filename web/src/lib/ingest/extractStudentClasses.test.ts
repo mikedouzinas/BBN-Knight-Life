@@ -242,30 +242,30 @@ describe('a free block', () => {
   });
 });
 
-describe('grade and advisory room', () => {
-  it('are collected from the sheet header', async () => {
-    const { client } = stubClient([
-      { content: [detailsUse('a', { grade: '11', advisory: '134' })] },
-    ]);
+describe('grade', () => {
+  it('is collected from the sheet header', async () => {
+    const { client } = stubClient([{ content: [detailsUse('a', { grade: '11' })] }]);
     const result = await extractStudentClasses(PHOTO, client);
-    expect(result.details).toEqual({ grade: '11', advisory: '134' });
+    expect(result.details).toEqual({ grade: '11' });
   });
 
-  it('merge rather than replace, so a second call keeps the first call\'s field', async () => {
+  // Advisory room was removed: the sheet names an advisor, never a room, so an always-empty
+  // field only invited the model to put the advisor's NAME into `room-advisory`.
+  it('ignores an advisory room even if the model sends one', async () => {
     const { client } = stubClient([
-      { content: [detailsUse('a', { grade: '11' }), detailsUse('b', { advisory: '134' })] },
+      { content: [detailsUse('a', { grade: '11', advisory: 'Ms. Rose' })] },
     ]);
     const result = await extractStudentClasses(PHOTO, client);
-    expect(result.details).toEqual({ grade: '11', advisory: '134' });
+    expect(result.details).toEqual({ grade: '11' });
   });
 
-  it('are left out when the sheet does not state them', async () => {
+  it('is left out when the sheet does not state it', async () => {
     const { client } = stubClient([{ content: [toolUse('a', GOOD)] }]);
     const result = await extractStudentClasses(PHOTO, client);
     expect(result.details).toEqual({});
   });
 
-  it('reject a grade outside 9-12 and ask again', async () => {
+  it('rejects a grade outside 9-12 and asks again', async () => {
     const { client, create } = stubClient([
       { content: [detailsUse('a', { grade: '13' })] },
       { content: [detailsUse('b', { grade: '12' })] },

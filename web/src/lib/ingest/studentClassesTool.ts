@@ -96,17 +96,24 @@ export const EMIT_LUNCH_WAVE_TOOL: Anthropic.Tool = {
 };
 
 /**
- * Grade and advisory room, which a BB&N sheet prints in its header. Kai's idea (PR 57) and a
- * good one: they are on the page, the app has fields for both, and a student otherwise types
- * them by hand.
+ * Grade, which a BB&N sheet prints in its header. Kai's idea (PR 57) and a good one: it is on
+ * the page, the app has a field for it, and a student otherwise types it in.
  *
- * Lunch is deliberately NOT here even though PR 57 put it here. Lunch is not one fact about a
- * student - the app stores five, one per weekday - so it belongs on a per-weekday tool.
+ * ADVISORY ROOM WAS HERE AND HAS BEEN REMOVED. The sheet prints "Advisor: <person>" and the
+ * Advisory rows in the grid carry no room at all, so there is no advisory ROOM anywhere on the
+ * page to read. Confirmed against the live model on both Opus 5 and Sonnet 5: each correctly
+ * reported nothing for it. A field that is always empty is a field that invites the model to
+ * fill it with the advisor's name, which is not what `room-advisory` means. Mike, 2026-09-03:
+ * "the advisory room doesn't actually say the actual advisory room so I think that's fine. I
+ * guess we don't need to automatically have that go in."
+ *
+ * Lunch is deliberately NOT here either, even though PR 57 put it here. Lunch is not one fact
+ * about a student - the app stores five, one per weekday - so it has its own per-weekday tool.
  */
 export const EMIT_STUDENT_DETAILS_TOOL: Anthropic.Tool = {
   name: 'emit_student_details',
   description:
-    'Emit the student\'s grade level and advisory room if the sheet states them, usually in its header. Call it at most once. Omit any field the sheet does not state - do not guess.',
+    'Emit the student\'s grade level if the sheet states it, usually in its header. Call it at most once, and not at all if the sheet does not state a grade - do not guess.',
   input_schema: {
     type: 'object' as const,
     additionalProperties: false,
@@ -116,11 +123,6 @@ export const EMIT_STUDENT_DETAILS_TOOL: Anthropic.Tool = {
         enum: ['9', '10', '11', '12'],
         description:
           'The student\'s grade as a NUMBER, only if the sheet states it. Sheets word this several ways and all of them map onto 9-12: "Grade 11" and "11th" are 11; "Freshman" is 9, "Sophomore" 10, "Junior" 11, "Senior" 12; "Form III/IV/V/VI" is 9/10/11/12. Report the number, never the word. If the sheet gives a graduating year rather than a grade, omit this - working it out needs today\'s date and that is not on the page.',
-      },
-      advisory: {
-        type: 'string',
-        description:
-          'The advisory ROOM, only if the sheet states one - a room number or name like "134" or "Library". A ROOM, never a PERSON: a sheet with a line like "Advisor: Ms. Rose" names an advisor and no room, so there is nothing to report. The room may be printed beside an "Advisory" row in the grid rather than in the header.',
       },
     },
   },
@@ -164,9 +166,9 @@ They are usually printed together on one line, as "Ms. Lieberman - 285" or "Mr. 
 
 BB&N runs two lunch waves. The sheet shows one lunch row per weekday, printed as "Lunch-1st" or "Lunch-2nd", sometimes with "(Block L1)" or "(Block L2)". Call emit_lunch_wave once for each weekday you can read one for. Read every weekday column separately - a student can have first lunch on one day and second on another, and the days are not always the same.
 
-## Grade and advisory room
+## Grade
 
-A sheet usually names the student's grade and often an advisory room, in its header. Call emit_student_details once with whichever it states. Leave out anything it does not state rather than guessing - a wrong value here silently overwrites something the student already set. An advisory ROOM is a room; a sheet that names an advisor but no room has no room to report.
+A sheet usually names the student's grade in its header. Call emit_student_details once with it. If the sheet does not state a grade, do not call the tool at all - a wrong value here silently overwrites something the student already set.
 
 ## When you cannot read it
 

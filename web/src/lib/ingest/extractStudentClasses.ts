@@ -197,7 +197,6 @@ export const studentClassSchema = z.object({
 
 export const studentDetailsSchema = z.object({
   grade: z.enum(['9', '10', '11', '12']).optional(),
-  advisory: z.string().max(60).optional(),
 });
 
 export const lunchWaveSchema = z.object({
@@ -218,7 +217,7 @@ export interface ExtractStudentClassesInput {
 export interface ExtractStudentClassesResult {
   classes: StudentClass[];
   lunch: LunchWaves;
-  /** Grade and advisory room, when the sheet's header states them. */
+  /** The student's grade, when the sheet's header states it. */
   details: StudentDetails;
   message: string;
   rejected: { input: unknown; issues: string[] }[];
