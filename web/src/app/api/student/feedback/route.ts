@@ -8,8 +8,15 @@
  * wrong, it gets wrong then. A report that is not captured in that window is gone: the student
  * fixes their schedule by hand, never mentions it, and the failure is invisible.
  *
- * So this is deliberately the CAPTURE half only, with no admin UI yet (HQ-923). The perishable
- * thing is the report; a page to read them on is not perishable and can follow.
+ * So this is deliberately the CAPTURE half only, with nothing yet that reads the reports back.
+ * The perishable thing is the report; the reading half is not perishable and can follow.
+ *
+ * HQ-610 is where that half is designed, and it is more than a mailbox: a student's words go to a
+ * model that checks them against the tickets that already exist, then either files a new one or
+ * adds a confirmation to the ticket that already covers it. Twenty students reporting one broken
+ * morning should make one ticket with twenty confirmations. Nothing here forecloses that - it
+ * writes the student's own words, their uid, the screen they were on and the build they were
+ * running, which is the input that pass needs.
  *
  * Written with the Admin SDK, which bypasses security rules, so `feedback` needs no rule opening
  * it to students - and one student cannot read another's report, which matters because the free
