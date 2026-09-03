@@ -540,6 +540,23 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
 
     // MARK: - Review list
 
+    /// One row of the review list.
+    ///
+    /// A named factory rather than an inline initialiser, purely so a test can assert the thing
+    /// that broke: this screen used `register(UITableViewCell.self, ...)`, which makes cells in
+    /// `.default` style, and a `.default` cell's `detailTextLabel` is **nil**. Every right-hand
+    /// value here - the lunch wave, the grade, every teacher and room - was assigned to a nil
+    /// label and silently never drew. The screen looked plausible and was missing every value on
+    /// it, which is why it survived a build, a test run, a string check in the binary, and a
+    /// device install, and was found by a person reading the screen.
+    ///
+    /// `ScheduleScanVCTests.testReviewCellCanShowARightHandValue` fails if this returns a style
+    /// with no detail label. That is a cheap test for a class of bug that is invisible to every
+    /// other check in this repository.
+    static func makeReviewCell() -> UITableViewCell {
+        UITableViewCell(style: .value1, reuseIdentifier: "scanRow")
+    }
+
     // Two sections, because a class and a lunch wave are edited differently: a class has
     // three free-text fields, a lunch wave has exactly two possible values.
     private enum Section: Int, CaseIterable { case classes, lunch, grade }
@@ -603,11 +620,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        // `.value1`, built by hand. `dequeueReusableCell(withIdentifier:for:)` would need a
-        // registered class, and registering a class is what produced `.default` cells with a nil
-        // detailTextLabel - every value on the right silently not drawing.
-        let cell = tableView.dequeueReusableCell(withIdentifier: "scanRow")
-            ?? UITableViewCell(style: .value1, reuseIdentifier: "scanRow")
+        let cell = tableView.dequeueReusableCell(withIdentifier: "scanRow") ?? Self.makeReviewCell()
         cell.backgroundColor = UIColor(named: "background")
         cell.textLabel?.textColor = UIColor(named: "inverse")
         cell.detailTextLabel?.textColor = .systemGray
