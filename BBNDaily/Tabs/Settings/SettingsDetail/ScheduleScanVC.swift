@@ -73,6 +73,21 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     /// and no reason to keep them on a blank review screen.
     private var hasNothingToSave: Bool { results.isEmpty && lunchResults.isEmpty }
 
+    /// Closes this screen whichever way it was opened.
+    ///
+    /// Settings PUSHES it; the new-school-year prompt in AuthVC PRESENTS it as the root of its
+    /// own navigation controller, because a launch-time prompt has no navigation stack to push
+    /// onto. `popViewController` on a root does nothing at all, so a single pop would have left
+    /// a student stuck on this screen with no way back - and that student is a new user in
+    /// their first thirty seconds of the school year.
+    @objc func closeSelf() {
+        if let nav = navigationController, nav.viewControllers.first !== self {
+            nav.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Scan Your Schedule"
@@ -114,7 +129,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         alert.addAction(UIAlertAction(title: "Take Photo", style: .default, handler: { [weak self] _ in self?.presentPicker(source: .camera) }))
         alert.addAction(UIAlertAction(title: "Choose from Library", style: .default, handler: { [weak self] _ in self?.presentPicker(source: .photoLibrary) }))
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { [weak self] _ in
-            if self?.hasNothingToSave ?? true { self?.navigationController?.popViewController(animated: true) }
+            if self?.hasNothingToSave ?? true { self?.closeSelf() }
         }))
         present(alert, animated: true)
     }
@@ -223,7 +238,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             if budgetExhausted {
                 // Out of scans for the year - the manual picker in Settings still works,
                 // same message the backend sent.
-                navigationController?.popViewController(animated: true)
+                closeSelf()
             } else {
                 promptForPhotoSource()
             }
@@ -495,7 +510,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             guard let self = self else { return }
             ProgressHUD.colorAnimation = .green
             ProgressHUD.succeed(self.lunchResults.isEmpty ? "Classes saved" : "Classes and lunches saved")
-            self.navigationController?.popViewController(animated: true)
+            self.closeSelf()
         })
     }
 

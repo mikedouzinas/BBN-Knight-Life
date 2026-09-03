@@ -220,17 +220,24 @@ class AuthVC: CustomLoader {
         guard let presenter = topPresenter() else { return }
         let alert = UIAlertController(
             title: "New School Year",
-            message: "Looks like a new year started. Want to clear last year's classes and set up your new ones?",
+            message: "Looks like a new year started. Want to clear last year's classes and set up your new ones?\n\nIf you have your printed schedule, you can take a photo of it instead of typing seven classes in.",
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "Not Now", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Set Up Now", style: .default, handler: { [weak self] _ in
-            self?.startNewYearSetup(termStart: termStart)
+        // Scanning is offered first because this is the exact moment it is worth most: the
+        // student is being asked to set up seven blocks, and of 639 user records only 220 have
+        // any class set - almost everyone else had used the app and set other preferences, then
+        // hit the seven-class setup and stopped (HQ-877). Typing is what they stopped at.
+        alert.addAction(UIAlertAction(title: "Scan My Schedule", style: .default, handler: { [weak self] _ in
+            self?.startNewYearSetup(termStart: termStart, thenScan: true)
         }))
+        alert.addAction(UIAlertAction(title: "Set Up by Hand", style: .default, handler: { [weak self] _ in
+            self?.startNewYearSetup(termStart: termStart, thenScan: false)
+        }))
+        alert.addAction(UIAlertAction(title: "Not Now", style: .cancel))
         presenter.present(alert, animated: true)
     }
 
-    private func startNewYearSetup(termStart: String) {
+    private func startNewYearSetup(termStart: String, thenScan: Bool) {
         guard let presenter = topPresenter() else { return }
         presenter.showLoader(text: "Clearing last year's classes...")
         resetClasses { [weak self] result in
@@ -245,17 +252,34 @@ class AuthVC: CustomLoader {
                     // cannot disagree about how it is stored. setData(merge:) inside, because
                     // updateData fails outright on a record that does not exist yet.
                     Self.recordTermSetup(termStart)
-                    // HQ-656 (read classes from a photo of your schedule) plugs in exactly
-                    // here once it exists, replacing this message with that flow. Until then,
-                    // the existing manual picker in Settings is the real setup path.
-                    ProgressHUD.colorAnimation = .green
-                    ProgressHUD.succeed("Classes cleared - head to Settings to set your new ones")
+                    if thenScan {
+                        self.presentScheduleScan()
+                    } else {
+                        ProgressHUD.colorAnimation = .green
+                        ProgressHUD.succeed("Classes cleared - head to Settings to set your new ones")
+                    }
                 case .failure:
                     ProgressHUD.colorAnimation = .red
                     ProgressHUD.failed("Didn't finish - you can also clear classes any time from Settings")
                 }
             })
         }
+    }
+
+    /// Opens the scanner from the new-year prompt.
+    ///
+    /// Modally, inside its own navigation controller, because there is no guarantee of one to
+    /// push onto here - this fires from a launch-time prompt over whatever screen happens to be
+    /// showing, not from Settings. ScheduleScanVC closes itself with `closeSelf()`, which pops
+    /// when it was pushed and dismisses when it is a modal root, so both entry points work.
+    private func presentScheduleScan() {
+        guard let presenter = topPresenter() else { return }
+        let scan = ScheduleScanVC()
+        let nav = UINavigationController(rootViewController: scan)
+        scan.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: "Later", style: .plain, target: scan, action: #selector(ScheduleScanVC.closeSelf))
+        nav.modalPresentationStyle = .fullScreen
+        presenter.present(nav, animated: true)
     }
 
     func setAppearance(input: String?) {
