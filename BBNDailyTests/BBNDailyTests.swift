@@ -41,6 +41,42 @@ import UIKit
 ///
 /// A string in a binary proves the text was compiled in. It cannot prove there is a label to put
 /// it in. This test can.
+/// HQ-922: which weekdays a scanned class actually meets.
+///
+/// `nil` means the sheet did not say and every day stays on. It must never be read as an empty
+/// week, which would hide the class from the calendar on all five days.
+final class ScannedClassMeetingDaysTests: XCTestCase {
+
+    private func row(_ days: [String]?) -> ScannedClass {
+        ScannedClass(block: "c", subject: "Ceramics", teacher: "Ms. Lee", room: "200", days: days)
+    }
+
+    func testNotReadMeansEveryDayMeets() {
+        let scanned = row(nil)
+        for day in ScannedClass.weekdays {
+            XCTAssertTrue(scanned.days.map { $0.contains(day) } ?? true, "\(day) should stay on when days were not read")
+        }
+    }
+
+    func testOnlyTheNamedDaysMeet() {
+        let scanned = row(["tuesday", "thursday"])
+        XCTAssertEqual(
+            ScannedClass.weekdays.map { day in scanned.days.map { $0.contains(day) } ?? true },
+            [false, true, false, true, false])
+    }
+
+    /// The summary is what makes a misread visible on the review screen, so a partial week has to
+    /// render and a full week has to stay quiet.
+    func testAPartialWeekReadsInWeekdayOrder() {
+        XCTAssertEqual(row(["friday", "monday"]).meetingDaysSummary, "Mon, Fri")
+    }
+
+    func testAFullWeekSaysNothing() {
+        XCTAssertEqual(row(ScannedClass.weekdays).meetingDaysSummary, "")
+        XCTAssertEqual(row(nil).meetingDaysSummary, "")
+    }
+}
+
 final class ScanReviewCellTests: XCTestCase {
 
     func testReviewCellCanShowARightHandValue() {

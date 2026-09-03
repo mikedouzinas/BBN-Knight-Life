@@ -30,7 +30,16 @@ import {
 
 export const STUDENT_INGEST_MODEL = 'claude-opus-5';
 const MAX_ATTEMPTS = 3;
-const MAX_TOKENS = 4000;
+/**
+ * Raised from 4000 on 2026-09-03. Seven `emit_student_classes` calls now each carry a `days`
+ * array as well as subject, teacher and room, plus five lunch calls, the grade, and whatever
+ * prose the model writes - and one real sheet went over, came back with no tool calls at all,
+ * and was very nearly reported to the student as "this photo is not a schedule".
+ *
+ * Output tokens are billed for what is produced, not for the ceiling, so headroom here costs
+ * nothing on a normal sheet and is the difference between a read and a wasted scan on a long one.
+ */
+const MAX_TOKENS = 12000;
 
 /**
  * Retries for a busy API, which is a different failure from a bad photo.
@@ -203,6 +212,50 @@ export function isFreeSubject(subject: string): boolean {
 }
 
 /**
+ * A supervised study period: "Study 9", "Study Hall 11", and the bare forms.
+ *
+ * This is NOT the same thing as a free block, and one real sheet proves it. Matteo's block C
+ * prints "Unscheduled" on Monday and Thursday, and on Wednesday and Friday prints
+ * "Study 9 (Block C) Mr. Moccia - 372". He is expected in room 372. Telling him he is free is
+ * the worse error, so a study period with a ROOM is a class and keeps that room.
+ *
+ * Without a room there is nowhere to be and nothing to say, so it stays free - which is also
+ * what "study" and "studyhall" in FREE_SUBJECTS have always done, and this does not disturb it.
+ *
+ * The grade suffix is deliberately part of the name rather than normalised away: Study 9 and
+ * Study 11 are different rooms full of different students, so they are different classes.
+ *
+ * Anchored at the start so "Advanced Study Hall Design" and "Study Skills" - real courses -
+ * are not swept in.
+ */
+const STUDY_HALL = /^study(hall)?(9|10|11|12)?$/;
+export function isStudyHall(subject: string): boolean {
+  return STUDY_HALL.test(normalizeSubject(subject).replace(/[^a-z0-9]/g, ''));
+}
+
+/**
+ * The weekdays a class meets, in weekday order, deduplicated - or `undefined` for "not read".
+ *
+ * THE UNDEFINED CASE IS THE SAFETY OF THIS WHOLE FIELD and it is why this returns `undefined`
+ * rather than `[]`. Downstream, `undefined` means "leave all five days on", which is what the
+ * app did before this existed. An empty array would mean "meets no days", which would delete a
+ * class from the student's calendar every day of the week.
+ *
+ * The two errors are not symmetric, same as the course-beats-Free decision. A class shown on a
+ * day it does not meet is a visible annoyance the student can see is wrong. A class hidden on a
+ * day it does meet makes them miss it, and nothing on the screen says anything is missing. So a
+ * day only goes false when the sheet positively showed that block as something else that day,
+ * and anything unread stays true.
+ */
+export function meetingDays(days: readonly string[] | undefined): StudentClass['days'] {
+  if (days === undefined) return undefined;
+  const present = new Set(days);
+  const ordered = WEEKDAYS.filter((d) => present.has(d));
+  // Nothing readable is "not read", never "meets no days".
+  return ordered.length === 0 ? undefined : ordered;
+}
+
+/**
  * A BB&N sheet prints the teacher and the room on one line, as "Ms. Lieberman - 285". The
  * prompt asks for them split, and in four measured runs the model always did. This is the
  * backstop for the run where it does not.
@@ -235,11 +288,19 @@ export function splitTeacherAndRoom(
   return { teacher: name, room: tail };
 }
 
+export const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const;
+
 export const studentClassSchema = z.object({
   block: z.enum(['a', 'b', 'c', 'd', 'e', 'f', 'g']),
   subject: z.string().min(1).max(120),
   teacher: z.string().max(120).optional(),
   room: z.string().max(60).optional(),
+  /**
+   * The weekdays this course actually appears under its letter. Omitted means "not read", which
+   * is NOT the same as "meets no days" - see `meetingDays` below for why that distinction is the
+   * whole safety of this field.
+   */
+  days: z.array(z.enum(WEEKDAYS)).max(5).optional(),
 });
 
 export const studentDetailsSchema = z.object({
@@ -338,6 +399,24 @@ export async function extractStudentClasses(
           block.name === EMIT_LUNCH_WAVE_TOOL.name ||
           block.name === EMIT_STUDENT_DETAILS_TOOL.name),
     );
+    // A RESPONSE THAT RAN OUT OF TOKENS IS NOT A SHEET WITH NOTHING ON IT.
+    //
+    // Found on 2026-09-03 by IMG_6972, which had read six courses and a free block minutes
+    // earlier and came back with zero of everything: no classes, no lunch, no grade, nothing
+    // rejected, nothing skipped, one attempt, and a `message` cut off mid-sentence at "I read
+    // the sheet as". The `break` below then returned that as a clean result, and the app's only
+    // reading of a clean result with no classes is "this photo is not a schedule" - so a student
+    // is told their schedule is unreadable, and has spent one of five scans finding out.
+    //
+    // The trigger was adding `days` to every tool call, which is what pushed one sheet's output
+    // past the limit. The truncation was always reachable; the field just made it likely enough
+    // to catch. Raising MAX_TOKENS is the fix for THIS sheet, and this check is the fix for the
+    // class: a truncated read must fail loudly rather than come back empty and confident.
+    if (response.stop_reason === 'max_tokens') {
+      throw new IngestError(
+        'The schedule was too long to read in one go. Please try again.',
+      );
+    }
     if (!calls.length) break;
 
     const results: Anthropic.ToolResultBlockParam[] = [];
@@ -427,18 +506,33 @@ export async function extractStudentClasses(
       // this point either compares it or stores it as part of a document id. `Health &amp;
       // Wellness` reaching the id makes a second roster for a class that already exists.
       const subjectText = decodeEntities(parsed.data.subject);
-      const free = isFreeSubject(subjectText);
+      const split = splitTeacherAndRoom(
+        parsed.data.teacher === undefined ? undefined : decodeEntities(parsed.data.teacher),
+        parsed.data.room === undefined ? undefined : decodeEntities(parsed.data.room),
+      );
+
+      // A supervised study period with a room is a place the student has to be, so it is a
+      // class rather than a free block - but its SUPERVISOR is not its identity. One sheet
+      // printed Study 9 with Mr. Moccia on Wednesday and Ms. Rose on Friday, in the same room,
+      // and the teacher is part of the document id, so keeping it made three documents for one
+      // study hall across five reads of one photo. Dropping it makes everyone in Study 9 land
+      // on the same roster, which is the point.
+      const studyHall = isStudyHall(subjectText) && !!split.room;
+      const free = !studyHall && isFreeSubject(subjectText);
+
       const { teacher, room } = free
         ? { teacher: undefined, room: undefined }
-        : splitTeacherAndRoom(
-            parsed.data.teacher === undefined ? undefined : decodeEntities(parsed.data.teacher),
-            parsed.data.room === undefined ? undefined : decodeEntities(parsed.data.room),
-          );
+        : studyHall
+          ? { teacher: undefined, room: split.room }
+          : split;
       const accepted: StudentClass = {
         block: parsed.data.block,
         subject: free ? FREE_SUBJECT : subjectText.trim(),
         teacher,
         room,
+        // A free block is every day the student is not in that class, which is a fact about the
+        // other blocks rather than about this one. Only a course carries meeting days.
+        days: free ? undefined : meetingDays(parsed.data.days),
       };
 
       // A later call for the same block replaces the earlier one - the model correcting

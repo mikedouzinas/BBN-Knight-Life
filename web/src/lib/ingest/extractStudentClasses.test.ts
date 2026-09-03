@@ -11,6 +11,8 @@ import {
   extractStudentClasses,
   isFreeSubject,
   isNonBlockRow,
+  isStudyHall,
+  meetingDays,
   normalizeSubject,
   splitTeacherAndRoom,
 } from './extractStudentClasses';
@@ -27,7 +29,7 @@ function detailsUse(id: string, input: unknown) {
   return { type: 'tool_use' as const, id, name: 'emit_student_details', input };
 }
 
-function stubClient(responses: { content: unknown[] }[]) {
+function stubClient(responses: { content: unknown[]; stop_reason?: string }[]) {
   const create = vi.fn();
   for (const response of responses) create.mockResolvedValueOnce(response);
   create.mockResolvedValue({ content: [] });
@@ -241,6 +243,160 @@ describe('a free block', () => {
     const result = await extractStudentClasses(PHOTO, client);
     expect(result.classes[0].teacher).toBeUndefined();
     expect(result.classes[0].room).toBeUndefined();
+  });
+});
+
+/**
+ * IMG_6972, 2026-09-03: a sheet that had read six courses and a free block minutes earlier came
+ * back with zero of everything and a `message` cut off mid-sentence. It had run out of output
+ * tokens. Nothing looked at `stop_reason`, so the empty result was returned as a clean one, and
+ * a clean result with no classes reads to the app as "this photo is not a schedule" - a student
+ * told their own schedule is unreadable, one scan poorer.
+ */
+describe('a response that ran out of tokens', () => {
+  it('fails rather than reporting a sheet with nothing on it', async () => {
+    const { client } = stubClient([
+      { stop_reason: 'max_tokens', content: [{ type: 'text', text: 'I read the sheet as' }] },
+    ]);
+    await expect(extractStudentClasses(PHOTO, client)).rejects.toBeInstanceOf(IngestError);
+  });
+
+  it('fails even when it had already emitted some of the blocks', async () => {
+    const { client } = stubClient([
+      { stop_reason: 'max_tokens', content: [toolUse('a', GOOD)] },
+    ]);
+    // Half a schedule saved silently is worse than none: the student sees classes appear and has
+    // no reason to think the rest went missing.
+    await expect(extractStudentClasses(PHOTO, client)).rejects.toBeInstanceOf(IngestError);
+  });
+
+  it('leaves a normal end_turn alone', async () => {
+    const { client } = stubClient([{ stop_reason: 'end_turn', content: [toolUse('a', GOOD)] }]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes).toHaveLength(1);
+  });
+});
+
+/**
+ * HQ-922's first half. Mike, 2026-09-03: "i think this is crucial given there are so many
+ * classes that only meet some days per week."
+ *
+ * The whole safety of this field is the difference between "not read" and "meets no days". A
+ * class shown on a day it does not meet is a visible annoyance; a class hidden on a day it does
+ * meet makes the student miss it with nothing on screen to say so.
+ */
+describe('which weekdays a class meets', () => {
+  it('is left unset when the model did not report it', () => {
+    expect(meetingDays(undefined)).toBeUndefined();
+  });
+
+  it('is left unset rather than empty, because empty would mean "never meets"', () => {
+    expect(meetingDays([])).toBeUndefined();
+  });
+
+  it('comes back in weekday order, however the model listed them', () => {
+    expect(meetingDays(['friday', 'monday', 'wednesday'])).toEqual(['monday', 'wednesday', 'friday']);
+  });
+
+  it('deduplicates a day the model named twice', () => {
+    expect(meetingDays(['tuesday', 'tuesday'])).toEqual(['tuesday']);
+  });
+
+  it('reaches the caller on a course', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { ...GOOD, days: ['tuesday', 'thursday'] })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].days).toEqual(['tuesday', 'thursday']);
+  });
+
+  it('is absent on a course the model said nothing about, so every day stays on', async () => {
+    const { client } = stubClient([{ content: [toolUse('a', GOOD)] }]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].days).toBeUndefined();
+  });
+
+  it('is never set on a free block', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'f', subject: 'Unscheduled', days: ['monday'] })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].days).toBeUndefined();
+  });
+
+  it('rejects a day that is not a weekday and asks again', async () => {
+    const { client, create } = stubClient([
+      { content: [toolUse('a', { ...GOOD, days: ['saturday'] })] },
+      { content: [toolUse('b', { ...GOOD, days: ['monday'] })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(result.classes[0].days).toEqual(['monday']);
+    expect(result.rejected).toEqual([]);
+  });
+});
+
+/**
+ * Matteo's block C: "Unscheduled" on Monday and Thursday, and on Wednesday and Friday
+ * "Study 9 (Block C) Mr. Moccia - 372" / "Study 9 (Block C) Ms. Rose - 372". He is expected in
+ * room 372, so it is a class - but the supervisor changes by day and the supervisor is part of
+ * the document id, so keeping it made three documents out of one study hall.
+ */
+describe('a supervised study hall', () => {
+  it.each(['Study 9', 'study 9', 'Study Hall 11', 'Study', 'Study Hall', 'STUDY 12'])(
+    'recognises %s',
+    (subject) => {
+      expect(isStudyHall(subject)).toBe(true);
+    },
+  );
+
+  it.each(['Study Skills', 'Advanced Study Hall Design', 'Studio Art', 'Biology'])(
+    'does not treat %s as one',
+    (subject) => {
+      expect(isStudyHall(subject)).toBe(false);
+    },
+  );
+
+  it('keeps the room and drops the supervisor', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Study 9', teacher: 'Mr. Moccia', room: '372' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toEqual([{ block: 'c', subject: 'Study 9', teacher: undefined, room: '372' }]);
+  });
+
+  it('lands on one class whichever day was read', async () => {
+    const { client: wed } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Study 9', teacher: 'Mr. Moccia', room: '372' })] },
+    ]);
+    const { client: fri } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Study 9', teacher: 'Ms. Rose', room: '372' })] },
+    ]);
+    const [a, b] = [await extractStudentClasses(PHOTO, wed), await extractStudentClasses(PHOTO, fri)];
+    expect(a.classes).toEqual(b.classes);
+  });
+
+  it('stays a free block when the sheet gives it no room', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Study Hall' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toEqual([{ block: 'c', subject: 'Free', teacher: undefined, room: undefined }]);
+  });
+
+  it('beats a free block for the same letter, like any other course', async () => {
+    const { client } = stubClient([
+      {
+        content: [
+          toolUse('a', { block: 'c', subject: 'Study 9', teacher: 'Mr. Moccia', room: '372' }),
+          toolUse('b', { block: 'c', subject: 'Unscheduled' }),
+        ],
+      },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].subject).toBe('Study 9');
   });
 });
 

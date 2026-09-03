@@ -37,7 +37,7 @@
  */
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
-import { extractStudentClasses } from '../src/lib/ingest/extractStudentClasses';
+import { extractStudentClasses, isFreeSubject } from '../src/lib/ingest/extractStudentClasses';
 
 const MEDIA: Record<string, string> = {
   '.pdf': 'application/pdf',
@@ -91,7 +91,7 @@ interface Row {
   attempts: number;
   seconds: number;
   message: string;
-  classes: { block: string; subject: string; teacher?: string; room?: string }[];
+  classes: { block: string; subject: string; teacher?: string; room?: string; days?: string[] }[];
   error?: string;
 }
 
@@ -127,7 +127,7 @@ for (const file of files) {
       attempts: result.attempts,
       seconds: Math.round((Date.now() - started) / 100) / 10,
       message: (result.message ?? '').trim(),
-      classes: result.classes.map((c) => ({ block: c.block.toUpperCase(), subject: c.subject, teacher: c.teacher, room: c.room })),
+      classes: result.classes.map((c) => ({ block: c.block.toUpperCase(), subject: c.subject, teacher: c.teacher, room: c.room, days: c.days })),
     };
     rows.push(row);
     console.log(`${row.seconds}s  blocks=${row.blocks}  grade=${row.grade ?? '—'}  lunchMissing=${row.lunchMissing.length}`);
@@ -153,7 +153,14 @@ for (const r of rows) {
   }
   console.log(`  ${r.courses} course(s), ${r.frees} free, grade ${r.grade ?? 'NOT READ'}, ${r.attempts} attempt(s), ${r.seconds}s`);
   for (const c of r.classes) {
-    console.log(`    ${c.block}  ${c.subject}${c.teacher ? `  ·  ${c.teacher}` : ''}${c.room ? `  ·  ${c.room}` : ''}`);
+    // HQ-922. `undefined` and "all five" are DIFFERENT and the report has to show which:
+    // undefined means the model could not read the weekday columns and every day stays on,
+    // while a listed set is a claim that the class is hidden on the days it omits.
+    const days = c.days === undefined ? 'every day (not read)' : c.days.map((d) => d.slice(0, 3)).join(',');
+    console.log(
+      `    ${c.block}  ${c.subject}${c.teacher ? `  ·  ${c.teacher}` : ''}${c.room ? `  ·  ${c.room}` : ''}` +
+        `${isFreeSubject(c.subject) ? '' : `  ·  ${days}`}`,
+    );
   }
   if (r.missingBlocks.length) console.log(`    blocks not on the sheet: ${r.missingBlocks.join(', ')}`);
   console.log(`    lunch: ${WEEKDAYS.map((d) => `${d.slice(0, 3)}=${r.lunch[d] ?? '—'}`).join(' ')}`);

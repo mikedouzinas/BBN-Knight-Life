@@ -67,6 +67,15 @@ export const EMIT_STUDENT_CLASSES_TOOL: Anthropic.Tool = {
         description:
           'The room alone, with the teacher removed. A row reading "Ms. Lieberman - 285" has room "285". Omit if the source names no room.',
       },
+      days: {
+        type: 'array',
+        items: {
+          type: 'string',
+          enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+        },
+        description:
+          'The weekday columns this course actually appears in under this letter. Many BB&N courses do not meet every day - an arts course might print only on Tuesday and Thursday, with the same letter showing "Unscheduled" on the other three. List only the days you can positively see the course. OMIT this entirely if you cannot read every weekday column for this block (a cropped photo, a covered corner); omitting means "meets every day", which is a visible mistake, while a short list hides the class on days the student really has it.',
+      },
     },
   },
 };
@@ -161,6 +170,25 @@ The one case to leave out entirely is a letter the sheet **never mentions**. Tha
 A course usually appears on several weekdays. That is one class, so emit it once. If two genuinely different courses appear under the same letter, emit the one appearing most often and say so in text.
 
 A course can also occupy more than one letter - a lab, a double period, a year-long course meeting in two blocks. That is not a mistake to correct: emit it under each letter it appears in, with the same name.
+
+## Which weekdays a course meets
+
+Most BB&N courses do not meet all five days, and the sheet says so plainly: the course prints in the weekday columns it meets in, and the same letter prints "Unscheduled" in the others. Read across all five columns for each letter and put the days you can see the course in "days".
+
+Two rules, and the second one matters more than the first:
+
+1. List only days you can positively see the course under that letter.
+2. **If you cannot read every weekday column for that block, omit "days" entirely.** A corner covered by a thumb, a cropped edge, a column too blurred to read - any of those and you leave the field out. Omitting it means "meets every day", which the student sees and can shrug at. A list that is short because you could not read a column hides a class on a day they really have it, and nothing tells them it is missing.
+
+Do not infer days from the course's name or from how many days a course "should" meet.
+
+## Study halls
+
+A supervised study period - printed "Study 9", "Study Hall", "Study 11" - is a class, not a free block, whenever the sheet gives it a room. The student is expected in that room, and telling them they are free sends them somewhere else.
+
+Report its name and room exactly as printed, and give it NO teacher. The supervisor on a study hall changes from day to day and is not what identifies it; the room is.
+
+A study period with no room and no teacher is just an open block. Report that as "Free".
 
 ## Teacher and room
 

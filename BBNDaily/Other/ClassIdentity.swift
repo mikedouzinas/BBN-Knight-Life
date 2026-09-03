@@ -65,7 +65,16 @@ enum ClassIdentity {
         if isFree(cleanSubject) {
             return "\(freeSubject)~~~\(cleanBlock)"
         }
-        return "\(cleanSubject)~\(canonicalTeacher(teacher))~\(canonicalRoom(room))~\(cleanBlock)"
+
+        // A supervised study period keeps its room and drops its supervisor. The room is where
+        // the student has to be; the supervisor is whoever is covering that day. One sheet
+        // printed Study 9 in room 372 with Mr. Moccia on Wednesday and Ms. Rose on Friday, so
+        // a key carrying the teacher makes a second study hall out of the same room.
+        let cleanRoom = canonicalRoom(room)
+        if isStudyHall(cleanSubject) && !cleanRoom.isEmpty {
+            return "\(cleanSubject)~~\(cleanRoom)~\(cleanBlock)"
+        }
+        return "\(cleanSubject)~\(canonicalTeacher(teacher))~\(cleanRoom)~\(cleanBlock)"
     }
 
     /// Collapse runs of whitespace, trim, and drop stray edge punctuation. Case is left alone.
@@ -127,6 +136,20 @@ enum ClassIdentity {
         let key = comparisonKey(subject)
         return ["free", "freeperiod", "freeblock", "unscheduled", "unassigned",
                 "studyhall", "study", "open", "none", "na", "noclass", "flex"].contains(key)
+    }
+
+    /// A supervised study period: "Study 9", "Study Hall 11", and the bare forms.
+    ///
+    /// Different from a free block, and only when the sheet gives it a room - see
+    /// `canonicalClassKey`. The grade suffix stays part of the name because Study 9 and Study 11
+    /// are different rooms full of different students. Anchored, so the real courses "Study
+    /// Skills" and "Advanced Study Hall Design" are not swept in.
+    static func isStudyHall(_ subject: String) -> Bool {
+        let key = comparisonKey(subject)
+        for suffix in ["", "9", "10", "11", "12"] {
+            if key == "study\(suffix)" || key == "studyhall\(suffix)" { return true }
+        }
+        return false
     }
 
     // MARK: - Recognition

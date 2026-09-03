@@ -18,6 +18,28 @@ struct ScannedClass {
     var subject: String
     var teacher: String
     var room: String
+
+    /// The weekdays this course actually meets, or nil for "the sheet did not say".
+    ///
+    /// HQ-922's first half. Most BB&N courses do not meet all five days - an arts course prints
+    /// on two weekdays and the same letter prints "Unscheduled" on the other three - and until
+    /// now every scanned class was created meeting every day.
+    ///
+    /// NIL IS NOT AN EMPTY WEEK. Nil means "not read" and leaves all five days on, which is what
+    /// the app did before this existed. The distinction is the whole safety of the field: a
+    /// class shown on a day it does not meet is a visible annoyance, while a class hidden on a
+    /// day it does meet makes the student miss it with nothing on screen to say so.
+    var days: [String]?
+
+    static let weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+
+    /// What `days` reads as on the review screen. Empty when every day meets, because a class
+    /// that meets all week is the unremarkable case and does not need saying.
+    var meetingDaysSummary: String {
+        guard let days = days, !days.isEmpty, days.count < ScannedClass.weekdays.count else { return "" }
+        let short = ["monday": "Mon", "tuesday": "Tue", "wednesday": "Wed", "thursday": "Thu", "friday": "Fri"]
+        return ScannedClass.weekdays.filter { days.contains($0) }.compactMap { short[$0] }.joined(separator: ", ")
+    }
 }
 
 /// A lunch wave read off the same photo: which weekday, which of the two waves, and the
@@ -506,7 +528,17 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         let rawClasses = (json["classes"] as? [[String: Any]]) ?? []
         results = rawClasses.compactMap { dict in
             guard let block = dict["block"] as? String, let subject = dict["subject"] as? String else { return nil }
-            return ScannedClass(block: block, subject: subject, teacher: (dict["teacher"] as? String) ?? "", room: (dict["room"] as? String) ?? "")
+            // An unrecognised weekday is dropped rather than stored. If that empties the list,
+            // it becomes nil - "not read" - never an empty week. See ScannedClass.days.
+            let parsedDays = (dict["days"] as? [String])?
+                .map { $0.lowercased() }
+                .filter { ScannedClass.weekdays.contains($0) }
+            return ScannedClass(
+                block: block,
+                subject: subject,
+                teacher: (dict["teacher"] as? String) ?? "",
+                room: (dict["room"] as? String) ?? "",
+                days: (parsedDays?.isEmpty ?? true) ? nil : parsedDays)
         }
 
         if let details = json["details"] as? [String: Any], let grade = details["grade"] as? String,
@@ -804,7 +836,13 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         default:
             let row = results[indexPath.row]
             cell.textLabel?.text = "Block \(row.block.uppercased()): \(row.subject)"
-            cell.detailTextLabel?.text = [row.teacher, row.room].filter { !$0.isEmpty }.joined(separator: " \u{00B7} ")
+            // The meeting days join the teacher and room rather than getting a row of their own:
+            // a class that meets all week says nothing here, so the line only grows for the
+            // classes where it is news. The student cannot edit it (HQ-922 owns that), but a
+            // misread has to be visible rather than silently deciding their calendar.
+            cell.detailTextLabel?.text = [row.teacher, row.room, row.meetingDaysSummary]
+                .filter { !$0.isEmpty }
+                .joined(separator: " \u{00B7} ")
         }
         return cell
     }
@@ -996,8 +1034,9 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             // in one block were two rows both reading "N/A", which is indistinguishable from a
             // duplicate.
             //
-            // `owner` matters for the same reason one step later: ClassPopupVC reads it with an
-            // `?? "N/A"` fallback and shows it as who made the class.
+            // `owner` is the one field deliberately left off - see the note where the weekday
+            // flags are written. ClassPopupVC shows it with an `?? "N/A"` fallback as who made
+            // the class, and "N/A" is the honest answer for a class nobody claimed.
             //
             let isNewClass = snapshot?.exists != true
             var payload: [String: Any] = ["members": members, "block": row.block.uppercased()]
@@ -1019,9 +1058,34 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
                 // missing flag to `true`, because "meets every weekday" is a claim about the
                 // class, and leaning on a reader's fallback means the document is only correct
                 // for as long as every future reader picks the same one.
-                payload["owner"] = LoginVC.email
-                for day in ["monday", "tuesday", "wednesday", "thursday", "friday"] {
-                    payload[day] = true
+                //
+                // HQ-922: those flags used to be five hardcoded `true`s, which said every
+                // scanned class meets every day. Most BB&N courses do not - an arts course
+                // prints on two weekdays and the same letter reads "Unscheduled" on the other
+                // three - and this is the field the calendar has always honoured, so writing it
+                // correctly needs nothing else to change. `classMeetingDays` is read from here
+                // in AuthVC, and nine places consume it.
+                //
+                // `row.days == nil` means the sheet did not say, NOT that the class never meets,
+                // so it falls back to all five. A class shown on a day it does not meet is a
+                // visible annoyance; one hidden on a day it does meet makes the student miss it.
+                // `owner` is deliberately NOT set, and that is a change made the same day as the
+                // weekday flags above, because those flags are what made it matter.
+                //
+                // DaySelectVC refuses an edit unless you are the class's owner or an admin, and
+                // joinClass used to name whoever scanned first. That was survivable while every
+                // scanned class met every day: there was nothing worth editing. Now the first
+                // scanner's reading of the weekday columns decides twenty-four other students'
+                // calendars, and every one of them gets "Sorry, you do not have permission to
+                // edit this class" when they try to correct it.
+                //
+                // DaySelectVC already treats a missing owner as owned by nobody and never
+                // denies on it, and firestore.rules does not read the field, so leaving it off
+                // makes a scan-created class editable by everyone in it. A class created by
+                // photographing a timetable is not owned by the student who photographed it -
+                // which is HQ-923's point, arrived at from the other direction.
+                for day in ScannedClass.weekdays {
+                    payload[day] = row.days.map { $0.contains(day) } ?? true
                 }
             }
 
