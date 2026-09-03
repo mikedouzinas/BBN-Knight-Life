@@ -19,6 +19,37 @@ class DaySelectVC: UIViewController {
     var link: ClassesOptionsPopupVC!
     var isEditingClass = false
     var finalString = ""
+
+    /// Show the days this class ACTUALLY meets.
+    ///
+    /// Nothing ever set these switches. They came up however the storyboard left them - all five
+    /// on - so the screen claimed "meets every day" for a class that does not, and saving from it
+    /// wrote those five back and wiped the real days. Harmless while every class met every
+    /// weekday; destructive from the moment HQ-656 started writing real ones.
+    ///
+    /// Mike, 2026-09-03: "when I do edit a class, like when I edit Photography with Ms. Lee, it
+    /// goes all the way through the days that it meets. It is not up to date with the actual
+    /// ones. It just says all five of them are active even though we know that's not true."
+    ///
+    /// Read from `LoginVC.classMeetingDays`, the same source the calendar draws from, so the
+    /// editor and the calendar cannot disagree about what a class does. A block with no entry
+    /// falls back to all five, matching every other reader in the app.
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        // Only when editing. Creating a class starts from every day, which is the right default
+        // for one nobody has said anything about yet.
+        guard isEditingClass else { return }
+
+        let block = ClassesOptionsPopupVC.currentBlock.lowercased()
+        let days = LoginVC.classMeetingDays[block] ?? [true, true, true, true, true]
+        guard days.count == 5 else { return }
+
+        for (toggle, meets) in zip([MondaySwitch, TuesdaySwitch, WednesdaySwitch, ThursdaySwitch, FridaySwitch], days) {
+            toggle?.setOn(meets, animated: false)
+        }
+    }
+
     func alreadyExists(word: String) -> Bool {
         for selectedRow in link.Classes {
             if word == "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)" {
