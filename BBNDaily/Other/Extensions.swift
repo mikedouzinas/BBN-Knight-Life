@@ -8,6 +8,8 @@
 import Foundation
 import UIKit
 import Firebase
+// `Auth` for the ID token the feedback POST sends. `import Firebase` alone does not re-export it.
+import FirebaseAuth
 import ProgressHUD
 
 extension UIViewController {
@@ -54,6 +56,16 @@ extension String {
             return "N/A"
         }
         return self
+    }
+
+    /// The inverse of `setNotAvailable()`, for a label that should show nothing rather than "N/A".
+    ///
+    /// `getValues()` substitutes "N/A" for an empty field so that a caller building one string out
+    /// of subject/teacher/room has something to print. A caller with a DEDICATED label per field
+    /// wants the opposite: an empty label it can hide. Without this the two conventions collide and
+    /// a free block, whose teacher and room are legitimately empty, reads as "Free / N/A".
+    func blankIfNotAvailable() -> String {
+        self == "N/A" ? "" : self
     }
     func getDayOfWeek() -> Int? {
         let formatter  = DateFormatter()
@@ -663,6 +675,79 @@ extension UIViewController {
     func hideLoader(completion: (() -> Void)?) {
         ProgressHUD.dismiss()
         completion?()
+    }
+
+    /// Asks the student what went wrong and posts it, in their own words.
+    ///
+    /// Lives on `UIViewController` so both Settings and the scan review screen offer it from the
+    /// same code - the report that matters most is the one sent from the screen where the thing
+    /// went wrong, while the student can still see it.
+    ///
+    /// Fire and mostly forget, on purpose. It reports success or failure and never blocks
+    /// anything: a student who cannot send feedback has already hit one problem, and making them
+    /// sit through a second failure to tell us about the first is the wrong trade.
+    ///
+    /// - Parameter context: where they were, e.g. "schedule-scan". Stored alongside the message so
+    ///   a week of reports can be read by area instead of one at a time.
+    func promptForFeedback(context: String) {
+        let alert = UIAlertController(
+            title: "Report a Problem",
+            message: "What went wrong? This goes straight to whoever maintains the app. Say what you expected and what you got.",
+            preferredStyle: .alert
+        )
+        alert.addTextField { field in
+            field.placeholder = "It read my B block as the wrong class"
+            field.autocapitalizationType = .sentences
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Send", style: .default, handler: { [weak self] _ in
+            let text = (alert.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { return }
+            self?.sendFeedback(message: text, context: context)
+        }))
+        present(alert, animated: true)
+    }
+
+    /// The feedback endpoint, on the canonical `www.` host for the same reason the scan endpoint
+    /// is - a cross-host 308 drops the Authorization header. scripts/check-app-urls.sh enforces it.
+    private static let feedbackEndpoint = "https://www.mikeveson.com/knight-life/api/student/feedback"
+
+    private func sendFeedback(message: String, context: String) {
+        guard let url = URL(string: UIViewController.feedbackEndpoint) else { return }
+        let version = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "?"
+        let build = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "?"
+
+        Auth.auth().currentUser?.getIDToken(completion: { token, error in
+            guard let token = token, error == nil else {
+                DispatchQueue.main.async {
+                    ProgressHUD.colorAnimation = .red
+                    ProgressHUD.failed("Couldn't verify your sign-in. Try again.")
+                }
+                return
+            }
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try? JSONSerialization.data(withJSONObject: [
+                "message": message,
+                "context": context,
+                "appVersion": "\(version) (\(build))",
+            ])
+
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                DispatchQueue.main.async {
+                    let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                    guard error == nil, (200...299).contains(status) else {
+                        ProgressHUD.colorAnimation = .red
+                        ProgressHUD.failed("Couldn't send that. Check your connection and try again.")
+                        return
+                    }
+                    ProgressHUD.colorAnimation = .green
+                    ProgressHUD.succeed("Thanks - that was sent")
+                }
+            }.resume()
+        })
     }
     // getScheduleFor lived here and is gone. HQ-607.
     //

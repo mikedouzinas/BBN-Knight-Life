@@ -99,6 +99,14 @@ struct settingsBlock {
     /// "Scan Your Schedule" would have shown next. Defaults to false, so the 38 existing
     /// call sites are unchanged.
     var isAction: Bool = false
+    /// A short tag shown where an action row's value would be - currently only "Beta".
+    ///
+    /// An action row has no value, so its right-hand label is otherwise empty and free. A badge
+    /// rather than part of `blockName` on purpose: "Scan Your Schedule (Beta)" makes the label
+    /// part of the feature's NAME, so removing it later means editing the name, and that is the
+    /// kind of edit nobody remembers - which is how a "Beta" tag ships to students a year after
+    /// the thing stopped being one.
+    var badge: String? = nil
 }
 
 struct ProfileCell {

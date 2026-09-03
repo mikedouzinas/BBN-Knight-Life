@@ -24,13 +24,48 @@ import EventKit
 /// and a mis-wired row here runs "Clear My Classes" when somebody taps "Share".
 enum SettingsSection: Int, CaseIterable {
     case personalInfo = 0
-    /// Scan and Clear, together, directly under Personal Info - the two actions that SET UP a
-    /// schedule, where a student looks for them, rather than buried at the bottom under Other.
+    /// Scan, Clear and Send Feedback, together, directly under Personal Info - the actions that
+    /// SET UP a schedule, where a student looks for them, rather than buried under Other.
     case manageSchedule
     case blocks
     case preferences
     case lunch
     case other
+}
+
+/// The rows inside Manage Schedule, in order.
+///
+/// Named for the same reason `SettingsSection` is, one level down. Both the icon choice and the
+/// tap handler were written as `indexPath.row == 0 ? scan : clear`, which is not "scan is first"
+/// - it is "everything that is not row 0 clears the student's classes". Adding a third row to
+/// that shape wires it to the destructive action.
+enum ManageScheduleRow: Int, CaseIterable {
+    case scan = 0
+    case clear
+    /// Beta feedback, and last on purpose: it is the least-used row, and putting it below the
+    /// destructive one keeps Clear out of the position a thumb lands on by habit.
+    case feedback
+
+    var title: String {
+        switch self {
+        case .scan:     return "Scan Your Schedule"
+        case .clear:    return "Clear My Classes"
+        case .feedback: return "Report a Problem"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .scan:     return "camera.viewfinder"
+        case .clear:    return "trash"
+        case .feedback: return "exclamationmark.bubble"
+        }
+    }
+
+    /// Only the destructive row is red, so it does not look like the others.
+    var isDestructive: Bool { self == .clear }
+
+    var badge: String? { self == .scan ? "Beta" : nil }
 }
 
 class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollViewDelegate, UITextFieldDelegate {
@@ -89,11 +124,9 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
                 fatalError()
             }
-            // Scan first, Clear second - and the destructive one is the only red row in
-            // Settings, so it does not look like the other two.
-            let imgName = indexPath.row == 0 ? "camera.viewfinder" : "trash"
-            let imageview = UIImageView(image: UIImage(systemName: imgName)!)
-            imageview.tintColor = indexPath.row == 0 ? UIColor(named: "inverse") : .systemRed
+            let row = ManageScheduleRow(rawValue: indexPath.row) ?? .scan
+            let imageview = UIImageView(image: UIImage(systemName: row.systemImage)!)
+            imageview.tintColor = row.isDestructive ? .systemRed : UIColor(named: "inverse")
             cell.accessoryView = imageview
             cell.configure(with: manageSchedule[indexPath.row])
             return cell
@@ -276,10 +309,11 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.section == SettingsSection.manageSchedule.rawValue {
             tableView.deselectRow(at: indexPath, animated: true)
-            if indexPath.row == 0 {
-                navigationController?.pushViewController(ScheduleScanVC(), animated: true)
-            } else {
-                confirmResetClasses()
+            switch ManageScheduleRow(rawValue: indexPath.row) {
+            case .scan:     navigationController?.pushViewController(ScheduleScanVC(), animated: true)
+            case .clear:    confirmResetClasses()
+            case .feedback: promptForFeedback(context: "settings")
+            case .none:     break
             }
         }
         else if indexPath.section == SettingsSection.blocks.rawValue {
@@ -597,10 +631,14 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
         // Kai's idea (PR 57), and the right one: the two actions that SET UP a schedule belong
         // together near the top, not at the bottom of a list that starts with "Share".
         // Destructive last, so a mis-tap on Scan is not a wipe.
-        manageSchedule = [
-            settingsBlock(blockName: "Scan Your Schedule", className: "", isAction: true),
-            settingsBlock(blockName: "Clear My Classes", className: "", isAction: true)
-        ]
+        // Built from the enum rather than written out, so the rows, their icons, and the tap
+        // handler cannot get out of step with each other. "Beta" is a badge on the scan row: it
+        // reads one photo per student in the first week of the year, on sheets nobody here has
+        // seen, and a student should know that BEFORE they trust it over typing seven classes in
+        // by hand rather than after it gets one wrong.
+        manageSchedule = ManageScheduleRow.allCases.map {
+            settingsBlock(blockName: $0.title, className: "", isAction: true, badge: $0.badge)
+        }
         tableView = UITableView(frame: .zero, style: .grouped)
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false

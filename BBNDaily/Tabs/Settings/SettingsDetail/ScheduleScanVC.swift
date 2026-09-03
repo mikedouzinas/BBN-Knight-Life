@@ -32,11 +32,18 @@ struct ScannedLunch {
     var block: String
     var wave: Int
 
-    /// Leads with the DAY, because that is what a student is confirming. The block letter is
-    /// secondary context - Mike, on the first version: "it said lunch, like D-block, which I
-    /// was confused about."
+    /// The DAY, and only the day.
+    ///
+    /// The row used to read `Mondays · D block` on the left and `2nd Lunch` on the right, which
+    /// puts two answers on one line and makes the block letter look like the thing being set.
+    /// Mike, twice: "it said lunch, like D-block, which I was confused about", then "isn't it
+    /// first or second lunch that matters?" It is. The wave is the only value stored, so the wave
+    /// is the only value on the row, and the block letter moved into the section footer where it
+    /// is explained once instead of asserted five times.
     var displayName: String { "\(weekday.capitalized)s" }
-    var blockNote: String { "\(block) block" }
+    /// "Mondays (D block)" - for the edit sheet's title, where naming the block is genuinely
+    /// useful because the student is being asked to check it against a specific row on the sheet.
+    var displayNameWithBlock: String { "\(weekday.capitalized)s (\(block) block)" }
     /// The exact strings Settings has always written, so a scanned value and a typed one are
     /// the same value and the schedule's `filter: ["L1"]` / `["L2"]` keeps matching.
     var storedValue: String { wave == 1 ? "1st Lunch" : "2nd Lunch" }
@@ -97,6 +104,56 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
 
+    /// Leaving with a reviewed-but-unsaved schedule on screen asks first.
+    ///
+    /// A scan costs the student one of five for the year, and this screen holds the whole result
+    /// in memory only - walking away discards it and the next attempt spends another one. The
+    /// screen says "Nothing is saved yet" to make the review trustworthy, and that same sentence
+    /// is exactly why an accidental back is expensive.
+    ///
+    /// Wired to a REPLACEMENT left bar button rather than to `viewWillDisappear`, because by the
+    /// time the view is disappearing the pop has already been committed and there is nothing left
+    /// to confirm. The interactive swipe-back gesture is disabled for the same reason: it cannot
+    /// be intercepted the way a button can, and a half-swipe that completes by accident is the
+    /// most likely way this happens at all.
+    @objc private func confirmDiscardAndClose() {
+        guard !hasNothingToSave else {
+            closeSelf()
+            return
+        }
+        let alert = UIAlertController(
+            title: "Don't Save Your Classes?",
+            message: "You scanned your schedule but haven't saved it. Leaving now throws this away, and scanning again uses another of your scans for the year.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Keep Reviewing", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Save Now", style: .default, handler: { [weak self] _ in
+            self?.saveAll()
+        }))
+        alert.addAction(UIAlertAction(title: "Discard", style: .destructive, handler: { [weak self] _ in
+            self?.closeSelf()
+        }))
+        present(alert, animated: true)
+    }
+
+    /// Puts the confirm-on-leave control in place, whichever way this screen was opened.
+    ///
+    /// Pushed from Settings it needs to replace the system back button; presented from the
+    /// new-school-year prompt there is no back button and it needs a Cancel. Both end up calling
+    /// the same confirmation, so the guard cannot be present on one route and missing on the other
+    /// - and the presented route is the one a brand-new student sees first.
+    private func installLeaveButton() {
+        let isPushed = navigationController.map { $0.viewControllers.first !== self } ?? false
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: isPushed ? "Back" : "Cancel",
+            style: .plain,
+            target: self,
+            action: #selector(confirmDiscardAndClose)
+        )
+        navigationItem.hidesBackButton = true
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Scan Your Schedule"
@@ -106,6 +163,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         tableView.dataSource = self
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: .done, target: self, action: #selector(saveAll))
         navigationItem.rightBarButtonItem?.isEnabled = false
+        installLeaveButton()
 
         view.addSubview(imageView)
         view.addSubview(hintLabel)
@@ -127,6 +185,16 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         ])
 
         promptForPhotoSource()
+    }
+
+    /// Hands the swipe-back gesture back to the navigation controller.
+    ///
+    /// `installLeaveButton` disables it so an accidental swipe cannot discard an unsaved scan, and
+    /// that recognizer belongs to the NAVIGATION CONTROLLER, not to this screen - leaving it off
+    /// would kill swipe-back on every Settings screen for the rest of the session.
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
     }
 
     private func promptForPhotoSource() {
@@ -290,16 +358,88 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             gradeResult = grade
         }
 
+        remainingScans = (json["remainingScans"] as? NSNumber)?.intValue
+
         guard !hasNothingToSave else {
-            let message = (json["message"] as? String) ?? "Couldn't read any classes from that photo."
-            ProgressHUD.colorAnimation = .red
-            ProgressHUD.failed(message)
-            promptForPhotoSource()
+            reportNothingFound(modelMessage: json["message"] as? String)
             return
         }
 
         updateSaveButton()
         tableView.reloadData()
+    }
+
+    /// How many scans the student has left this year, as of the last response.
+    private var remainingScans: Int?
+
+    /// The photo produced nothing at all: not a schedule, too blurry, or the wrong page.
+    ///
+    /// An alert rather than `ProgressHUD.failed`, and this is the one place in this screen where
+    /// that difference matters. The HUD shows one short line for a moment and then vanishes, which
+    /// is fine for "Classes saved" and wrong here: the student has just SPENT one of five scans
+    /// and needs to read why, decide whether another photo would do better, and know that typing
+    /// it in by hand is still a complete option. Flashing the model's prose and immediately
+    /// re-opening the camera invites them to spend a second scan on the same bad photo.
+    private func reportNothingFound(modelMessage: String?) {
+        // The model is told to say what went wrong in prose when it cannot read a sheet, so this
+        // is usually specific ("this looks like a course catalogue, not a schedule"). The
+        // fallback covers a response that carried no prose.
+        let explanation = (modelMessage?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 }
+            ?? "Nothing on that photo looked like a class schedule."
+
+        var message = explanation
+        if let left = remainingScans {
+            message += left == 0
+                ? "\n\nThat was your last scan for this year. You can still set your classes by hand in Settings."
+                : "\n\nYou have \(left) scan\(left == 1 ? "" : "s") left this year."
+        }
+        message += "\n\nA photo works best when the whole sheet is in frame, lying flat, in good light."
+
+        let alert = UIAlertController(title: "Couldn't Read That Photo", message: message, preferredStyle: .alert)
+        if remainingScans != 0 {
+            alert.addAction(UIAlertAction(title: "Try Another Photo", style: .default, handler: { [weak self] _ in
+                self?.promptForPhotoSource()
+            }))
+        }
+        // Always available, and named as the equal option it is rather than as a consolation.
+        alert.addAction(UIAlertAction(title: "Enter Classes by Hand", style: .default, handler: { [weak self] _ in
+            self?.closeSelf()
+        }))
+        // Offered HERE because this is the highest-signal failure the feature has: a student is
+        // looking at their own sheet, knows exactly what it says, and the scan just told them it
+        // could read none of it. That is the report worth having in week one, and it is gone the
+        // moment they close this alert and type their classes in by hand.
+        alert.addAction(UIAlertAction(title: "Report a Problem", style: .default, handler: { [weak self] _ in
+            self?.promptForFeedback(context: "schedule-scan-empty")
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { [weak self] _ in
+            self?.closeSelf()
+        }))
+        present(alert, animated: true)
+    }
+
+    /// The line under the photo, rewritten to describe what actually came back.
+    ///
+    /// The static "Tap a row to fix anything before saving" is right once there are rows, but it
+    /// says nothing about how much of the sheet was read - and "it only found four classes" is the
+    /// single most likely thing to read as a broken feature when it is in fact the prompt refusing
+    /// to invent the other three.
+    private func updateHint() {
+        let courses = results.filter { !ClassIdentity.isFree($0.subject) }.count
+        let frees = results.count - courses
+
+        var parts = [String]()
+        if courses > 0 { parts.append("\(courses) class\(courses == 1 ? "" : "es")") }
+        if frees > 0 { parts.append("\(frees) free block\(frees == 1 ? "" : "s")") }
+        if !lunchResults.isEmpty { parts.append("your lunches") }
+        if gradeResult != nil { parts.append("your grade") }
+
+        guard !parts.isEmpty else {
+            hintLabel.text = "Tap a row to fix anything before saving. Nothing is saved yet."
+            return
+        }
+        let found = parts.count == 1 ? parts[0] : parts.dropLast().joined(separator: ", ") + " and " + parts.last!
+        hintLabel.text = "Read \(found). Tap any row to fix or remove it. Nothing is saved yet."
     }
 
     // MARK: - Review list
@@ -328,6 +468,44 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
 
+    /// Every block letter the app expects a student to have.
+    private static let allBlocks = ["A", "B", "C", "D", "E", "F", "G"]
+
+    /// The letters this photo said nothing about.
+    ///
+    /// A partial read is the EXPECTED outcome, not a failure: the prompt deliberately leaves out
+    /// a letter the sheet never mentions rather than guessing "Free" for it, because guessing
+    /// there invents a fact. A photo of half a sheet, a trimester sheet, or a page that cuts off
+    /// mid-table all land here legitimately. So this has to be reported as information, and the
+    /// student has to be told the rest is still theirs to set - otherwise "it only found four of
+    /// my classes" reads as the feature being broken.
+    private var missingBlocks: [String] {
+        let found = Set(results.map { $0.block.uppercased() })
+        return Self.allBlocks.filter { !found.contains($0) }
+    }
+
+    func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        switch Section(rawValue: section) {
+        case .classes:
+            guard !results.isEmpty else { return nil }
+            let missing = missingBlocks
+            guard !missing.isEmpty else { return nil }
+            if missing.count == 1 {
+                return "Block \(missing[0]) wasn't on this photo. Saving won't clear it - set it in Settings, or scan a photo that shows it."
+            }
+            let letters = missing.dropLast().joined(separator: ", ") + " and " + missing.last!
+            return "Blocks \(letters) weren't on this photo. Saving won't clear them - set them in Settings, or scan a photo that shows them."
+        case .lunch:
+            guard !lunchResults.isEmpty else { return nil }
+            // The block letters live here, once, as the explanation for why lunch is not simply
+            // "one lunch". Naming them on every row made the letter look like the answer.
+            let pairs = lunchResults.map { "\($0.weekday.prefix(3).capitalized) \($0.block)" }.joined(separator: ", ")
+            return "Lunch falls in a different block each day (\(pairs)). All you're confirming is which of the two waves you're in."
+        default:
+            return nil
+        }
+    }
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "scanRow", for: indexPath)
         cell.backgroundColor = UIColor(named: "background")
@@ -341,7 +519,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             cell.detailTextLabel?.text = gradeResult
         case .lunch:
             let row = lunchResults[indexPath.row]
-            cell.textLabel?.text = "\(row.displayName)  ·  \(row.blockNote)"
+            cell.textLabel?.text = row.displayName
             cell.detailTextLabel?.text = row.storedValue
         default:
             let row = results[indexPath.row]
@@ -379,6 +557,9 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             self.results[index].teacher = alert.textFields?[1].text ?? row.teacher
             self.results[index].room = alert.textFields?[2].text ?? row.room
             self.tableView.reloadRows(at: [IndexPath(row: index, section: Section.classes.rawValue)], with: .fade)
+            // The summary line counts courses and free blocks separately, and editing a subject
+            // to or from "Free" moves a row between those two counts.
+            self.updateSaveButton()
         }))
         present(alert, animated: true)
     }
@@ -389,8 +570,8 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     private func editLunch(at index: Int) {
         let row = lunchResults[index]
         let alert = UIAlertController(
-            title: row.displayName,
-            message: "Which lunch do you have on \(row.weekday.capitalized)s? This is your \(row.block) block day.",
+            title: row.displayNameWithBlock,
+            message: "Which lunch do you have on \(row.weekday.capitalized)s? On the sheet this is the row marked \"Lunch\" in \(row.block) block.",
             preferredStyle: .actionSheet
         )
         for wave in [1, 2] {
@@ -433,8 +614,14 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         present(alert, animated: true)
     }
 
+    /// Everything on this screen that describes the CURRENT contents of the review list.
+    ///
+    /// One call rather than two, because the Save button and the summary line answer the same
+    /// question ("what is about to be saved") and drifted apart the moment one of them was
+    /// updated after a row was removed and the other was not.
     private func updateSaveButton() {
         navigationItem.rightBarButtonItem?.isEnabled = !hasNothingToSave
+        updateHint()
     }
 
     // MARK: - Confirm and save
@@ -518,11 +705,50 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
                     members.append(["name": LoginVC.fullName, "email": LoginVC.email, "uid": uid])
                 }
             }
+            // The FULL class document, the same shape AddClassVC writes.
+            //
+            // This used to send only `members` and `block`, and the missing field that mattered
+            // was `name`. ClassesOptionsPopupVC builds every row of the block picker from
+            // `document.data()["name"]` and nothing else - so a class created by a scan had no
+            // name, `"".getValues()` returned ["N/A", "N/A", "N/A", ""], and the class the
+            // student had just saved appeared in their own picker as "N/A". Two scanned classes
+            // in one block were two rows both reading "N/A", which is indistinguishable from a
+            // duplicate.
+            //
+            // `owner` matters for the same reason one step later: ClassPopupVC reads it with an
+            // `?? "N/A"` fallback and shows it as who made the class.
+            //
+            let isNewClass = snapshot?.exists != true
+            var payload: [String: Any] = ["members": members, "block": row.block.uppercased()]
+
+            // Repaired even on an existing document, because a document with no name is exactly
+            // what an earlier version of this screen created and those are already in the
+            // database. Every other field below is create-only; this one is a fix-up.
+            if (snapshot?.data()?["name"] as? String).map({ $0.isEmpty }) ?? true {
+                payload["name"] = classKey
+            }
+
+            if isNewClass {
+                // Create-only, all of it. Merging any of this into a class that already exists
+                // would overwrite decisions somebody else made: `owner` would hand a teacher's
+                // class to whichever student scanned it most recently, and the weekday flags
+                // would switch a class back on for a day its owner had deliberately turned off.
+                //
+                // The flags are written explicitly on create even though every reader defaults a
+                // missing flag to `true`, because "meets every weekday" is a claim about the
+                // class, and leaning on a reader's fallback means the document is only correct
+                // for as long as every future reader picks the same one.
+                payload["owner"] = LoginVC.email
+                for day in ["monday", "tuesday", "wednesday", "thursday", "friday"] {
+                    payload[day] = true
+                }
+            }
+
             // Every write is checked. Both completions used to be `{ _ in }`, so a refused or
             // failed write carried on to the next block and the screen still reported
             // "Classes saved" - the one outcome a student must never be told wrongly, because
             // they then stop and their schedule is silently not set.
-            classDoc.setData(["members": members, "block": row.block.uppercased()], merge: true, completion: { error in
+            classDoc.setData(payload, merge: true, completion: { error in
                 if let error = error {
                     self.abortSave(at: index, reason: error)
                     return

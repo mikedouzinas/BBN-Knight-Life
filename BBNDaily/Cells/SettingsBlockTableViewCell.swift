@@ -58,10 +58,27 @@ class SettingsBlockTableViewCell: UITableViewCell {
         var className = viewModel.className
         if className != "" {
             if className.contains("~") {
-                let array = className.getValues()
-                className = "\(array[0]) \(array[1].replacingOccurrences(of: "N/A", with: ""))"
+                // The SUBJECT only.
+                //
+                // This used to be "\(subject) \(teacher)", so the block list read "AP English
+                // Masks Ms. Lieberman" - the teacher's name appended to every row, on a screen
+                // whose job is to tell a student which class each letter is. Mike: "all of the
+                // teachers are appearing in the name during blocks, which seems weird... I
+                // shouldn't see the teacher name."
+                //
+                // It also removes the "Free N/A" case at the source. A free block's key is
+                // `Free~~~F`, or `Free~N/A~N/A~G` for one written by an older build, and
+                // `getValues()` turns an empty field into the literal "N/A" for display. The old
+                // line stripped "N/A" out of the teacher slot and left the space it was joined
+                // with, so a free block rendered as "Free" with a trailing space in one place and
+                // "Free N/A" wherever the strip did not apply. Dropping the teacher slot entirely
+                // means there is no N/A to strip.
+                className = className.getValues()[0]
             }
             DataLabel.text = className
+        }
+        else if let badge = viewModel.badge {
+            DataLabel.text = badge
         }
         else {
             if viewModel.blockName.count > 1 {

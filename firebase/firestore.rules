@@ -105,6 +105,20 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // What a student typed into "Send Feedback" (HQ-656 beta). Written only through
+    // /api/student/feedback with the Admin SDK, which bypasses these rules, so nothing here
+    // needs to be reachable from a client.
+    //
+    // Spelled out rather than left to the catch-all at the bottom, because the catch-all denies
+    // by DEFAULT and this needs to deny on PURPOSE. The free text will contain other students'
+    // names, teachers, and whatever else somebody types into a box, so an `allow read: if
+    // signedIn()` added here later without thinking would hand all of it to the school. A rule
+    // with a reason written next to it is the thing that makes that edit stop and think.
+    match /feedback/{doc} {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
+
     // The side menu's publication list (HQ-661), so adding a paper back or hiding one that
     // went quiet is a Firestore edit rather than a code change and an App Store release.
     // Every student reads it on launch; only a maintainer changes it.
