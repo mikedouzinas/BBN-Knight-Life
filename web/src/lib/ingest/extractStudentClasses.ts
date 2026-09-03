@@ -443,9 +443,35 @@ export async function extractStudentClasses(
 
       // A later call for the same block replaces the earlier one - the model correcting
       // itself mid-conversation, not a second class in one block.
+      //
+      // ONE EXCEPTION, and it is the C-block bug Mike found on 2026-09-03. A letter can be a
+      // course on one weekday and print "Unscheduled" under the same letter on the other four
+      // - an arts or wellness course meeting once a week does exactly this - so BOTH answers
+      // are genuinely on the page and the model can emit both. Last-write-wins made the
+      // outcome depend on which order they arrived in, so the same photo read twice gave the
+      // course once and a free block the next time.
+      //
+      // A course beats "Free" here whatever the order. The two errors are not symmetric: a
+      // course wrongly shown for a block the student is free in is sitting on the review
+      // screen with an edit button next to it, while a real course wrongly reduced to "Free"
+      // deletes a class they take, takes them off its roster, and shows them nothing to
+      // suggest anything is missing.
       const existing = classes.findIndex((c) => c.block === accepted.block);
-      if (existing >= 0) classes[existing] = accepted;
-      else classes.push(accepted);
+      if (existing >= 0) {
+        if (free && !isFreeSubject(classes[existing].subject)) {
+          results.push({
+            type: 'tool_result',
+            tool_use_id: call.id,
+            content:
+              `Kept "${classes[existing].subject}" for block ${accepted.block.toUpperCase()}. A letter that holds a ` +
+              `course on any weekday is that course, even when the sheet shows it unscheduled on the others.`,
+          });
+          continue;
+        }
+        classes[existing] = accepted;
+      } else {
+        classes.push(accepted);
+      }
       results.push({ type: 'tool_result', tool_use_id: call.id, content: `Accepted block ${accepted.block}.` });
     }
 

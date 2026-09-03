@@ -181,6 +181,29 @@ final class ClassIdentityTests: XCTestCase {
             existingKey: "Physics~N/A~N/A~C", subject: "Physics", teacher: "Ms. Courtemanche", block: "c"))
     }
 
+    /// Two scans of ONE sheet can name the teacher differently: the sheet printed
+    /// "Ms. Schmucker" and one scan came back "Ellie Schmucker", a first name that is nowhere
+    /// on the page. The prompt now forbids that, but a prompt is a request and this is the
+    /// guarantee - whichever spelling created the class, the next student joins it rather than
+    /// starting a second roster for the same teacher.
+    func testAnInventedFirstNameStillFindsTheSameClass() {
+        let created = "Precalculus (Advanced)~Ellie Schmucker~376~G"
+        XCTAssertTrue(ClassIdentity.matchesExistingClass(
+            existingKey: created, subject: "Precalculus (Advanced)", teacher: "Ms. Schmucker", block: "g"))
+
+        let printedAsShown = "Precalculus (Advanced)~Ms. Schmucker~376~G"
+        XCTAssertTrue(ClassIdentity.matchesExistingClass(
+            existingKey: printedAsShown, subject: "Precalculus (Advanced)", teacher: "Ellie Schmucker", block: "g"))
+    }
+
+    /// The limit of the rule above, and it is deliberate: a surname is what identifies a
+    /// teacher, so two different surnames are two different sections however alike they look.
+    func testADifferentSurnameIsStillADifferentClass() {
+        XCTAssertFalse(ClassIdentity.matchesExistingClass(
+            existingKey: "Precalculus (Advanced)~Ms. Schmucker~376~G",
+            subject: "Precalculus (Advanced)", teacher: "Ms. Schumacher", block: "g"))
+    }
+
     func testAMalformedKeyMatchesNothing() {
         for junk in ["", "Physics", "Physics~Ms. X", "a~b~c~d~e"] {
             XCTAssertFalse(ClassIdentity.matchesExistingClass(

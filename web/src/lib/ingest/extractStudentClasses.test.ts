@@ -244,6 +244,71 @@ describe('a free block', () => {
   });
 });
 
+/**
+ * The C-block bug, found on a real sheet on 2026-09-03: block C is "Health & Wellness" on
+ * Wednesday and "Unscheduled (Block C)" on Monday, Tuesday and Friday. Both are printed under
+ * the same letter, so both are true, and the model can legitimately emit both. Last-write-wins
+ * made the answer depend on emission order, and the same photo read twice gave a course once and
+ * a free block the next time.
+ */
+describe('a letter that is a course on some days and unscheduled on the others', () => {
+  const COURSE = { block: 'c', subject: 'Health & Wellness', teacher: 'Mx. Herrmann', room: '276' };
+
+  it('stays the course when "Free" arrives afterwards', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', COURSE), toolUse('b', { block: 'c', subject: 'Unscheduled' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toHaveLength(1);
+    expect(result.classes[0].subject).toBe('Health & Wellness');
+    expect(result.classes[0].teacher).toBe('Mx. Herrmann');
+  });
+
+  it('becomes the course when "Free" arrived first', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Unscheduled' }), toolUse('b', COURSE)] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toHaveLength(1);
+    expect(result.classes[0].subject).toBe('Health & Wellness');
+  });
+
+  it('reads the same either way round, which is the whole point', async () => {
+    const { client: courseFirst } = stubClient([
+      { content: [toolUse('a', COURSE), toolUse('b', { block: 'c', subject: 'Unscheduled' })] },
+    ]);
+    const { client: freeFirst } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Study Hall' }), toolUse('b', COURSE)] },
+    ]);
+    const [a, b] = [
+      await extractStudentClasses(PHOTO, courseFirst),
+      await extractStudentClasses(PHOTO, freeFirst),
+    ];
+    expect(a.classes).toEqual(b.classes);
+  });
+
+  it('still lets the model correct one course to another', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', COURSE), toolUse('b', { block: 'c', subject: 'Wellness', teacher: 'Mx. Herrmann' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toHaveLength(1);
+    expect(result.classes[0].subject).toBe('Wellness');
+  });
+
+  it('leaves a genuinely free block free', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Unscheduled' }), toolUse('b', { block: 'c', subject: 'Study Hall' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toEqual([{ block: 'c', subject: 'Free', teacher: undefined, room: undefined }]);
+  });
+});
+
 describe('grade', () => {
   it('is collected from the sheet header', async () => {
     const { client } = stubClient([{ content: [detailsUse('a', { grade: '11' })] }]);

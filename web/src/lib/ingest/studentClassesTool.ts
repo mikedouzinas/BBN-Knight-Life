@@ -55,12 +55,12 @@ export const EMIT_STUDENT_CLASSES_TOOL: Anthropic.Tool = {
       subject: {
         type: 'string',
         description:
-          'The course name exactly as the source shows it, with nothing added or expanded, e.g. "AP English Masks", "United States History (Honors)", "Spanish III". Use the exact string "Free" - nothing else - when the sheet shows this block but marks it unscheduled, blank, "Free", "Study Hall", "Open" or similar.',
+          'The course name exactly as the source shows it, with nothing added or expanded, e.g. "AP English Masks", "United States History (Honors)", "Spanish III". Use the exact string "Free" - nothing else - when the sheet shows this block but marks it unscheduled, blank, "Free", "Study Hall", "Open" or similar on EVERY day it appears. A letter that holds a course on even one weekday and is unscheduled on the rest is that course, not "Free".',
       },
       teacher: {
         type: 'string',
         description:
-          'The teacher\'s name alone, with the room removed. A row reading "Ms. Lieberman - 285" has teacher "Ms. Lieberman". Keep the title (Ms., Mr., Dr.) exactly as printed. Omit if the source names no teacher.',
+          'The teacher\'s name alone, with the room removed, copied character for character from the page. A row reading "Ms. Lieberman - 285" has teacher "Ms. Lieberman". Keep the title (Ms., Mr., Dr., Mx.) exactly as printed, and never add a first name or expand an initial that the sheet does not show. Omit if the source names no teacher.',
       },
       room: {
         type: 'string',
@@ -145,6 +145,10 @@ Each lettered block a-g holds at most one thing. Call emit_student_classes once 
 
 A free block is a real answer, not a missing one. Report it.
 
+A LETTER THAT IS A COURSE ON SOME WEEKDAYS AND UNSCHEDULED ON THE OTHERS IS A COURSE, NOT A FREE BLOCK. This is normal at BB&N and it is common: a course meeting once or twice a week prints under its letter on the days it meets and prints "Unscheduled" under the same letter on the days it does not. Report the course, with its teacher and room, however few days it meets on. Report a letter as "Free" only when every single day the sheet shows that letter is unscheduled. Do not count days and go with the majority - one day of a real course outweighs four days of blank.
+
+The two mistakes here are not equally bad. A course wrongly reported for a block the student is free in sits on the review screen in front of them with an edit button next to it. A real course wrongly reported as "Free" deletes a class they actually take and leaves them off its roster, and nothing on the screen tells them it is missing.
+
 NEVER call emit_student_classes for a row that is not a lettered block at all, even though the sheet gives it a block-shaped label:
 
 - lunch, however written - "Lunch", "Lunch-1st", "Lunch-2nd", "(Block L1)", "(Block L2)". Use emit_lunch_wave instead.
@@ -160,7 +164,9 @@ A course can also occupy more than one letter - a lab, a double period, a year-l
 
 ## Teacher and room
 
-They are usually printed together on one line, as "Ms. Lieberman - 285" or "Mr. Turnbull - 283". Split them: the name goes in teacher, the room goes in room. Keep the title exactly as printed - "Ms. Lieberman", not "Lieberman" and not "Ms Lieberman". If only one of the two is shown, fill only that one.
+They are usually printed together on one line, as "Ms. Lieberman - 285" or "Mr. Turnbull - 283". Split them: the name goes in teacher, the room goes in room. If only one of the two is shown, fill only that one.
+
+Copy the name across character for character. Never add a first name, never expand an initial, and never swap a title for a name you believe belongs to that person - a sheet reading "Ms. Kim" has teacher "Ms. Kim" and nothing else, even if you are confident you know her first name. The teacher's name becomes part of the class's identity, so a name that is not on the page creates a record for a teacher who does not exist under that spelling. Keep the title exactly as printed too: "Ms. Lieberman", not "Lieberman" and not "Ms Lieberman". If the sheet prints a bare surname with no title, that bare surname is the answer.
 
 ## Lunch
 
