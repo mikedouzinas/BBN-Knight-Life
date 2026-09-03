@@ -70,3 +70,71 @@ final class ScanReviewCellTests: XCTestCase {
             ".value1 lost its detailTextLabel, so the review screen needs a different style.")
     }
 }
+
+/// Does the scan screen lay out on the SMALLEST iPhone anyone still runs this on?
+///
+/// Mike, 2026-09-03: "I worry the popup to verify/edit classes won't fit on some screens so make
+/// sure it does and ALL our features are made to fit all iPhone screens fine. I can't test that
+/// easily." Neither can a person with one phone, which is exactly why it belongs in a test.
+///
+/// This does not prove the screen looks good. It proves the two things that silently go wrong when
+/// a layout written on a large phone meets a small one: constraints that cannot all be satisfied,
+/// and a fixed-size element that leaves the actual content no room. The photo preview used to be a
+/// hard 160pt, which is better than a quarter of an SE's screen.
+final class ScanScreenLayoutTests: XCTestCase {
+
+    /// iPhone SE (3rd gen) in points - the smallest screen this app supports.
+    private let smallest = CGRect(x: 0, y: 0, width: 375, height: 667)
+    /// iPhone 17 Pro Max, near the top of the range.
+    private let largest = CGRect(x: 0, y: 0, width: 440, height: 956)
+
+    private func laidOut(in frame: CGRect) -> ScheduleScanVC {
+        let vc = ScheduleScanVC()
+        vc.view.frame = frame
+        vc.view.layoutIfNeeded()
+        return vc
+    }
+
+    func testLaysOutOnTheSmallestPhoneWithoutConflicts() {
+        let vc = laidOut(in: smallest)
+        XCTAssertFalse(vc.view.hasAmbiguousLayout, "The scan screen's layout is ambiguous on an iPhone SE.")
+    }
+
+    func testLaysOutOnTheLargestPhoneWithoutConflicts() {
+        let vc = laidOut(in: largest)
+        XCTAssertFalse(vc.view.hasAmbiguousLayout, "The scan screen's layout is ambiguous on a large iPhone.")
+    }
+
+    /// The proportional height and the cap are a deliberate pair: `.defaultHigh` for the 22% and
+    /// required for the 170pt cap. Two REQUIRED constraints there would be unsatisfiable on any
+    /// phone taller than about 773pt, which is most of them.
+    func testPhotoPreviewNeverEatsTheScreen() {
+        for (name, frame) in [("SE", smallest), ("Pro Max", largest)] {
+            let vc = laidOut(in: frame)
+            let preview = vc.view.subviews.compactMap { $0 as? UIImageView }.first
+            guard let height = preview?.frame.height else {
+                XCTFail("No photo preview found on \(name)"); continue
+            }
+            XCTAssertGreaterThan(height, 0, "The photo preview collapsed to nothing on \(name).")
+            XCTAssertLessThanOrEqual(
+                height, 175,
+                "The photo preview is \(height)pt on \(name); the cap is 170 and it is stealing room from the rows being confirmed.")
+            XCTAssertLessThan(
+                height, frame.height * 0.3,
+                "The photo preview takes \(Int(height / frame.height * 100))% of the screen on \(name).")
+        }
+    }
+
+    /// The review list has to be the biggest thing on the screen, on every phone. It is what the
+    /// student is actually reading.
+    func testTheListGetsMostOfTheScreen() {
+        for (name, frame) in [("SE", smallest), ("Pro Max", largest)] {
+            let vc = laidOut(in: frame)
+            let table = vc.view.subviews.compactMap { $0 as? UITableView }.first
+            guard let table = table else { XCTFail("No review table found on \(name)"); continue }
+            XCTAssertGreaterThan(
+                table.frame.height, frame.height * 0.5,
+                "The review list only gets \(Int(table.frame.height / frame.height * 100))% of the screen on \(name).")
+        }
+    }
+}

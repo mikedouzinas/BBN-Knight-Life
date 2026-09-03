@@ -217,11 +217,31 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
 
         view.addSubview(imageView)
         view.addSubview(tableView)
+
+        // The photo preview is a SHARE of the screen, not a fixed 160 points.
+        //
+        // 160pt is a fifth of an iPhone 17 Pro and better than a quarter of an SE - and the SE is
+        // also the phone with the least room for the list underneath, so the fixed height took the
+        // most space exactly where there was least of it. The photo is context; the seven rows
+        // being confirmed are the content.
+        //
+        // The proportional one is `.defaultHigh` and the cap is required, which is what makes the
+        // pair safe rather than contradictory: on a tall phone 22% exceeds 170, so the cap wins and
+        // the proportional constraint yields instead of raising a conflict. On an SE 22% is about
+        // 125, comfortably under the cap, so it holds. Two required constraints here would break
+        // layout on every large phone.
+        let imageHeight = imageView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.22)
+        imageHeight.priority = .defaultHigh
+        let imageHeightCap = imageView.heightAnchor.constraint(lessThanOrEqualToConstant: 170)
+
         NSLayoutConstraint.activate([
             imageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
             imageView.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 16),
             imageView.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -16),
-            imageView.heightAnchor.constraint(equalToConstant: 160),
+
+            // Height is set below, as a share of the screen rather than a fixed 160pt.
+            imageHeight,
+            imageHeightCap,
 
             // Straight to the image. The hint label is the TABLE's header view now, not a sibling
             // above it, so nothing between the two moves when its text changes.
@@ -231,7 +251,24 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
         installHintAsTableHeader()
+    }
 
+    /// True once the photo prompt has been shown, so returning to this screen does not re-ask.
+    private var hasPromptedForPhoto = false
+
+    /// The photo prompt is presented from `viewDidAppear`, not `viewDidLoad`.
+    ///
+    /// A view controller's view is not in the window hierarchy during `viewDidLoad`, so presenting
+    /// there is presenting from a controller that is not on screen yet - UIKit warns about exactly
+    /// this, and it also makes the screen impossible to instantiate in a test without an alert
+    /// trying to appear over nothing.
+    ///
+    /// The flag matters because `viewDidAppear` fires again every time the image picker is
+    /// dismissed, and without it choosing a photo would immediately re-ask which photo to choose.
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard !hasPromptedForPhoto else { return }
+        hasPromptedForPhoto = true
         promptForPhotoSource()
     }
 
@@ -585,13 +622,20 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         let explanation = (modelMessage?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 }
             ?? "Nothing on that photo looked like a class schedule."
 
+        // Short on purpose. This was three paragraphs - the model's prose, a scan count, and
+        // photography advice - and Mike read the result as "a BUNCH of text". An alert nobody
+        // finishes reading is the same failure as the HUD that vanished before it could be read,
+        // arriving from the other direction. The model's own sentence is the part that says
+        // something specific about THIS photo, so it is the part that stays; the framing advice
+        // is one short line, and the scan count only appears when it is nearly out, which is the
+        // only time the number changes what the student should do.
         var message = explanation
-        if let left = remainingScans {
+        if let left = remainingScans, left <= 1 {
             message += left == 0
-                ? "\n\nThat was your last scan for this year. You can still set your classes by hand in Settings."
-                : "\n\nYou have \(left) scan\(left == 1 ? "" : "s") left this year."
+                ? "\n\nThat was your last scan this year. You can still set classes by hand."
+                : "\n\n1 scan left this year."
         }
-        message += "\n\nA photo works best when the whole sheet is in frame, lying flat, in good light."
+        message += "\n\nWorks best with the whole sheet flat and in frame."
 
         let alert = UIAlertController(title: "Couldn't Read That Photo", message: message, preferredStyle: .alert)
         if remainingScans != 0 {

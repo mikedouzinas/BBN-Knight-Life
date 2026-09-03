@@ -142,6 +142,53 @@ export function normalizeSubject(subject: string): string {
   return subject.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
+/** Named entities worth handling. Anything else numeric is covered by the two patterns below. */
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&',
+  apos: "'",
+  quot: '"',
+  lt: '<',
+  gt: '>',
+  nbsp: ' ',
+  ndash: '–',
+  mdash: '—',
+  rsquo: '’',
+  lsquo: '‘',
+  rdquo: '”',
+  ldquo: '“',
+  hellip: '…',
+};
+
+/**
+ * Turns `Health &amp; Wellness` back into `Health & Wellness`.
+ *
+ * This is a CORRECTNESS fix, not a cosmetic one. The subject is part of the class document's id,
+ * so `Health &amp; Wellness` and `Health & Wellness` are two different documents - two rosters for
+ * one real class, each showing half the students in it, and they never merge. It is the same
+ * failure as a sheet's "Unscheduled" surviving instead of "Free", arriving by a different route.
+ *
+ * Seen on a real sheet on 2026-09-03. The model transcribes what it reads, and school systems
+ * export HTML, so an ampersand reaches the page already escaped often enough to matter: "Health &
+ * Wellness", "Science & Technology", "Rhetoric & Composition" are ordinary BB&N course names.
+ *
+ * Deliberately not a full HTML parser. These are course names, not documents; the named list plus
+ * numeric references covers everything that plausibly appears, and a real parser here would be a
+ * dependency and an attack surface for no gain. Applied repeatedly, because a double-escaped
+ * `&amp;amp;` is exactly the sort of thing that comes out of two systems in a row.
+ */
+export function decodeEntities(value: string): string {
+  let out = value;
+  for (let pass = 0; pass < 3; pass += 1) {
+    const next = out
+      .replace(/&([a-zA-Z]+);/g, (whole, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? whole)
+      .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
+      .replace(/&#[xX]([0-9a-fA-F]+);/g, (_, code: string) => String.fromCodePoint(parseInt(code, 16)));
+    if (next === out) break;
+    out = next;
+  }
+  return out;
+}
+
 /** A row that is not a lettered block at all, and must never become a class. */
 export function isNonBlockRow(subject: string): boolean {
   const normalized = normalizeSubject(subject);
@@ -376,13 +423,20 @@ export async function extractStudentClasses(
       // A free block IS an answer, and it is normalised onto one spelling so that two students
       // whose sheets said "Unscheduled" and "Study Hall" land on the same roster rather than
       // starting two.
-      const free = isFreeSubject(parsed.data.subject);
+      // Entities are decoded BEFORE anything else looks at the text, because everything after
+      // this point either compares it or stores it as part of a document id. `Health &amp;
+      // Wellness` reaching the id makes a second roster for a class that already exists.
+      const subjectText = decodeEntities(parsed.data.subject);
+      const free = isFreeSubject(subjectText);
       const { teacher, room } = free
         ? { teacher: undefined, room: undefined }
-        : splitTeacherAndRoom(parsed.data.teacher, parsed.data.room);
+        : splitTeacherAndRoom(
+            parsed.data.teacher === undefined ? undefined : decodeEntities(parsed.data.teacher),
+            parsed.data.room === undefined ? undefined : decodeEntities(parsed.data.room),
+          );
       const accepted: StudentClass = {
         block: parsed.data.block,
-        subject: free ? FREE_SUBJECT : parsed.data.subject.trim(),
+        subject: free ? FREE_SUBJECT : subjectText.trim(),
         teacher,
         room,
       };

@@ -7,9 +7,11 @@ import { describe, expect, it, vi } from 'vitest';
 import type Anthropic from '@anthropic-ai/sdk';
 import { IngestError } from './extract';
 import {
+  decodeEntities,
   extractStudentClasses,
   isFreeSubject,
   isNonBlockRow,
+  normalizeSubject,
   splitTeacherAndRoom,
 } from './extractStudentClasses';
 
@@ -484,5 +486,71 @@ describe('a transient model failure', () => {
     const client = { messages: { create } } as unknown as Anthropic;
     await expect(extractStudentClasses(PHOTO, client)).rejects.toThrow(/socket/);
     expect(create).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('decodeEntities', () => {
+  // Found on a real sheet on 2026-09-03: "Health &amp; Wellness". The subject is part of the
+  // class document's id, so this is not a display bug - it is a second roster for a class that
+  // already exists, and the two never merge.
+  it('turns an escaped ampersand back into a class name a human would type', () => {
+    expect(decodeEntities('Health &amp; Wellness')).toBe('Health & Wellness');
+  });
+
+  it('handles the entities a course name plausibly carries', () => {
+    expect(decodeEntities('Rhetoric &amp; Composition')).toBe('Rhetoric & Composition');
+    expect(decodeEntities('Writers&apos; Workshop')).toBe("Writers' Workshop");
+    expect(decodeEntities('Art &ndash; Ceramics')).toBe('Art – Ceramics');
+    expect(decodeEntities('AP &quot;Masks&quot;')).toBe('AP "Masks"');
+  });
+
+  it('handles numeric references, decimal and hex', () => {
+    expect(decodeEntities('Health &#38; Wellness')).toBe('Health & Wellness');
+    expect(decodeEntities('Health &#x26; Wellness')).toBe('Health & Wellness');
+  });
+
+  it('unwinds double escaping, which is what two systems in a row produce', () => {
+    expect(decodeEntities('Health &amp;amp; Wellness')).toBe('Health & Wellness');
+  });
+
+  it('leaves an ordinary ampersand and unknown entities alone', () => {
+    expect(decodeEntities('Health & Wellness')).toBe('Health & Wellness');
+    expect(decodeEntities('Chem &notarealentity; Lab')).toBe('Chem &notarealentity; Lab');
+  });
+
+  // The whole point: after decoding, the escaped and unescaped spellings are the SAME key.
+  it('makes the escaped and plain spellings normalize identically', () => {
+    expect(normalizeSubject(decodeEntities('Health &amp; Wellness')))
+      .toBe(normalizeSubject(decodeEntities('Health & Wellness')));
+  });
+});
+
+describe('entities are decoded by the PIPELINE, not just by the helper', () => {
+  // The tests above prove `decodeEntities` works. They would all still pass if nothing ever
+  // called it, which is precisely how the route came to drop `details`: a correct function and a
+  // missing call site look identical from the function's own tests.
+  it('stores the decoded subject, so the class key matches a hand-typed one', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('t1', { block: 'c', subject: 'Health &amp; Wellness', teacher: 'Ms. Rose', room: '110' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].subject).toBe('Health & Wellness');
+  });
+
+  it('decodes the teacher and room too, since both are part of the key', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('t1', { block: 'c', subject: 'Ceramics', teacher: 'Mr. O&apos;Brien', room: 'Art &amp; Design' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].teacher).toBe("Mr. O'Brien");
+    expect(result.classes[0].room).toBe('Art & Design');
+  });
+
+  it('still recognises a free block whose wording arrives escaped', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('t1', { block: 'g', subject: 'Free&nbsp;Period' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].subject).toBe('Free');
   });
 });
