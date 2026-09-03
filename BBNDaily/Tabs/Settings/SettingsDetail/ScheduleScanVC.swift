@@ -20,6 +20,24 @@ struct ScannedClass {
     var room: String
 }
 
+/// A lunch wave read off the same photo: which weekday, which of the two waves, and the
+/// lettered block that carries lunch that day.
+///
+/// Students have always set these five by hand in Settings, one per weekday, and they are
+/// printed on the sheet being photographed ("Lunch-2nd", "Lunch-1st"). The weekday-to-block
+/// pairing is not written down again here: `lunchBlockByWeekday()` derives it from
+/// `regularSchedule`, so a year in which BB&N moves lunch moves this with it.
+struct ScannedLunch {
+    var weekday: String
+    var block: String
+    var wave: Int
+
+    var displayName: String { "\(weekday.capitalized) lunch" }
+    /// The exact strings Settings has always written, so a scanned value and a typed one are
+    /// the same value and the schedule's `filter: ["L1"]` / `["L2"]` keeps matching.
+    var storedValue: String { wave == 1 ? "1st Lunch" : "2nd Lunch" }
+}
+
 class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITableViewDelegate, UITableViewDataSource {
 
     private let imageView: UIImageView = {
@@ -44,11 +62,16 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 13, weight: .regular)
         label.textColor = .systemGray
-        label.text = "Tap a class to fix anything before saving. Nothing is saved yet."
+        label.text = "Tap a row to fix anything before saving. Nothing is saved yet."
         return label
     }()
 
     private var results = [ScannedClass]()
+    private var lunchResults = [ScannedLunch]()
+
+    /// Nothing was read, or the student removed every row. Either way there is nothing to save
+    /// and no reason to keep them on a blank review screen.
+    private var hasNothingToSave: Bool { results.isEmpty && lunchResults.isEmpty }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -91,7 +114,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         alert.addAction(UIAlertAction(title: "Take Photo", style: .default, handler: { [weak self] _ in self?.presentPicker(source: .camera) }))
         alert.addAction(UIAlertAction(title: "Choose from Library", style: .default, handler: { [weak self] _ in self?.presentPicker(source: .photoLibrary) }))
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { [weak self] _ in
-            if self?.results.isEmpty ?? true { self?.navigationController?.popViewController(animated: true) }
+            if self?.hasNothingToSave ?? true { self?.navigationController?.popViewController(animated: true) }
         }))
         present(alert, animated: true)
     }
@@ -111,7 +134,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
 
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         picker.dismiss(animated: true, completion: { [weak self] in
-            if self?.results.isEmpty ?? true { self?.promptForPhotoSource() }
+            if self?.hasNothingToSave ?? true { self?.promptForPhotoSource() }
         })
     }
 
@@ -213,7 +236,18 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             return ScannedClass(block: block, subject: subject, teacher: (dict["teacher"] as? String) ?? "", room: (dict["room"] as? String) ?? "")
         }
 
-        guard !results.isEmpty else {
+        // Lunch arrives keyed by weekday ("monday": 2). The lettered block that carries lunch
+        // that day comes from the schedule rather than from the server, because the server has
+        // no reason to know the app's block layout and the app already does.
+        let rawLunch = (json["lunch"] as? [String: Any]) ?? [:]
+        let blockForWeekday = lunchBlockByWeekday()
+        lunchResults = lunchWeekdaysInOrder().compactMap { pair in
+            guard let wave = (rawLunch[pair.weekday] as? NSNumber)?.intValue, wave == 1 || wave == 2 else { return nil }
+            guard let block = blockForWeekday[pair.weekday] else { return nil }
+            return ScannedLunch(weekday: pair.weekday, block: block, wave: wave)
+        }
+
+        guard !results.isEmpty || !lunchResults.isEmpty else {
             let message = (json["message"] as? String) ?? "Couldn't read any classes from that photo."
             ProgressHUD.colorAnimation = .red
             ProgressHUD.failed(message)
@@ -221,29 +255,60 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             return
         }
 
-        navigationItem.rightBarButtonItem?.isEnabled = true
+        updateSaveButton()
         tableView.reloadData()
     }
 
     // MARK: - Review list
 
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { results.count }
+    // Two sections, because a class and a lunch wave are edited differently: a class has
+    // three free-text fields, a lunch wave has exactly two possible values.
+    private enum Section: Int, CaseIterable { case classes, lunch }
+
+    func numberOfSections(in tableView: UITableView) -> Int { Section.allCases.count }
+
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        switch Section(rawValue: section) {
+        case .classes: return results.isEmpty ? nil : "Classes"
+        case .lunch:   return lunchResults.isEmpty ? nil : "Lunch"
+        default:       return nil
+        }
+    }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        switch Section(rawValue: section) {
+        case .classes: return results.count
+        case .lunch:   return lunchResults.count
+        default:       return 0
+        }
+    }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "scanRow", for: indexPath)
-        let row = results[indexPath.row]
         cell.backgroundColor = UIColor(named: "background")
         cell.textLabel?.textColor = UIColor(named: "inverse")
         cell.detailTextLabel?.textColor = .systemGray
-        cell.textLabel?.text = "Block \(row.block.uppercased()): \(row.subject)"
-        cell.detailTextLabel?.text = [row.teacher, row.room].filter { !$0.isEmpty }.joined(separator: " · ")
         cell.accessoryType = .disclosureIndicator
+
+        switch Section(rawValue: indexPath.section) {
+        case .lunch:
+            let row = lunchResults[indexPath.row]
+            cell.textLabel?.text = "\(row.displayName) (\(row.block) Block)"
+            cell.detailTextLabel?.text = row.storedValue
+        default:
+            let row = results[indexPath.row]
+            cell.textLabel?.text = "Block \(row.block.uppercased()): \(row.subject)"
+            cell.detailTextLabel?.text = [row.teacher, row.room].filter { !$0.isEmpty }.joined(separator: " \u{00B7} ")
+        }
         return cell
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        editRow(at: indexPath.row)
+        switch Section(rawValue: indexPath.section) {
+        case .lunch: editLunch(at: indexPath.row)
+        default:     editRow(at: indexPath.row)
+        }
     }
 
     private func editRow(at index: Int) {
@@ -256,7 +321,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             guard let self = self else { return }
             self.results.remove(at: index)
             self.tableView.reloadData()
-            self.navigationItem.rightBarButtonItem?.isEnabled = !self.results.isEmpty
+            self.updateSaveButton()
         }))
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Save", style: .default, handler: { [weak self] _ in
@@ -264,15 +329,49 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             self.results[index].subject = alert.textFields?[0].text ?? row.subject
             self.results[index].teacher = alert.textFields?[1].text ?? row.teacher
             self.results[index].room = alert.textFields?[2].text ?? row.room
-            self.tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .fade)
+            self.tableView.reloadRows(at: [IndexPath(row: index, section: Section.classes.rawValue)], with: .fade)
         }))
         present(alert, animated: true)
+    }
+
+    /// A lunch wave has exactly two values, so this is a picker rather than a text field -
+    /// there is no third thing a student could mean, and a typo here silently shows them the
+    /// wrong half of every school day.
+    private func editLunch(at index: Int) {
+        let row = lunchResults[index]
+        let alert = UIAlertController(
+            title: row.displayName,
+            message: "Which lunch do you have on \(row.weekday.capitalized)s? This is your \(row.block) block day.",
+            preferredStyle: .actionSheet
+        )
+        for wave in [1, 2] {
+            let title = wave == 1 ? "1st Lunch" : "2nd Lunch"
+            let action = UIAlertAction(title: title, style: .default, handler: { [weak self] _ in
+                guard let self = self else { return }
+                self.lunchResults[index].wave = wave
+                self.tableView.reloadRows(at: [IndexPath(row: index, section: Section.lunch.rawValue)], with: .fade)
+            })
+            if row.wave == wave { action.setValue(true, forKey: "checked") }
+            alert.addAction(action)
+        }
+        alert.addAction(UIAlertAction(title: "Remove", style: .destructive, handler: { [weak self] _ in
+            guard let self = self else { return }
+            self.lunchResults.remove(at: index)
+            self.tableView.reloadData()
+            self.updateSaveButton()
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func updateSaveButton() {
+        navigationItem.rightBarButtonItem?.isEnabled = !results.isEmpty || !lunchResults.isEmpty
     }
 
     // MARK: - Confirm and save
 
     @objc private func saveAll() {
-        guard !results.isEmpty else { return }
+        guard !results.isEmpty || !lunchResults.isEmpty else { return }
         showLoader(text: "Saving your classes...")
         saveNextClass(index: 0)
     }
@@ -282,11 +381,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     // saved rather than losing the whole batch.
     private func saveNextClass(index: Int) {
         guard index < results.count else {
-            hideLoader(completion: { [weak self] in
-                ProgressHUD.colorAnimation = .green
-                ProgressHUD.succeed("Classes saved")
-                self?.navigationController?.popViewController(animated: true)
-            })
+            saveLunchPreferences()
             return
         }
         guard let uid = LoginVC.blocks["uid"] as? String, !uid.isEmpty else {
@@ -337,6 +432,71 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
                     })
             })
         }
+    }
+
+    /// The five lunch waves, written in ONE merge rather than five, because unlike a class
+    /// they touch no roster and nothing outside this document - so there is no partial state
+    /// worth preserving, and one write means one chance to fail.
+    ///
+    /// `merge: true` on purpose. Settings writes this preference with
+    /// `currDoc.setData(LoginVC.blocks)`, an unmerged write of the whole in-memory dictionary,
+    /// which replaces the stored document with whatever the app happens to be holding. That is
+    /// survivable there because Settings has just loaded the document; here the student may
+    /// have been on this screen for a while, so only the keys being changed are sent.
+    private func saveLunchPreferences() {
+        guard !lunchResults.isEmpty else {
+            finishSave()
+            return
+        }
+        guard let uid = LoginVC.blocks["uid"] as? String, !uid.isEmpty else {
+            hideLoader(completion: {
+                ProgressHUD.colorAnimation = .red
+                ProgressHUD.failed("Please sign out and back in to fix your account")
+            })
+            return
+        }
+
+        var payload = [String: Any]()
+        for lunch in lunchResults {
+            payload[lunchPreferenceKey(forBlock: lunch.block)] = lunch.storedValue
+        }
+
+        Firestore.firestore().collection("users").document(uid).setData(payload, merge: true, completion: { [weak self] error in
+            guard let self = self else { return }
+            if let error = error {
+                // The classes are already saved at this point, so this says what did and did
+                // not land rather than reporting the whole save as failed.
+                print("schedule scan lunch save failed: \(error)")
+                self.hideLoader(completion: {
+                    ProgressHUD.colorAnimation = .red
+                    ProgressHUD.failed("Saved your classes, but not your lunches. Set those in Settings.")
+                })
+                return
+            }
+            // Only after the write lands, so the app never shows a preference the server
+            // rejected.
+            for (key, value) in payload { LoginVC.blocks[key] = value }
+            self.finishSave()
+        })
+    }
+
+    private func finishSave() {
+        // Both halves of what this screen writes change what a reminder should say and when.
+        // Classes change WHICH class a block reminder names; the lunch wave changes WHEN the
+        // blocks around lunch start and end. Anything already scheduled is now describing the
+        // schedule the student had before they scanned.
+        //
+        // setNotifications() clears the pending requests first and no-ops if notifications are
+        // off, and it is also the only thing that fills LoginVC.upcomingDays, which CalendarVC
+        // reads for "Next Day of Classes" (HQ-639). Skipping it would leave that list stale too.
+        setNotifications()
+
+        hideLoader(completion: { [weak self] in
+            guard let self = self else { return }
+            ProgressHUD.colorAnimation = .green
+            ProgressHUD.succeed(self.lunchResults.isEmpty ? "Classes saved" : "Classes and lunches saved")
+            self.navigationController?.popViewController(animated: true)
+        })
     }
 
     /// Stops the chain and says how far it got. Blocks before `index` are already durably

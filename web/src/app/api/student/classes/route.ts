@@ -41,6 +41,13 @@ export async function POST(request: Request) {
     const result = await extractStudentClasses(parsed.data);
     return NextResponse.json({
       classes: result.classes,
+      // Which lunch wave on which weekday, read off the same photo. This is why a student no
+      // longer has to set five lunch preferences by hand in Settings.
+      lunch: result.lunch,
+      // Non-course rows the model tried to save as classes. The app never shows these; they
+      // are returned so a prompt starting to drift is visible in a log rather than only in
+      // some student's schedule.
+      skipped: result.skipped,
       message: result.message,
       rejected: result.rejected,
       attempts: result.attempts,
