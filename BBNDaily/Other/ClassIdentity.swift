@@ -170,13 +170,61 @@ enum ClassIdentity {
         return comparisonKey(String(last))
     }
 
+    /// Are two surnames one character apart - a substitution, an insertion or a deletion?
+    ///
+    /// For ONE job: telling an OCR misread from a different person. Twelve reads of one sheet
+    /// spelled `Dr. Gatti` as `Dr. Gattl` three times, because at photo resolution a trailing i
+    /// and l are nearly the same shape. Nothing could merge those afterwards, so one class had
+    /// two documents and half a roster each.
+    ///
+    /// Never used on its own - see `matchesExistingClass`, which only reaches for it once the
+    /// subject, block AND room are all identical.
+    static func isOneCharacterApart(_ a: String, _ b: String) -> Bool {
+        if a == b { return false }          // identical is a different case, handled before this
+        if a.isEmpty || b.isEmpty { return false }
+        let x = Array(a), y = Array(b)
+        if abs(x.count - y.count) > 1 { return false }
+
+        if x.count == y.count {
+            var differences = 0
+            for i in 0..<x.count where x[i] != y[i] {
+                differences += 1
+                if differences > 1 { return false }
+            }
+            return differences == 1
+        }
+
+        // One is exactly one character longer: it matches if deleting a single character makes
+        // them equal.
+        let longer = x.count > y.count ? x : y
+        let shorter = x.count > y.count ? y : x
+        var i = 0, j = 0, skipped = false
+        while i < longer.count && j < shorter.count {
+            if longer[i] == shorter[j] { i += 1; j += 1; continue }
+            if skipped { return false }
+            skipped = true
+            i += 1
+        }
+        return true
+    }
+
     /// Is `existingKey` (a `Subject~Teacher~Room~Block` document id already in Firestore) the
     /// same real class as the one just scanned?
     ///
-    /// Room is deliberately NOT compared. A class keeps its identity when it moves room, two
-    /// students' sheets can disagree about the room, and one of them is often blank. Matching
-    /// on room is how one class becomes three.
-    static func matchesExistingClass(existingKey: String, subject: String, teacher: String, block: String) -> Bool {
+    /// Room is not REQUIRED to match. A class keeps its identity when it moves room, two
+    /// students' sheets can disagree about the room, and one of them is often blank. Requiring
+    /// it is how one class becomes three.
+    ///
+    /// But an exact room match is strong positive evidence, and it is the only thing that can
+    /// rescue a surname the camera got wrong. Subject + block + room identifies a section on its
+    /// own: a block is one time slot, so two different Biology sections cannot both be in room
+    /// 236 during block F. So when all three agree and the surnames are a single character
+    /// apart, that is the camera, not a second teacher.
+    ///
+    /// Deliberately narrow. A wrong merge is worse than a split - it puts a student on a roster
+    /// they are not in and shows them another class's homework - so this needs the subject, the
+    /// block and the room to agree exactly before one character of slack is allowed anywhere.
+    static func matchesExistingClass(existingKey: String, subject: String, teacher: String, block: String, room: String = "") -> Bool {
         let parts = existingKey.components(separatedBy: "~")
         guard parts.count == 4 else { return false }
 
@@ -200,7 +248,17 @@ enum ClassIdentity {
         let scannedSurname = teacherSurnameKey(teacher)
         let existingSurname = teacherSurnameKey(existingTeacher)
         if scannedSurname.isEmpty || existingSurname.isEmpty { return true }
-        return scannedSurname == existingSurname
+        if scannedSurname == existingSurname { return true }
+
+        // The surnames differ. That is normally two teachers and the answer is no - unless the
+        // room agrees exactly and the difference is a single character, which is the camera
+        // rather than a person. Both rooms have to be present: two blanks agree trivially and
+        // would prove nothing.
+        let scannedRoom = canonicalRoom(room)
+        let existingRoom = canonicalRoom(parts[2] == "N/A" ? "" : parts[2])
+        guard !scannedRoom.isEmpty, !existingRoom.isEmpty,
+              comparisonKey(scannedRoom) == comparisonKey(existingRoom) else { return false }
+        return isOneCharacterApart(scannedSurname, existingSurname)
     }
 
     // MARK: -

@@ -996,7 +996,8 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
                 }
                 let existing = snapshot?.documents.map({ $0.documentID }).first(where: {
                     ClassIdentity.matchesExistingClass(
-                        existingKey: $0, subject: row.subject, teacher: row.teacher, block: row.block)
+                        existingKey: $0, subject: row.subject, teacher: row.teacher,
+                        block: row.block, room: row.room)
                 })
                 self.joinClass(key: existing ?? canonicalKey, row: row, index: index, uid: uid)
             }
