@@ -12,8 +12,61 @@ import ProgressHUD
 import Firebase
 
 class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewDelegate, SkeletonTableViewDataSource {
+    // MARK: - "Your Class" on top
+    //
+    // The picker lists every class in the block and nothing said which one you were already in.
+    // Mike, 2026-09-03: "I would like to be able to see the class you're in at the top in a
+    // separate section... just so you know which one you've already clicked on."
+    //
+    // A section rather than a checkmark: a popular block runs to dozens of rows, and a tick
+    // somewhere down the list is not an answer to "which one am I in".
+
+    /// Where this student's current class sits in the list on screen, if it is there at all.
+    ///
+    /// Matched through `ClassIdentity`, not string equality: the stored key can be in whatever
+    /// wording an earlier year typed ("Ms Rose" against "Ms. Rose"), and a row that failed to
+    /// match would show the same class twice, once in each section.
+    private var myClassIndex: Int? {
+        let stored = (LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] as? String) ?? ""
+        guard stored.contains("~") else { return nil }
+        return filteredClasses.firstIndex { model in
+            ClassIdentity.matchesExistingClass(
+                existingKey: stored,
+                subject: model.Subject.blankIfNotAvailable(),
+                teacher: model.Teacher.blankIfNotAvailable(),
+                block: model.Block.isEmpty ? ClassesOptionsPopupVC.currentBlock : model.Block,
+                room: model.Room.blankIfNotAvailable())
+        }
+    }
+
+    /// Every row except the one already shown at the top.
+    private var otherClasses: [ClassModel] {
+        guard let mine = myClassIndex else { return filteredClasses }
+        var rest = filteredClasses
+        rest.remove(at: mine)
+        return rest
+    }
+
+    /// The one place an index path becomes a class. Three call sites indexed `filteredClasses`
+    /// directly, and with two sections each one is its own arithmetic bug.
+    private func classAt(_ indexPath: IndexPath) -> ClassModel? {
+        if let mine = myClassIndex, indexPath.section == 0 { return filteredClasses[mine] }
+        let rest = otherClasses
+        return indexPath.row < rest.count ? rest[indexPath.row] : nil
+    }
+
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return myClassIndex == nil ? 1 : 2
+    }
+
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        guard myClassIndex != nil else { return nil }
+        return section == 0 ? "Your Class" : "All Classes in \(ClassesOptionsPopupVC.currentBlock.uppercased())"
+    }
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return filteredClasses.count
+        guard myClassIndex != nil else { return filteredClasses.count }
+        return section == 0 ? 1 : otherClasses.count
     }
     func collectionSkeletonView(_ skeletonView: UITableView, cellIdentifierForRowAt indexPath: IndexPath) -> ReusableCellIdentifier {
         return editClassTableViewCell.identifier
@@ -47,8 +100,16 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         classIsEditing = true
         ClassesOptionsPopupVC.editedClass = viewModel
         ClassesOptionsPopupVC.newClass = viewModel
-        ClassesOptionsPopupVC.indexPath = indexPath
-        
+        // The index into `Classes`, NOT the table's row. Its only consumer is
+        // `DaySelectVC.completeEdit`, which does `link.Classes.remove(at: indexPath.row)` - so a
+        // table row was already the wrong number whenever a search filter was active, and with
+        // "Your Class" split into its own section it would be wrong far more often.
+        let position = Classes.firstIndex {
+            $0.Subject == viewModel.Subject && $0.Teacher == viewModel.Teacher
+                && $0.Room == viewModel.Room && $0.Block == viewModel.Block
+        } ?? indexPath.row
+        ClassesOptionsPopupVC.indexPath = IndexPath(row: position, section: 0)
+
         presentTextfield()
     }
     static var newClass = ClassModel(Subject: "TOADS", Teacher: "MR MIKE", Room: "300", Block: "G")
@@ -58,13 +119,14 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
             fatalError()
         }
         cell.link = self
-        cell.configure(with: filteredClasses[indexPath.row], indexPath: indexPath)
+        guard let model = classAt(indexPath) else { return cell }
+        cell.configure(with: model, indexPath: indexPath)
         return cell
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let db = Firestore.firestore()
-        let selectedRow = filteredClasses[indexPath.row]
+        guard let selectedRow = classAt(indexPath) else { return }
         let realDef = "\(selectedRow.Subject)~\(selectedRow.Teacher)~\(selectedRow.Room)~\(selectedRow.Block)".replacingOccurrences(of: "N/A", with: "")
         let memberDocs = db.collection("classes")
         var doc = (LoginVC.blocks["\(ClassesOptionsPopupVC.currentBlock)"] as? String) ?? "N/A"
