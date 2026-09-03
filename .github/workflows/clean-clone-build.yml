@@ -52,7 +52,7 @@ jobs:
     name: .gitignore scope guard
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: No unanchored source patterns, no half-tracked Pods
         run: ./scripts/check-gitignore-scope.sh
 
@@ -60,7 +60,7 @@ jobs:
     name: Resolver inputs have writers
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Cheap, and it catches a class no test can: a feature that is compiled, silent, and
       # always falls back because the code that loads its data was lost in a merge.
       - name: Every input resolveDay reads is written somewhere
@@ -70,7 +70,7 @@ jobs:
     name: App URLs use the canonical host
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # One missing `www.` costs a cross-host 308, which drops the Authorization header and
       # reports itself to the student as "Sign in with Google first." Invisible in review.
       - name: No bare-apex mikeveson.com in Swift
@@ -80,7 +80,7 @@ jobs:
     name: Settings sections are named, not numbered
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # A stale section index repaints the wrong rows, which reads as a delete that did not work.
       - name: No bare integer section indices in Settings
         run: ./scripts/check-settings-sections.sh
@@ -92,7 +92,7 @@ jobs:
     steps:
       # A fresh checkout on a fresh runner. Nothing here has ever had Pods/ on
       # disk, which is precisely the condition that hid HQ-608.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Show toolchain
         run: |
