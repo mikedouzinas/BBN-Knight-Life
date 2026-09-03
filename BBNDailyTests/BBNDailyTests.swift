@@ -77,6 +77,44 @@ final class ScannedClassMeetingDaysTests: XCTestCase {
     }
 }
 
+/// Joining a class that already exists must still be able to fill in days nobody has set.
+///
+/// Mike, testing on a fresh account 2026-09-03: all seven of his blocks joined existing
+/// documents, so none of them got weekday flags and every class showed all week. 326 class
+/// documents survived the reset, so most students on Tuesday JOIN rather than create.
+final class ExistingClassMeetingDaysTests: XCTestCase {
+
+    func testAClassWithNoFlagsAtAllCountsAsUnset() {
+        XCTAssertTrue(ScheduleScanVC.meetsEveryWeekday([:]))
+        XCTAssertTrue(ScheduleScanVC.meetsEveryWeekday(nil))
+    }
+
+    func testFiveExplicitTruesCountAsUnset() {
+        var data: [String: Any] = [:]
+        for day in ScannedClass.weekdays { data[day] = true }
+        XCTAssertTrue(ScheduleScanVC.meetsEveryWeekday(data))
+    }
+
+    /// The guard. One `false` anywhere means somebody decided about this class, and a scan must
+    /// not overwrite that.
+    func testASingleFalseMeansSomebodyDecided() {
+        for off in ScannedClass.weekdays {
+            var data: [String: Any] = [:]
+            for day in ScannedClass.weekdays { data[day] = (day != off) }
+            XCTAssertFalse(
+                ScheduleScanVC.meetsEveryWeekday(data),
+                "a class with \(off) turned off must be left alone")
+        }
+    }
+
+    /// A partially-written document: some flags present and true, the rest missing. Still unset,
+    /// because a missing flag reads as true everywhere else in the app.
+    func testAPartiallyWrittenDocumentIsStillUnset() {
+        XCTAssertTrue(ScheduleScanVC.meetsEveryWeekday(["monday": true, "friday": true]))
+        XCTAssertFalse(ScheduleScanVC.meetsEveryWeekday(["monday": true, "friday": false]))
+    }
+}
+
 final class ScanReviewCellTests: XCTestCase {
 
     func testReviewCellCanShowARightHandValue() {

@@ -734,6 +734,16 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     /// `ScheduleScanVCTests.testReviewCellCanShowARightHandValue` fails if this returns a style
     /// with no detail label. That is a cheap test for a class of bug that is invisible to every
     /// other check in this repository.
+    /// Does this class document still say it meets every weekday - the state of a class whose
+    /// days nobody has ever narrowed?
+    ///
+    /// A missing flag counts as true, because that is what every reader in the app does with it
+    /// (`(data?["monday"] as? Bool) ?? true`), so a document with no flags at all and one with
+    /// five `true`s are the same class as far as the calendar is concerned.
+    static func meetsEveryWeekday(_ data: [String: Any]?) -> Bool {
+        ScannedClass.weekdays.allSatisfy { (data?[$0] as? Bool) ?? true }
+    }
+
     static func makeReviewCell() -> UITableViewCell {
         UITableViewCell(style: .value1, reuseIdentifier: "scanRow")
     }
@@ -1087,6 +1097,29 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
                 // which is HQ-923's point, arrived at from the other direction.
                 for day in ScannedClass.weekdays {
                     payload[day] = row.days.map { $0.contains(day) } ?? true
+                }
+            } else if let days = row.days, Self.meetsEveryWeekday(snapshot?.data()) {
+                // A CLASS THAT ALREADY EXISTS AND HAS NEVER HAD ITS DAYS NARROWED.
+                //
+                // Found by Mike on 2026-09-03, testing on a fresh account: all seven of his
+                // blocks joined documents that already existed, so `isNewClass` was false and
+                // not one of them got the weekday flags. His Health & Wellness kept showing
+                // every day. That is not seven classes - 326 class documents survived the reset,
+                // so most students on Tuesday will JOIN rather than create, and the whole
+                // day-of-week feature would quietly do nothing for them.
+                //
+                // Writing days onto somebody else's document is exactly what the create-only
+                // rule above exists to prevent, so this is deliberately narrow: it writes only
+                // when all five flags are currently true, which is the never-set state. A class
+                // where any day is already false is one somebody decided about, and it is left
+                // alone.
+                //
+                // "All five true" is safe to read as "unset" here on evidence, not on hope:
+                // across four real sheets graded by hand, NOT ONE of 28 blocks met all five
+                // weekdays. A class claiming to meet every day at BB&N is a default nobody
+                // has corrected yet.
+                for day in ScannedClass.weekdays {
+                    payload[day] = days.contains(day)
                 }
             }
 
