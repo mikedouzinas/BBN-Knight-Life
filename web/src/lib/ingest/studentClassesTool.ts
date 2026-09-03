@@ -114,12 +114,13 @@ export const EMIT_STUDENT_DETAILS_TOOL: Anthropic.Tool = {
       grade: {
         type: 'string',
         enum: ['9', '10', '11', '12'],
-        description: 'The student\'s grade level, only if the sheet states it.',
+        description:
+          'The student\'s grade as a NUMBER, only if the sheet states it. Sheets word this several ways and all of them map onto 9-12: "Grade 11" and "11th" are 11; "Freshman" is 9, "Sophomore" 10, "Junior" 11, "Senior" 12; "Form III/IV/V/VI" is 9/10/11/12. Report the number, never the word. If the sheet gives a graduating year rather than a grade, omit this - working it out needs today\'s date and that is not on the page.',
       },
       advisory: {
         type: 'string',
         description:
-          'The advisory ROOM, only if the sheet states one. A room, not a person: a sheet naming an advisor but no room has no advisory room to report.',
+          'The advisory ROOM, only if the sheet states one - a room number or name like "134" or "Library". A ROOM, never a PERSON: a sheet with a line like "Advisor: Ms. Rose" names an advisor and no room, so there is nothing to report. The room may be printed beside an "Advisory" row in the grid rather than in the header.',
       },
     },
   },
@@ -132,6 +133,8 @@ Transcribe only. Do not fill in a subject, teacher, or room from memory, and do 
 ## What goes in a lettered block
 
 A BB&N sheet prints a block-like label next to almost every row, including rows that are not blocks at all. The label is not what makes something a class.
+
+HOW MANY COURSES A STUDENT HAS IS NOT FIXED, and you must not aim for a particular number. One student has seven courses and no free blocks; another has four courses and three frees. Report exactly what the sheet shows for each letter and let the count be whatever it is. If you find yourself deciding a block "should" hold a course because the others do, stop - that is inventing a class.
 
 Each lettered block a-g holds at most one thing. Call emit_student_classes once per lettered block the sheet shows, and put in "subject" either:
 
@@ -150,6 +153,8 @@ Those rows carry labels like SP, CAB, Adv, Aft, L1, L2. None of them is a letter
 The one case to leave out entirely is a letter the sheet **never mentions**. That is different from a letter shown as free: the sheet simply does not cover it, and guessing "Free" there would be as much an invention as guessing a course. Leave it blank for the student to fill in.
 
 A course usually appears on several weekdays. That is one class, so emit it once. If two genuinely different courses appear under the same letter, emit the one appearing most often and say so in text.
+
+A course can also occupy more than one letter - a lab, a double period, a year-long course meeting in two blocks. That is not a mistake to correct: emit it under each letter it appears in, with the same name.
 
 ## Teacher and room
 

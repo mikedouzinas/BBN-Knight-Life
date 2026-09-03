@@ -33,6 +33,67 @@ const MAX_ATTEMPTS = 3;
 const MAX_TOKENS = 4000;
 
 /**
+ * Retries for a busy API, which is a different failure from a bad photo.
+ *
+ * MAX_ATTEMPTS above is the CORRECTNESS loop: the model emitted something invalid and is being
+ * asked to fix it. This is the AVAILABILITY loop: the request never landed. Conflating them
+ * would let a single 529 eat one of the three correction attempts.
+ *
+ * It matters on one specific day. Hundreds of students set their classes up in the same week,
+ * many in the same hour, and 529 Overloaded is what that looks like from here - hit while
+ * testing this on 2026-09-03. Without a retry, a student sees "that scan failed" for something
+ * that would have worked half a second later.
+ */
+const TRANSIENT_STATUSES = new Set([408, 429, 500, 502, 503, 504, 529]);
+
+/**
+ * Two retries, not more, and a short backoff - because this shares a 60-second budget.
+ *
+ * The route is `maxDuration = 60`, and one Opus call on a schedule photo measured ~12s. Three
+ * correctness attempts is already ~36s of that, so the availability retries have to be cheap
+ * or a scan that would have succeeded gets killed by the platform instead. Worst case here is
+ * about 1.5s of waiting per correctness attempt, which fits.
+ */
+const MAX_TRANSIENT_RETRIES = 2;
+const RETRY_BASE_MS = 400;
+
+function isTransient(error: unknown): boolean {
+  const status = (error as { status?: number } | null)?.status;
+  return typeof status === 'number' && TRANSIENT_STATUSES.has(status);
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * One model call, retried only when the failure was the API being unavailable.
+ *
+ * Anything else - a bad request, an auth problem, a refusal - is thrown straight through,
+ * because retrying it just spends the same money on the same answer.
+ */
+async function createWithRetry(
+  anthropic: Anthropic,
+  params: Anthropic.MessageCreateParamsNonStreaming,
+): Promise<Anthropic.Message> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= MAX_TRANSIENT_RETRIES; attempt += 1) {
+    try {
+      return await anthropic.messages.create(params);
+    } catch (error) {
+      if (!isTransient(error) || attempt === MAX_TRANSIENT_RETRIES) throw error;
+      lastError = error;
+      // Exponential, with jitter, because every phone in the grade retrying in lockstep is
+      // what caused the overload in the first place.
+      const backoff = RETRY_BASE_MS * 2 ** attempt + Math.random() * RETRY_BASE_MS;
+      console.warn(
+        `[student-classes] transient ${(error as { status?: number }).status} from the model, retrying in ${Math.round(backoff)}ms`,
+      );
+      await sleep(backoff);
+    }
+  }
+  throw lastError;
+}
+
+/**
  * Rows a BB&N sheet prints with a block letter that are not courses. Matched against the
  * whole subject, case- and punctuation-insensitively, so "Lunch - 2nd", "lunch-2nd" and
  * "LUNCH 2ND" are one entry.
@@ -208,7 +269,7 @@ export async function extractStudentClasses(
 
   while (attempts < MAX_ATTEMPTS) {
     attempts += 1;
-    const response = await anthropic.messages.create({
+    const response = await createWithRetry(anthropic, {
       model: STUDENT_INGEST_MODEL,
       max_tokens: MAX_TOKENS,
       thinking: { type: 'adaptive' },

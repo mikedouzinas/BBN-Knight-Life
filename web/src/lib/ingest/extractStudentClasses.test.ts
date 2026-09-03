@@ -428,3 +428,61 @@ describe('the real Grade 11 sheet, end to end', () => {
     expect(result.classes.some((c) => c.subject === 'Unscheduled')).toBe(false);
   });
 });
+
+/**
+ * A busy API is a different failure from a bad photo, and the student must not pay for it.
+ * Hit for real on 2026-09-03: a 529 Overloaded while testing, which is exactly what the first
+ * week of school looks like when a whole grade scans within the same hour.
+ */
+describe('a transient model failure', () => {
+  function apiError(status: number) {
+    return Object.assign(new Error(`${status} overloaded`), { status });
+  }
+
+  function flakyClient(failures: number[], then: { content: unknown[] }) {
+    const create = vi.fn();
+    for (const status of failures) create.mockRejectedValueOnce(apiError(status));
+    create.mockResolvedValue(then);
+    return { client: { messages: { create } } as unknown as Anthropic, create };
+  }
+
+  it.each([408, 429, 500, 502, 503, 504, 529])('retries a %i and then succeeds', async (status) => {
+    const { client, create } = flakyClient([status], { content: [toolUse('a', GOOD)] });
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(result.classes).toHaveLength(1);
+  });
+
+  // Explicit timeout: the backoff is real time, and the point of the test is that it stops
+  // rather than retrying forever. The whole retry budget has to stay small because the route
+  // is maxDuration = 60 and three correctness attempts already spend most of that.
+  it('gives up after two retries rather than retrying forever', { timeout: 15_000 }, async () => {
+    const { client, create } = flakyClient([529, 529, 529], { content: [] });
+    await expect(extractStudentClasses(PHOTO, client)).rejects.toThrow(/529/);
+    expect(create).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not spend a correction attempt on an availability failure', async () => {
+    // One 529, then two rounds of the correctness loop. If the two were conflated, the 529
+    // would eat one of the three correction attempts and the good block would never land.
+    const { client, create } = flakyClient([529], { content: [toolUse('a', GOOD)] });
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.attempts).toBe(1);
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it('does NOT retry an error that would fail the same way again', async () => {
+    for (const status of [400, 401, 403, 404, 413, 422]) {
+      const { client, create } = flakyClient([status], { content: [toolUse('a', GOOD)] });
+      await expect(extractStudentClasses(PHOTO, client)).rejects.toThrow();
+      expect(create).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it('does not retry an error with no status at all', async () => {
+    const create = vi.fn().mockRejectedValue(new Error('socket hang up'));
+    const client = { messages: { create } } as unknown as Anthropic;
+    await expect(extractStudentClasses(PHOTO, client)).rejects.toThrow(/socket/);
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+});
