@@ -30,14 +30,23 @@ struct ScannedClass {
 struct ScannedLunch {
     var weekday: String
     var block: String
-    /// nil means "the photo did not say", NOT "no lunch".
+    /// 1 or 2, and after a scan it is never nil.
     ///
-    /// A row is now shown for every weekday that carries a lunch choice, including the ones the
-    /// model returned nothing for. It used to `compactMap` those away, so a weekday the model
-    /// missed simply was not on the screen - Mike lost Friday on a real sheet and there was no
-    /// way to tell whether the sheet lacked a Friday lunch row, the model missed it, or the app
-    /// dropped it, and no way to set it from here either. An empty row says which day is
-    /// unanswered and can be tapped to answer it.
+    /// Two decisions ended up here, in this order:
+    ///
+    /// A row exists for every weekday that carries a lunch choice, even one the photo said nothing
+    /// about. These used to be `compactMap`ed away, so a weekday the model missed simply was not
+    /// on the screen - Friday vanished off a real sheet, with no way to tell whether the sheet
+    /// lacked the row, the model missed it, or the app dropped it, and no way to set it from here.
+    ///
+    /// And every one of those rows gets a value. Blank is not the cautious choice it looks like:
+    /// the wave decides when the blocks either side of lunch start and end, so a day with no value
+    /// makes that day's schedule wrong for a student who never opens Settings. Unanswered days
+    /// default to 2nd and the footer names them and asks the student to check.
+    ///
+    /// The type stays optional because it is nil for the moment between the rows being built and
+    /// the defaults being applied, and because "the photo did not say" is what
+    /// `lunchDaysDefaulted` is computed from.
     var wave: Int?
 
     /// The DAY, and only the day.
@@ -55,15 +64,16 @@ struct ScannedLunch {
     /// The exact strings Settings has always written, so a scanned value and a typed one are
     /// the same value and the schedule's `filter: ["L1"]` / `["L2"]` keeps matching.
     ///
-    /// nil when the wave is unknown, and callers must not substitute a default. Guessing "2nd
-    /// Lunch" for a day the sheet did not state writes a confident wrong answer, which shows the
-    /// student the wrong half of that school day.
+    /// nil only before the defaults are applied. Nothing is ever written for a nil wave: the save
+    /// path takes `answeredLunches`, so a row that somehow reached the screen without a value is
+    /// skipped rather than guessed at that late stage.
     var storedValue: String? {
         guard let wave = wave else { return nil }
         return wave == 1 ? "1st Lunch" : "2nd Lunch"
     }
 
-    /// What the row shows on the right. Unanswered days say so.
+    /// What the row shows on the right. "Not set" should be unreachable after a scan, and is kept
+    /// as an honest fallback rather than a crash if it ever is not.
     var displayValue: String { storedValue ?? "Not set" }
 }
 
@@ -256,16 +266,30 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     /// when its content changes. Without this the header keeps the height it was first given and
     /// a longer summary is clipped.
     private func sizeTableHeader() {
-        guard let header = tableView.tableHeaderView else { return }
+        guard let header = tableView.tableHeaderView, tableView.bounds.width > 0 else { return }
         header.frame.size.width = tableView.bounds.width
         let height = header.systemLayoutSizeFitting(
             CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height),
             withHorizontalFittingPriority: .required,
             verticalFittingPriority: .fittingSizeLevel).height
-        guard header.frame.height != height else { return }
+        guard abs(header.frame.height - height) > 0.5 else { return }
         header.frame.size.height = height
-        // Reassigning is what makes the table pick the new height up.
-        tableView.tableHeaderView = header
+        // Reassigning is what makes the table pick the new height up, and it is also a full
+        // re-layout of the table - which is why it must never happen while rows are animating.
+        //
+        // This is what was still making rows vanish and come back after tapping one to edit it.
+        // The tap ran `reloadRows(with: .none)` and then `updateSaveButton()`, which rewrites the
+        // summary line, which changes the header's height, which reassigned the header MID-FADE.
+        // The table threw away the layout it was animating and did not rebuild it until the next
+        // touch. Moving the label into the header fixed the version of this that happened on the
+        // first load; this is the version that happens on every edit.
+        //
+        // `performWithoutAnimation` makes the re-layout atomic instead of interleaving with the
+        // row animation, so the table ends in a laid-out state either way.
+        UIView.performWithoutAnimation {
+            tableView.tableHeaderView = header
+            tableView.layoutIfNeeded()
+        }
     }
 
     /// The header's width comes from the table's bounds, which are not final until the first
@@ -306,10 +330,29 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             promptForPhotoSource()
             return
         }
+
+        // A spinner while the picker gets itself up.
+        //
+        // `UIImagePickerController` is slow to appear - it asks for photo-library permission, then
+        // builds a whole browser over the user's library, and on a big library that is a visible
+        // pause. Between the tap and the picker there was NOTHING on screen, so it read as a tap
+        // that did not register. Mike: "sometimes there's a little delay between clicking 'choose
+        // a photo' and when it actually pops up so the user is left confused."
+        //
+        // `interaction: false` blocks a second tap during the gap, which would otherwise queue a
+        // second picker presentation behind the first.
+        showLoader(text: source == .camera ? "Opening camera..." : "Opening photos...")
+
         let picker = UIImagePickerController()
         picker.sourceType = source
         picker.delegate = self
-        present(picker, animated: true)
+
+        // Constructing the picker is the slow part and it happens above, on the main thread; the
+        // loader is torn down in the presentation's own completion so it covers the whole gap
+        // rather than a guessed interval.
+        present(picker, animated: true) { [weak self] in
+            self?.hideLoader(completion: nil)
+        }
     }
 
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
@@ -402,25 +445,24 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
 
     private func handleScanResponse(data: Data?, error: Error?) {
-        guard error == nil, let data = data,
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            ProgressHUD.colorAnimation = .red
-            ProgressHUD.failed("That scan failed. Check your connection and try again.")
-            promptForPhotoSource()
+        let json = data.flatMap { try? JSONSerialization.jsonObject(with: $0) } as? [String: Any]
+
+        guard error == nil, let json = json else {
+            // A blocking alert, not a HUD. See `reportFailure` - a HUD that fades while the screen
+            // is closing is a message nobody ever reads.
+            reportFailure(
+                title: "That Scan Didn't Work",
+                message: "Couldn't reach the server. Check your connection and try again.",
+                offerRetry: true)
             return
         }
 
         if let errorMessage = json["error"] as? String {
             let budgetExhausted = (json["budgetExhausted"] as? Bool) ?? false
-            ProgressHUD.colorAnimation = .red
-            ProgressHUD.failed(errorMessage)
-            if budgetExhausted {
-                // Out of scans for the year - the manual picker in Settings still works,
-                // same message the backend sent.
-                closeSelf()
-            } else {
-                promptForPhotoSource()
-            }
+            reportFailure(
+                title: budgetExhausted ? "No Scans Left" : "That Scan Didn't Work",
+                message: errorMessage,
+                offerRetry: !budgetExhausted)
             return
         }
 
@@ -430,22 +472,6 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             return ScannedClass(block: block, subject: subject, teacher: (dict["teacher"] as? String) ?? "", room: (dict["room"] as? String) ?? "")
         }
 
-        // Lunch arrives keyed by weekday ("monday": 2). The lettered block that carries lunch
-        // that day comes from the schedule rather than from the server, because the server has
-        // no reason to know the app's block layout and the app already does.
-        // A row for EVERY weekday that carries a lunch choice, whether or not the model answered
-        // for it. `lunchWeekdaysInOrder()` is derived from `regularSchedule`, so this is the app's
-        // own list of lunch days rather than the model's - a day the photo did not cover still
-        // gets a row, reading "Not set", that the student can tap.
-        let rawLunch = (json["lunch"] as? [String: Any]) ?? [:]
-        lunchResults = lunchWeekdaysInOrder().map { pair in
-            let wave = (rawLunch[pair.weekday] as? NSNumber)?.intValue
-            return ScannedLunch(
-                weekday: pair.weekday,
-                block: pair.block,
-                wave: (wave == 1 || wave == 2) ? wave : nil)
-        }
-
         if let details = json["details"] as? [String: Any], let grade = details["grade"] as? String,
            ["9", "10", "11", "12"].contains(grade) {
             gradeResult = grade
@@ -453,17 +479,96 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
 
         remainingScans = (json["remainingScans"] as? NSNumber)?.intValue
 
-        guard !hasNothingToSave else {
+        // Lunch arrives keyed by weekday ("monday": 2). The lettered block that carries lunch that
+        // day comes from the schedule rather than from the server, because the server has no reason
+        // to know the app's block layout and the app already does.
+        let rawLunch = (json["lunch"] as? [String: Any]) ?? [:]
+        let wavesFromPhoto: [String: Int] = lunchWeekdaysInOrder().reduce(into: [:]) { out, pair in
+            if let w = (rawLunch[pair.weekday] as? NSNumber)?.intValue, w == 1 || w == 2 { out[pair.weekday] = w }
+        }
+
+        // "Did this photo produce anything at all" is asked BEFORE lunch defaults are filled in,
+        // and that ordering is load-bearing. Every lunch day gets a value below, so asking
+        // afterwards would find five lunch rows on a photo of a wall and call it a successful scan.
+        guard !results.isEmpty || !wavesFromPhoto.isEmpty || gradeResult != nil else {
             reportNothingFound(modelMessage: json["message"] as? String)
             return
         }
 
+        // EVERY lunch weekday gets a wave, defaulting to 2nd for any the photo did not state.
+        //
+        // Leaving one blank is not the safe option, which is what it looked like when the choice
+        // was "don't guess". The lunch wave decides when the blocks around lunch start and end, so
+        // a day with no value does not degrade gracefully - the schedule for that day is wrong for
+        // everyone, including the students who never open Settings. Mike: "if nothing is set the
+        // app won't work schedule-wise... we will show one by default so don't let them save
+        // without doing that."
+        //
+        // 2nd is the default because it is already the app's: SettingsBlockTableViewCell has shown
+        // "2nd Lunch" for an unset lunch preference since long before this screen existed, so a
+        // student who never touches either screen sees the same thing from both.
+        //
+        // A default is a claim, so the footer says so and asks them to check it against the sheet.
+        lunchResults = lunchWeekdaysInOrder().map { pair in
+            ScannedLunch(weekday: pair.weekday, block: pair.block, wave: wavesFromPhoto[pair.weekday] ?? 2)
+        }
+        lunchDaysDefaulted = lunchWeekdaysInOrder().filter { wavesFromPhoto[$0.weekday] == nil }.map { $0.weekday }
+
+        hasScanned = true
         updateSaveButton()
         tableView.reloadData()
     }
 
+    /// True once a scan has come back with something. Nothing is listed before that.
+    ///
+    /// Every section used to render from the moment the screen opened, so the Grade row sat there
+    /// saying "Not set" while the camera was still being chosen - a value offered for confirmation
+    /// before anything had been read. Sections are a report on a scan, so there is nothing to
+    /// report until there has been one.
+    private var hasScanned = false
+
+    /// The weekdays whose lunch wave is a default rather than something read off the photo.
+    /// Named so the footer can say which ones actually need checking.
+    private var lunchDaysDefaulted = [String]()
+
     /// How many scans the student has left this year, as of the last response.
     private var remainingScans: Int?
+
+    /// Says why a scan failed, and waits to be dismissed.
+    ///
+    /// Every failure here used to be a `ProgressHUD.failed(...)` followed immediately by either
+    /// `closeSelf()` or a new photo prompt. A HUD fades out on its own after a moment, and popping
+    /// the view controller takes it down early - so on a device the student saw a red something
+    /// flash for a fraction of a second and then found themselves back in Settings with no idea
+    /// what had happened. Mike, on scanning a photo that was not a schedule: "it just exited me to
+    /// the settings page, didn't say anything, it seems to flash an error page but it disappears
+    /// because we automatically go back."
+    ///
+    /// That is the worst possible outcome for the two failures a student will actually meet: an
+    /// unreadable photo, which they can fix, and no scans left, where the message is the ONLY
+    /// thing that tells them their classes can still be set by hand.
+    ///
+    /// - Parameter offerRetry: whether another photo is worth offering. False when the budget is
+    ///   gone, because there is nothing left to spend on a retry.
+    private func reportFailure(title: String, message: String, offerRetry: Bool) {
+        var body = message
+        if let left = remainingScans, offerRetry {
+            body += "\n\nYou have \(left) scan\(left == 1 ? "" : "s") left this year."
+        }
+        let alert = UIAlertController(title: title, message: body, preferredStyle: .alert)
+        if offerRetry {
+            alert.addAction(UIAlertAction(title: "Try Another Photo", style: .default, handler: { [weak self] _ in
+                self?.promptForPhotoSource()
+            }))
+        }
+        alert.addAction(UIAlertAction(title: "Enter Classes by Hand", style: .default, handler: { [weak self] _ in
+            self?.closeSelf()
+        }))
+        alert.addAction(UIAlertAction(title: "Report a Problem", style: .default, handler: { [weak self] _ in
+            self?.promptForFeedback(context: "schedule-scan-failed")
+        }))
+        present(alert, animated: true)
+    }
 
     /// The photo produced nothing at all: not a schedule, too blurry, or the wrong page.
     ///
@@ -564,6 +669,10 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     func numberOfSections(in tableView: UITableView) -> Int { Section.allCases.count }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        // Nothing at all until a scan has come back. Every section is a report ON a scan, and the
+        // Grade row in particular sat there reading "Not set" while the camera was still being
+        // chosen, offering a value for confirmation before anything had been read.
+        guard hasScanned else { return nil }
         switch Section(rawValue: section) {
         case .classes: return results.isEmpty ? nil : "Classes"
         case .lunch:   return lunchResults.isEmpty ? nil : "Which lunch you have"
@@ -573,6 +682,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        guard hasScanned else { return 0 }
         switch Section(rawValue: section) {
         case .classes: return results.count
         case .lunch:   return lunchResults.count
@@ -598,6 +708,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
 
     func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        guard hasScanned else { return nil }
         switch Section(rawValue: section) {
         case .classes:
             guard !results.isEmpty else { return nil }
@@ -610,10 +721,22 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             return "Blocks \(letters) weren't on this photo. Saving won't clear them - set them in Settings, or scan a photo that shows them."
         case .lunch:
             guard !lunchResults.isEmpty else { return nil }
-            // The block letters live here, once, as the explanation for why lunch is not simply
-            // "one lunch". Naming them on every row made the letter look like the answer.
-            let pairs = lunchResults.map { "\($0.weekday.prefix(3).capitalized) \($0.block)" }.joined(separator: ", ")
-            return "Lunch falls in a different block each day (\(pairs)). All you're confirming is which of the two waves you're in."
+            // No block letters, and nothing about how the school's schedule is arranged.
+            //
+            // This used to read "Lunch falls in a different block each day (Mon D, Tue C, ...)",
+            // which is a claim about BB&N's timetable that this screen has no business making and
+            // that stops being true the year they rearrange it. Mike: "that may change. make it
+            // more simple." What the student is being asked is the same every year and does not
+            // depend on the timetable at all.
+            var text = "Some students have 1st lunch and some have 2nd, and it changes when your classes are that day. Check your schedule and set each day to match."
+            if !lunchDaysDefaulted.isEmpty {
+                // Naming the guessed days is the point. A default that looks identical to a
+                // reading is a wrong answer nobody has any reason to check.
+                let days = lunchDaysDefaulted.map { $0.capitalized }
+                let list = days.count == 1 ? days[0] : days.dropLast().joined(separator: ", ") + " and " + days.last!
+                text += "\n\nYour photo didn't say for \(list), so \(days.count == 1 ? "it is" : "they are") set to 2nd Lunch. Check \(days.count == 1 ? "it" : "them")."
+            }
+            return text
         default:
             return nil
         }
@@ -669,7 +792,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             self.results[index].subject = alert.textFields?[0].text ?? row.subject
             self.results[index].teacher = alert.textFields?[1].text ?? row.teacher
             self.results[index].room = alert.textFields?[2].text ?? row.room
-            self.tableView.reloadRows(at: [IndexPath(row: index, section: Section.classes.rawValue)], with: .fade)
+            self.tableView.reloadRows(at: [IndexPath(row: index, section: Section.classes.rawValue)], with: .none)
             // The summary line counts courses and free blocks separately, and editing a subject
             // to or from "Free" moves a row between those two counts.
             self.updateSaveButton()
@@ -692,7 +815,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             let action = UIAlertAction(title: title, style: .default, handler: { [weak self] _ in
                 guard let self = self else { return }
                 self.lunchResults[index].wave = wave
-                self.tableView.reloadRows(at: [IndexPath(row: index, section: Section.lunch.rawValue)], with: .fade)
+                self.tableView.reloadRows(at: [IndexPath(row: index, section: Section.lunch.rawValue)], with: .none)
                 // The Save button and the summary line both count answered days, and this is the
                 // action that turns an unanswered day into an answered one.
                 self.updateSaveButton()
@@ -700,15 +823,10 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             if row.wave == wave { action.setValue(true, forKey: "checked") }
             alert.addAction(action)
         }
-        // Clears the day rather than deleting the row. The row is one of the five weekdays that
-        // carry lunch, so it exists whether or not it has an answer - removing it would take the
-        // day off the screen and leave no way to set it, which is the bug this replaced.
-        alert.addAction(UIAlertAction(title: "Leave This Day Unset", style: .destructive, handler: { [weak self] _ in
-            guard let self = self else { return }
-            self.lunchResults[index].wave = nil
-            self.tableView.reloadRows(at: [IndexPath(row: index, section: Section.lunch.rawValue)], with: .fade)
-            self.updateSaveButton()
-        }))
+        // No "leave this unset" action, deliberately. Every lunch day must end up 1st or 2nd:
+        // the wave decides when the blocks around lunch start and end, so a day with no value
+        // makes that day's schedule wrong rather than merely incomplete. The only two answers a
+        // student can give are the only two actions here.
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(alert, animated: true)
     }

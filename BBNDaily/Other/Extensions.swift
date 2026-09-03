@@ -739,8 +739,24 @@ extension UIViewController {
                 DispatchQueue.main.async {
                     let status = (response as? HTTPURLResponse)?.statusCode ?? 0
                     guard error == nil, (200...299).contains(status) else {
+                        // The status is named rather than blamed on the network.
+                        //
+                        // "Check your connection" is right for a transport failure and actively
+                        // misleading for anything else - and the first time this ran the endpoint
+                        // was not deployed yet, so it answered 404 and the app told Mike his
+                        // connection was bad. A student chasing their wifi over a server problem
+                        // never reports it, which defeats the entire point of a feedback button.
                         ProgressHUD.colorAnimation = .red
-                        ProgressHUD.failed("Couldn't send that. Check your connection and try again.")
+                        if error != nil {
+                            ProgressHUD.failed("Couldn't send that. Check your connection and try again.")
+                        } else if status == 404 {
+                            ProgressHUD.failed("Reporting isn't available yet in this version. Sorry.")
+                        } else if status == 401 || status == 403 {
+                            ProgressHUD.failed("Couldn't verify your sign-in. Sign out and back in.")
+                        } else {
+                            ProgressHUD.failed("Couldn't send that (error \(status)). Try again.")
+                        }
+                        print("feedback POST failed: status \(status), error \(String(describing: error))")
                         return
                     }
                     ProgressHUD.colorAnimation = .green
