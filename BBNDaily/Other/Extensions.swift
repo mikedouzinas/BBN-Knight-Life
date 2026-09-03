@@ -8,6 +8,8 @@
 import Foundation
 import UIKit
 import Firebase
+// `Auth` for the ID token the feedback POST sends. `import Firebase` alone does not re-export it.
+import FirebaseAuth
 import ProgressHUD
 
 extension UIViewController {
@@ -54,6 +56,16 @@ extension String {
             return "N/A"
         }
         return self
+    }
+
+    /// The inverse of `setNotAvailable()`, for a label that should show nothing rather than "N/A".
+    ///
+    /// `getValues()` substitutes "N/A" for an empty field so that a caller building one string out
+    /// of subject/teacher/room has something to print. A caller with a DEDICATED label per field
+    /// wants the opposite: an empty label it can hide. Without this the two conventions collide and
+    /// a free block, whose teacher and room are legitimately empty, reads as "Free / N/A".
+    func blankIfNotAvailable() -> String {
+        self == "N/A" ? "" : self
     }
     func getDayOfWeek() -> Int? {
         let formatter  = DateFormatter()
@@ -635,33 +647,122 @@ extension UIViewController {
         
         self.present(alert, animated: true, completion: nil)
     }
+    /// The blocking "working on it" indicator.
+    ///
+    /// ProgressHUD, not a hand-built UIAlertController. The alert version put a spinner into an
+    /// alert's view with its own constraints while UIKit laid out the message independently, so
+    /// the spinner and the text were positioned by two different systems that never agreed -
+    /// which is why it read as off-centre with the spinner floating above the words, and why it
+    /// was off by a different amount at every message length and Dynamic Type size.
+    ///
+    /// ProgressHUD is what every other status in this app already uses (`ProgressHUD.succeed`,
+    /// `.failed`), so this also makes the loading state look like the states either side of it
+    /// instead of like a different app.
     func showLoader(text: String) {
-        // The leading newline reserves the row the spinner occupies. Without it the spinner
-        // is drawn on top of the message text.
-        let alert = UIAlertController(title: nil, message: "\n\(text)", preferredStyle: .alert)
-
-        let loadingIndicator = UIActivityIndicatorView(style: .medium)
-        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
-        loadingIndicator.hidesWhenStopped = true
-        loadingIndicator.startAnimating()
-
-        alert.view.addSubview(loadingIndicator)
-        // Constrained rather than a hardcoded frame. It was CGRect(x: 10, y: 5, 50x50), which
-        // pins the spinner near the alert's top-LEFT while the message under it is centred:
-        // visibly off, and off by a different amount at every message length and Dynamic Type
-        // size, because the alert sizes itself to its content.
-        NSLayoutConstraint.activate([
-            loadingIndicator.centerXAnchor.constraint(equalTo: alert.view.centerXAnchor),
-            loadingIndicator.topAnchor.constraint(equalTo: alert.view.topAnchor, constant: 20),
-        ])
-        present(alert, animated: true)
+        ProgressHUD.animationType = .circleStrokeSpin
+        ProgressHUD.colorAnimation = UIColor(named: "inverse") ?? .label
+        ProgressHUD.animate(text, interaction: false)
     }
     func showConfirmation(title: String, message: String) {
         
     }
+    /// Dismisses whatever `showLoader` put up, then runs the follow-on.
+    ///
+    /// The completion is invoked directly rather than through `dismiss(animated:completion:)`,
+    /// because ProgressHUD is not a presented view controller - calling `dismiss` here would
+    /// dismiss whatever screen the caller is ON. That is also why the completion is optional
+    /// now: the old version force-unwrapped it and crashed on `hideLoader(completion: nil)`.
     func hideLoader(completion: (() -> Void)?) {
-        dismiss(animated: true, completion: {
-            completion!()
+        ProgressHUD.dismiss()
+        completion?()
+    }
+
+    /// Asks the student what went wrong and posts it, in their own words.
+    ///
+    /// Lives on `UIViewController` so both Settings and the scan review screen offer it from the
+    /// same code - the report that matters most is the one sent from the screen where the thing
+    /// went wrong, while the student can still see it.
+    ///
+    /// Fire and mostly forget, on purpose. It reports success or failure and never blocks
+    /// anything: a student who cannot send feedback has already hit one problem, and making them
+    /// sit through a second failure to tell us about the first is the wrong trade.
+    ///
+    /// - Parameter context: where they were, e.g. "schedule-scan". Stored alongside the message so
+    ///   a week of reports can be read by area instead of one at a time.
+    func promptForFeedback(context: String) {
+        let alert = UIAlertController(
+            title: "Report a Problem",
+            message: "What went wrong? This goes straight to whoever maintains the app. Say what you expected and what you got.",
+            preferredStyle: .alert
+        )
+        alert.addTextField { field in
+            field.placeholder = "It read my B block as the wrong class"
+            field.autocapitalizationType = .sentences
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Send", style: .default, handler: { [weak self] _ in
+            let text = (alert.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { return }
+            self?.sendFeedback(message: text, context: context)
+        }))
+        present(alert, animated: true)
+    }
+
+    /// The feedback endpoint, on the canonical `www.` host for the same reason the scan endpoint
+    /// is - a cross-host 308 drops the Authorization header. scripts/check-app-urls.sh enforces it.
+    private static let feedbackEndpoint = "https://www.mikeveson.com/knight-life/api/student/feedback"
+
+    private func sendFeedback(message: String, context: String) {
+        guard let url = URL(string: UIViewController.feedbackEndpoint) else { return }
+        let version = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "?"
+        let build = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "?"
+
+        Auth.auth().currentUser?.getIDToken(completion: { token, error in
+            guard let token = token, error == nil else {
+                DispatchQueue.main.async {
+                    ProgressHUD.colorAnimation = .red
+                    ProgressHUD.failed("Couldn't verify your sign-in. Try again.")
+                }
+                return
+            }
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try? JSONSerialization.data(withJSONObject: [
+                "message": message,
+                "context": context,
+                "appVersion": "\(version) (\(build))",
+            ])
+
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                DispatchQueue.main.async {
+                    let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                    guard error == nil, (200...299).contains(status) else {
+                        // The status is named rather than blamed on the network.
+                        //
+                        // "Check your connection" is right for a transport failure and actively
+                        // misleading for anything else - and the first time this ran the endpoint
+                        // was not deployed yet, so it answered 404 and the app told Mike his
+                        // connection was bad. A student chasing their wifi over a server problem
+                        // never reports it, which defeats the entire point of a feedback button.
+                        ProgressHUD.colorAnimation = .red
+                        if error != nil {
+                            ProgressHUD.failed("Couldn't send that. Check your connection and try again.")
+                        } else if status == 404 {
+                            ProgressHUD.failed("Reporting isn't available yet in this version. Sorry.")
+                        } else if status == 401 || status == 403 {
+                            ProgressHUD.failed("Couldn't verify your sign-in. Sign out and back in.")
+                        } else {
+                            ProgressHUD.failed("Couldn't send that (error \(status)). Try again.")
+                        }
+                        print("feedback POST failed: status \(status), error \(String(describing: error))")
+                        return
+                    }
+                    ProgressHUD.colorAnimation = .green
+                    ProgressHUD.succeed("Thanks - that was sent")
+                }
+            }.resume()
         })
     }
     // getScheduleFor lived here and is gone. HQ-607.

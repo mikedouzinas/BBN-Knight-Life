@@ -12,3 +12,8 @@ next-env.d.ts
 .env*.local
 *serviceAccount*.json
 *-adminsdk-*.json
+
+# `vercel link` writes a project id here. It also appends `.env*`, which shadows the
+# tracked `.env.local.example` - scripts/check-gitignore-scope.sh catches that, and the
+# three .env lines above already cover everything `vercel env pull` writes.
+.vercel

@@ -30,7 +30,16 @@ import {
 
 export const STUDENT_INGEST_MODEL = 'claude-opus-5';
 const MAX_ATTEMPTS = 3;
-const MAX_TOKENS = 4000;
+/**
+ * Raised from 4000 on 2026-09-03. Seven `emit_student_classes` calls now each carry a `days`
+ * array as well as subject, teacher and room, plus five lunch calls, the grade, and whatever
+ * prose the model writes - and one real sheet went over, came back with no tool calls at all,
+ * and was very nearly reported to the student as "this photo is not a schedule".
+ *
+ * Output tokens are billed for what is produced, not for the ceiling, so headroom here costs
+ * nothing on a normal sheet and is the difference between a read and a wasted scan on a long one.
+ */
+const MAX_TOKENS = 12000;
 
 /**
  * Retries for a busy API, which is a different failure from a bad photo.
@@ -142,6 +151,53 @@ export function normalizeSubject(subject: string): string {
   return subject.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
+/** Named entities worth handling. Anything else numeric is covered by the two patterns below. */
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&',
+  apos: "'",
+  quot: '"',
+  lt: '<',
+  gt: '>',
+  nbsp: ' ',
+  ndash: '–',
+  mdash: '—',
+  rsquo: '’',
+  lsquo: '‘',
+  rdquo: '”',
+  ldquo: '“',
+  hellip: '…',
+};
+
+/**
+ * Turns `Health &amp; Wellness` back into `Health & Wellness`.
+ *
+ * This is a CORRECTNESS fix, not a cosmetic one. The subject is part of the class document's id,
+ * so `Health &amp; Wellness` and `Health & Wellness` are two different documents - two rosters for
+ * one real class, each showing half the students in it, and they never merge. It is the same
+ * failure as a sheet's "Unscheduled" surviving instead of "Free", arriving by a different route.
+ *
+ * Seen on a real sheet on 2026-09-03. The model transcribes what it reads, and school systems
+ * export HTML, so an ampersand reaches the page already escaped often enough to matter: "Health &
+ * Wellness", "Science & Technology", "Rhetoric & Composition" are ordinary BB&N course names.
+ *
+ * Deliberately not a full HTML parser. These are course names, not documents; the named list plus
+ * numeric references covers everything that plausibly appears, and a real parser here would be a
+ * dependency and an attack surface for no gain. Applied repeatedly, because a double-escaped
+ * `&amp;amp;` is exactly the sort of thing that comes out of two systems in a row.
+ */
+export function decodeEntities(value: string): string {
+  let out = value;
+  for (let pass = 0; pass < 3; pass += 1) {
+    const next = out
+      .replace(/&([a-zA-Z]+);/g, (whole, name: string) => NAMED_ENTITIES[name.toLowerCase()] ?? whole)
+      .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
+      .replace(/&#[xX]([0-9a-fA-F]+);/g, (_, code: string) => String.fromCodePoint(parseInt(code, 16)));
+    if (next === out) break;
+    out = next;
+  }
+  return out;
+}
+
 /** A row that is not a lettered block at all, and must never become a class. */
 export function isNonBlockRow(subject: string): boolean {
   const normalized = normalizeSubject(subject);
@@ -153,6 +209,50 @@ export function isNonBlockRow(subject: string): boolean {
 /** A block the sheet shows as open. Kept, and reported under one spelling. */
 export function isFreeSubject(subject: string): boolean {
   return FREE_SUBJECTS.has(normalizeSubject(subject));
+}
+
+/**
+ * A supervised study period: "Study 9", "Study Hall 11", and the bare forms.
+ *
+ * This is NOT the same thing as a free block, and one real sheet proves it. Matteo's block C
+ * prints "Unscheduled" on Monday and Thursday, and on Wednesday and Friday prints
+ * "Study 9 (Block C) Mr. Moccia - 372". He is expected in room 372. Telling him he is free is
+ * the worse error, so a study period with a ROOM is a class and keeps that room.
+ *
+ * Without a room there is nowhere to be and nothing to say, so it stays free - which is also
+ * what "study" and "studyhall" in FREE_SUBJECTS have always done, and this does not disturb it.
+ *
+ * The grade suffix is deliberately part of the name rather than normalised away: Study 9 and
+ * Study 11 are different rooms full of different students, so they are different classes.
+ *
+ * Anchored at the start so "Advanced Study Hall Design" and "Study Skills" - real courses -
+ * are not swept in.
+ */
+const STUDY_HALL = /^study(hall)?(9|10|11|12)?$/;
+export function isStudyHall(subject: string): boolean {
+  return STUDY_HALL.test(normalizeSubject(subject).replace(/[^a-z0-9]/g, ''));
+}
+
+/**
+ * The weekdays a class meets, in weekday order, deduplicated - or `undefined` for "not read".
+ *
+ * THE UNDEFINED CASE IS THE SAFETY OF THIS WHOLE FIELD and it is why this returns `undefined`
+ * rather than `[]`. Downstream, `undefined` means "leave all five days on", which is what the
+ * app did before this existed. An empty array would mean "meets no days", which would delete a
+ * class from the student's calendar every day of the week.
+ *
+ * The two errors are not symmetric, same as the course-beats-Free decision. A class shown on a
+ * day it does not meet is a visible annoyance the student can see is wrong. A class hidden on a
+ * day it does meet makes them miss it, and nothing on the screen says anything is missing. So a
+ * day only goes false when the sheet positively showed that block as something else that day,
+ * and anything unread stays true.
+ */
+export function meetingDays(days: readonly string[] | undefined): StudentClass['days'] {
+  if (days === undefined) return undefined;
+  const present = new Set(days);
+  const ordered = WEEKDAYS.filter((d) => present.has(d));
+  // Nothing readable is "not read", never "meets no days".
+  return ordered.length === 0 ? undefined : ordered;
 }
 
 /**
@@ -188,11 +288,19 @@ export function splitTeacherAndRoom(
   return { teacher: name, room: tail };
 }
 
+export const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const;
+
 export const studentClassSchema = z.object({
   block: z.enum(['a', 'b', 'c', 'd', 'e', 'f', 'g']),
   subject: z.string().min(1).max(120),
   teacher: z.string().max(120).optional(),
   room: z.string().max(60).optional(),
+  /**
+   * The weekdays this course actually appears under its letter. Omitted means "not read", which
+   * is NOT the same as "meets no days" - see `meetingDays` below for why that distinction is the
+   * whole safety of this field.
+   */
+  days: z.array(z.enum(WEEKDAYS)).max(5).optional(),
 });
 
 export const studentDetailsSchema = z.object({
@@ -291,6 +399,24 @@ export async function extractStudentClasses(
           block.name === EMIT_LUNCH_WAVE_TOOL.name ||
           block.name === EMIT_STUDENT_DETAILS_TOOL.name),
     );
+    // A RESPONSE THAT RAN OUT OF TOKENS IS NOT A SHEET WITH NOTHING ON IT.
+    //
+    // Found on 2026-09-03 by IMG_6972, which had read six courses and a free block minutes
+    // earlier and came back with zero of everything: no classes, no lunch, no grade, nothing
+    // rejected, nothing skipped, one attempt, and a `message` cut off mid-sentence at "I read
+    // the sheet as". The `break` below then returned that as a clean result, and the app's only
+    // reading of a clean result with no classes is "this photo is not a schedule" - so a student
+    // is told their schedule is unreadable, and has spent one of five scans finding out.
+    //
+    // The trigger was adding `days` to every tool call, which is what pushed one sheet's output
+    // past the limit. The truncation was always reachable; the field just made it likely enough
+    // to catch. Raising MAX_TOKENS is the fix for THIS sheet, and this check is the fix for the
+    // class: a truncated read must fail loudly rather than come back empty and confident.
+    if (response.stop_reason === 'max_tokens') {
+      throw new IngestError(
+        'The schedule was too long to read in one go. Please try again.',
+      );
+    }
     if (!calls.length) break;
 
     const results: Anthropic.ToolResultBlockParam[] = [];
@@ -376,22 +502,70 @@ export async function extractStudentClasses(
       // A free block IS an answer, and it is normalised onto one spelling so that two students
       // whose sheets said "Unscheduled" and "Study Hall" land on the same roster rather than
       // starting two.
-      const free = isFreeSubject(parsed.data.subject);
+      // Entities are decoded BEFORE anything else looks at the text, because everything after
+      // this point either compares it or stores it as part of a document id. `Health &amp;
+      // Wellness` reaching the id makes a second roster for a class that already exists.
+      const subjectText = decodeEntities(parsed.data.subject);
+      const split = splitTeacherAndRoom(
+        parsed.data.teacher === undefined ? undefined : decodeEntities(parsed.data.teacher),
+        parsed.data.room === undefined ? undefined : decodeEntities(parsed.data.room),
+      );
+
+      // A supervised study period with a room is a place the student has to be, so it is a
+      // class rather than a free block - but its SUPERVISOR is not its identity. One sheet
+      // printed Study 9 with Mr. Moccia on Wednesday and Ms. Rose on Friday, in the same room,
+      // and the teacher is part of the document id, so keeping it made three documents for one
+      // study hall across five reads of one photo. Dropping it makes everyone in Study 9 land
+      // on the same roster, which is the point.
+      const studyHall = isStudyHall(subjectText) && !!split.room;
+      const free = !studyHall && isFreeSubject(subjectText);
+
       const { teacher, room } = free
         ? { teacher: undefined, room: undefined }
-        : splitTeacherAndRoom(parsed.data.teacher, parsed.data.room);
+        : studyHall
+          ? { teacher: undefined, room: split.room }
+          : split;
       const accepted: StudentClass = {
         block: parsed.data.block,
-        subject: free ? FREE_SUBJECT : parsed.data.subject.trim(),
+        subject: free ? FREE_SUBJECT : subjectText.trim(),
         teacher,
         room,
+        // A free block is every day the student is not in that class, which is a fact about the
+        // other blocks rather than about this one. Only a course carries meeting days.
+        days: free ? undefined : meetingDays(parsed.data.days),
       };
 
       // A later call for the same block replaces the earlier one - the model correcting
       // itself mid-conversation, not a second class in one block.
+      //
+      // ONE EXCEPTION, and it is the C-block bug Mike found on 2026-09-03. A letter can be a
+      // course on one weekday and print "Unscheduled" under the same letter on the other four
+      // - an arts or wellness course meeting once a week does exactly this - so BOTH answers
+      // are genuinely on the page and the model can emit both. Last-write-wins made the
+      // outcome depend on which order they arrived in, so the same photo read twice gave the
+      // course once and a free block the next time.
+      //
+      // A course beats "Free" here whatever the order. The two errors are not symmetric: a
+      // course wrongly shown for a block the student is free in is sitting on the review
+      // screen with an edit button next to it, while a real course wrongly reduced to "Free"
+      // deletes a class they take, takes them off its roster, and shows them nothing to
+      // suggest anything is missing.
       const existing = classes.findIndex((c) => c.block === accepted.block);
-      if (existing >= 0) classes[existing] = accepted;
-      else classes.push(accepted);
+      if (existing >= 0) {
+        if (free && !isFreeSubject(classes[existing].subject)) {
+          results.push({
+            type: 'tool_result',
+            tool_use_id: call.id,
+            content:
+              `Kept "${classes[existing].subject}" for block ${accepted.block.toUpperCase()}. A letter that holds a ` +
+              `course on any weekday is that course, even when the sheet shows it unscheduled on the others.`,
+          });
+          continue;
+        }
+        classes[existing] = accepted;
+      } else {
+        classes.push(accepted);
+      }
       results.push({ type: 'tool_result', tool_use_id: call.id, content: `Accepted block ${accepted.block}.` });
     }
 

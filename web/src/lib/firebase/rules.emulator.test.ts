@@ -214,6 +214,26 @@ emulated('firestore.rules', () => {
     });
   });
 
+  // Beta feedback. Written only through /api/student/feedback with the Admin SDK, so no client
+  // needs any access - and the free text will contain other students' names and teachers, which
+  // is why "a student cannot read this" is asserted rather than inherited from the catch-all.
+  describe('student feedback', () => {
+    it('is not readable by a student, including their own report', async () => {
+      const db = signedIn(env, STUDENT, STUDENT_EMAIL);
+      await assertFails(getDoc(doc(db, 'feedback', 'some-report')));
+    });
+
+    it('cannot be written from the app, so a report always carries a server-verified uid', async () => {
+      const db = signedIn(env, STUDENT, STUDENT_EMAIL);
+      await assertFails(setDoc(doc(db, 'feedback', 'forged'), { uid: 'someone-else', message: 'hi' }));
+    });
+
+    it('is readable by an admin, which is how the reports get read at all', async () => {
+      const db = signedIn(env, ADMIN, ADMIN_EMAIL);
+      await assertSucceeds(getDoc(doc(db, 'feedback', 'some-report')));
+    });
+  });
+
   // HQ-911. `members` is the only field in this database that holds other students - a name,
   // an email and a uid each. Under `write: if signedIn()` any of ~645 accounts could rewrite
   // any roster, and nothing in the app shows when one changes. These tests are the line

@@ -7,9 +7,13 @@ import { describe, expect, it, vi } from 'vitest';
 import type Anthropic from '@anthropic-ai/sdk';
 import { IngestError } from './extract';
 import {
+  decodeEntities,
   extractStudentClasses,
   isFreeSubject,
   isNonBlockRow,
+  isStudyHall,
+  meetingDays,
+  normalizeSubject,
   splitTeacherAndRoom,
 } from './extractStudentClasses';
 
@@ -25,7 +29,7 @@ function detailsUse(id: string, input: unknown) {
   return { type: 'tool_use' as const, id, name: 'emit_student_details', input };
 }
 
-function stubClient(responses: { content: unknown[] }[]) {
+function stubClient(responses: { content: unknown[]; stop_reason?: string }[]) {
   const create = vi.fn();
   for (const response of responses) create.mockResolvedValueOnce(response);
   create.mockResolvedValue({ content: [] });
@@ -239,6 +243,225 @@ describe('a free block', () => {
     const result = await extractStudentClasses(PHOTO, client);
     expect(result.classes[0].teacher).toBeUndefined();
     expect(result.classes[0].room).toBeUndefined();
+  });
+});
+
+/**
+ * IMG_6972, 2026-09-03: a sheet that had read six courses and a free block minutes earlier came
+ * back with zero of everything and a `message` cut off mid-sentence. It had run out of output
+ * tokens. Nothing looked at `stop_reason`, so the empty result was returned as a clean one, and
+ * a clean result with no classes reads to the app as "this photo is not a schedule" - a student
+ * told their own schedule is unreadable, one scan poorer.
+ */
+describe('a response that ran out of tokens', () => {
+  it('fails rather than reporting a sheet with nothing on it', async () => {
+    const { client } = stubClient([
+      { stop_reason: 'max_tokens', content: [{ type: 'text', text: 'I read the sheet as' }] },
+    ]);
+    await expect(extractStudentClasses(PHOTO, client)).rejects.toBeInstanceOf(IngestError);
+  });
+
+  it('fails even when it had already emitted some of the blocks', async () => {
+    const { client } = stubClient([
+      { stop_reason: 'max_tokens', content: [toolUse('a', GOOD)] },
+    ]);
+    // Half a schedule saved silently is worse than none: the student sees classes appear and has
+    // no reason to think the rest went missing.
+    await expect(extractStudentClasses(PHOTO, client)).rejects.toBeInstanceOf(IngestError);
+  });
+
+  it('leaves a normal end_turn alone', async () => {
+    const { client } = stubClient([{ stop_reason: 'end_turn', content: [toolUse('a', GOOD)] }]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes).toHaveLength(1);
+  });
+});
+
+/**
+ * HQ-922's first half. Mike, 2026-09-03: "i think this is crucial given there are so many
+ * classes that only meet some days per week."
+ *
+ * The whole safety of this field is the difference between "not read" and "meets no days". A
+ * class shown on a day it does not meet is a visible annoyance; a class hidden on a day it does
+ * meet makes the student miss it with nothing on screen to say so.
+ */
+describe('which weekdays a class meets', () => {
+  it('is left unset when the model did not report it', () => {
+    expect(meetingDays(undefined)).toBeUndefined();
+  });
+
+  it('is left unset rather than empty, because empty would mean "never meets"', () => {
+    expect(meetingDays([])).toBeUndefined();
+  });
+
+  it('comes back in weekday order, however the model listed them', () => {
+    expect(meetingDays(['friday', 'monday', 'wednesday'])).toEqual(['monday', 'wednesday', 'friday']);
+  });
+
+  it('deduplicates a day the model named twice', () => {
+    expect(meetingDays(['tuesday', 'tuesday'])).toEqual(['tuesday']);
+  });
+
+  it('reaches the caller on a course', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { ...GOOD, days: ['tuesday', 'thursday'] })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].days).toEqual(['tuesday', 'thursday']);
+  });
+
+  it('is absent on a course the model said nothing about, so every day stays on', async () => {
+    const { client } = stubClient([{ content: [toolUse('a', GOOD)] }]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].days).toBeUndefined();
+  });
+
+  it('is never set on a free block', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'f', subject: 'Unscheduled', days: ['monday'] })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].days).toBeUndefined();
+  });
+
+  it('rejects a day that is not a weekday and asks again', async () => {
+    const { client, create } = stubClient([
+      { content: [toolUse('a', { ...GOOD, days: ['saturday'] })] },
+      { content: [toolUse('b', { ...GOOD, days: ['monday'] })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(result.classes[0].days).toEqual(['monday']);
+    expect(result.rejected).toEqual([]);
+  });
+});
+
+/**
+ * Matteo's block C: "Unscheduled" on Monday and Thursday, and on Wednesday and Friday
+ * "Study 9 (Block C) Mr. Moccia - 372" / "Study 9 (Block C) Ms. Rose - 372". He is expected in
+ * room 372, so it is a class - but the supervisor changes by day and the supervisor is part of
+ * the document id, so keeping it made three documents out of one study hall.
+ */
+describe('a supervised study hall', () => {
+  it.each(['Study 9', 'study 9', 'Study Hall 11', 'Study', 'Study Hall', 'STUDY 12'])(
+    'recognises %s',
+    (subject) => {
+      expect(isStudyHall(subject)).toBe(true);
+    },
+  );
+
+  it.each(['Study Skills', 'Advanced Study Hall Design', 'Studio Art', 'Biology'])(
+    'does not treat %s as one',
+    (subject) => {
+      expect(isStudyHall(subject)).toBe(false);
+    },
+  );
+
+  it('keeps the room and drops the supervisor', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Study 9', teacher: 'Mr. Moccia', room: '372' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toEqual([{ block: 'c', subject: 'Study 9', teacher: undefined, room: '372' }]);
+  });
+
+  it('lands on one class whichever day was read', async () => {
+    const { client: wed } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Study 9', teacher: 'Mr. Moccia', room: '372' })] },
+    ]);
+    const { client: fri } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Study 9', teacher: 'Ms. Rose', room: '372' })] },
+    ]);
+    const [a, b] = [await extractStudentClasses(PHOTO, wed), await extractStudentClasses(PHOTO, fri)];
+    expect(a.classes).toEqual(b.classes);
+  });
+
+  it('stays a free block when the sheet gives it no room', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Study Hall' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toEqual([{ block: 'c', subject: 'Free', teacher: undefined, room: undefined }]);
+  });
+
+  it('beats a free block for the same letter, like any other course', async () => {
+    const { client } = stubClient([
+      {
+        content: [
+          toolUse('a', { block: 'c', subject: 'Study 9', teacher: 'Mr. Moccia', room: '372' }),
+          toolUse('b', { block: 'c', subject: 'Unscheduled' }),
+        ],
+      },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].subject).toBe('Study 9');
+  });
+});
+
+/**
+ * The C-block bug, found on a real sheet on 2026-09-03: block C is "Health & Wellness" on
+ * Wednesday and "Unscheduled (Block C)" on Monday, Tuesday and Friday. Both are printed under
+ * the same letter, so both are true, and the model can legitimately emit both. Last-write-wins
+ * made the answer depend on emission order, and the same photo read twice gave a course once and
+ * a free block the next time.
+ */
+describe('a letter that is a course on some days and unscheduled on the others', () => {
+  const COURSE = { block: 'c', subject: 'Health & Wellness', teacher: 'Mx. Herrmann', room: '276' };
+
+  it('stays the course when "Free" arrives afterwards', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', COURSE), toolUse('b', { block: 'c', subject: 'Unscheduled' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toHaveLength(1);
+    expect(result.classes[0].subject).toBe('Health & Wellness');
+    expect(result.classes[0].teacher).toBe('Mx. Herrmann');
+  });
+
+  it('becomes the course when "Free" arrived first', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Unscheduled' }), toolUse('b', COURSE)] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toHaveLength(1);
+    expect(result.classes[0].subject).toBe('Health & Wellness');
+  });
+
+  it('reads the same either way round, which is the whole point', async () => {
+    const { client: courseFirst } = stubClient([
+      { content: [toolUse('a', COURSE), toolUse('b', { block: 'c', subject: 'Unscheduled' })] },
+    ]);
+    const { client: freeFirst } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Study Hall' }), toolUse('b', COURSE)] },
+    ]);
+    const [a, b] = [
+      await extractStudentClasses(PHOTO, courseFirst),
+      await extractStudentClasses(PHOTO, freeFirst),
+    ];
+    expect(a.classes).toEqual(b.classes);
+  });
+
+  it('still lets the model correct one course to another', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', COURSE), toolUse('b', { block: 'c', subject: 'Wellness', teacher: 'Mx. Herrmann' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toHaveLength(1);
+    expect(result.classes[0].subject).toBe('Wellness');
+  });
+
+  it('leaves a genuinely free block free', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('a', { block: 'c', subject: 'Unscheduled' }), toolUse('b', { block: 'c', subject: 'Study Hall' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+
+    expect(result.classes).toEqual([{ block: 'c', subject: 'Free', teacher: undefined, room: undefined }]);
   });
 });
 
@@ -484,5 +707,71 @@ describe('a transient model failure', () => {
     const client = { messages: { create } } as unknown as Anthropic;
     await expect(extractStudentClasses(PHOTO, client)).rejects.toThrow(/socket/);
     expect(create).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('decodeEntities', () => {
+  // Found on a real sheet on 2026-09-03: "Health &amp; Wellness". The subject is part of the
+  // class document's id, so this is not a display bug - it is a second roster for a class that
+  // already exists, and the two never merge.
+  it('turns an escaped ampersand back into a class name a human would type', () => {
+    expect(decodeEntities('Health &amp; Wellness')).toBe('Health & Wellness');
+  });
+
+  it('handles the entities a course name plausibly carries', () => {
+    expect(decodeEntities('Rhetoric &amp; Composition')).toBe('Rhetoric & Composition');
+    expect(decodeEntities('Writers&apos; Workshop')).toBe("Writers' Workshop");
+    expect(decodeEntities('Art &ndash; Ceramics')).toBe('Art – Ceramics');
+    expect(decodeEntities('AP &quot;Masks&quot;')).toBe('AP "Masks"');
+  });
+
+  it('handles numeric references, decimal and hex', () => {
+    expect(decodeEntities('Health &#38; Wellness')).toBe('Health & Wellness');
+    expect(decodeEntities('Health &#x26; Wellness')).toBe('Health & Wellness');
+  });
+
+  it('unwinds double escaping, which is what two systems in a row produce', () => {
+    expect(decodeEntities('Health &amp;amp; Wellness')).toBe('Health & Wellness');
+  });
+
+  it('leaves an ordinary ampersand and unknown entities alone', () => {
+    expect(decodeEntities('Health & Wellness')).toBe('Health & Wellness');
+    expect(decodeEntities('Chem &notarealentity; Lab')).toBe('Chem &notarealentity; Lab');
+  });
+
+  // The whole point: after decoding, the escaped and unescaped spellings are the SAME key.
+  it('makes the escaped and plain spellings normalize identically', () => {
+    expect(normalizeSubject(decodeEntities('Health &amp; Wellness')))
+      .toBe(normalizeSubject(decodeEntities('Health & Wellness')));
+  });
+});
+
+describe('entities are decoded by the PIPELINE, not just by the helper', () => {
+  // The tests above prove `decodeEntities` works. They would all still pass if nothing ever
+  // called it, which is precisely how the route came to drop `details`: a correct function and a
+  // missing call site look identical from the function's own tests.
+  it('stores the decoded subject, so the class key matches a hand-typed one', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('t1', { block: 'c', subject: 'Health &amp; Wellness', teacher: 'Ms. Rose', room: '110' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].subject).toBe('Health & Wellness');
+  });
+
+  it('decodes the teacher and room too, since both are part of the key', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('t1', { block: 'c', subject: 'Ceramics', teacher: 'Mr. O&apos;Brien', room: 'Art &amp; Design' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].teacher).toBe("Mr. O'Brien");
+    expect(result.classes[0].room).toBe('Art & Design');
+  });
+
+  it('still recognises a free block whose wording arrives escaped', async () => {
+    const { client } = stubClient([
+      { content: [toolUse('t1', { block: 'g', subject: 'Free&nbsp;Period' })] },
+    ]);
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.classes[0].subject).toBe('Free');
   });
 });

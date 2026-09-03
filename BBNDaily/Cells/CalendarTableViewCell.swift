@@ -129,12 +129,16 @@ class calendarTableViewCell: UITableViewCell {
     }
     func configure (with viewModel: ClassModel){
         BlockLabel.isHidden = false
-        BottomRightLabel.isHidden = false
         RightLabel.isHidden = false
-        TitleLabel.text = viewModel.Room
         BlockLabel.text = "\(viewModel.Block.capitalized) Block"
         RightLabel.text = viewModel.Subject
-        BottomRightLabel.text = viewModel.Teacher
+        // "N/A" is what `getValues()` puts in an EMPTY field, as a display convention - it is
+        // never a stored value. Printing it renders a free block as "Free" with "N/A" beneath it,
+        // which is what Mike saw in the G-block picker, and it makes a class with no room look
+        // like a class whose room is unknown rather than one that simply has none.
+        TitleLabel.text = viewModel.Room.blankIfNotAvailable()
+        BottomRightLabel.text = viewModel.Teacher.blankIfNotAvailable()
+        BottomRightLabel.isHidden = BottomRightLabel.text?.isEmpty ?? true
     }
     func configure(with viewModel: Person) {
         BlockLabel.isHidden = false

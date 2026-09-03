@@ -181,6 +181,102 @@ final class ClassIdentityTests: XCTestCase {
             existingKey: "Physics~N/A~N/A~C", subject: "Physics", teacher: "Ms. Courtemanche", block: "c"))
     }
 
+    /// Two scans of ONE sheet can name the teacher differently: the sheet printed
+    /// "Ms. Schmucker" and one scan came back "Ellie Schmucker", a first name that is nowhere
+    /// on the page. The prompt now forbids that, but a prompt is a request and this is the
+    /// guarantee - whichever spelling created the class, the next student joins it rather than
+    /// starting a second roster for the same teacher.
+    func testAnInventedFirstNameStillFindsTheSameClass() {
+        let created = "Precalculus (Advanced)~Ellie Schmucker~376~G"
+        XCTAssertTrue(ClassIdentity.matchesExistingClass(
+            existingKey: created, subject: "Precalculus (Advanced)", teacher: "Ms. Schmucker", block: "g"))
+
+        let printedAsShown = "Precalculus (Advanced)~Ms. Schmucker~376~G"
+        XCTAssertTrue(ClassIdentity.matchesExistingClass(
+            existingKey: printedAsShown, subject: "Precalculus (Advanced)", teacher: "Ellie Schmucker", block: "g"))
+    }
+
+    /// The limit of the rule above, and it is deliberate: a surname is what identifies a
+    /// teacher, so two different surnames are two different sections however alike they look.
+    func testADifferentSurnameIsStillADifferentClass() {
+        XCTAssertFalse(ClassIdentity.matchesExistingClass(
+            existingKey: "Precalculus (Advanced)~Ms. Schmucker~376~G",
+            subject: "Precalculus (Advanced)", teacher: "Ms. Schumacher", block: "g"))
+    }
+
+    // MARK: - A surname the camera got wrong
+
+    /// Twelve reads of one sheet spelled `Dr. Gatti` as `Dr. Gattl` three times. Nothing could
+    /// merge those, so one Biology class had two documents and half a roster each.
+    ///
+    /// Subject + block + room identifies a section on its own - a block is one time slot, so two
+    /// Biology sections cannot both be in room 236 during block F - so with all three agreeing,
+    /// one character of difference in the surname is the camera rather than a second teacher.
+    func testAOneCharacterMisreadJoinsTheExistingClass() {
+        XCTAssertTrue(ClassIdentity.matchesExistingClass(
+            existingKey: "Biology~Dr. Gatti~236~F",
+            subject: "Biology", teacher: "Dr. Gattl", block: "f", room: "236"))
+    }
+
+    func testItWorksWhicheverSpellingGotThereFirst() {
+        XCTAssertTrue(ClassIdentity.matchesExistingClass(
+            existingKey: "Biology~Dr. Gattl~236~F",
+            subject: "Biology", teacher: "Dr. Gatti", block: "f", room: "236"))
+    }
+
+    /// A dropped or doubled letter, not just a swapped one.
+    func testAMissingOrExtraLetterAlsoCounts() {
+        XCTAssertTrue(ClassIdentity.matchesExistingClass(
+            existingKey: "Biology~Dr. Gatti~236~F",
+            subject: "Biology", teacher: "Dr. Gati", block: "f", room: "236"))
+        XCTAssertTrue(ClassIdentity.matchesExistingClass(
+            existingKey: "Biology~Dr. Gatti~236~F",
+            subject: "Biology", teacher: "Dr. Gattii", block: "f", room: "236"))
+    }
+
+    /// THE LIMIT, and the reason the rule needs three exact fields before it bends the fourth.
+    /// A wrong merge is worse than a split: it puts a student on a roster they are not in.
+    func testADifferentRoomIsStillADifferentClass() {
+        XCTAssertFalse(ClassIdentity.matchesExistingClass(
+            existingKey: "Biology~Dr. Gatti~236~F",
+            subject: "Biology", teacher: "Dr. Gattl", block: "f", room: "999"))
+    }
+
+    func testTwoBlankRoomsProveNothing() {
+        XCTAssertFalse(ClassIdentity.matchesExistingClass(
+            existingKey: "Biology~Dr. Gatti~~F",
+            subject: "Biology", teacher: "Dr. Gattl", block: "f", room: ""))
+    }
+
+    func testTwoCharactersApartIsTwoTeachers() {
+        XCTAssertFalse(ClassIdentity.matchesExistingClass(
+            existingKey: "Biology~Dr. Gatti~236~F",
+            subject: "Biology", teacher: "Dr. Gatson", block: "f", room: "236"))
+    }
+
+    /// Short surnames are where a one-character rule is most dangerous, so this is the case to
+    /// keep an eye on: "Ng" and "Ni" are two people, and the room cannot say otherwise.
+    func testShortSurnamesOneApartStillMergeOnAnExactRoom() {
+        // Documented rather than asserted as desirable: with subject, block and room identical
+        // this is one section, so the merge is right even though the names are short. If BB&N
+        // ever has two such teachers sharing a room in one block, this is the test to revisit.
+        XCTAssertTrue(ClassIdentity.matchesExistingClass(
+            existingKey: "Physics~Ms. Ng~131~E",
+            subject: "Physics", teacher: "Ms. Ni", block: "e", room: "131"))
+    }
+
+    func testOneCharacterApartIsExactAboutWhatItMeans() {
+        XCTAssertTrue(ClassIdentity.isOneCharacterApart("gatti", "gattl"))
+        XCTAssertTrue(ClassIdentity.isOneCharacterApart("gatti", "gati"))
+        XCTAssertFalse(ClassIdentity.isOneCharacterApart("gatti", "gatti"), "identical is not one apart")
+        XCTAssertFalse(ClassIdentity.isOneCharacterApart("gatti", "turnbull"))
+        XCTAssertFalse(ClassIdentity.isOneCharacterApart("", "gatti"))
+        // "rose" and "ross" ARE one apart, and could be two real people. This function does not
+        // know that and is not asked to - it is the room, the block and the subject agreeing
+        // that make the call. Asserted so the split of responsibility stays visible.
+        XCTAssertTrue(ClassIdentity.isOneCharacterApart("rose", "ross"))
+    }
+
     func testAMalformedKeyMatchesNothing() {
         for junk in ["", "Physics", "Physics~Ms. X", "a~b~c~d~e"] {
             XCTAssertFalse(ClassIdentity.matchesExistingClass(

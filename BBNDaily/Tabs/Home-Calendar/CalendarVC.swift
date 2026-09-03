@@ -106,6 +106,18 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
             // per-second ticker below also calls.
             if foundCurrentBlock {
                 updateCountdownLabel()
+            } else {
+                // No block is running, so there is nothing to count down - and the state that
+                // drove the last one has to be dropped, not just left unused.
+                //
+                // Without this the title kept whatever it last said. Re-resolving a day that
+                // turns out to have no current block (outside the term, a break, a weekend, or
+                // simply after the last block ends) left "27 minutes left in English" on screen
+                // above a list correctly showing Summer Break, and the per-second ticker below
+                // kept refreshing that stale text because `countdownTarget` was still set.
+                countdownTarget = nil
+                countdownPrefix = ""
+                countdownName = ""
             }
             setOld()
 
@@ -546,6 +558,27 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         let resolved = resolveDay(date: date)
         currentDay = resolved.blocks
         selectedDay = resolved.weekdayIndex
+
+        // The countdown reads `todayBlocks`, and it has to be re-resolved HERE rather than only
+        // once in viewDidLoad.
+        //
+        // `LoginVC.term` loads asynchronously, and resolveDay's outside-the-term guard reads
+        // `if let term = LoginVC.term` - so a resolve that runs before the term arrives falls
+        // through and returns a full day of blocks. viewDidLoad captured `todayBlocks` from that
+        // first, term-less resolve and never updated it, so the two halves of the screen could
+        // disagree permanently: the list correctly said "Summer Break" while the countdown under
+        // it kept saying "27 minutes left in English", still driving off block times captured
+        // before the app knew school had not started. Relaunching fixed it, which is exactly what
+        // made it look intermittent - by the second launch the term was cached before the
+        // calendar drew.
+        //
+        // Guarded on the date being TODAY, because this same path runs when a student taps a
+        // different day on the calendar, and the countdown must keep counting down today rather
+        // than whichever day they are browsing.
+        if Calendar.current.isDateInToday(date) {
+            CalendarVC.todayBlocks = resolved.blocks
+            setTimes(recursive: false)
+        }
 
         if case .image(let url) = resolved.kind {
             ScheduleCalendar.isHidden = true
