@@ -22,19 +22,26 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             return profileCells.count
         }
         else if section == 1 {
+            return manageSchedule.count
+        }
+        else if section == 2 {
             return blocks.count
         }
-        else if section == 3 {
+        else if section == 4 {
             return lunchBlocks.count
         }
-        else if section == 4 {
+        else if section == 5 {
             return other.count
         }
         return (3 + preferenceBlocks.count)
     }
     private var other = [settingsBlock]()
+    // Above Blocks: the two actions that act ON a student's schedule rather than just
+    // showing or exporting it, so they're the first thing seen rather than buried at the
+    // bottom with the share/calendar rows.
+    private var manageSchedule = [settingsBlock]()
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 5
+        return 6
     }
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 30
@@ -53,12 +60,15 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             label.text = "Personal Info"
         }
         else if section == 1 {
+            label.text = "Manage Schedule"
+        }
+        else if section == 2 {
             label.text = "Blocks"
         }
-        else if section == 3 {
+        else if section == 4 {
             label.text = "Lunch Configurations"
         }
-        else if section == 4 {
+        else if section == 5 {
             label.text = "Other"
         }
         else {
@@ -82,13 +92,27 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
                 fatalError()
             }
+            var imgName = "camera.viewfinder" // HQ-656: scan your schedule
+            if indexPath.row == 1 { // HQ-649: clear my classes
+                imgName = "trash"
+            }
+            let imageview = UIImageView(image: UIImage(systemName: imgName)!)
+            imageview.tintColor = UIColor(named: "inverse")
+            cell.accessoryView = imageview
+            cell.configure(with: manageSchedule[indexPath.row])
+            return cell
+        }
+        else if indexPath.section == 2 {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
+                fatalError()
+            }
             let imageview = UIImageView(image: UIImage(systemName: "chevron.right")!)
             imageview.tintColor = UIColor(named: "darkGray")
             cell.accessoryView = imageview
             cell.configure(with: blocks[indexPath.row])
             return cell
         }
-        else if indexPath.section == 3 {
+        else if indexPath.section == 4 {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
                 fatalError()
             }
@@ -98,7 +122,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             cell.configure(with: lunchBlocks[indexPath.row])
             return cell
         }
-        else if indexPath.section == 4 {
+        else if indexPath.section == 5 {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingsBlockTableViewCell.identifier, for: indexPath) as? SettingsBlockTableViewCell else {
                 fatalError()
             }
@@ -109,9 +133,6 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             else if indexPath.row == 2 { // apple calendar add
                 imgName = "calendar.circle.fill"
             }
-            else if indexPath.row == 3 { // HQ-649: clear my classes
-                imgName = "trash"
-            }
             let imageview = UIImageView(image: UIImage(systemName: imgName)!)
             imageview.tintColor = UIColor(named: "inverse")
             cell.accessoryView = imageview
@@ -119,6 +140,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             return cell
         }
         else {
+            // section 3: Preferences
             if indexPath.row == 0 {
                 let cell = UITableViewCell()
                 cell.selectionStyle = .none
@@ -253,10 +275,19 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.section == 1 {
             tableView.deselectRow(at: indexPath, animated: true)
+            switch indexPath.row {
+            case 0: // HQ-656: scan your schedule
+                navigationController?.pushViewController(ScheduleScanVC(), animated: true)
+            default: // HQ-649: clear my classes
+                confirmResetClasses()
+            }
+        }
+        else if indexPath.section == 2 {
+            tableView.deselectRow(at: indexPath, animated: true)
             ClassesOptionsPopupVC.currentBlock = "\(self.blocks[indexPath.row].blockName)"
             self.performSegue(withIdentifier: "options", sender: nil)
         }
-        else if indexPath.section == 2 {
+        else if indexPath.section == 3 {
             if indexPath.row == 3 {
                 let alertController = UIAlertController(title: "Grade", message: "Please enter your grade to better configure your schedule", preferredStyle: .actionSheet)
                 
@@ -373,7 +404,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 present(alertController, animated: true, completion: nil)
             }
         }
-        else if indexPath.section == 3 {
+        else if indexPath.section == 4 {
             var name = ""
             switch indexPath.row {
 //            case 0:
@@ -427,7 +458,7 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             alertController.addAction(cancel)
             present(alertController, animated: true, completion: nil)
         }
-        else if indexPath.section == 4 {
+        else if indexPath.section == 5 {
             tableView.deselectRow(at: indexPath, animated: true)
             switch indexPath.row {
             case 0: // share
@@ -436,10 +467,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 }
             case 1: // google calendar
                 addItemToCalendar(pref: 0)
-            case 2: // apple calendar
+            default: // apple calendar
                 addItemToCalendar(pref: 1)
-            default: // HQ-649: clear my classes
-                confirmResetClasses()
             }
         }
     }
@@ -473,14 +502,14 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                     ProgressHUD.colorAnimation = .green
                     ProgressHUD.succeed("Classes cleared")
                     self.setBlocks()
-                    self.tableView.reloadSections(IndexSet(integer: 1), with: .fade)
+                    self.tableView.reloadSections(IndexSet(integer: 2), with: .fade)
                 case .failure:
                     // Whatever got through before the failure is already durable (each block is
                     // committed before moving to the next), so this is safe to just retry.
                     ProgressHUD.colorAnimation = .red
                     ProgressHUD.failed("Didn't finish — some classes may still be set. Try again.")
                     self.setBlocks()
-                    self.tableView.reloadSections(IndexSet(integer: 1), with: .fade)
+                    self.tableView.reloadSections(IndexSet(integer: 2), with: .fade)
                 }
             })
         }
@@ -574,7 +603,10 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             // isAction and its right-hand label stays empty. See settingsBlock in Structs.
             settingsBlock(blockName: "Share Your Classes", className: "", isAction: true),
             settingsBlock(blockName: "Add Schedule to Google Calendar", className: "", isAction: true),
-            settingsBlock(blockName: "Add Schedule to Apple Calendar", className: "", isAction: true),
+            settingsBlock(blockName: "Add Schedule to Apple Calendar", className: "", isAction: true)
+        ]
+        manageSchedule = [
+            settingsBlock(blockName: "Scan Your Schedule", className: "", isAction: true),
             settingsBlock(blockName: "Clear My Classes", className: "", isAction: true)
         ]
         tableView = UITableView(frame: .zero, style: .grouped)
