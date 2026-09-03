@@ -120,9 +120,46 @@ service cloud.firestore {
 
     // Class rosters. Students create and join classes, and ClassesOptionsPopupVC
     // queries this collection by block, so both get and list stay open.
+    //
+    // `update` is the one verb that gets narrowed, because `members` is the only field in
+    // this database that holds OTHER students: each entry is a name, an email and a uid.
+    // Under `write: if signedIn()` any of ~645 accounts could rewrite any roster — drop a
+    // classmate out of a class, or add someone who is not in it — and nothing in the app
+    // would show what happened. Membership is now the caller's own to change: either the
+    // roster is untouched, or it differs by exactly one entry and that entry is the caller.
+    //
+    // Everything the shipped app does still passes, which is why this is narrowed rather
+    // than closed:
+    //   - ClassesOptionsPopupVC / ScheduleScanVC join       -> addsOnlySelf()
+    //   - AuthVC "clear my classes" leaves a roster         -> removesOnlySelf()
+    //   - TextEditVC writes homework, members untouched     -> rosterUnchanged()
+    //   - DaySelectVC renames a class for the whole roster  -> rosterUnchanged()
+    //
+    // create and delete stay open on purpose: renaming a class in DaySelectVC writes the
+    // new document and DELETES the old one, so a student legitimately deletes a document
+    // they may not have created. Narrowing that is a data-model change (a class needs a
+    // stable id that is not its display text), not a rules change. See HQ-911.
+    function roster(data) {
+      return data.get('members', []);
+    }
+    function rosterUnchanged() {
+      return roster(request.resource.data) == roster(resource.data);
+    }
+    function addsOnlySelf() {
+      return roster(request.resource.data).size() == roster(resource.data).size() + 1
+        && roster(request.resource.data).removeAll(roster(resource.data)).size() == 1
+        && roster(request.resource.data).removeAll(roster(resource.data))[0].uid == request.auth.uid;
+    }
+    function removesOnlySelf() {
+      return roster(resource.data).size() == roster(request.resource.data).size() + 1
+        && roster(resource.data).removeAll(roster(request.resource.data)).size() == 1
+        && roster(resource.data).removeAll(roster(request.resource.data))[0].uid == request.auth.uid;
+    }
     match /classes/{doc} {
-      allow read:  if signedIn();
-      allow write: if signedIn();
+      allow read:            if signedIn();
+      allow create, delete:  if signedIn();
+      allow update:          if signedIn()
+        && (rosterUnchanged() || addsOnlySelf() || removesOnlySelf());
     }
 
     match /{document=**} {
