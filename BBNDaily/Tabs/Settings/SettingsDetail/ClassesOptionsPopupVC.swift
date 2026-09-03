@@ -299,6 +299,10 @@ class ClassesOptionsPopupVC: UIViewController, UISearchBarDelegate, UITableViewD
         tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         tableView.register(editClassTableViewCell.self, forCellReuseIdentifier: editClassTableViewCell.identifier)
         tableView.backgroundColor = UIColor(named: "background")
+        // iOS 15 puts a fixed 22pt above every section header, whatever the header contains. On
+        // a one-section table nobody notices; with "Your Class" split out it reads as a gap
+        // somebody left by accident between the two lists. The header text is its own separator.
+        tableView.sectionHeaderTopPadding = 0
         tableView.tableFooterView = UIView(frame: .zero)
         tableView.delegate = self
         tableView.dataSource = self
