@@ -30,7 +30,15 @@ struct ScannedClass {
 struct ScannedLunch {
     var weekday: String
     var block: String
-    var wave: Int
+    /// nil means "the photo did not say", NOT "no lunch".
+    ///
+    /// A row is now shown for every weekday that carries a lunch choice, including the ones the
+    /// model returned nothing for. It used to `compactMap` those away, so a weekday the model
+    /// missed simply was not on the screen - Mike lost Friday on a real sheet and there was no
+    /// way to tell whether the sheet lacked a Friday lunch row, the model missed it, or the app
+    /// dropped it, and no way to set it from here either. An empty row says which day is
+    /// unanswered and can be tapped to answer it.
+    var wave: Int?
 
     /// The DAY, and only the day.
     ///
@@ -46,7 +54,17 @@ struct ScannedLunch {
     var displayNameWithBlock: String { "\(weekday.capitalized)s (\(block) block)" }
     /// The exact strings Settings has always written, so a scanned value and a typed one are
     /// the same value and the schedule's `filter: ["L1"]` / `["L2"]` keeps matching.
-    var storedValue: String { wave == 1 ? "1st Lunch" : "2nd Lunch" }
+    ///
+    /// nil when the wave is unknown, and callers must not substitute a default. Guessing "2nd
+    /// Lunch" for a day the sheet did not state writes a confident wrong answer, which shows the
+    /// student the wrong half of that school day.
+    var storedValue: String? {
+        guard let wave = wave else { return nil }
+        return wave == 1 ? "1st Lunch" : "2nd Lunch"
+    }
+
+    /// What the row shows on the right. Unanswered days say so.
+    var displayValue: String { storedValue ?? "Not set" }
 }
 
 class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITableViewDelegate, UITableViewDataSource {
@@ -60,10 +78,25 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         iv.clipsToBounds = true
         return iv
     }()
+    /// Grouped, and NOT `.plain`.
+    ///
+    /// Two reasons, both of which were bugs on a device:
+    ///
+    /// 1. A plain table TRUNCATES a section footer to one line. Both footers here carry the
+    ///    sentence that makes the section make sense - which blocks were missing from the photo,
+    ///    and why lunch is a different block each day - and Mike saw the second one cut off
+    ///    mid-word. A grouped table wraps them.
+    /// 2. It is what Settings already uses, so the review list looks like the screen it was
+    ///    reached from rather than like a different app.
+    ///
+    /// No `register(UITableViewCell.self, ...)`. Registering the CLASS makes `.default`-style
+    /// cells, and a `.default` cell has a nil `detailTextLabel` - so every right-hand value on
+    /// this screen was assigned to nothing and never drew. That silently hid the lunch wave, the
+    /// grade, and every teacher and room. Cells are made by hand below in `.value1`, which is
+    /// the style with a right-aligned grey detail label.
     private let tableView: UITableView = {
-        let tv = UITableView()
+        let tv = UITableView(frame: .zero, style: .insetGrouped)
         tv.translatesAutoresizingMaskIntoConstraints = false
-        tv.register(UITableViewCell.self, forCellReuseIdentifier: "scanRow")
         return tv
     }()
     private let hintLabel: UILabel = {
@@ -85,9 +118,16 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     /// was about to be written to their record.
     private var gradeResult: String?
 
+    /// The lunch rows that actually carry an answer.
+    ///
+    /// `lunchResults` now always holds all five weekdays, including unanswered ones, so it is no
+    /// longer a count of what was read. Anything asking "did the scan produce anything" or "what
+    /// gets written" has to use this instead, or an empty scan looks like a full one.
+    private var answeredLunches: [ScannedLunch] { lunchResults.filter { $0.wave != nil } }
+
     /// Nothing was read, or the student removed every row. Either way there is nothing to save
     /// and no reason to keep them on a blank review screen.
-    private var hasNothingToSave: Bool { results.isEmpty && lunchResults.isEmpty && gradeResult == nil }
+    private var hasNothingToSave: Bool { results.isEmpty && answeredLunches.isEmpty && gradeResult == nil }
 
     /// Closes this screen whichever way it was opened.
     ///
@@ -166,7 +206,6 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         installLeaveButton()
 
         view.addSubview(imageView)
-        view.addSubview(hintLabel)
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             imageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
@@ -174,17 +213,66 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
             imageView.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -16),
             imageView.heightAnchor.constraint(equalToConstant: 160),
 
-            hintLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
-            hintLabel.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 20),
-            hintLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
-
-            tableView.topAnchor.constraint(equalTo: hintLabel.bottomAnchor, constant: 8),
+            // Straight to the image. The hint label is the TABLE's header view now, not a sibling
+            // above it, so nothing between the two moves when its text changes.
+            tableView.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
             tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
             tableView.rightAnchor.constraint(equalTo: view.rightAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+        installHintAsTableHeader()
 
         promptForPhotoSource()
+    }
+
+    /// Puts the summary line INSIDE the table, as its header view.
+    ///
+    /// It used to be a sibling view above the table, with the table's top pinned to the label's
+    /// bottom. The label is multi-line, so every time the summary text changed length the label's
+    /// intrinsic height changed, which moved the table's frame - and `reloadData()` had already
+    /// laid the cells out against the old frame. The result on a device was rows that were partly
+    /// missing and then snapped back the moment the screen was touched, because a touch forces the
+    /// layout pass that had not happened yet.
+    ///
+    /// As a header view the table owns the label's geometry: changing the text re-measures the
+    /// header and the rows follow, in one pass. That removes the class of bug rather than adding a
+    /// `layoutIfNeeded()` to the places that happened to trigger it.
+    private func installHintAsTableHeader() {
+        let container = UIView()
+        container.addSubview(hintLabel)
+        NSLayoutConstraint.activate([
+            hintLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
+            hintLabel.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -8),
+            hintLabel.leftAnchor.constraint(equalTo: container.leftAnchor, constant: 20),
+            hintLabel.rightAnchor.constraint(equalTo: container.rightAnchor, constant: -20),
+        ])
+        tableView.tableHeaderView = container
+        sizeTableHeader()
+    }
+
+    /// Re-measures the header to fit its text.
+    ///
+    /// A `tableHeaderView` is laid out by frame, not by constraints, so it does not resize itself
+    /// when its content changes. Without this the header keeps the height it was first given and
+    /// a longer summary is clipped.
+    private func sizeTableHeader() {
+        guard let header = tableView.tableHeaderView else { return }
+        header.frame.size.width = tableView.bounds.width
+        let height = header.systemLayoutSizeFitting(
+            CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel).height
+        guard header.frame.height != height else { return }
+        header.frame.size.height = height
+        // Reassigning is what makes the table pick the new height up.
+        tableView.tableHeaderView = header
+    }
+
+    /// The header's width comes from the table's bounds, which are not final until the first
+    /// layout pass and change again on rotation.
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        sizeTableHeader()
     }
 
     /// Hands the swipe-back gesture back to the navigation controller.
@@ -345,12 +433,17 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         // Lunch arrives keyed by weekday ("monday": 2). The lettered block that carries lunch
         // that day comes from the schedule rather than from the server, because the server has
         // no reason to know the app's block layout and the app already does.
+        // A row for EVERY weekday that carries a lunch choice, whether or not the model answered
+        // for it. `lunchWeekdaysInOrder()` is derived from `regularSchedule`, so this is the app's
+        // own list of lunch days rather than the model's - a day the photo did not cover still
+        // gets a row, reading "Not set", that the student can tap.
         let rawLunch = (json["lunch"] as? [String: Any]) ?? [:]
-        let blockForWeekday = lunchBlockByWeekday()
-        lunchResults = lunchWeekdaysInOrder().compactMap { pair in
-            guard let wave = (rawLunch[pair.weekday] as? NSNumber)?.intValue, wave == 1 || wave == 2 else { return nil }
-            guard let block = blockForWeekday[pair.weekday] else { return nil }
-            return ScannedLunch(weekday: pair.weekday, block: block, wave: wave)
+        lunchResults = lunchWeekdaysInOrder().map { pair in
+            let wave = (rawLunch[pair.weekday] as? NSNumber)?.intValue
+            return ScannedLunch(
+                weekday: pair.weekday,
+                block: pair.block,
+                wave: (wave == 1 || wave == 2) ? wave : nil)
         }
 
         if let details = json["details"] as? [String: Any], let grade = details["grade"] as? String,
@@ -431,15 +524,18 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         var parts = [String]()
         if courses > 0 { parts.append("\(courses) class\(courses == 1 ? "" : "es")") }
         if frees > 0 { parts.append("\(frees) free block\(frees == 1 ? "" : "s")") }
-        if !lunchResults.isEmpty { parts.append("your lunches") }
+        if !answeredLunches.isEmpty { parts.append("your lunches") }
         if gradeResult != nil { parts.append("your grade") }
 
         guard !parts.isEmpty else {
             hintLabel.text = "Tap a row to fix anything before saving. Nothing is saved yet."
+            sizeTableHeader()
             return
         }
         let found = parts.count == 1 ? parts[0] : parts.dropLast().joined(separator: ", ") + " and " + parts.last!
         hintLabel.text = "Read \(found). Tap any row to fix or remove it. Nothing is saved yet."
+        // The header is laid out by frame, so a text change needs an explicit re-measure.
+        sizeTableHeader()
     }
 
     // MARK: - Review list
@@ -454,7 +550,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         switch Section(rawValue: section) {
         case .classes: return results.isEmpty ? nil : "Classes"
         case .lunch:   return lunchResults.isEmpty ? nil : "Which lunch you have"
-        case .grade:   return gradeResult == nil ? nil : "Grade"
+        case .grade:   return "Grade"
         default:       return nil
         }
     }
@@ -463,7 +559,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         switch Section(rawValue: section) {
         case .classes: return results.count
         case .lunch:   return lunchResults.count
-        case .grade:   return gradeResult == nil ? 0 : 1
+        case .grade:   return 1
         default:       return 0
         }
     }
@@ -507,7 +603,11 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "scanRow", for: indexPath)
+        // `.value1`, built by hand. `dequeueReusableCell(withIdentifier:for:)` would need a
+        // registered class, and registering a class is what produced `.default` cells with a nil
+        // detailTextLabel - every value on the right silently not drawing.
+        let cell = tableView.dequeueReusableCell(withIdentifier: "scanRow")
+            ?? UITableViewCell(style: .value1, reuseIdentifier: "scanRow")
         cell.backgroundColor = UIColor(named: "background")
         cell.textLabel?.textColor = UIColor(named: "inverse")
         cell.detailTextLabel?.textColor = .systemGray
@@ -516,11 +616,11 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         switch Section(rawValue: indexPath.section) {
         case .grade:
             cell.textLabel?.text = "Grade"
-            cell.detailTextLabel?.text = gradeResult
+            cell.detailTextLabel?.text = gradeResult.map { "Grade \($0)" } ?? "Not set"
         case .lunch:
             let row = lunchResults[indexPath.row]
             cell.textLabel?.text = row.displayName
-            cell.detailTextLabel?.text = row.storedValue
+            cell.detailTextLabel?.text = row.displayValue
         default:
             let row = results[indexPath.row]
             cell.textLabel?.text = "Block \(row.block.uppercased()): \(row.subject)"
@@ -580,14 +680,20 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
                 guard let self = self else { return }
                 self.lunchResults[index].wave = wave
                 self.tableView.reloadRows(at: [IndexPath(row: index, section: Section.lunch.rawValue)], with: .fade)
+                // The Save button and the summary line both count answered days, and this is the
+                // action that turns an unanswered day into an answered one.
+                self.updateSaveButton()
             })
             if row.wave == wave { action.setValue(true, forKey: "checked") }
             alert.addAction(action)
         }
-        alert.addAction(UIAlertAction(title: "Remove", style: .destructive, handler: { [weak self] _ in
+        // Clears the day rather than deleting the row. The row is one of the five weekdays that
+        // carry lunch, so it exists whether or not it has an answer - removing it would take the
+        // day off the screen and leave no way to set it, which is the bug this replaced.
+        alert.addAction(UIAlertAction(title: "Leave This Day Unset", style: .destructive, handler: { [weak self] _ in
             guard let self = self else { return }
-            self.lunchResults.remove(at: index)
-            self.tableView.reloadData()
+            self.lunchResults[index].wave = nil
+            self.tableView.reloadRows(at: [IndexPath(row: index, section: Section.lunch.rawValue)], with: .fade)
             self.updateSaveButton()
         }))
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -826,7 +932,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     /// survivable there because Settings has just loaded the document; here the student may
     /// have been on this screen for a while, so only the keys being changed are sent.
     private func saveLunchPreferences() {
-        guard !lunchResults.isEmpty || gradeResult != nil else {
+        guard !answeredLunches.isEmpty || gradeResult != nil else {
             finishSave()
             return
         }
@@ -839,7 +945,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
 
         var payload = [String: Any]()
-        for lunch in lunchResults {
+        for lunch in answeredLunches {
             payload[lunchPreferenceKey(forBlock: lunch.block)] = lunch.storedValue
         }
         // Same merge write as the lunch waves - it is the same document and the same kind of
@@ -879,7 +985,7 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         hideLoader(completion: { [weak self] in
             guard let self = self else { return }
             ProgressHUD.colorAnimation = .green
-            ProgressHUD.succeed(self.lunchResults.isEmpty ? "Classes saved" : "Classes and lunches saved")
+            ProgressHUD.succeed(self.answeredLunches.isEmpty ? "Classes saved" : "Classes and lunches saved")
             self.closeSelf()
         })
     }
