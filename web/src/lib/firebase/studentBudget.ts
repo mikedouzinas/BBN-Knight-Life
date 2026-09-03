@@ -70,6 +70,27 @@ export async function spendClassSetupAttempt(uid: string): Promise<BudgetStatus 
   });
 }
 
+/**
+ * Gives back one attempt after a failure the student could not have prevented.
+ *
+ * Spending up front is right, because the Anthropic call is what costs money and has to be paid
+ * for before it is made. But that reasoning only covers failures the student caused - an
+ * unreadable photo, a picture of the wrong page. A 529 Overloaded is our capacity problem, and
+ * it turns up exactly when hundreds of students scan within the same hour, which is the first
+ * week of school.
+ *
+ * Deliberately NOT a period reset: it increments, and it never touches `resetsAt`. A refund
+ * that reset the clock would hand a student a fresh year of scans every time the API hiccuped.
+ * It also does not clamp to the default budget, because an admin top-up may legitimately have
+ * pushed the balance above it.
+ */
+export async function refundClassSetupAttempt(uid: string): Promise<void> {
+  await adminDb()
+    .collection(BUDGET_COLLECTION)
+    .doc(uid)
+    .set({ [REMAINING_FIELD]: FieldValue.increment(1) }, { merge: true });
+}
+
 /** Admin top-up - "the person who drops a class in November is exactly the person the limit will hit." */
 export async function topUpClassSetupBudget(uid: string, additional: number): Promise<BudgetStatus> {
   const ref = adminDb().collection(BUDGET_COLLECTION).doc(uid);

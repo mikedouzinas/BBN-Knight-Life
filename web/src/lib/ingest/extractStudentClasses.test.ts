@@ -242,30 +242,30 @@ describe('a free block', () => {
   });
 });
 
-describe('grade and advisory room', () => {
-  it('are collected from the sheet header', async () => {
-    const { client } = stubClient([
-      { content: [detailsUse('a', { grade: '11', advisory: '134' })] },
-    ]);
+describe('grade', () => {
+  it('is collected from the sheet header', async () => {
+    const { client } = stubClient([{ content: [detailsUse('a', { grade: '11' })] }]);
     const result = await extractStudentClasses(PHOTO, client);
-    expect(result.details).toEqual({ grade: '11', advisory: '134' });
+    expect(result.details).toEqual({ grade: '11' });
   });
 
-  it('merge rather than replace, so a second call keeps the first call\'s field', async () => {
+  // Advisory room was removed: the sheet names an advisor, never a room, so an always-empty
+  // field only invited the model to put the advisor's NAME into `room-advisory`.
+  it('ignores an advisory room even if the model sends one', async () => {
     const { client } = stubClient([
-      { content: [detailsUse('a', { grade: '11' }), detailsUse('b', { advisory: '134' })] },
+      { content: [detailsUse('a', { grade: '11', advisory: 'Ms. Rose' })] },
     ]);
     const result = await extractStudentClasses(PHOTO, client);
-    expect(result.details).toEqual({ grade: '11', advisory: '134' });
+    expect(result.details).toEqual({ grade: '11' });
   });
 
-  it('are left out when the sheet does not state them', async () => {
+  it('is left out when the sheet does not state it', async () => {
     const { client } = stubClient([{ content: [toolUse('a', GOOD)] }]);
     const result = await extractStudentClasses(PHOTO, client);
     expect(result.details).toEqual({});
   });
 
-  it('reject a grade outside 9-12 and ask again', async () => {
+  it('rejects a grade outside 9-12 and asks again', async () => {
     const { client, create } = stubClient([
       { content: [detailsUse('a', { grade: '13' })] },
       { content: [detailsUse('b', { grade: '12' })] },
@@ -426,5 +426,63 @@ describe('the real Grade 11 sheet, end to end', () => {
     expect(result.skipped).toEqual([]);
     // The sheet's own wording never survives - F and G come back as the canonical "Free".
     expect(result.classes.some((c) => c.subject === 'Unscheduled')).toBe(false);
+  });
+});
+
+/**
+ * A busy API is a different failure from a bad photo, and the student must not pay for it.
+ * Hit for real on 2026-09-03: a 529 Overloaded while testing, which is exactly what the first
+ * week of school looks like when a whole grade scans within the same hour.
+ */
+describe('a transient model failure', () => {
+  function apiError(status: number) {
+    return Object.assign(new Error(`${status} overloaded`), { status });
+  }
+
+  function flakyClient(failures: number[], then: { content: unknown[] }) {
+    const create = vi.fn();
+    for (const status of failures) create.mockRejectedValueOnce(apiError(status));
+    create.mockResolvedValue(then);
+    return { client: { messages: { create } } as unknown as Anthropic, create };
+  }
+
+  it.each([408, 429, 500, 502, 503, 504, 529])('retries a %i and then succeeds', async (status) => {
+    const { client, create } = flakyClient([status], { content: [toolUse('a', GOOD)] });
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(result.classes).toHaveLength(1);
+  });
+
+  // Explicit timeout: the backoff is real time, and the point of the test is that it stops
+  // rather than retrying forever. The whole retry budget has to stay small because the route
+  // is maxDuration = 60 and three correctness attempts already spend most of that.
+  it('gives up after two retries rather than retrying forever', { timeout: 15_000 }, async () => {
+    const { client, create } = flakyClient([529, 529, 529], { content: [] });
+    await expect(extractStudentClasses(PHOTO, client)).rejects.toThrow(/529/);
+    expect(create).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not spend a correction attempt on an availability failure', async () => {
+    // One 529, then two rounds of the correctness loop. If the two were conflated, the 529
+    // would eat one of the three correction attempts and the good block would never land.
+    const { client, create } = flakyClient([529], { content: [toolUse('a', GOOD)] });
+    const result = await extractStudentClasses(PHOTO, client);
+    expect(result.attempts).toBe(1);
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it('does NOT retry an error that would fail the same way again', async () => {
+    for (const status of [400, 401, 403, 404, 413, 422]) {
+      const { client, create } = flakyClient([status], { content: [toolUse('a', GOOD)] });
+      await expect(extractStudentClasses(PHOTO, client)).rejects.toThrow();
+      expect(create).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it('does not retry an error with no status at all', async () => {
+    const create = vi.fn().mockRejectedValue(new Error('socket hang up'));
+    const client = { messages: { create } } as unknown as Anthropic;
+    await expect(extractStudentClasses(PHOTO, client)).rejects.toThrow(/socket/);
+    expect(create).toHaveBeenCalledTimes(1);
   });
 });

@@ -96,17 +96,24 @@ export const EMIT_LUNCH_WAVE_TOOL: Anthropic.Tool = {
 };
 
 /**
- * Grade and advisory room, which a BB&N sheet prints in its header. Kai's idea (PR 57) and a
- * good one: they are on the page, the app has fields for both, and a student otherwise types
- * them by hand.
+ * Grade, which a BB&N sheet prints in its header. Kai's idea (PR 57) and a good one: it is on
+ * the page, the app has a field for it, and a student otherwise types it in.
  *
- * Lunch is deliberately NOT here even though PR 57 put it here. Lunch is not one fact about a
- * student - the app stores five, one per weekday - so it belongs on a per-weekday tool.
+ * ADVISORY ROOM WAS HERE AND HAS BEEN REMOVED. The sheet prints "Advisor: <person>" and the
+ * Advisory rows in the grid carry no room at all, so there is no advisory ROOM anywhere on the
+ * page to read. Confirmed against the live model on both Opus 5 and Sonnet 5: each correctly
+ * reported nothing for it. A field that is always empty is a field that invites the model to
+ * fill it with the advisor's name, which is not what `room-advisory` means. Mike, 2026-09-03:
+ * "the advisory room doesn't actually say the actual advisory room so I think that's fine. I
+ * guess we don't need to automatically have that go in."
+ *
+ * Lunch is deliberately NOT here either, even though PR 57 put it here. Lunch is not one fact
+ * about a student - the app stores five, one per weekday - so it has its own per-weekday tool.
  */
 export const EMIT_STUDENT_DETAILS_TOOL: Anthropic.Tool = {
   name: 'emit_student_details',
   description:
-    'Emit the student\'s grade level and advisory room if the sheet states them, usually in its header. Call it at most once. Omit any field the sheet does not state - do not guess.',
+    'Emit the student\'s grade level if the sheet states it, usually in its header. Call it at most once, and not at all if the sheet does not state a grade - do not guess.',
   input_schema: {
     type: 'object' as const,
     additionalProperties: false,
@@ -114,12 +121,8 @@ export const EMIT_STUDENT_DETAILS_TOOL: Anthropic.Tool = {
       grade: {
         type: 'string',
         enum: ['9', '10', '11', '12'],
-        description: 'The student\'s grade level, only if the sheet states it.',
-      },
-      advisory: {
-        type: 'string',
         description:
-          'The advisory ROOM, only if the sheet states one. A room, not a person: a sheet naming an advisor but no room has no advisory room to report.',
+          'The student\'s grade as a NUMBER, only if the sheet states it. Sheets word this several ways and all of them map onto 9-12: "Grade 11" and "11th" are 11; "Freshman" is 9, "Sophomore" 10, "Junior" 11, "Senior" 12; "Form III/IV/V/VI" is 9/10/11/12. Report the number, never the word. If the sheet gives a graduating year rather than a grade, omit this - working it out needs today\'s date and that is not on the page.',
       },
     },
   },
@@ -132,6 +135,8 @@ Transcribe only. Do not fill in a subject, teacher, or room from memory, and do 
 ## What goes in a lettered block
 
 A BB&N sheet prints a block-like label next to almost every row, including rows that are not blocks at all. The label is not what makes something a class.
+
+HOW MANY COURSES A STUDENT HAS IS NOT FIXED, and you must not aim for a particular number. One student has seven courses and no free blocks; another has four courses and three frees. Report exactly what the sheet shows for each letter and let the count be whatever it is. If you find yourself deciding a block "should" hold a course because the others do, stop - that is inventing a class.
 
 Each lettered block a-g holds at most one thing. Call emit_student_classes once per lettered block the sheet shows, and put in "subject" either:
 
@@ -151,6 +156,8 @@ The one case to leave out entirely is a letter the sheet **never mentions**. Tha
 
 A course usually appears on several weekdays. That is one class, so emit it once. If two genuinely different courses appear under the same letter, emit the one appearing most often and say so in text.
 
+A course can also occupy more than one letter - a lab, a double period, a year-long course meeting in two blocks. That is not a mistake to correct: emit it under each letter it appears in, with the same name.
+
 ## Teacher and room
 
 They are usually printed together on one line, as "Ms. Lieberman - 285" or "Mr. Turnbull - 283". Split them: the name goes in teacher, the room goes in room. Keep the title exactly as printed - "Ms. Lieberman", not "Lieberman" and not "Ms Lieberman". If only one of the two is shown, fill only that one.
@@ -159,9 +166,9 @@ They are usually printed together on one line, as "Ms. Lieberman - 285" or "Mr. 
 
 BB&N runs two lunch waves. The sheet shows one lunch row per weekday, printed as "Lunch-1st" or "Lunch-2nd", sometimes with "(Block L1)" or "(Block L2)". Call emit_lunch_wave once for each weekday you can read one for. Read every weekday column separately - a student can have first lunch on one day and second on another, and the days are not always the same.
 
-## Grade and advisory room
+## Grade
 
-A sheet usually names the student's grade and often an advisory room, in its header. Call emit_student_details once with whichever it states. Leave out anything it does not state rather than guessing - a wrong value here silently overwrites something the student already set. An advisory ROOM is a room; a sheet that names an advisor but no room has no room to report.
+A sheet usually names the student's grade in its header. Call emit_student_details once with it. If the sheet does not state a grade, do not call the tool at all - a wrong value here silently overwrites something the student already set.
 
 ## When you cannot read it
 

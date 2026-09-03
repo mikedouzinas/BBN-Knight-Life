@@ -473,6 +473,10 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
                     self.abortSave(at: index, reason: error)
                     return
                 }
+                // The class this block pointed at BEFORE the scan, if it pointed at a different
+                // one. Read before the write below overwrites it.
+                let previousKey = LoginVC.blocks[row.block.uppercased()] as? String
+
                 db.collection("users").document(uid)
                     .setData([row.block.uppercased(): classKey], merge: true, completion: { error in
                         if let error = error {
@@ -480,9 +484,55 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
                             return
                         }
                         LoginVC.blocks[row.block.uppercased()] = classKey
+                        // Leaving the old class is cleanup, not part of the save. It runs after
+                        // the student's own record is already correct, so a failure here cannot
+                        // cost them their schedule - it only leaves them on a roster they are
+                        // no longer in, which is the lesser of the two wrongs.
+                        self.leavePreviousClass(previousKey: previousKey, newKey: classKey, uid: uid)
                         self.saveNextClass(index: index + 1)
                     })
             })
+        }
+    }
+
+    /// Takes the student off the roster of the class this block used to point at.
+    ///
+    /// Rescanning, or scanning over classes set by hand, re-points a block at a different class.
+    /// Without this, the student's own record is correct and they are STILL a member of the old
+    /// class - so they show up in ClassPopupVC for a class they are not in, and that class's
+    /// roster count is wrong forever, because nothing else ever revisits it.
+    ///
+    /// It is the same failure HQ-649 fixed for "Clear My Classes", which AuthVC records as
+    /// leaving "374 class documents carrying stale membership". Pointing a block somewhere new
+    /// is the other way to cause it.
+    ///
+    /// Does nothing when the block is unchanged, when it was empty, or when both keys resolve to
+    /// the same class - a student re-scanning the same schedule must not be removed from the
+    /// class they just joined.
+    private func leavePreviousClass(previousKey: String?, newKey: String, uid: String) {
+        guard let previousKey = previousKey,
+              !previousKey.isEmpty,
+              previousKey.contains("~"),
+              previousKey != newKey else { return }
+
+        let classDoc = Firestore.firestore().collection("classes").document(previousKey)
+        classDoc.getDocument { snapshot, error in
+            guard error == nil, let data = snapshot?.data() else {
+                print("schedule scan: could not read \(previousKey) to leave it: \(error?.localizedDescription ?? "missing")")
+                return
+            }
+            var members = (data["members"] as? [[String: String]]) ?? [[String: String]]()
+            let before = members.count
+            members.removeAll { ($0["uid"] ?? "") == uid }
+            guard members.count != before else { return }  // was not on it anyway
+
+            classDoc.setData(["members": members], merge: true) { error in
+                if let error = error {
+                    // Reported, not surfaced: the student's schedule is already saved correctly
+                    // and telling them their classes failed would be wrong.
+                    print("schedule scan: left \(previousKey) but the write failed: \(error)")
+                }
+            }
         }
     }
 
