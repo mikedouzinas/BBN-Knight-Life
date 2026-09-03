@@ -32,6 +32,7 @@
 		27AEED6E288B353D00C6176C /* TeacherNameVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED6D288B353D00C6176C /* TeacherNameVC.swift */; };
 		27AEED70288B355900C6176C /* RoomNumVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED6F288B355900C6176C /* RoomNumVC.swift */; };
 		6723B259041C156451B03A1E /* AddClassVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D999875B0353C697F5D83E /* AddClassVC.swift */; };
+		CAA90E50ECF3158DACD41A44 /* ScheduleScanVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F95AA882BA7526A1F6B89A2 /* ScheduleScanVC.swift */; };
 		27AEED72288B359100C6176C /* DaySelectVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED71288B359100C6176C /* DaySelectVC.swift */; };
 		27AEED74288B35B500C6176C /* TextFieldVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED73288B35B500C6176C /* TextFieldVC.swift */; };
 		27AEED76288B35DD00C6176C /* AboutTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED75288B35DD00C6176C /* AboutTableViewCell.swift */; };
@@ -46,6 +47,7 @@
 		27AEED8A288B37E600C6176C /* TaskCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED89288B37E600C6176C /* TaskCell.swift */; };
 		27B0DB7F288B025D009C32B8 /* AuthVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B0DB7E288B025D009C32B8 /* AuthVC.swift */; };
 		27B0DB81288B0DBD009C32B8 /* Structs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B0DB80288B0DBD009C32B8 /* Structs.swift */; };
+		HQ6560000000000000001001 /* ClassIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ6560000000000000000001 /* ClassIdentity.swift */; };
 		27B8BCDD285CA60400892509 /* SideMenuVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B8BCDC285CA60400892509 /* SideMenuVC.swift */; };
 		478DFB7C41816FBC4FAC25CA /* Pods_BBNDaily.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2484BAF33C53EE45734AEB6 /* Pods_BBNDaily.framework */; };
 		8704E96E26EEA5B9001826F8 /* LoginVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8704E96D26EEA5B9001826F8 /* LoginVC.swift */; };
@@ -63,6 +65,7 @@
 		87507FD326E6ADEB005DDFB4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87507FD126E6ADEB005DDFB4 /* LaunchScreen.storyboard */; };
 		87507FDE26E6ADEB005DDFB4 /* BBNDailyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FDD26E6ADEB005DDFB4 /* BBNDailyTests.swift */; };
 		HQ6400000000000000001001 /* ResolveDayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ6400000000000000000001 /* ResolveDayTests.swift */; };
+		HQ6560000000000000001002 /* ClassIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ6560000000000000000002 /* ClassIdentityTests.swift */; };
 		HQ6270000000000000001001 /* FirestoreParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ6270000000000000000001 /* FirestoreParsingTests.swift */; };
 		87507FE926E6ADEB005DDFB4 /* BBNDailyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FE826E6ADEB005DDFB4 /* BBNDailyUITests.swift */; };
 		87AAFC4327062AC6006AF8DC /* demo.gif in Resources */ = {isa = PBXBuildFile; fileRef = 87AAFC4227062AC6006AF8DC /* demo.gif */; };
@@ -149,6 +152,7 @@
 		27AEED6D288B353D00C6176C /* TeacherNameVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeacherNameVC.swift; sourceTree = "<group>"; };
 		27AEED6F288B355900C6176C /* RoomNumVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomNumVC.swift; sourceTree = "<group>"; };
 		C2D999875B0353C697F5D83E /* AddClassVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddClassVC.swift; sourceTree = "<group>"; };
+		8F95AA882BA7526A1F6B89A2 /* ScheduleScanVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleScanVC.swift; sourceTree = "<group>"; };
 		27AEED71288B359100C6176C /* DaySelectVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaySelectVC.swift; sourceTree = "<group>"; };
 		27AEED73288B35B500C6176C /* TextFieldVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldVC.swift; sourceTree = "<group>"; };
 		27AEED75288B35DD00C6176C /* AboutTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutTableViewCell.swift; sourceTree = "<group>"; };
@@ -163,6 +167,7 @@
 		27AEED89288B37E600C6176C /* TaskCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCell.swift; sourceTree = "<group>"; };
 		27B0DB7E288B025D009C32B8 /* AuthVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthVC.swift; sourceTree = "<group>"; };
 		27B0DB80288B0DBD009C32B8 /* Structs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Structs.swift; sourceTree = "<group>"; };
+		HQ6560000000000000000001 /* ClassIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassIdentity.swift; sourceTree = "<group>"; };
 		27B8BCDC285CA60400892509 /* SideMenuVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideMenuVC.swift; sourceTree = "<group>"; };
 		686509F683A6F0D45E16F1C8 /* Pods-BBNDailyTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDailyTests.release.xcconfig"; path = "Target Support Files/Pods-BBNDailyTests/Pods-BBNDailyTests.release.xcconfig"; sourceTree = "<group>"; };
 		6F24F5F20F8704E743C7BFB5 /* Pods-BBNDailyTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BBNDailyTests.debug.xcconfig"; path = "Target Support Files/Pods-BBNDailyTests/Pods-BBNDailyTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -187,6 +192,7 @@
 		87507FD926E6ADEB005DDFB4 /* BBNDailyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BBNDailyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		87507FDD26E6ADEB005DDFB4 /* BBNDailyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyTests.swift; sourceTree = "<group>"; };
 		HQ6400000000000000000001 /* ResolveDayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolveDayTests.swift; sourceTree = "<group>"; };
+		HQ6560000000000000000002 /* ClassIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassIdentityTests.swift; sourceTree = "<group>"; };
 		HQ6270000000000000000001 /* FirestoreParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreParsingTests.swift; sourceTree = "<group>"; };
 		87507FDF26E6ADEB005DDFB4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		87507FE426E6ADEB005DDFB4 /* BBNDailyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BBNDailyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -298,6 +304,7 @@
 				27AEED6D288B353D00C6176C /* TeacherNameVC.swift */,
 				27AEED6F288B355900C6176C /* RoomNumVC.swift */,
 				C2D999875B0353C697F5D83E /* AddClassVC.swift */,
+				8F95AA882BA7526A1F6B89A2 /* ScheduleScanVC.swift */,
 				27AEED71288B359100C6176C /* DaySelectVC.swift */,
 			);
 			path = SettingsDetail;
@@ -390,6 +397,7 @@
 				8704E96F26EEA5E9001826F8 /* Extensions.swift */,
 				3E7B751B8219FF77FD32E747 /* ScheduleNotifications.swift */,
 				27B0DB80288B0DBD009C32B8 /* Structs.swift */,
+				HQ6560000000000000000001 /* ClassIdentity.swift */,
 				27AEED54288B32E400C6176C /* TextEditVC.swift */,
 				27AEED73288B35B500C6176C /* TextFieldVC.swift */,
 				27AEED52288B32C600C6176C /* defaultVariables.swift */,
@@ -456,6 +464,7 @@
 			children = (
 				87507FDD26E6ADEB005DDFB4 /* BBNDailyTests.swift */,
 				HQ6400000000000000000001 /* ResolveDayTests.swift */,
+				HQ6560000000000000000002 /* ClassIdentityTests.swift */,
 				HQ6270000000000000000001 /* FirestoreParsingTests.swift */,
 				87507FDF26E6ADEB005DDFB4 /* Info.plist */,
 			);
@@ -723,6 +732,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27B0DB81288B0DBD009C32B8 /* Structs.swift in Sources */,
+				HQ6560000000000000001001 /* ClassIdentity.swift in Sources */,
 				27B0DB7F288B025D009C32B8 /* AuthVC.swift in Sources */,
 				8704E97026EEA5E9001826F8 /* Extensions.swift in Sources */,
 				BA55B946A81E3E1DD80A75D0 /* ScheduleNotifications.swift in Sources */,
@@ -759,6 +769,7 @@
 				27AEED88288B37B700C6176C /* HomeworkTitleVC.swift in Sources */,
 				27AEED70288B355900C6176C /* RoomNumVC.swift in Sources */,
 				6723B259041C156451B03A1E /* AddClassVC.swift in Sources */,
+				CAA90E50ECF3158DACD41A44 /* ScheduleScanVC.swift in Sources */,
 				27AEED5B288B338500C6176C /* ClassPopupVC.swift in Sources */,
 				8704E97A26EEA6FC001826F8 /* NewsVC.swift in Sources */,
 				27AEED66288B34A200C6176C /* editClassTableViewCell.swift in Sources */,
@@ -775,6 +786,7 @@
 			files = (
 				87507FDE26E6ADEB005DDFB4 /* BBNDailyTests.swift in Sources */,
 				HQ6400000000000000001001 /* ResolveDayTests.swift in Sources */,
+				HQ6560000000000000001002 /* ClassIdentityTests.swift in Sources */,
 				HQ6270000000000000001001 /* FirestoreParsingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

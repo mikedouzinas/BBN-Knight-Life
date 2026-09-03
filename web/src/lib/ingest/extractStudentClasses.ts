@@ -1,0 +1,354 @@
+/**
+ * Source in, validated classes out. Same shape as extract.ts's loop - invalid output is
+ * fed back to the model as a tool error and retried, valid output never writes anywhere
+ * on its own - pointed at a different output: one student's seven blocks plus their five
+ * lunch waves, instead of a day of bell times.
+ *
+ * A FREE BLOCK IS KEPT, a non-block row is not, and the difference is the whole shape of the
+ * filter below. "Unscheduled (Block F)" means the student has F open - that is an answer, and
+ * Mike wants it visible, because seeing who else is free in your block is the point. "Lunch-2nd
+ * (Block L2)" is not a block at all and must never become a class.
+ *
+ * So NON_BLOCK_ROWS rejects the second kind only, and FREE_SUBJECTS normalises the first kind
+ * onto one spelling. The prompt says the same things; this is the mechanism behind it, because
+ * a prompt is a rule and rules hold most of the time. The cost of one slip is not a bad row on
+ * a screen: a class is keyed by its text, so a single scan emitting the sheet's own wording
+ * ("Unscheduled") instead of "Free" starts a SECOND shared roster alongside the real one, and
+ * the two never merge.
+ */
+import 'server-only';
+import Anthropic from '@anthropic-ai/sdk';
+import { z } from 'zod';
+import type { IngestAttachment } from './extract';
+import { IMAGE_TYPES, IngestError, attachmentBlock } from './extract';
+import {
+  EMIT_LUNCH_WAVE_TOOL,
+  EMIT_STUDENT_CLASSES_TOOL,
+  EMIT_STUDENT_DETAILS_TOOL,
+  STUDENT_CLASSES_SYSTEM_PROMPT,
+} from './studentClassesTool';
+
+export const STUDENT_INGEST_MODEL = 'claude-opus-5';
+const MAX_ATTEMPTS = 3;
+const MAX_TOKENS = 4000;
+
+/**
+ * Rows a BB&N sheet prints with a block letter that are not courses. Matched against the
+ * whole subject, case- and punctuation-insensitively, so "Lunch - 2nd", "lunch-2nd" and
+ * "LUNCH 2ND" are one entry.
+ *
+ * Every one of these was read off a real Grade 11 printout except the ones marked defensive.
+ * Deliberately NOT a substring match: "Physics" must never be rejected for containing a
+ * fragment of something here, so this compares normalised whole strings plus a small number
+ * of explicit prefixes.
+ */
+const NON_BLOCK_ROWS = new Set([
+  // Lunch. Handled by emit_lunch_wave instead.
+  'lunch', 'lunch 1st', 'lunch 2nd', 'lunch 1', 'lunch 2',
+  'first lunch', 'second lunch', '1st lunch', '2nd lunch',
+  'l1', 'l2',
+  // School-wide activities that carry a block-shaped label but are not lettered blocks.
+  'advisory', 'advising', 'adv',
+  'assembly', 'assembly special programs', 'special programs', 'special programming', 'sp',
+  'community activity', 'cab', 'optional cab',
+  'class mtg', 'class meeting',
+  'long passing', 'passing',
+  'after school', 'afterschool', 'aft', 'attendance',
+  'faculty time', 'faculty meeting',
+  // Not on the sheet that was read, but the same kind of row.
+  'chapel', 'office hours', 'homeroom', 'recess', 'break', 'flex block', 'activity period',
+]);
+
+/** Prefixes that make a row non-block whatever follows them. */
+const NON_BLOCK_PREFIXES = ['lunch', 'assembly', 'advisory', 'community activity', 'after school'];
+
+/**
+ * Every wording a sheet uses for "this block is open", normalised onto one.
+ *
+ * The canonical spelling is exactly `Free`, and that matters more than it looks: the class
+ * document is keyed by its subject text, so students whose sheets said "Unscheduled" and
+ * "Study Hall" would otherwise land on two different rosters for the same empty block.
+ */
+const FREE_SUBJECTS = new Set([
+  'free', 'free period', 'free block', 'unscheduled', 'unassigned',
+  'study hall', 'studyhall', 'study', 'open', 'none', 'n a', 'no class', 'flex',
+]);
+
+export const FREE_SUBJECT = 'Free';
+
+/** Lowercase, strip punctuation and collapse whitespace, so one entry covers its spellings. */
+export function normalizeSubject(subject: string): string {
+  return subject.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+/** A row that is not a lettered block at all, and must never become a class. */
+export function isNonBlockRow(subject: string): boolean {
+  const normalized = normalizeSubject(subject);
+  if (!normalized) return true;
+  if (NON_BLOCK_ROWS.has(normalized)) return true;
+  return NON_BLOCK_PREFIXES.some((p) => normalized === p || normalized.startsWith(`${p} `));
+}
+
+/** A block the sheet shows as open. Kept, and reported under one spelling. */
+export function isFreeSubject(subject: string): boolean {
+  return FREE_SUBJECTS.has(normalizeSubject(subject));
+}
+
+/**
+ * A BB&N sheet prints the teacher and the room on one line, as "Ms. Lieberman - 285". The
+ * prompt asks for them split, and in four measured runs the model always did. This is the
+ * backstop for the run where it does not.
+ *
+ * Worth a backstop because a class document is keyed by `Subject~Teacher~Room~Block`, so
+ * "Ms. Lieberman - 285" landing whole in `teacher` makes a DIFFERENT document than
+ * "Ms. Lieberman" + "285" - two rosters for one real class, which is HQ-877's duplicate
+ * problem produced by the feature meant to reduce it.
+ *
+ * Only splits when `room` is empty, so a model that already did the work is left alone, and
+ * only on a trailing token that actually looks like a room.
+ */
+const ROOM_LIKE = /^[A-Za-z]?\d{1,4}[A-Za-z]?$/;
+
+export function splitTeacherAndRoom(
+  teacher?: string,
+  room?: string,
+): { teacher?: string; room?: string } {
+  const cleanTeacher = teacher?.trim();
+  const cleanRoom = room?.trim();
+  if (!cleanTeacher || cleanRoom) {
+    return { teacher: cleanTeacher || undefined, room: cleanRoom || undefined };
+  }
+
+  const match = cleanTeacher.match(/^(.*\S)\s+[-‐-―−]\s+(\S+)$/);
+  if (!match) return { teacher: cleanTeacher, room: undefined };
+
+  const [, name, tail] = match;
+  if (!ROOM_LIKE.test(tail)) return { teacher: cleanTeacher, room: undefined };
+  return { teacher: name, room: tail };
+}
+
+export const studentClassSchema = z.object({
+  block: z.enum(['a', 'b', 'c', 'd', 'e', 'f', 'g']),
+  subject: z.string().min(1).max(120),
+  teacher: z.string().max(120).optional(),
+  room: z.string().max(60).optional(),
+});
+
+export const studentDetailsSchema = z.object({
+  grade: z.enum(['9', '10', '11', '12']).optional(),
+  advisory: z.string().max(60).optional(),
+});
+
+export const lunchWaveSchema = z.object({
+  day: z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday']),
+  wave: z.union([z.literal(1), z.literal(2)]),
+});
+
+export type StudentClass = z.infer<typeof studentClassSchema>;
+export type StudentDetails = z.infer<typeof studentDetailsSchema>;
+export type LunchWave = z.infer<typeof lunchWaveSchema>;
+export type LunchWaves = Partial<Record<LunchWave['day'], 1 | 2>>;
+
+export interface ExtractStudentClassesInput {
+  attachments: IngestAttachment[];
+  notes?: string;
+}
+
+export interface ExtractStudentClassesResult {
+  classes: StudentClass[];
+  lunch: LunchWaves;
+  /** Grade and advisory room, when the sheet's header states them. */
+  details: StudentDetails;
+  message: string;
+  rejected: { input: unknown; issues: string[] }[];
+  /** Non-block rows the model emitted as classes anyway, kept so a bad prompt is visible. */
+  skipped: { block: string; subject: string }[];
+  attempts: number;
+}
+
+/** Every validation failure as one flat "path: message" line, for the retry prompt. */
+function issueLines(error: z.ZodError): string[] {
+  return error.issues.map((issue) => {
+    const path = issue.path.length ? issue.path.join('.') : '(root)';
+    return `${path}: ${issue.message}`;
+  });
+}
+
+export async function extractStudentClasses(
+  input: ExtractStudentClassesInput,
+  client?: Anthropic,
+): Promise<ExtractStudentClassesResult> {
+  if (!input.attachments.length) {
+    throw new IngestError('Nothing to read. Attach a photo, screenshot, or PDF of your schedule.');
+  }
+  for (const attachment of input.attachments) {
+    if (attachment.mediaType !== 'application/pdf' && !IMAGE_TYPES.has(attachment.mediaType)) {
+      throw new IngestError(`Cannot read a ${attachment.mediaType} file. Send a PDF or a photo.`);
+    }
+  }
+
+  const anthropic = client ?? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  const firstBlocks: Anthropic.ContentBlockParam[] = input.attachments.map(attachmentBlock);
+  firstBlocks.push({
+    type: 'text',
+    text: input.notes
+      ? `Read this student's schedule.\n\nStudent's notes: ${input.notes}`
+      : "Read this student's schedule.",
+  });
+
+  const messages: Anthropic.MessageParam[] = [{ role: 'user', content: firstBlocks }];
+  const classes: StudentClass[] = [];
+  const lunch: LunchWaves = {};
+  let details: StudentDetails = {};
+  const rejected: { input: unknown; issues: string[] }[] = [];
+  const skipped: { block: string; subject: string }[] = [];
+  let message = '';
+  let attempts = 0;
+
+  while (attempts < MAX_ATTEMPTS) {
+    attempts += 1;
+    const response = await anthropic.messages.create({
+      model: STUDENT_INGEST_MODEL,
+      max_tokens: MAX_TOKENS,
+      thinking: { type: 'adaptive' },
+      system: STUDENT_CLASSES_SYSTEM_PROMPT,
+      tools: [EMIT_STUDENT_CLASSES_TOOL, EMIT_LUNCH_WAVE_TOOL, EMIT_STUDENT_DETAILS_TOOL],
+      messages: [...messages],
+    });
+
+    const prose = response.content
+      .filter((block): block is Anthropic.TextBlock => block.type === 'text')
+      .map((block) => block.text.trim())
+      .filter(Boolean)
+      .join('\n\n');
+    if (prose) message = prose;
+
+    const calls = response.content.filter(
+      (block): block is Anthropic.ToolUseBlock =>
+        block.type === 'tool_use' &&
+        (block.name === EMIT_STUDENT_CLASSES_TOOL.name ||
+          block.name === EMIT_LUNCH_WAVE_TOOL.name ||
+          block.name === EMIT_STUDENT_DETAILS_TOOL.name),
+    );
+    if (!calls.length) break;
+
+    const results: Anthropic.ToolResultBlockParam[] = [];
+    let anyInvalid = false;
+
+    for (const call of calls) {
+      const raw = call.input as Record<string, unknown>;
+
+      if (call.name === EMIT_STUDENT_DETAILS_TOOL.name) {
+        const parsedDetails = studentDetailsSchema.safeParse(raw);
+        if (parsedDetails.success) {
+          // Merged rather than replaced, so a second call adding advisory does not drop the
+          // grade the first one found.
+          details = { ...details, ...parsedDetails.data };
+          results.push({ type: 'tool_result', tool_use_id: call.id, content: 'Accepted student details.' });
+        } else {
+          anyInvalid = true;
+          const issues = issueLines(parsedDetails.error);
+          rejected.push({ input: raw, issues });
+          results.push({
+            type: 'tool_result',
+            tool_use_id: call.id,
+            is_error: true,
+            content: `Rejected. Fix these and call emit_student_details again:\n${issues.join('\n')}`,
+          });
+        }
+        continue;
+      }
+
+      if (call.name === EMIT_LUNCH_WAVE_TOOL.name) {
+        const parsedLunch = lunchWaveSchema.safeParse(raw);
+        if (parsedLunch.success) {
+          lunch[parsedLunch.data.day] = parsedLunch.data.wave;
+          results.push({
+            type: 'tool_result',
+            tool_use_id: call.id,
+            content: `Accepted ${parsedLunch.data.day} lunch.`,
+          });
+        } else {
+          anyInvalid = true;
+          const issues = issueLines(parsedLunch.error);
+          rejected.push({ input: raw, issues });
+          results.push({
+            type: 'tool_result',
+            tool_use_id: call.id,
+            is_error: true,
+            content: `Rejected. Fix these and call emit_lunch_wave again for this day:\n${issues.join('\n')}`,
+          });
+        }
+        continue;
+      }
+
+      const parsed = studentClassSchema.safeParse(raw);
+      if (!parsed.success) {
+        anyInvalid = true;
+        const issues = issueLines(parsed.error);
+        rejected.push({ input: raw, issues });
+        results.push({
+          type: 'tool_result',
+          tool_use_id: call.id,
+          is_error: true,
+          content: `Rejected. Fix these and call emit_student_classes again for this block:\n${issues.join('\n')}`,
+        });
+        continue;
+      }
+
+      // A row that is not a lettered block at all. NOT retried: there is nothing for the model
+      // to correct, the right outcome is that the row simply is not a class, and telling it to
+      // "try again" invites it to invent something to fill the space.
+      if (isNonBlockRow(parsed.data.subject)) {
+        skipped.push({ block: parsed.data.block, subject: parsed.data.subject });
+        results.push({
+          type: 'tool_result',
+          tool_use_id: call.id,
+          content:
+            `Not a block - "${parsed.data.subject}" is lunch or a school-wide activity, not one of ` +
+            `this student's lettered blocks. Dropped. Do not emit it again and do not substitute ` +
+            `another class for block ${parsed.data.block.toUpperCase()}.`,
+        });
+        continue;
+      }
+
+      // A free block IS an answer, and it is normalised onto one spelling so that two students
+      // whose sheets said "Unscheduled" and "Study Hall" land on the same roster rather than
+      // starting two.
+      const free = isFreeSubject(parsed.data.subject);
+      const { teacher, room } = free
+        ? { teacher: undefined, room: undefined }
+        : splitTeacherAndRoom(parsed.data.teacher, parsed.data.room);
+      const accepted: StudentClass = {
+        block: parsed.data.block,
+        subject: free ? FREE_SUBJECT : parsed.data.subject.trim(),
+        teacher,
+        room,
+      };
+
+      // A later call for the same block replaces the earlier one - the model correcting
+      // itself mid-conversation, not a second class in one block.
+      const existing = classes.findIndex((c) => c.block === accepted.block);
+      if (existing >= 0) classes[existing] = accepted;
+      else classes.push(accepted);
+      results.push({ type: 'tool_result', tool_use_id: call.id, content: `Accepted block ${accepted.block}.` });
+    }
+
+    messages.push({ role: 'assistant', content: response.content });
+    messages.push({ role: 'user', content: results });
+    if (!anyInvalid) break;
+  }
+
+  const acceptedBlocks = new Set(classes.map((c) => c.block));
+  const acceptedDays = new Set(Object.keys(lunch));
+  const stillRejected = rejected.filter((entry) => {
+    const input = entry.input as { block?: unknown; day?: unknown };
+    if (typeof input.block === 'string') return !acceptedBlocks.has(input.block as StudentClass['block']);
+    if (typeof input.day === 'string') return !acceptedDays.has(input.day);
+    return true;
+  });
+
+  classes.sort((a, b) => a.block.localeCompare(b.block));
+  return { classes, lunch, details, message, rejected: stillRejected, skipped, attempts };
+}

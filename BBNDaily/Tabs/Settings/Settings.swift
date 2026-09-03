@@ -109,7 +109,10 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             else if indexPath.row == 2 { // apple calendar add
                 imgName = "calendar.circle.fill"
             }
-            else if indexPath.row == 3 { // HQ-649: clear my classes
+            else if indexPath.row == 3 { // HQ-656: scan your schedule
+                imgName = "camera.viewfinder"
+            }
+            else if indexPath.row == 4 { // HQ-649: clear my classes
                 imgName = "trash"
             }
             let imageview = UIImageView(image: UIImage(systemName: imgName)!)
@@ -374,31 +377,14 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             }
         }
         else if indexPath.section == 3 {
-            var name = ""
-            switch indexPath.row {
-//            case 0:
-//                name = "monday"
-//            case 1:
-//                name = "tuesday"
-//            case 2:
-//                name = "wednesday"
-//            case 3:
-//                name = "thursday"
-//            case 4:
-//                name = "friday"
-            case 0:
-                name = "d"
-            case 1:
-                name = "c"
-            case 2:
-                name = "g"
-            case 3:
-                name = "a"
-            case 4:
-                name = "f"
-            default:
-                name = "[Unknown]"
-            }
+            // Which block carries lunch on which weekday comes from the schedule itself
+            // (`lunchWeekdaysInOrder`, derived from `regularSchedule`) rather than from a
+            // hardcoded row-number switch. The rows and the schedule cannot disagree, and a
+            // year in which BB&N moves lunch moves this list with it.
+            let lunchWeekdays = lunchWeekdaysInOrder()
+            let name = indexPath.row < lunchWeekdays.count
+                ? lunchWeekdays[indexPath.row].block.lowercased()
+                : "[Unknown]"
             let alertController = UIAlertController(title: "Lunch", message: "Please enter your lunch preference for \(name.count == 1 ? name.capitalized + " Block" : name.capitalized). You may need to restart the app to save your changes.", preferredStyle: .actionSheet)
             let lunch1 = UIAlertAction(title: "1st Lunch", style: .default) { _ in
                 LoginVC.updateField("l-\(name)", to: "1st Lunch")
@@ -438,6 +424,8 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
                 addItemToCalendar(pref: 0)
             case 2: // apple calendar
                 addItemToCalendar(pref: 1)
+            case 3: // HQ-656: scan your schedule
+                navigationController?.pushViewController(ScheduleScanVC(), animated: true)
             default: // HQ-649: clear my classes
                 confirmResetClasses()
             }
@@ -554,27 +542,25 @@ class SettingsVC: AuthVC, UITableViewDelegate, UITableViewDataSource, UIScrollVi
             settingsBlock(blockName: "Appearance", className: "\(LoginVC.appearance)")
         ]
         
-        lunchBlocks = [
-//            settingsBlock(blockName: "Monday Lunch", className: "\(LoginVC.blocks["l-monday"] as? String ?? "")"),
-//            settingsBlock(blockName: "Tuesday Lunch", className: "\(LoginVC.blocks["l-tuesday"] as? String ?? "")"),
-//            settingsBlock(blockName: "Wednesday Lunch", className: "\(LoginVC.blocks["l-wednesday"] as? String ?? "")"),
-//            settingsBlock(blockName: "Thursday Lunch", className: "\(LoginVC.blocks["l-thursday"] as? String ?? "")"),
-//            settingsBlock(blockName: "Friday Lunch", className: "\(LoginVC.blocks["l-friday"] as? String ?? "")"),
-            
-            settingsBlock(blockName: "D Block (Mondays)", className: "\(LoginVC.blocks["l-d"] as? String ?? "")"),
-            settingsBlock(blockName: "C Block (Tuesdays)", className: "\(LoginVC.blocks["l-c"] as? String ?? "")"),
-            settingsBlock(blockName: "G Block (Wednesdays)", className: "\(LoginVC.blocks["l-g"] as? String ?? "")"),
-            settingsBlock(blockName: "A Block (Thursdays)", className: "\(LoginVC.blocks["l-a"] as? String ?? "")"),
-            settingsBlock(blockName: "F Block (Fridays)", className: "\(LoginVC.blocks["l-f"] as? String ?? "")")
-            //            settingsBlock(blockName: "B Block", className: "\(LoginVC.blocks["l-b"] as? String ?? "")"),
-            //            settingsBlock(blockName: "E Block", className: "\(LoginVC.blocks["l-e"] as? String ?? "")"),
-        ]
+        // One row per weekday that has a lunch choice, built from the schedule rather than
+        // typed out. The pairing used to be written here as display text ("D Block (Mondays)")
+        // AND as a row-number switch in didSelectRowAt AND as `lunchBlock` on the L1/L2 events
+        // in `regularSchedule` - three copies of one fact, and the label was the only one a
+        // person would notice going wrong.
+        lunchBlocks = lunchWeekdaysInOrder().map { pair in
+            settingsBlock(
+                blockName: "\(pair.block) Block (\(pair.weekday.capitalized)s)",
+                className: "\(LoginVC.blocks[lunchPreferenceKey(forBlock: pair.block)] as? String ?? "")"
+            )
+        }
         other = [
             // Every row here DOES something rather than showing a value, so each is marked
             // isAction and its right-hand label stays empty. See settingsBlock in Structs.
             settingsBlock(blockName: "Share Your Classes", className: "", isAction: true),
             settingsBlock(blockName: "Add Schedule to Google Calendar", className: "", isAction: true),
             settingsBlock(blockName: "Add Schedule to Apple Calendar", className: "", isAction: true),
+            settingsBlock(blockName: "Scan Your Schedule", className: "", isAction: true),
+            // Destructive, so it sits last rather than next to the thing that fills classes in.
             settingsBlock(blockName: "Clear My Classes", className: "", isAction: true)
         ]
         tableView = UITableView(frame: .zero, style: .grouped)
