@@ -115,7 +115,7 @@ jobs:
       # download, so a gutted tree looks installed. Only ~/Library/Caches is
       # cached, which holds downloaded archives and cannot mask a missing file.
       - name: Cache CocoaPods downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/Library/Caches/CocoaPods
