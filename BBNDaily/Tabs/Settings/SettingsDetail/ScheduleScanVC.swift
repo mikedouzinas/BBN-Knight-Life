@@ -32,6 +32,8 @@ struct ScannedClass {
     var days: [String]?
 
     static let weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    /// The same five days as `getRegularSchedule` spells them.
+    static let weekdayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
     /// What `days` reads as on the review screen. Empty when every day meets, because a class
     /// that meets all week is the unremarkable case and does not need saying.
@@ -734,6 +736,37 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     /// `ScheduleScanVCTests.testReviewCellCanShowARightHandValue` fails if this returns a style
     /// with no detail label. That is a cheap test for a class of bug that is invisible to every
     /// other check in this repository.
+    /// The five weekday flags to write for a class, given what the sheet said.
+    ///
+    /// A day is only turned OFF when that block genuinely exists in the regular schedule on that
+    /// weekday. Mike, 2026-09-03: *"if a class, just because of the schedule, doesn't have a
+    /// block on Monday, I don't think we should be setting it to false... imagine there's a
+    /// special schedule and it says OK there's class on Monday and this class meets. Then what
+    /// happens?"*
+    ///
+    /// He is right, and the distinction is between two different reasons a course is absent from
+    /// a weekday column:
+    ///
+    /// - The block is there and the student is free in it. Block A exists on Monday and the
+    ///   sheet reads "Unscheduled (Block A)". That is a fact about the CLASS, and false is right.
+    /// - The block is not on that weekday at all. Matteo's sheet has no D block on Wednesday, so
+    ///   "Dance does not meet Wednesday" says nothing about Dance - it is a fact about the
+    ///   SCHEDULE, which the app already knows and which a special day can override.
+    ///
+    /// Writing false for the second case is what would hide a real class on a special schedule
+    /// that puts block A on a Monday. Leaving it true costs nothing on an ordinary week, because
+    /// a day with no A block renders no A row whatever this says.
+    func meetingDayFlags(for row: ScannedClass) -> [String: Bool] {
+        var flags: [String: Bool] = [:]
+        for (index, day) in ScannedClass.weekdays.enumerated() {
+            guard let days = row.days else { flags[day] = true; continue }
+            let blockExistsToday = getRegularSchedule(weekday: ScannedClass.weekdayNames[index])
+                .blocks.contains { $0.block.caseInsensitiveCompare(row.block) == .orderedSame }
+            flags[day] = days.contains(day) || !blockExistsToday
+        }
+        return flags
+    }
+
     /// Does this class document still say it meets every weekday - the state of a class whose
     /// days nobody has ever narrowed?
     ///
@@ -866,12 +899,82 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
 
+    /// How a row's meeting days read on a button: "Every day" when nothing has been narrowed.
+    static func daysSummary(_ row: ScannedClass) -> String {
+        let summary = row.meetingDaysSummary
+        return summary.isEmpty ? "Every day" : summary
+    }
+
+    /// Tick the weekdays this class actually meets.
+    ///
+    /// One alert per tap, re-presented after each toggle. Not elegant, but it matches how grade
+    /// and lunch are already edited on this screen, and it needs no new view controller three
+    /// days before the school year.
+    ///
+    /// The edit applies to the CLASS, so it changes the days for everyone in it - the same thing
+    /// DaySelectVC has always done. Mike, 2026-09-03: *"I don't think there's a need to do a
+    /// bigger scope thing and have it not edit it for everyone because I think that's just a
+    /// later ticket."* Per-student days are HQ-922.
+    private func editDays(at index: Int) {
+        guard index < results.count else { return }
+        let row = results[index]
+        // nil means the sheet did not say, which every reader treats as all five. Ticking from
+        // that state has to start from all five too, or the first tap would silently clear four
+        // days the student never touched.
+        let current = Set(row.days ?? ScannedClass.weekdays)
+
+        let alert = UIAlertController(
+            title: "Block \(row.block.uppercased()) · \(row.subject)",
+            message: "Which days does this meet? This changes the class for everyone in it.",
+            preferredStyle: .alert)
+
+        for (position, day) in ScannedClass.weekdays.enumerated() {
+            let on = current.contains(day)
+            alert.addAction(UIAlertAction(
+                title: "\(on ? "☑︎" : "☐")  \(ScannedClass.weekdayNames[position])",
+                style: .default,
+                handler: { [weak self] _ in
+                    guard let self = self else { return }
+                    var next = current
+                    if on { next.remove(day) } else { next.insert(day) }
+                    // Never store an empty week. Clearing the last day means "I do not know",
+                    // which is nil - all five days on - and never "this class never meets".
+                    let ordered = ScannedClass.weekdays.filter { next.contains($0) }
+                    self.results[index].days = ordered.isEmpty ? nil : ordered
+                    self.tableView.reloadRows(
+                        at: [IndexPath(row: index, section: Section.classes.rawValue)], with: .none)
+                    self.editDays(at: index)
+                }))
+        }
+        alert.addAction(UIAlertAction(title: "Done", style: .cancel))
+        present(alert, animated: true)
+    }
+
     private func editRow(at index: Int) {
         let row = results[index]
         let alert = UIAlertController(title: "Block \(row.block.uppercased())", message: "Fix anything that's wrong, or remove this class.", preferredStyle: .alert)
         alert.addTextField { field in field.text = row.subject; field.placeholder = "Subject" }
         alert.addTextField { field in field.text = row.teacher; field.placeholder = "Teacher" }
         alert.addTextField { field in field.text = row.room; field.placeholder = "Room" }
+        // Days are edited on their own screen rather than as a fourth text field: they are a set
+        // of five choices, not a string, and typing "Tue, Thu" is a worse way to say it than
+        // ticking two boxes.
+        //
+        // This is also currently the ONLY way a student can correct a misread weekday. The class
+        // edit button in Settings has never worked (HQ-929), and the flags now decide whether a
+        // class appears on a day at all, so leaving them read-only made a wrong reading
+        // uncorrectable.
+        if !ClassIdentity.isFree(row.subject) {
+            alert.addAction(UIAlertAction(title: "Days: \(Self.daysSummary(row))", style: .default, handler: { [weak self] _ in
+                // Take the text fields first: opening the day picker discards this alert, and
+                // an edit the student had already typed must not be lost by it.
+                guard let self = self else { return }
+                self.results[index].subject = alert.textFields?[0].text ?? row.subject
+                self.results[index].teacher = alert.textFields?[1].text ?? row.teacher
+                self.results[index].room = alert.textFields?[2].text ?? row.room
+                self.editDays(at: index)
+            }))
+        }
         alert.addAction(UIAlertAction(title: "Remove", style: .destructive, handler: { [weak self] _ in
             guard let self = self else { return }
             self.results.remove(at: index)
@@ -1095,10 +1198,8 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
                 // makes a scan-created class editable by everyone in it. A class created by
                 // photographing a timetable is not owned by the student who photographed it -
                 // which is HQ-923's point, arrived at from the other direction.
-                for day in ScannedClass.weekdays {
-                    payload[day] = row.days.map { $0.contains(day) } ?? true
-                }
-            } else if let days = row.days, Self.meetsEveryWeekday(snapshot?.data()) {
+                for (day, meets) in self.meetingDayFlags(for: row) { payload[day] = meets }
+            } else if row.days != nil, Self.meetsEveryWeekday(snapshot?.data()) {
                 // A CLASS THAT ALREADY EXISTS AND HAS NEVER HAD ITS DAYS NARROWED.
                 //
                 // Found by Mike on 2026-09-03, testing on a fresh account: all seven of his
@@ -1118,9 +1219,26 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
                 // across four real sheets graded by hand, NOT ONE of 28 blocks met all five
                 // weekdays. A class claiming to meet every day at BB&N is a default nobody
                 // has corrected yet.
-                for day in ScannedClass.weekdays {
-                    payload[day] = days.contains(day)
-                }
+                for (day, meets) in self.meetingDayFlags(for: row) { payload[day] = meets }
+            }
+
+            // THE CALENDAR READS AN IN-MEMORY DICTIONARY, NOT FIRESTORE.
+            //
+            // `LoginVC.classMeetingDays` is what all nine consumers actually consult, and until
+            // now only three things ever wrote it: the static all-true default, AuthVC at login,
+            // and DaySelectVC when a student edits by hand. A scan was not one of them.
+            //
+            // So the flags landed in Firestore correctly and the calendar kept drawing the
+            // login-time values - for a student who had no classes when they signed in, that is
+            // five `true`s. Mike, 2026-09-03, after the deploy: "I still see Photography on
+            // Monday", with `mon=false` sitting in the document. Right data, stale cache, and it
+            // "fixed itself" on relaunch because AuthVC rebuilt the dictionary from Firestore.
+            //
+            // Whatever the document ends up saying is what goes in the cache: `payload` when
+            // this write set the days, the existing document's own flags when it did not,
+            // because joining a class somebody has already narrowed must not widen it here.
+            let effectiveDays = ScannedClass.weekdays.map { day -> Bool in
+                (payload[day] as? Bool) ?? (snapshot?.data()?[day] as? Bool) ?? true
             }
 
             // Every write is checked. Both completions used to be `{ _ in }`, so a refused or
@@ -1143,6 +1261,11 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
                             return
                         }
                         LoginVC.blocks[row.block.uppercased()] = classKey
+                        // Written next to `LoginVC.blocks` on purpose: they are two halves of
+                        // the same fact, and the calendar needs both. Setting one without the
+                        // other is what put a class on a day its own document says it does not
+                        // meet.
+                        LoginVC.classMeetingDays[row.block.lowercased()] = effectiveDays
                         // Leaving the old class is cleanup, not part of the save. It runs after
                         // the student's own record is already correct, so a failure here cannot
                         // cost them their schedule - it only leaves them on a roster they are
