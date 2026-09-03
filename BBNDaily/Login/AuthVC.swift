@@ -142,10 +142,19 @@ class AuthVC: CustomLoader {
     // bar, and any read failure here just means no prompt this launch - same as `LoginVC.term`
     // itself, where a failed read leaves the rule not applied rather than the app broken.
     func checkNewYearSetup() {
+        // Whether the student HAS classes decides the wording, and nothing else.
+        //
+        // This used to be `guard hasAnyClass else { return }`, on the reading that a student with
+        // no classes has nothing to "roll over" and is really a new user for onboarding to handle.
+        // That inverted on 2026-09-03, when every student's A-G was cleared for the new year: all
+        // 639 accounts now have no classes, so the guard would have suppressed the prompt for the
+        // entire school on the first morning. They would have opened the app to seven empty blocks
+        // with nothing telling them the scan exists.
+        //
+        // A student with no classes needs this prompt MORE than one with last year's, not less.
         let hasAnyClass = ["A", "B", "C", "D", "E", "F", "G"].contains {
             ((LoginVC.blocks[$0] as? String) ?? "").contains("~")
         }
-        guard hasAnyClass else { return } // nothing set yet to roll over - not this ticket's case
 
         Firestore.firestore().collection("schedules").document("term").getDocument { snapshot, error in
             guard error == nil, let data = snapshot?.data(),
@@ -176,7 +185,7 @@ class AuthVC: CustomLoader {
                 return
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.presentNewYearPrompt(termStart: start)
+                self.presentNewYearPrompt(termStart: start, hasAnyClass: hasAnyClass)
             }
         }
     }
@@ -216,11 +225,16 @@ class AuthVC: CustomLoader {
         return top
     }
 
-    private func presentNewYearPrompt(termStart: String) {
+    /// - Parameter hasAnyClass: whether anything is currently set, which changes the wording only.
+    ///   Offering to "clear last year's classes" to a student who has none reads as a bug, and
+    ///   after the 2026-09-03 reset that is every student in the school.
+    private func presentNewYearPrompt(termStart: String, hasAnyClass: Bool) {
         guard let presenter = topPresenter() else { return }
         let alert = UIAlertController(
             title: "New School Year",
-            message: "Looks like a new year started. Want to clear last year's classes and set up your new ones?\n\nIf you have your printed schedule, you can take a photo of it instead of typing seven classes in.",
+            message: hasAnyClass
+                ? "Looks like a new year started. Want to clear last year's classes and set up your new ones?\n\nIf you have your printed schedule, you can take a photo of it instead of typing seven classes in."
+                : "Welcome back. Your classes aren't set for this year yet.\n\nIf you have your printed schedule, you can take a photo of it instead of typing seven classes in.",
             preferredStyle: .alert
         )
         // Scanning is offered first because this is the exact moment it is worth most: the
