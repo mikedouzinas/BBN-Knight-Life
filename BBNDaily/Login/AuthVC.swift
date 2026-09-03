@@ -290,8 +290,11 @@ class AuthVC: CustomLoader {
         guard let presenter = topPresenter() else { return }
         let scan = ScheduleScanVC()
         let nav = UINavigationController(rootViewController: scan)
-        scan.navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: "Later", style: .plain, target: scan, action: #selector(ScheduleScanVC.closeSelf))
+        // No "Later" button set here any more. It was assigned before the view had loaded, and
+        // `ScheduleScanVC.viewDidLoad` installs its own left button - so this one was overwritten
+        // moments later and never appeared. The screen's own button is the one that should win: it
+        // asks before discarding a scan the student has already spent one of five on, which a bare
+        // `closeSelf` did not.
         nav.modalPresentationStyle = .fullScreen
         presenter.present(nav, animated: true)
     }
