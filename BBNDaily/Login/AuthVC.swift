@@ -228,13 +228,26 @@ class AuthVC: CustomLoader {
     /// - Parameter hasAnyClass: whether anything is currently set, which changes the wording only.
     ///   Offering to "clear last year's classes" to a student who has none reads as a bug, and
     ///   after the 2026-09-03 reset that is every student in the school.
+    ///
+    /// The empty-account wording has to work for TWO different people, which is why it greets
+    /// neither of them: a returning student whose classes were cleared for the new year, and
+    /// somebody signing in for the very first time. Both reach this with no classes set, and
+    /// nothing here can tell them apart - `users/{uid}` records no join date. "Welcome back" was
+    /// wrong for half of them, and the half it was wrong for is a new student's first impression
+    /// of the app.
+    ///
+    /// Both wordings end by saying Settings is always there. "Not Now" is a real option and it
+    /// should not feel like the door closing - a student holding no printed schedule at that
+    /// moment has no way to answer the question yet.
     private func presentNewYearPrompt(termStart: String, hasAnyClass: Bool) {
         guard let presenter = topPresenter() else { return }
+        let scanLine = "If you have your printed schedule, you can take a photo of it instead of typing seven classes in."
+        let settingsLine = "You can always do this later in Settings."
         let alert = UIAlertController(
             title: "New School Year",
             message: hasAnyClass
-                ? "Looks like a new year started. Want to clear last year's classes and set up your new ones?\n\nIf you have your printed schedule, you can take a photo of it instead of typing seven classes in."
-                : "Welcome back. Your classes aren't set for this year yet.\n\nIf you have your printed schedule, you can take a photo of it instead of typing seven classes in.",
+                ? "Looks like a new year started. Want to clear last year's classes and set up your new ones?\n\n\(scanLine)\n\n\(settingsLine)"
+                : "Your classes aren't set up for this year yet.\n\n\(scanLine)\n\n\(settingsLine)",
             preferredStyle: .alert
         )
         // Scanning is offered first because this is the exact moment it is worth most: the
@@ -568,7 +581,26 @@ class AuthVC: CustomLoader {
                     })
                 }
                 //                            isCreated = true
-                LoginVC.blocks = document?.data() ?? [String: Any]()
+                // Only overwrite from Firestore when there IS a Firestore document.
+                //
+                // This was `document?.data() ?? [String: Any]()`, which replaced the in-memory
+                // record with an EMPTY dictionary for anyone signing in for the first time - and
+                // the branch above has no `return`, so a new account always falls through to here.
+                // Seconds earlier that branch set `LoginVC.blocks["uid"]` and wrote the defaults to
+                // Firestore; this threw the in-memory copy away, uid included.
+                //
+                // Everything that writes for a student guards on that uid: resetClasses, the
+                // schedule scan's save, the class picker. So a brand-new account reached the tab
+                // bar and then failed its first action with "Please sign out and back in to fix
+                // your account" - or, from the new-year prompt, "Didn't finish". Signing out and
+                // back in did fix it, because the second sign-in finds the document that the first
+                // one created, which is why it would read as a fluke rather than a bug.
+                //
+                // It matters most on the first day of school, which is exactly when the accounts
+                // being created are ninth graders who have never opened the app.
+                if let existingRecord = document?.data() {
+                    LoginVC.blocks = existingRecord
+                }
                 ScheduleNotifications.syncSubscription()
                 let array = ["a":LoginVC.blocks["A"], "b":LoginVC.blocks["B"], "c":LoginVC.blocks["C"], "d":LoginVC.blocks["D"], "e":LoginVC.blocks["E"], "f":LoginVC.blocks["F"], "g":LoginVC.blocks["G"]]
                 var i = 0
