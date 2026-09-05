@@ -368,6 +368,11 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        stopScanProgress()
+    }
+
+    deinit {
+        scanProgressTimer?.invalidate()
     }
 
     private func promptForPhotoSource() {
@@ -450,16 +455,59 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         return renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: target)) }
     }
 
+    /// What the student is told while they wait, and why it changes.
+    ///
+    /// Measured 2026-09-04 across ten real phone photos: one read averages ~29s, and the server
+    /// may spend a second attempt on a sheet it could not parse the first time. A spinner that
+    /// says nothing for that long reads as a hang, and a student who force-quits and retries has
+    /// burned one of their five scans on an app that was working.
+    ///
+    /// So the wait is named early rather than at the end, and the copy keeps changing to prove
+    /// the app is alive. Single lines on purpose: ProgressHUD renders one.
+    private static let scanProgress: [(after: TimeInterval, text: String)] = [
+        (0, "Reading your schedule..."),
+        (6, "This can take up to a minute."),
+        (25, "Still reading. Keep the app open."),
+        (50, "Almost there."),
+    ]
+
+    private var scanProgressTimer: Timer?
+    private var scanStartedAt: Date?
+
+    private func startScanProgress() {
+        scanStartedAt = Date()
+        var shown = Self.scanProgress[0].text
+        showLoader(text: shown)
+        scanProgressTimer?.invalidate()
+        scanProgressTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self = self, let started = self.scanStartedAt else { return }
+            let elapsed = Date().timeIntervalSince(started)
+            guard let stage = Self.scanProgress.last(where: { elapsed >= $0.after }) else { return }
+            guard stage.text != shown else { return }
+            shown = stage.text
+            self.showLoader(text: stage.text)
+        }
+    }
+
+    /// Always paired with `startScanProgress`. A repeating timer holds a strong reference to its
+    /// own schedule, so one left running keeps firing against a screen the student has left.
+    private func stopScanProgress() {
+        scanProgressTimer?.invalidate()
+        scanProgressTimer = nil
+        scanStartedAt = nil
+    }
+
     private func scanImage(_ image: UIImage) {
         guard let data = downscaled(image).jpegData(compressionQuality: 0.7) else {
             ProgressHUD.colorAnimation = .red
             ProgressHUD.failed("Couldn't read that photo. Try another one.")
             return
         }
-        showLoader(text: "Reading your schedule...")
+        startScanProgress()
         Auth.auth().currentUser?.getIDToken(completion: { [weak self] token, error in
             guard let self = self else { return }
             guard let token = token, error == nil else {
+                self.stopScanProgress()
                 self.hideLoader(completion: {
                     ProgressHUD.colorAnimation = .red
                     ProgressHUD.failed("Couldn't verify your sign-in. Try again.")
@@ -495,9 +543,23 @@ class ScheduleScanVC: UIViewController, UIImagePickerControllerDelegate, UINavig
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
+        // 150s, against a server that gives up at 120 (`maxDuration` on the route).
+        //
+        // The default is 60, and it was the binding timeout in 2.5.0: a scan needing a second
+        // attempt runs ~58s on a real photo, so the phone was hanging up at almost exactly the
+        // moment the server was finishing. Raising the server alone fixed nothing while this
+        // number was 60, which is why it was never the ceiling it looked like.
+        //
+        // Deliberately LONGER than the server's own limit so the client is never the thing that
+        // gives up first. A scan that genuinely fails should come back as the server's error
+        // message, which tells the student what happened and refunds the attempt, rather than as
+        // "couldn't reach the server", which tells them nothing and does not.
+        request.timeoutInterval = 150
+
         URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
+                self.stopScanProgress()
                 self.hideLoader(completion: {
                     self.handleScanResponse(data: data, error: error)
                 })
