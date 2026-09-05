@@ -14,7 +14,18 @@ import { extractStudentClasses } from '@/lib/ingest/extractStudentClasses';
 import { studentClassesBodySchema } from '@/lib/ingest/requestBody';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+
+/**
+ * 120, matching the admin ingest route. Hobby with fluid compute allows up to 300, and the
+ * wait on the model is I/O rather than active CPU, so headroom here is free (HQ-939).
+ *
+ * It is NOT the binding wall, and raising it alone would have fixed nothing. The phone posts
+ * through `URLSession.shared` with no `timeoutInterval` set, so it gives up at its own 60s
+ * default, and that is compiled into 2.5.0. What actually keeps a scan inside both walls is
+ * MAX_ATTEMPTS being 2 rather than 3. This is here so that the day the app sets its own
+ * timeout, the server is not the thing that has to change too.
+ */
+export const maxDuration = 120;
 
 export async function POST(request: Request) {
   try {

@@ -69,7 +69,10 @@ describe('extractStudentClasses', () => {
     expect(toolResults[0].content).toMatch(/block/);
   });
 
-  it('gives up after three attempts and reports the failure rather than a class', async () => {
+  // Two, not three, until the app sets its own request timeout - see MAX_ATTEMPTS. A third
+  // stubbed response is supplied on purpose: if the cap ever silently goes back up, this stops
+  // asserting the cap and starts asserting whatever the loop happens to do.
+  it('gives up after two attempts and reports the failure rather than a class', async () => {
     const { client, create } = stubClient([
       { content: [toolUse('a', BAD)] },
       { content: [toolUse('b', BAD)] },
@@ -77,9 +80,9 @@ describe('extractStudentClasses', () => {
     ]);
     const result = await extractStudentClasses(PHOTO, client);
 
-    expect(create).toHaveBeenCalledTimes(3);
+    expect(create).toHaveBeenCalledTimes(2);
     expect(result.classes).toEqual([]);
-    expect(result.rejected).toHaveLength(3);
+    expect(result.rejected).toHaveLength(2);
   });
 
   it('keeps the good blocks from a batch where one block was bad', async () => {
@@ -677,8 +680,8 @@ describe('a transient model failure', () => {
   });
 
   // Explicit timeout: the backoff is real time, and the point of the test is that it stops
-  // rather than retrying forever. The whole retry budget has to stay small because the route
-  // is maxDuration = 60 and three correctness attempts already spend most of that.
+  // rather than retrying forever. The whole retry budget has to stay small because the phone
+  // hangs up at 60s and two correctness attempts already spend ~34s of that.
   it('gives up after two retries rather than retrying forever', { timeout: 15_000 }, async () => {
     const { client, create } = flakyClient([529, 529, 529], { content: [] });
     await expect(extractStudentClasses(PHOTO, client)).rejects.toThrow(/529/);
@@ -686,8 +689,8 @@ describe('a transient model failure', () => {
   });
 
   it('does not spend a correction attempt on an availability failure', async () => {
-    // One 529, then two rounds of the correctness loop. If the two were conflated, the 529
-    // would eat one of the three correction attempts and the good block would never land.
+    // One 529, then a round of the correctness loop. If the two were conflated, the 529 would
+    // eat one of the two correction attempts and the good block would never land.
     const { client, create } = flakyClient([529], { content: [toolUse('a', GOOD)] });
     const result = await extractStudentClasses(PHOTO, client);
     expect(result.attempts).toBe(1);

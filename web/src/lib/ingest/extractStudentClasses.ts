@@ -29,7 +29,32 @@ import {
 } from './studentClassesTool';
 
 export const STUDENT_INGEST_MODEL = 'claude-opus-5';
-const MAX_ATTEMPTS = 3;
+
+/**
+ * Two, not three, until the app can wait longer than 60 seconds. RESTORE TO 3 IN 2.5.1, once
+ * `ScheduleScanVC.postScan` sets its own `timeoutInterval` (HQ-939).
+ *
+ * There are two 60-second walls, not one. The route's `maxDuration` is the visible one and it
+ * is now 120. The other is invisible from this file: the phone posts through
+ * `URLSession.shared` without setting `timeoutInterval`, so it takes the 60s default and hangs
+ * up on its own whatever the server is still doing. That one is compiled into 2.5.0 and cannot
+ * be changed without an App Store release, which is why raising `maxDuration` alone fixes
+ * nothing this year.
+ *
+ * Measured 2026-09-04 against the anonymised Grade 11 sheet: one attempt is ~17s, so three is
+ * ~51s plus up to 2s of transient backoff. That fits inside 60 by about seven seconds, and the
+ * margin is thinnest on exactly the sheets most likely to need three attempts. Two caps a scan
+ * at ~34s.
+ *
+ * What dropping it costs is close to nothing. Nine live calls that day and eight real BB&N
+ * sheets on 2026-09-03 all read on the FIRST attempt. The third attempt is what creates the
+ * timeout risk and almost never what produces the answer.
+ *
+ * What keeping it costs is the one failure this route cannot refund. `refundClassSetupAttempt`
+ * runs in a `catch`, and a function terminated at the wall runs no `catch`, so a student loses
+ * one of their five scans and gets nothing back for it.
+ */
+const MAX_ATTEMPTS = 2;
 /**
  * Raised from 4000 on 2026-09-03. Seven `emit_student_classes` calls now each carry a `days`
  * array as well as subject, teacher and room, plus five lunch calls, the grade, and whatever
@@ -46,7 +71,8 @@ const MAX_TOKENS = 12000;
  *
  * MAX_ATTEMPTS above is the CORRECTNESS loop: the model emitted something invalid and is being
  * asked to fix it. This is the AVAILABILITY loop: the request never landed. Conflating them
- * would let a single 529 eat one of the three correction attempts.
+ * would let a single 529 eat one of the correction attempts, which matters more now that there
+ * are two of them rather than three.
  *
  * It matters on one specific day. Hundreds of students set their classes up in the same week,
  * many in the same hour, and 529 Overloaded is what that looks like from here - hit while
@@ -56,12 +82,17 @@ const MAX_TOKENS = 12000;
 const TRANSIENT_STATUSES = new Set([408, 429, 500, 502, 503, 504, 529]);
 
 /**
- * Two retries, not more, and a short backoff - because this shares a 60-second budget.
+ * Two retries, not more, and a short backoff - because this shares the phone's 60-second wall.
  *
- * The route is `maxDuration = 60`, and one Opus call on a schedule photo measured ~12s. Three
- * correctness attempts is already ~36s of that, so the availability retries have to be cheap
- * or a scan that would have succeeded gets killed by the platform instead. Worst case here is
- * about 1.5s of waiting per correctness attempt, which fits.
+ * One Opus call on a schedule photo measured ~17s on 2026-09-04, so two correctness attempts
+ * spend ~34s of that, and the availability retries have to stay cheap or a scan that would have
+ * succeeded gets hung up on by the client instead. Worst case here is about 1.5s of waiting per
+ * correctness attempt, which fits.
+ *
+ * These retries are for a 529, which clears in milliseconds. A 429 would want the `retry-after`
+ * header instead, and this ignores it - acceptable only because the account has room to spare:
+ * measured 2026-09-04, 5,000 requests and 1,000,000 output tokens per minute against a school
+ * of ~645. Recheck that assumption before pointing this at a bigger population.
  */
 const MAX_TRANSIENT_RETRIES = 2;
 const RETRY_BASE_MS = 400;
