@@ -160,7 +160,32 @@ class AuthVC: CustomLoader {
             guard error == nil, let data = snapshot?.data(),
                   let start = data["start"] as? String else { return }
             let recordedFor = LoginVC.blocks["classesSetForTermStart"] as? String
-            guard recordedFor != start else { return } // already set up for the current term
+
+            // HQ-954: the flag ALONE is not evidence a student is set up, and trusting it
+            // stranded real students for a whole term.
+            //
+            // `startNewYearSetup` records the term on the success of the CLEAR, before anything
+            // new has been saved. So a student who taps "Scan My Schedule" and backs out of the
+            // scanner, or taps "Set Up by Hand" and never opens Settings, ends with the flag set
+            // and zero classes. This guard then returned on every later launch and they saw seven
+            // blank blocks until June, with nothing offering to fix it. Two students were already
+            // in that state on 2026-09-06, two days before the term began, out of the handful who
+            // had reached the prompt at all.
+            //
+            // Requiring BOTH suppresses the prompt only when the student is actually set up,
+            // which is what this guard was always trying to say. It also repairs the already
+            // stranded on their next launch instead of needing a server-side sweep, because it
+            // stops trusting a field that can lie and reads the thing itself.
+            //
+            // The write is deliberately left where it is. This is the only reader of the field in
+            // the app, so correcting the read corrects the behaviour completely; moving the write
+            // would mean touching every save path for a strictly smaller gain.
+            //
+            // A student who genuinely wants no classes is asked again each launch and answers
+            // "Not Now", which records nothing. One tap beats a term of blank blocks, and a
+            // student with zero classes set is by definition not set up.
+            guard Self.isSetUpForTerm(recordedFor: recordedFor, termStart: start,
+                                      hasAnyClass: hasAnyClass) == false else { return }
 
             // WHEN to ask is a school-calendar decision, so it lives in schedules/term with
             // the rest of the school calendar rather than as a constant compiled into the
@@ -181,13 +206,34 @@ class AuthVC: CustomLoader {
             let today = Calendar.current.startOfDay(for: Date())
             guard today >= window.opens else { return }   // too early: wait, record nothing
             guard today <= window.closes else {           // long past: not a rollover
-                Self.recordTermSetup(start)
+                // Only write if it is not already recorded. Before HQ-954 the guard above
+                // returned whenever the flag matched, so this could never be reached twice for
+                // one student. Now a student with no classes falls through it every launch, and
+                // without this check that is a redundant Firestore write on each one.
+                if recordedFor != start { Self.recordTermSetup(start) }
                 return
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 self.presentNewYearPrompt(termStart: start, hasAnyClass: hasAnyClass)
             }
         }
+    }
+
+    /// Whether this student is genuinely set up for `termStart`, and so should not be prompted.
+    ///
+    /// Pulled out of `checkNewYearSetup` so it can be tested. The bug it replaces (HQ-954) lived
+    /// inside a closure inside a Firestore callback inside a view controller, where nothing could
+    /// reach it, and it cost two students their whole term. The decision is three booleans and
+    /// belongs somewhere a test can call.
+    ///
+    /// - Parameters:
+    ///   - recordedFor: `users/{uid}.classesSetForTermStart`, nil or "" if never recorded.
+    ///   - termStart: `schedules/term.start` for the term running now.
+    ///   - hasAnyClass: whether any of A-G actually holds a class key.
+    static func isSetUpForTerm(recordedFor: String?, termStart: String, hasAnyClass: Bool) -> Bool {
+        // BOTH, deliberately. The flag says the student went through the flow; the classes say
+        // the flow finished. Either one alone can be true while the student sits on seven blanks.
+        return recordedFor == termStart && hasAnyClass
     }
 
     /// The dates between which the new-year prompt may appear, read from `schedules/term`.
