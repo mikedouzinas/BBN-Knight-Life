@@ -298,6 +298,90 @@ function Headline({ day, clock }: { day: DayPayload; clock: number }) {
 
 /* ---------- the day ------------------------------------------------------ */
 
+/* ---------- a real calendar --------------------------------------------
+ * The week strip covers the common case (some other day this week). This covers every other
+ * case: a Monday in November, the day before a break, whatever.
+ *
+ * An expanding panel rather than a floating popover, so it pushes the day down instead of
+ * covering it. A popover over a schedule is a popover hiding the thing you opened it to
+ * compare against.
+ */
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+
+function monthGrid(year: number, month: number): (string | null)[] {
+  const first = new Date(Date.UTC(year, month, 1));
+  const lead = first.getUTCDay();
+  const days = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const cells: (string | null)[] = Array.from({ length: lead }, () => null);
+  for (let d = 1; d <= days; d++) {
+    cells.push(`${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+  }
+  return cells;
+}
+
+function Calendar({ selected, onPick }: { selected: string; onPick: (iso: string) => void }) {
+  const [y, m] = useMemo(() => {
+    const [year, month] = selected.split('-').map(Number);
+    return [year, month - 1];
+  }, [selected]);
+  const [view, setView] = useState({ y, m });
+
+  // Follow the selection when it moves to another month, so opening the calendar always
+  // lands on the month you are looking at rather than wherever it was left.
+  useEffect(() => setView({ y, m }), [y, m]);
+
+  const cells = monthGrid(view.y, view.m);
+  const today = localToday();
+
+  const step = (delta: number) => {
+    const next = new Date(Date.UTC(view.y, view.m + delta, 1));
+    setView({ y: next.getUTCFullYear(), m: next.getUTCMonth() });
+  };
+
+  return (
+    <div className="kl-cal">
+      <div className="kl-cal-head">
+        <button type="button" className="kl-cal-step" onClick={() => step(-1)} aria-label="Previous month">
+          &lsaquo;
+        </button>
+        <span className="kl-cal-month">{MONTHS[view.m]} {view.y}</span>
+        <button type="button" className="kl-cal-step" onClick={() => step(1)} aria-label="Next month">
+          &rsaquo;
+        </button>
+      </div>
+
+      <div className="kl-cal-dow" aria-hidden>
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <span key={i}>{d}</span>)}
+      </div>
+
+      <div className="kl-cal-grid">
+        {cells.map((iso, i) => {
+          if (!iso) return <span key={`pad-${i}`} className="kl-cal-pad" />;
+          const dow = new Date(`${iso}T00:00:00Z`).getUTCDay();
+          const weekend = dow === 0 || dow === 6;
+          return (
+            <button
+              key={iso}
+              type="button"
+              className={[
+                'kl-cal-day',
+                iso === selected ? 'is-selected' : '',
+                iso === today ? 'is-today' : '',
+                weekend ? 'is-weekend' : '',
+              ].filter(Boolean).join(' ')}
+              onClick={() => onPick(iso)}
+              aria-current={iso === selected ? 'date' : undefined}
+            >
+              {Number(iso.slice(8))}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function DaySheet({
   day, week, clock, isToday, onPick, onToday,
 }: {
@@ -308,6 +392,7 @@ function DaySheet({
   onPick: (iso: string) => void;
   onToday: () => void;
 }) {
+  const [calOpen, setCalOpen] = useState(false);
   const { current } = useMemo(
     () => (isToday ? nowAndNext(day.rows, clock, parseTime12) : { current: null, next: null }),
     [day.rows, clock, isToday],
@@ -317,21 +402,38 @@ function DaySheet({
     <section className="kl-sheet">
       <header className="kl-sheet-head">
         <h2>{day.label.replace(/,\s*\d{4}$/, '')}</h2>
-        <nav className="kl-week" aria-label="Pick a day">
-          {week.map((d) => (
-            <button
-              key={d.date}
-              type="button"
-              className={`kl-week-day${d.date === day.date ? ' is-current' : ''}${d.closed ? ' is-closed' : ''}`}
-              onClick={() => onPick(d.date)}
-              aria-current={d.date === day.date}
-            >
-              <span>{shortDay(d.label)}</span>
-              <em>{Number(d.date.slice(8))}</em>
-            </button>
-          ))}
-        </nav>
+        <div className="kl-sheet-nav">
+          <nav className="kl-week" aria-label="Pick a day this week">
+            {week.map((d) => (
+              <button
+                key={d.date}
+                type="button"
+                className={`kl-week-day${d.date === day.date ? ' is-current' : ''}${d.closed ? ' is-closed' : ''}`}
+                onClick={() => onPick(d.date)}
+                aria-current={d.date === day.date}
+              >
+                <span>{shortDay(d.label)}</span>
+                <em>{Number(d.date.slice(8))}</em>
+              </button>
+            ))}
+          </nav>
+          <button
+            type="button"
+            className={`kl-cal-toggle${calOpen ? ' is-open' : ''}`}
+            onClick={() => setCalOpen((v) => !v)}
+            aria-expanded={calOpen}
+          >
+            {calOpen ? 'Close calendar' : 'Another day'}
+          </button>
+        </div>
       </header>
+
+      {calOpen && (
+        <Calendar
+          selected={day.date}
+          onPick={(iso) => { onPick(iso); setCalOpen(false); }}
+        />
+      )}
 
       {!isToday && <button type="button" className="kl-link" onClick={onToday}>Back to today</button>}
 

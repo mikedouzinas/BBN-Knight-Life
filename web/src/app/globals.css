@@ -729,6 +729,106 @@ code {
 
 .kl-day-image { display: block; width: 100%; border-radius: 14px; margin-top: 16px; }
 
+/* ---------- the calendar ----------------------------------------------
+ * An expanding panel, not a floating popover: it pushes the day down rather than covering
+ * it. A popover over a schedule hides the thing you opened it to compare against, and this
+ * page has a standing rule that nothing overlaps anything.
+ */
+
+.kl-sheet-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.kl-cal-toggle {
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--hair);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.kl-cal-toggle:hover { border-color: var(--hair-hi); color: var(--text); }
+.kl-cal-toggle.is-open {
+  background: var(--surface-hi);
+  border-color: rgba(var(--gold-rgb), 0.45);
+  color: var(--text);
+}
+
+.kl-cal {
+  /* Capped, not fluid. Seven fluid columns across a 44rem sheet made each square 96px tall
+     and the month taller than the schedule it was there to navigate. A calendar wants to be
+     glanced at whole. */
+  max-width: 21rem;
+  margin: 14px 0 4px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--hair);
+  background: var(--surface);
+}
+
+.kl-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.kl-cal-month { font-size: 15px; font-weight: 600; }
+.kl-cal-step {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid var(--hair);
+  background: transparent;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.kl-cal-step:hover { background: var(--surface-hi); border-color: var(--hair-hi); }
+
+.kl-cal-dow,
+.kl-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+.kl-cal-dow {
+  margin-bottom: 4px;
+}
+.kl-cal-dow > span {
+  text-align: center;
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.kl-cal-pad { display: block; }
+
+.kl-cal-day {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.kl-cal-day:hover { background: var(--well-hi); }
+.kl-cal-day.is-weekend { color: var(--faint); }
+/* Today gets a ring, the day you are looking at gets the fill. They are different questions
+ * and on most days they are the same square, so they must not use the same treatment. */
+.kl-cal-day.is-today { border-color: rgba(var(--gold-rgb), 0.55); }
+.kl-cal-day.is-selected {
+  background: var(--gold);
+  color: #1a1305;
+  font-weight: 600;
+}
+
 /* ---------- actions ---------------------------------------------------- */
 
 .kl-primary {
