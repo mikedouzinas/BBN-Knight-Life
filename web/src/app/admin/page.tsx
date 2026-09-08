@@ -116,6 +116,13 @@ export default function AdminPage() {
       )}
       <IngestTool options={{ getToken }} />
       <LinkAgent />
+      {/* Moved off the root layout's footer, which now also wraps the student schedule.
+          This is addressed to the eight people who can publish, so it belongs on the page
+          where publishing happens rather than under everyone's day. */}
+      <p className="note">
+        Schedules published here reach students on their next app launch, and on the web
+        immediately. Check the day against your source before you publish it.
+      </p>
     </>
   );
 }
