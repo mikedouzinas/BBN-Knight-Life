@@ -108,8 +108,14 @@ body::before {
   color: var(--gold);
 }
 
-main { position: relative; max-width: 880px; margin: 0 auto; padding: 32px 20px 56px; }
-footer {
+/* Scoped for the same reason as the footer below: page layout, not any nested <main>. */
+body > main { position: relative; max-width: 880px; margin: 0 auto; padding: 32px 20px 56px; }
+/* `body >`, not a bare `footer`. This rule is PAGE layout: the 880px measure and the 20px
+ * gutter that match `main`. As a bare type selector it also hit any <footer> a component
+ * rendered inside main, re-centring it in a second 880px box and adding a second 20px
+ * gutter, so the student page's own footer sat 20px further in than every other element on
+ * the page. Scoped to the direct child, which is the only footer this is about. */
+body > footer {
   position: relative;
   max-width: 880px;
   margin: 0 auto;
@@ -522,9 +528,18 @@ code {
  * nothing there can reach this.
  * ---------------------------------------------------------------------- */
 
+/* No measure of its own. `main` is already 880px centred, and the page's <h1>, the
+ * maintainer link and the layout footer all sit on that edge. A second 44rem box centred
+ * inside it put every card 68px further in than the heading above them, which read as the
+ * heading being off-centre rather than the cards being narrow.
+ *
+ * Line length is still controlled where it matters: the prose blocks below cap themselves,
+ * so widening this container does not produce 840px-wide sentences. */
 .kl {
-  max-width: 44rem;
-  margin: 0 auto;
+  max-width: none;
+  /* The page <h1> sits 6px above this. That is right for a heading over body text and too
+     tight over a filled hero or a mode banner. */
+  margin-top: 18px;
 }
 
 .kl-note {
@@ -619,7 +634,7 @@ code {
   background: rgba(26, 19, 5, 0.58);
 }
 
-.kl-then { margin: 14px 4px 0; font-size: 15.5px; color: var(--muted); }
+.kl-then { margin: 14px 0 0; font-size: 15.5px; color: var(--muted); }
 
 .kl-signin { text-align: left; }
 .kl-signin-body {
@@ -992,6 +1007,10 @@ code {
   .kl-setup-fields { grid-template-columns: minmax(0, 1fr); }
   .kl-fieldset { padding: 16px; }
 }
+
+/* The maintainer link is for a different audience than everything above it, so it gets real
+ * separation rather than sitting as one more line in the student's footer. */
+.admin-link { margin-top: 30px; opacity: 0.72; }
 
 /* Focus stays visible: this page is used in a hurry, often on a borrowed device. */
 .kl button:focus-visible,
