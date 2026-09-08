@@ -508,123 +508,396 @@ code {
   word-break: break-word;
 }
 
-/* ---------- student schedule -------------------------------------------
- * The viewer at the root. Reuses .card, .field, .band-letter, .band-time and .room from
- * the admin tool so the two surfaces are visibly one product; everything below is layout
- * the rail-based preview does not provide, because a student reads a list and a maintainer
- * reads a timeline.
- */
-.student-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-.student-bar .switcher { display: flex; align-items: center; gap: 8px; margin: 0; }
-.student-bar-right { display: flex; gap: 8px; }
+/* ---------- student schedule (/schedule) ------------------------------
+ * Namespaced `kl-` and self-contained. It shares the page tokens with the admin tool so the
+ * two read as one product, but it does not reuse .card or .band: those are shaped for a
+ * maintainer reviewing a published day, and a student needs different shapes.
+ *
+ * The rule the page is built on: exactly ONE filled surface. The block you are in right now
+ * is gold with dark text, and everything else is a hairline or nothing. A page where every
+ * element is a card at the same size gives the eye no entry point, which is what the first
+ * version did.
+ *
+ * Every selector below is prefixed `.kl`, so nothing here can reach the admin tool and
+ * nothing there can reach this.
+ * ---------------------------------------------------------------------- */
 
-.nownext {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 4px 0 14px;
+.kl {
+  max-width: 44rem;
+  margin: 0 auto;
 }
-.nownext > div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+
+.kl-note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+.kl-error {
+  color: var(--bad);
+  font-size: 13.5px;
+  margin: 12px 0 16px;
   padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--well);
-  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: rgba(240, 115, 107, 0.09);
+  border: 1px solid rgba(240, 115, 107, 0.28);
 }
-.nownext-label {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-.nownext strong { font-weight: 600; }
-.nownext .room, .nownext .band-time { margin-left: 0; }
 
-.student-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.student-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 12px;
+/* ---------- view mode: the answer -------------------------------------- */
+
+.kl-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  padding: 26px 28px 24px;
+}
+.kl-hero > *:not(.glow-layer) { position: relative; z-index: 1; }
+
+/* The one filled surface on the page: dark text on gold, unmistakably the answer rather
+ * than another panel. */
+.kl-hero-now {
+  background: linear-gradient(168deg, var(--gold-bright) 0%, var(--gold) 62%, #d2932c 100%);
+  color: #1a1305;
+}
+.kl-hero-quiet {
   background: var(--surface);
   border: 1px solid var(--hair);
-  border-left: 3px solid var(--hair);
+  color: var(--text);
 }
-.student-row.now {
-  border-left-color: var(--gold);
-  background: var(--surface-hi);
-}
-.student-row .band-name { flex: 1 1 auto; min-width: 0; }
-.student-row .band-letter.blank { background: transparent; color: transparent; }
-.student-row .room {
-  font-family: var(--font-mono), monospace;
-  font-size: 11.5px;
-  color: var(--muted);
-  flex: none;
-}
-.day-image { display: block; width: 100%; border-radius: 12px; margin-top: 12px; }
 
-.week { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.week-day {
+.kl-hero-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.kl-hero-class {
+  margin: 0;
+  min-width: 0;
+  font-size: clamp(27px, 5.4vw, 42px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+/* The room is set nearly as large as the class name. In week one it is the half a student
+ * has not memorised, and it is the reason they opened this while walking. */
+.kl-hero-room {
+  margin: 0;
+  flex: none;
+  font-family: var(--font-mono), monospace;
+  font-size: clamp(21px, 4.2vw, 33px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kl-hero-meta {
+  margin: 14px 0 0;
+  font-size: 14.5px;
+  opacity: 0.8;
+}
+.kl-hero-now .kl-hero-meta strong { font-weight: 600; }
+
+.kl-hero-eyebrow { margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+.kl-hero-then { margin: 12px 0 0; font-size: 15px; color: var(--muted); }
+
+/* How far through the block you are. It moves when the clock moves and never otherwise. */
+.kl-progress {
+  margin-top: 18px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(26, 19, 5, 0.22);
+  overflow: hidden;
+}
+.kl-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(26, 19, 5, 0.58);
+}
+
+.kl-then { margin: 14px 4px 0; font-size: 15.5px; color: var(--muted); }
+
+.kl-signin { text-align: left; }
+.kl-signin-body {
+  margin: 16px 0 22px;
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 34rem;
+  line-height: 1.55;
+}
+
+/* ---------- view mode: the rest of the day ----------------------------- */
+
+.kl-sheet { margin-top: 34px; }
+
+.kl-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--hair);
+}
+.kl-sheet-head h2 { margin: 0; font-size: 17px; font-weight: 500; color: var(--text); }
+
+.kl-week { display: flex; gap: 4px; }
+.kl-week-day {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  align-items: flex-start;
-  padding: 10px;
-  border-radius: 12px;
-  background: var(--well);
-  border: 1px solid var(--hair);
-  text-align: left;
-  font: inherit;
-  color: var(--text);
-}
-.week-day.current { border-color: rgba(var(--gold-rgb), 0.55); background: var(--well-hi); }
-.week-day.closed { opacity: 0.55; }
-.week-day-name { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); }
-.week-day-num { font-family: var(--font-mono), monospace; font-size: 17px; font-weight: 600; }
-.week-day-count { font-size: 11px; color: var(--muted); }
-
-.setup-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.setup-row .field { flex: 1 1 auto; min-width: 0; margin: 0; padding: 0; }
-.setup-row select { width: 100%; }
-.setup-room {
-  flex: 0 0 90px;
-  background: var(--well);
-  border: 1px solid var(--hair-field);
+  align-items: center;
+  gap: 1px;
+  min-width: 42px;
+  padding: 6px 8px;
   border-radius: 10px;
-  padding: 9px 10px;
-  color: var(--text);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
   font: inherit;
-  font-size: 13.5px;
+  cursor: pointer;
 }
-.setup-grade { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.kl-week-day > span { font-size: 10.5px; }
+.kl-week-day > em {
+  font-family: var(--font-mono), monospace;
+  font-style: normal;
+  font-size: 15px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.kl-week-day:hover { background: var(--surface); color: var(--text); }
+.kl-week-day.is-current {
+  background: var(--surface-hi);
+  border-color: rgba(var(--gold-rgb), 0.5);
+  color: var(--text);
+}
+.kl-week-day.is-closed { opacity: 0.4; }
 
-.download {
+.kl-rows { list-style: none; margin: 0; padding: 0; }
+
+/* A grid, not flex, so every time and every room lands in a real column. That alignment is
+ * what lets the day be scanned in one pass. */
+.kl-row {
+  display: grid;
+  grid-template-columns: 3.6rem 1.5rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 4px 11px 10px;
+  border-bottom: 1px solid var(--hair);
+  border-left: 2px solid transparent;
+}
+.kl-row-time {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.kl-row-block {
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gold);
+}
+.kl-row-name { font-size: 15px; color: var(--text); }
+.kl-row-name > em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--faint);
+  margin-left: 6px;
+}
+.kl-row-room {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Where you are in the day, drawn. A block that is over recedes; the one you are in is
+ * marked on its left edge rather than filled, because the hero is already the filled thing. */
+.kl-row.is-past { opacity: 0.42; }
+.kl-row.is-now { border-left-color: var(--gold); background: var(--surface); }
+.kl-row.is-now .kl-row-name { font-weight: 600; }
+.kl-row.is-lunch .kl-row-name { color: var(--muted); }
+.kl-row.is-free .kl-row-name,
+.kl-row.is-free .kl-row-block { color: var(--faint); }
+
+.kl-closed { margin: 22px 0 0; font-size: 17px; color: var(--muted); }
+.kl-closed span { color: var(--text); }
+
+.kl-day-image { display: block; width: 100%; border-radius: 14px; margin-top: 16px; }
+
+/* ---------- actions ---------------------------------------------------- */
+
+.kl-primary {
   display: inline-block;
-  padding: 10px 16px;
+  padding: 12px 20px;
+  border: none;
   border-radius: 12px;
   background: var(--gold);
   color: #1a1305;
+  font: inherit;
+  font-size: 15px;
   font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
 }
-.download:hover { background: var(--gold-bright); }
-.admin-link { margin-top: 26px; opacity: 0.75; }
+.kl-primary:hover:not(:disabled) { background: var(--gold-bright); }
+.kl-primary:disabled { opacity: 0.5; cursor: default; }
 
-@media (max-width: 620px) {
-  .nownext { grid-template-columns: 1fr; }
-  .week { grid-template-columns: repeat(3, 1fr); }
-  .student-row .band-time { display: block; font-size: 11px; }
-  .setup-row { flex-wrap: wrap; }
-  .setup-row .field { flex-basis: 100%; order: 3; }
+.kl-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13.5px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.kl-link:hover { color: var(--text); }
+
+.kl-foot { margin-top: 38px; padding-top: 22px; border-top: 1px solid var(--hair); }
+.kl-foot-links { display: flex; gap: 18px; margin-top: 20px; }
+
+/* ---------- edit mode: a different screen, not a panel ----------------
+ * The schedule and this form share a URL, so they have to LOOK different or a student
+ * cannot tell which one they are in. View mode leads with a filled gold hero; edit mode has
+ * no hero at all, leads with a banner naming the mode, and groups its inputs into bordered
+ * fieldsets. They never render at the same time.
+ * ---------------------------------------------------------------------- */
+
+.kl-setup-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 13px 18px;
+  border-radius: 12px;
+  background: rgba(var(--gold-rgb), 0.1);
+  border: 1px solid rgba(var(--gold-rgb), 0.32);
+}
+.kl-setup-bar-title { font-size: 15px; font-weight: 600; color: var(--gold); }
+
+.kl-setup-lede {
+  margin: 18px 0 26px;
+  font-size: 15.5px;
+  color: var(--muted);
+  max-width: 36rem;
+  line-height: 1.55;
+}
+
+/* Each group of inputs is visibly its own thing, so grade and blocks are not one long
+ * undifferentiated column of dropdowns. */
+.kl-fieldset {
+  padding: 20px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--hair);
+  background: var(--surface);
+}
+.kl-fieldset-title { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); }
+.kl-fieldset-why { margin: 4px 0 16px; font-size: 13px; color: var(--muted); }
+
+.kl-grade-select { min-width: 12rem; }
+
+.kl-setup-rows { list-style: none; margin: 0; padding: 0; }
+
+/* A fixed letter gutter. The letter never moves, so seven rows read as one list rather than
+ * seven unrelated controls, and a long class name cannot push it around. */
+.kl-setup-row {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--hair);
+}
+.kl-setup-row:first-child { border-top: none; }
+
+.kl-setup-letter {
+  font-family: var(--font-mono), monospace;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  padding: 4px 0;
+  border-radius: 7px;
+  color: var(--faint);
+  background: var(--well);
+}
+.kl-setup-row.is-set .kl-setup-letter { color: #1a1305; background: var(--gold); }
+
+/* Class select and room field side by side, and they cannot overlap: the room is a fixed
+ * track, the select takes the rest, and minmax(0,1fr) makes a long option label shrink the
+ * select instead of overflowing the row. */
+.kl-setup-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.5rem;
+  gap: 8px;
+}
+
+.kl-setup select,
+.kl-setup input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 11px;
+  border-radius: 10px;
+  border: 1px solid var(--hair-field);
+  background: var(--well);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+.kl-setup select:hover,
+.kl-setup input:hover { border-color: var(--hair-hi); }
+
+/* NOT sticky. A sticky bar overlays whatever is behind it by definition, and on a short
+ * screen it sat on top of the second block's row so the class and room were half hidden.
+ * This form is seven rows and a dropdown; it does not need a floating action. Its own
+ * bordered block at the end, so the action is clearly the last separate part of the screen
+ * rather than something covering the form.
+ */
+.kl-setup-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid var(--hair);
+  background: var(--surface);
+}
+.kl-setup-actions .kl-note { margin: 0; flex: 1 1 14rem; }
+
+/* ---------- small screens ---------------------------------------------- */
+
+@media (max-width: 560px) {
+  .kl-hero { padding: 20px 20px 18px; border-radius: 16px; }
+  .kl-hero-top { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .kl-sheet-head { align-items: flex-start; }
+  .kl-week { width: 100%; justify-content: space-between; }
+
+  /* Drop the room out of the row grid and put it under the class name. A fourth column at
+     this width squeezed long class names to two characters. */
+  .kl-row { grid-template-columns: 3.2rem 1.2rem minmax(0, 1fr); row-gap: 1px; }
+  .kl-row-room { grid-column: 3; font-size: 12px; color: var(--faint); }
+
+  /* Stack the class select above the room field. Side by side, the room took 5.5rem of a
+     320px screen and the select could not show a class name. */
+  .kl-setup-fields { grid-template-columns: minmax(0, 1fr); }
+  .kl-fieldset { padding: 16px; }
+}
+
+/* Focus stays visible: this page is used in a hurry, often on a borrowed device. */
+.kl button:focus-visible,
+.kl a:focus-visible,
+.kl select:focus-visible,
+.kl input:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
