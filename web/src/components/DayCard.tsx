@@ -25,7 +25,7 @@ export function DayCard({
 
   return (
     <section className="card day">
-      <Glow size={280} intensity={0.13} color="255, 214, 130" />
+      <Glow size={160} intensity={0.13} color="255, 214, 130" />
       <header>
         <h3>{displayDate(candidate.date)}</h3>
         {candidate.day.reason && <p className="reason">{candidate.day.reason}</p>}

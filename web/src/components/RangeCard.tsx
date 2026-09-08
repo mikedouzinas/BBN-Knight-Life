@@ -46,7 +46,7 @@ export function RangeCard({
 
   return (
     <section className="card day">
-      <Glow size={300} intensity={0.1} />
+      <Glow size={160} intensity={0.1} />
 
       <div className="standalone-row">
         <Glow size={160} intensity={0.16} color="255, 214, 130" />

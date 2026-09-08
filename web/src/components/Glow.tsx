@@ -29,15 +29,29 @@ function subscribe(): () => void {
   };
 }
 
+/**
+ * The ceiling on a glow, in pixels.
+ *
+ * Past about this width the effect stops reading as a point of light following the cursor
+ * and starts reading as an inward glow washing the whole surface, which is the thing
+ * globals.css says this design does not do. The card glows had drifted to 280 and 300,
+ * where it is most visible because those cards are the widest.
+ *
+ * Clamped here rather than left as a convention. A convention about a number comes back the
+ * first time somebody types `size={300}` on a narrow card where it looks fine.
+ */
+const MAX_SIZE = 160;
+
 export function Glow({
   color = '202, 226, 255',
   intensity = 0.4,
-  size = 200,
+  size: requestedSize = MAX_SIZE,
 }: {
   color?: string;
   intensity?: number;
   size?: number;
 }) {
+  const size = Math.min(requestedSize, MAX_SIZE);
   const dot = useRef<HTMLDivElement>(null);
   const [fine, setFine] = useState(false);
 
