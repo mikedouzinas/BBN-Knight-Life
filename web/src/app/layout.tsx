@@ -21,8 +21,8 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Knight Life admin',
-  description: 'Change what Knight Life shows students for a day.',
+  title: 'Knight Life',
+  description: 'BB&N schedules, for students and for the people who publish them.',
   // metadata.icons is NOT base-path-prefixed by Next. See src/lib/basePath.ts.
   icons: { icon: withBasePath('/knight-life-icon.png') },
 };
@@ -39,15 +39,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <img src={withBasePath('/knight-life-icon.png')} alt="" width={34} height={34} />
             <span className="wordmark">
               Knight Life
-              <span className="wordmark-sub">admin</span>
+              <span className="wordmark-sub">BB&amp;N</span>
             </span>
           </Link>
         </header>
         <main>{children}</main>
         <footer>
+          {/* Deliberately not the admin warning that used to be here. This layout wraps the
+              student schedule now, and 640 people do not publish anything. The warning moved
+              to the admin page, next to the button it is about. */}
           <p>
-            Schedules published here reach students on their next app launch. Check the day
-            against your source before you publish it.
+            Also an{' '}
+            <a href="https://apps.apple.com/us/app/bb-ns-knight-life/id1585503654">iOS app</a>. Both
+            read the same schedule.
           </p>
         </footer>
       </body>

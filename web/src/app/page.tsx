@@ -3,8 +3,16 @@ import Link from 'next/link';
 export default function Home() {
   return (
     <>
-      <h1>Knight Life admin</h1>
+      <h1>Knight Life</h1>
       <div className="card">
+        <h2>Students</h2>
+        <p>
+          <Link href="/schedule">See your schedule</Link> on any screen. Sign in with the same Google
+          account you use in the app and your classes come with you.
+        </p>
+      </div>
+      <div className="card">
+        <h2>Knight Life admin</h2>
         <p>
           BB&amp;N sends a schedule change. Paste it, or drop in the PDF or a photo of it. The tool reads it,
           shows you the result as the students will see it, and publishes only after you say it is right.

@@ -56,7 +56,7 @@ export function SourceForm({
 
   return (
     <form className="card" onSubmit={submit}>
-      <Glow size={300} intensity={0.1} />
+      <Glow size={160} intensity={0.1} />
 
       <h2>Schedule changer</h2>
       <p className="note lede">

@@ -176,6 +176,20 @@ service cloud.firestore {
         && (rosterUnchanged() || addsOnlySelf() || removesOnlySelf());
     }
 
+    // The school's class catalogue: every class, its block, its teacher and its room.
+    //
+    // Closed to clients on purpose, and the catch-all below would close it anyway. Spelled
+    // out for the same reason `feedback` is: this collection is read constantly by the web
+    // schedule viewer through the Admin SDK, which does not consult these rules, so someone
+    // finding heavy traffic against a collection with no rule should see the intent rather
+    // than conclude a rule was forgotten. It also carries every teacher's name and room.
+    //
+    // Written by web/scripts/import-catalogue.mjs, which holds the service account.
+    match /catalogue/{year} {
+      allow read:  if false;
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
