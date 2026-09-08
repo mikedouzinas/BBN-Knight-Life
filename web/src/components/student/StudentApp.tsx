@@ -125,7 +125,7 @@ export function StudentApp() {
   if (!token) {
     return (
       <section className="card">
-        <Glow size={280} intensity={0.13} color="255, 214, 130" />
+        <Glow size={160} intensity={0.13} color="255, 214, 130" />
         <h2>Your schedule, on any screen</h2>
         <p>
           Sign in with the same Google account you use in the Knight Life app and your classes come with
@@ -191,7 +191,7 @@ function DayView({ day, clock, isToday }: { day: DayPayload; clock: number; isTo
 
   return (
     <section className="card day">
-      <Glow size={280} intensity={0.13} color="255, 214, 130" />
+      <Glow size={160} intensity={0.13} color="255, 214, 130" />
       <header>
         <h3>{day.label}</h3>
         {day.reason && <p className="reason">{day.reason}</p>}
@@ -248,7 +248,7 @@ function label(row: StudentRow): string {
 function WeekView({ week, current, onPick }: { week: DayPayload[]; current: string; onPick: (iso: string) => void }) {
   return (
     <section className="card">
-      <Glow size={280} intensity={0.1} color="255, 214, 130" />
+      <Glow size={160} intensity={0.1} color="255, 214, 130" />
       <h3>This week</h3>
       <div className="week">
         {week.map((day) => (
@@ -273,7 +273,7 @@ function WeekView({ week, current, onPick }: { week: DayPayload[]; current: stri
 function Export({ token, from }: { token: string; from: string }) {
   return (
     <section className="card">
-      <Glow size={280} intensity={0.1} color="255, 214, 130" />
+      <Glow size={160} intensity={0.1} color="255, 214, 130" />
       <h3>Put it in your calendar</h3>
       <p className="note">
         Downloads every class from {from} to the end of the term as a calendar file. Add it to Google
@@ -342,7 +342,7 @@ function ClassSetup({ token, onSaved }: { token: string; onSaved: () => void }) 
 
   return (
     <section className="card">
-      <Glow size={280} intensity={0.13} color="255, 214, 130" />
+      <Glow size={160} intensity={0.13} color="255, 214, 130" />
       <h3>Your classes</h3>
       <p className="note">
         Pick the class you have in each block. The room comes with it. This saves to your Knight Life
