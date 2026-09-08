@@ -37,6 +37,10 @@ on:
       - '**.md'
       - '.github/workflows/web-and-mcp.yml'
       - '.github/dependabot.yml'
+      # Firestore rules change what the app DOES at runtime, never whether it BUILDS, and
+      # this job only asks whether it builds. HQ-948 touched web/ plus this one file and
+      # took a macOS runner for eight minutes to rebuild a tree that could not have changed.
+      - 'firebase/**'
   pull_request:
     paths-ignore: *non-ios
   workflow_dispatch:
