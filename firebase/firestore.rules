@@ -132,6 +132,24 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // The bus schedule (HQ-1042), so changing a departure time is a Firestore edit rather
+    // than a code change and an App Store release. `shuttle` and `home` are the two
+    // documents, matching the two segments in the Bus Schedule tab.
+    //
+    // This is the same shape as `sideMenu` directly above, and it exists for the same
+    // reason: the bus times were Swift literals, so they went two school years without an
+    // update and the home segment shipped empty for two of them. Nobody was neglecting it;
+    // the cost of changing it was a release.
+    //
+    // The same fallback hazard applies here as it does to sideMenu. Without this rule the
+    // catch-all below denies the read and the app quietly falls back to its bundled
+    // schedule, so the tab renders correctly and every published change is invisible. That
+    // is the failure mode to test for, and it looks like nothing being wrong.
+    match /busSchedule/{doc} {
+      allow read:  if signedIn();
+      allow write: if isAdmin();
+    }
+
     // Class rosters. Students create and join classes, and ClassesOptionsPopupVC
     // queries this collection by block, so both get and list stay open.
     //

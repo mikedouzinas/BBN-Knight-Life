@@ -191,6 +191,37 @@ emulated('firestore.rules', () => {
     });
   });
 
+  // HQ-1042. Exactly the same hazard as the side menu above: BusScheduleVC falls back to the
+  // schedule bundled in the app on any read failure, so a denial here renders a correct-looking
+  // tab and makes every published change invisible. A missing rule would look like nothing.
+  //
+  // FALSIFIED 2026-09-10: deleted the `match /busSchedule/{doc}` block from firestore.rules and
+  // reran -> 3 of these 4 failed ("is readable", "reads the home document too", "is writable by
+  // an admin"). The fourth, "is not writable by a student", still passed, because the catch-all
+  // denies that write too. It is kept as the statement of intent rather than as the sensitive
+  // test; the three above are what actually detect the rule going missing.
+  describe('the bus schedule', () => {
+    it('is readable by a signed-in student', async () => {
+      const db = signedIn(env, STUDENT, STUDENT_EMAIL);
+      await assertSucceeds(getDoc(doc(db, 'busSchedule', 'shuttle')));
+    });
+
+    it('reads the home document too, not just the shuttle one', async () => {
+      const db = signedIn(env, STUDENT, STUDENT_EMAIL);
+      await assertSucceeds(getDoc(doc(db, 'busSchedule', 'home')));
+    });
+
+    it('is not writable by a student', async () => {
+      const db = signedIn(env, STUDENT, STUDENT_EMAIL);
+      await assertFails(setDoc(doc(db, 'busSchedule', 'shuttle'), { sections: [] }));
+    });
+
+    it('is writable by an admin, which is the point of the ticket', async () => {
+      const db = signedIn(env, ADMIN, ADMIN_EMAIL);
+      await assertSucceeds(setDoc(doc(db, 'busSchedule', 'shuttle'), { sections: [] }));
+    });
+  });
+
   // Where the counter actually belongs: a document the student it governs cannot reach.
   describe('the schedule-scan budget', () => {
     it('is not readable by the student it governs', async () => {

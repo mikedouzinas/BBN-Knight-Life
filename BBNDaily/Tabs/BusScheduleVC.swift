@@ -28,15 +28,29 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
     }
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     @IBAction func segmentedControlDidChange(_ sender: UISegmentedControl) {
-        let index = segmentedControl.selectedSegmentIndex
-        switch index {
+        applySelectedSegment()
+    }
+
+    // HQ-1042: the one place that decides what the table shows. Both the segmented control
+    // and the Firestore refresh route through here, so a schedule that arrives while the
+    // student is looking at the other segment cannot leave the two out of step.
+    //
+    // Empty sections are dropped rather than rendered. A BusSection with no buses draws a
+    // header with nothing under it, which is what the "Home" segment has looked like since
+    // 2024-09-14 (e2dd6c4) and reads as a broken app rather than as a route BB&N does not
+    // publish.
+    func applySelectedSegment() {
+        let selected: [BusSection]
+        switch segmentedControl.selectedSegmentIndex {
         case 0:
-            busSchedule = shuttleSchedule
+            selected = shuttleSchedule
         case 1:
-            busSchedule = homeSchedule
+            selected = homeSchedule
         default:
-            busSchedule = [BusSection]()
+            selected = [BusSection]()
         }
+        busSchedule = selected.filter { !$0.buses.isEmpty }
+        emptyLabel.isHidden = !busSchedule.isEmpty
         tableView.reloadData()
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -82,7 +96,66 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     public var tasks = [SchoolTask]()
     var busSchedule = [BusSection]()
-    var shuttleSchedule = [
+    var shuttleSchedule = BusSection.defaultShuttleSchedule
+    var homeSchedule = BusSection.defaultHomeSchedule
+
+    // HQ-1042: shown when the selected segment has no buses at all, in place of the blank
+    // headers that were there before. It says the times are missing rather than implying
+    // there are no buses, because those are different facts and only one of them is known.
+    let emptyLabel: UILabel = {
+        let label = UILabel()
+        label.text = "No routes listed yet.\nCheck with the front office."
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.textColor = UIColor(named: "lightGray")
+        label.font = .systemFont(ofSize: 15, weight: .regular)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = UIColor(named: "background")
+        tableView.register(busTimesTableViewCell.self, forCellReuseIdentifier: busTimesTableViewCell.identifier)
+        tableView.backgroundColor = UIColor(named: "background")
+        tableView.delegate = self
+        tableView.dataSource = self
+
+        view.addSubview(emptyLabel)
+        NSLayoutConstraint.activate([
+            emptyLabel.centerXAnchor.constraint(equalTo: tableView.centerXAnchor),
+            emptyLabel.centerYAnchor.constraint(equalTo: tableView.centerYAnchor),
+            emptyLabel.leftAnchor.constraint(greaterThanOrEqualTo: view.leftAnchor, constant: 24),
+            emptyLabel.rightAnchor.constraint(lessThanOrEqualTo: view.rightAnchor, constant: -24)
+        ])
+
+        applySelectedSegment()
+
+        // HQ-1042: refresh from Firestore. The table already shows the bundled schedule, so
+        // this is a silent update when the times have changed, not a loading state anyone
+        // waits on. Same shape as fetchSideMenuPublications (HQ-661).
+        fetchBusSchedules { [weak self] shuttle, home in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.shuttleSchedule = shuttle
+                self.homeSchedule = home
+                self.applySelectedSegment()
+            }
+        }
+    }
+}
+
+// HQ-1042: the schedule that ships inside the app. It is both the instant-display default,
+// so the tab is never empty while Firestore is still loading, and the fallback when the
+// document does not exist, is empty, or fails to read - so a school that has never touched
+// the new collection sees exactly what it saw before, never a blank tab.
+//
+// Editing these literals is no longer how a bus time gets changed. Publish to
+// busSchedule/shuttle or busSchedule/home instead; that reaches students who already have
+// the app, which a code change cannot do without an App Store release.
+extension BusSection {
+    static let defaultShuttleSchedule: [BusSection] = [
         BusSection(title: "Harvard Square", buses: [
             Bus(title: "Harvard Square to Upper School", times: [
                 Time(departure: "7:20 AM", arrival: "7:28 AM"),
@@ -131,23 +204,11 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
             ])
         ])
     ]
-    var homeSchedule = [
-        BusSection(title: "Morning", buses: [
-            
-        ]),
-        BusSection(title: "Afternoon", buses: [
-            
-        ])
-    ]
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        busSchedule = shuttleSchedule
-        view.backgroundColor = UIColor(named: "background")
-        tableView.register(busTimesTableViewCell.self, forCellReuseIdentifier: busTimesTableViewCell.identifier)
-        tableView.backgroundColor = UIColor(named: "background")
-        tableView.delegate = self
-        tableView.dataSource = self
-    }
+    // Empty since e2dd6c4 (2024-09-14), which replaced a working PM shuttle list with these
+    // two headers and never filled them in. Left empty on purpose rather than restored from
+    // that commit: those times are from 2022 and publishing them as current is how somebody
+    // misses a bus. The real ones go in busSchedule/home.
+    static let defaultHomeSchedule: [BusSection] = []
 }
 
 
@@ -159,11 +220,32 @@ class BusSection: NSObject {
         self.title = title
         self.buses = buses
     }
+
+    // HQ-1042. A section with no readable buses is dropped rather than rendered, because a
+    // header with nothing under it is exactly the failure this ticket exists to remove.
+    convenience init?(dict: [String: Any]) {
+        guard let title = dict["title"] as? String, !title.isEmpty else { return nil }
+        let buses = (dict["buses"] as? [[String: Any]] ?? []).compactMap { Bus(dict: $0) }
+        guard !buses.isEmpty else { return nil }
+        self.init(title: title, buses: buses)
+    }
 }
 
 struct Bus {
     let title: String
     let times: [Time]
+
+    init(title: String, times: [Time]) {
+        self.title = title
+        self.times = times
+    }
+
+    init?(dict: [String: Any]) {
+        guard let title = dict["title"] as? String, !title.isEmpty else { return nil }
+        let times = (dict["times"] as? [[String: Any]] ?? []).compactMap { Time(dict: $0) }
+        guard !times.isEmpty else { return nil }
+        self.init(title: title, times: times)
+    }
 }
 
 class Time: NSObject {
@@ -223,6 +305,31 @@ class Time: NSObject {
         self.arrivalTwo = arrivalTwo
         self.arrivalTwoSpot = arrivalTwoSpot
         self.weekDays = weekDays
+    }
+
+    // HQ-1042. Deliberately a separate labelled init rather than an all-optional memberwise
+    // one: an init whose parameters all had defaults would be ambiguous with the two-argument
+    // init above at every existing call site in the bundled schedule.
+    //
+    // departure and arrival are required because a row missing either shows a student a bus
+    // with no time on it. Everything else is decoration and defaults to absent.
+    init?(dict: [String: Any]) {
+        guard let departure = dict["departure"] as? String, !departure.isEmpty,
+              let arrival = dict["arrival"] as? String, !arrival.isEmpty else { return nil }
+        self.departure = departure
+        self.arrival = arrival
+        super.init()
+        self.departureSpot = (dict["departureSpot"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        self.arrivalSpot = (dict["arrivalSpot"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        self.weekDays = (dict["weekDays"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+
+        // Both halves of the second stop or neither. A time with an arrivalTwo and no
+        // arrivalTwoSpot renders the second leg as a blank line in the cell.
+        if let two = (dict["arrivalTwo"] as? String).flatMap({ $0.isEmpty ? nil : $0 }),
+           let twoSpot = (dict["arrivalTwoSpot"] as? String).flatMap({ $0.isEmpty ? nil : $0 }) {
+            self.arrivalTwo = two
+            self.arrivalTwoSpot = twoSpot
+        }
     }
 }
 

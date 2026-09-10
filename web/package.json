@@ -12,6 +12,8 @@
     "test:watch": "vitest",
     "check:assets": "node scripts/check-assets.mjs",
     "check:basepath": "node scripts/check-base-path.mjs",
+    "check:bus": "node scripts/bus-schedule-from-swift.mjs --check",
+    "bus:publish": "node scripts/publish-bus-schedule.mjs",
     "test:emulator": "bash ../scripts/test-emulator.sh"
   },
   "dependencies": {

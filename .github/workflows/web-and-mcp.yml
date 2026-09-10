@@ -82,6 +82,15 @@ jobs:
         if: matrix.package == 'web'
         run: npm run check:basepath
 
+      # HQ-1042. The bus schedule now lives in two places that must agree: the Swift literals
+      # bundled in the app as the offline fallback, and scripts/bus-schedule/shuttle.json,
+      # which is what gets published to Firestore. Two copies of one fact is two chances for
+      # them to disagree, and neither can see the other, so this generates one from the other
+      # and fails on drift.
+      - name: Check the bundled bus schedule matches the published seed
+        if: matrix.package == 'web'
+        run: npm run check:bus
+
       - name: Typecheck
         run: npx tsc --noEmit
 

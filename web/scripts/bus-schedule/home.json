@@ -1,0 +1,25 @@
+{
+  "_comment": [
+    "HQ-1042. The home bus routes. Empty because nobody has the current ones.",
+    "",
+    "The app's Home segment has been blank since e2dd6c4 (2024-09-14), which replaced a",
+    "working PM shuttle list with two empty headers and never filled them in. The 2022 times",
+    "are recoverable from git but are not written here on purpose: publishing times nobody",
+    "has confirmed in three years is how somebody misses a bus.",
+    "",
+    "To fill this in: get the current routes from BB&N, delete this _comment key, add them",
+    "below in the shape shown in shuttle.json, then run",
+    "  node scripts/publish-bus-schedule.mjs home",
+    "",
+    "Every time needs departure and arrival. Everything else is optional:",
+    "  departureSpot   names where it leaves from, when that is not obvious",
+    "  arrivalSpot     names the first stop",
+    "  arrivalTwo      a second stop, which REQUIRES arrivalTwoSpot alongside it",
+    "  weekDays        e.g. \"Tuesday\" or \"Wed/Fri\". Left out means every weekday.",
+    "",
+    "For reference, what the app showed before it was emptied:",
+    "  PM Shuttle, Upper School to Boston:  6:15 PM -> 6:45 PM at Charles St. @ Beacon St.",
+    "  PM Shuttle, Upper School to Newton:  6:15 PM -> 6:40 PM at Riverside, Newton (M/Tu/Th)"
+  ],
+  "sections": []
+}

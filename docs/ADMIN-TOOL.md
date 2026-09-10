@@ -94,6 +94,44 @@ by design, per the paragraph above) for every subscribed device. This is a one-t
 action, not a code change, and nobody has confirmed it is done as of 2026-08-29 — check the
 Cloud Messaging tab before assuming a push actually arrives.
 
+## Bus times
+
+[HQ-1042](https://mikeveson.com/dev). Until 2026-09-10 these were Swift literals, so changing
+one departure meant an App Store release. That is why the shuttle times went two school years
+without an update and the Home segment sat empty for two of them. They are Firestore documents
+now, `busSchedule/shuttle` and `busSchedule/home`, one per segment in the app's Bus Schedule tab.
+
+To change a time: edit `web/scripts/bus-schedule/shuttle.json` (or `home.json`), then
+
+```bash
+cd web
+npm run bus:publish -- shuttle --dry-run   # read it back before you mean it
+npm run bus:publish -- shuttle
+npm run bus:publish -- --read shuttle      # what is live right now
+```
+
+Students see it the next time they open the app.
+
+**The Home segment is empty and needs real data, not the old data.** It has shown two blank
+headers since `e2dd6c4` (2024-09-14), which replaced a working PM shuttle list with scaffolding
+and never filled it in. The 2022 times are in git and are deliberately not republished:
+three-year-old times presented as current are worse than an honest blank. `home.json` carries
+them as a reference for whoever gets the current ones from BB&N.
+
+**The app keeps a copy of the shuttle schedule inside itself** as the offline fallback, so the
+tab is never empty while Firestore loads and never breaks if the read fails. That means two
+places hold the same times. `npm run check:bus` generates the JSON from the Swift and fails if
+they disagree; it runs in CI. If you change the bundled schedule, regenerate:
+
+```bash
+node scripts/bus-schedule-from-swift.mjs > scripts/bus-schedule/shuttle.json
+```
+
+**The failure mode to know about:** if the Firestore rule for `busSchedule` ever goes missing,
+the read is denied, the app falls back to its bundled copy, and the tab looks completely
+normal while every published change is invisible. Same hazard as the side menu. The tests in
+`web/src/lib/firebase/rules.emulator.test.ts` are what catch it.
+
 ## Vacations and the school year
 
 Paste the break announcement like anything else. A vacation comes back as **one break**
