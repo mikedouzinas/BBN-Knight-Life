@@ -4,7 +4,7 @@
       "title": "Grove St",
       "buses": [
         {
-          "title": "Grove St to Upper School",
+          "title": "To Upper School",
           "times": [
             {
               "departure": "6:40 AM",
@@ -45,7 +45,7 @@
           ]
         },
         {
-          "title": "Upper School to Grove St",
+          "title": "To Grove St",
           "times": [
             {
               "departure": "12:00 PM",
@@ -125,7 +125,7 @@
       "title": "South Station & Harvard Square",
       "buses": [
         {
-          "title": "South Station to Upper School",
+          "title": "To Upper School",
           "times": [
             {
               "departure": "6:50 AM",
@@ -144,7 +144,7 @@
           ]
         },
         {
-          "title": "Upper School to Harvard Square & South Station (arrivals approximate)",
+          "title": "From Upper School",
           "times": [
             {
               "departure": "1:50 PM",
@@ -189,7 +189,8 @@
               "arrivalTwo": "7:45 PM",
               "arrivalTwoSpot": "South Station"
             }
-          ]
+          ],
+          "note": "Arrival times are approximate. Heavy traffic in Cambridge means drop-off times can fluctuate. The 7:00 PM Wednesday run is on a trial basis."
         }
       ]
     }

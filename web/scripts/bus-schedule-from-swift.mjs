@@ -86,7 +86,10 @@ function parseSections(literal) {
     const busesBlock = literal.slice(sectionRe.lastIndex, i - 1);
 
     const buses = [];
-    const busRe = /Bus\(title:\s*"([^"]+)",\s*times:\s*\[/g;
+    // `note:` is optional and sits between title and times. It MUST be part of this pattern:
+    // a regex that only matched `Bus(title: ..., times: [` would skip any bus carrying a note
+    // entirely, and the seed would quietly lose a whole route while still looking well-formed.
+    const busRe = /Bus\(title:\s*"([^"]+)",\s*(?:note:\s*"([^"]*)",\s*)?times:\s*\[/g;
     let bm;
     while ((bm = busRe.exec(busesBlock)) !== null) {
       let d = 1;
@@ -98,7 +101,9 @@ function parseSections(literal) {
       const timesBlock = busesBlock.slice(busRe.lastIndex, j - 1);
       const times = [...timesBlock.matchAll(/Time\(([^)]*)\)/g)].map((t) => parseTime(t[1]));
       if (times.length === 0) throw new Error(`bus "${bm[1]}" parsed to zero times`);
-      buses.push({ title: bm[1], times });
+      const bus = { title: bm[1], times };
+      if (bm[2]) bus.note = bm[2];
+      buses.push(bus);
     }
     if (buses.length === 0) throw new Error(`section "${title}" parsed to zero buses`);
     sections.push({ title, buses });
