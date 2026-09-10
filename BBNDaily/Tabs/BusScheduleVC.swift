@@ -155,52 +155,58 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
 // busSchedule/shuttle or busSchedule/home instead; that reaches students who already have
 // the app, which a code change cannot do without an App Store release.
 extension BusSection {
+    // BB&N Shuttle Service, Fall/Winter 2026-27. South Station, Harvard Square, Upper School
+    // and Grove St. Rows are ordered by departure time, because a student reads this looking
+    // for the next bus rather than looking for a particular service.
     static let defaultShuttleSchedule: [BusSection] = [
-        BusSection(title: "Harvard Square", buses: [
-            Bus(title: "Harvard Square to Upper School", times: [
-                Time(departure: "7:20 AM", arrival: "7:28 AM"),
-                Time(departure: "7:40 AM", departureSpot: nil, arrival: "7:48 AM", arrivalSpot: "Middle School", arrivalTwo: "7:56 AM", arrivalTwoSpot: "Upper School"),
-                Time(departure: "8:05 AM", arrival: "8:13 AM"),
-                Time(departure: "8:05 AM", departureSpot: nil, arrival: "8:13 AM", arrivalSpot: "Middle School", arrivalTwo: "8:21 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday"),
-                Time(departure: "8:30 AM", departureSpot: nil, arrival: "8:38 AM", arrivalSpot: "Middle School", arrivalTwo: "8:46 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday")
-            ]),
-            Bus(title: "Upper School to Harvard Square", times: [
-                Time(departure: "12:15 PM", arrival: "12:30 PM", weekDays: "Wednesday"),
-                Time(departure: "12:45 PM", arrival: "1:00 PM", weekDays: "Wednesday"),
-                Time(departure: "1:15 PM", arrival: "1:30 PM", weekDays: "Wednesday"),
-                Time(departure: "1:45 PM", arrival: "2:00 PM", weekDays: "Wednesday"),
-                Time(departure: "2:15 PM", arrival: "2:30 PM", weekDays: "Wednesday"),
-                Time(departure: "2:45 PM", arrival: "3:00 PM", weekDays: "Wed/Fri"),
-                Time(departure: "3:40 PM", arrival: "3:50 PM"),
-                Time(departure: "4:15 PM", departureSpot: nil, arrival: "4:30 PM", arrivalSpot: "Harvard Square", arrivalTwo: "4:45 PM", arrivalTwoSpot: "Grove St"),
-                Time(departure: "5:45 PM", departureSpot: nil, arrival: "6:00 PM", arrivalSpot: "Harvard Square", arrivalTwo: "6:15 PM", arrivalTwoSpot: "Grove St"),
-                Time(departure: "6:30 PM", departureSpot: nil, arrival: "6:45 PM", arrivalSpot: "Harvard Square", arrivalTwo: "7:00 PM", arrivalTwoSpot: "Grove St")
-            ])
-        ]),
         BusSection(title: "Grove St", buses: [
             Bus(title: "Grove St to Upper School", times: [
-                Time(departure: "6:30 AM", arrival: "6:45 AM"),
+                Time(departure: "6:40 AM", arrival: "6:45 AM"),
                 Time(departure: "6:55 AM", arrival: "7:10 AM"),
                 Time(departure: "7:20 AM", arrival: "7:35 AM"),
                 Time(departure: "7:45 AM", arrival: "8:00 AM"),
                 Time(departure: "8:10 AM", arrival: "8:25 AM"),
                 Time(departure: "8:35 AM", arrival: "8:50 AM"),
                 Time(departure: "9:00 AM", arrival: "9:15 AM"),
-                Time(departure: "9:30 AM", arrival: "9:45 AM")
+                Time(departure: "9:30 AM", arrival: "9:45 AM"),
+                Time(departure: "10:30 AM", arrival: "10:45 AM")
             ]),
             Bus(title: "Upper School to Grove St", times: [
+                Time(departure: "12:00 PM", arrival: "12:15 PM"),
                 Time(departure: "12:15 PM", arrival: "12:30 PM", weekDays: "Wednesday"),
                 Time(departure: "12:45 PM", arrival: "1:00 PM", weekDays: "Wednesday"),
+                Time(departure: "1:00 PM", arrival: "1:15 PM"),
                 Time(departure: "1:15 PM", arrival: "1:30 PM", weekDays: "Wednesday"),
-                Time(departure: "1:45 PM", arrival: "2:00 PM", weekDays: "Wednesday"),
+                Time(departure: "1:30 PM", arrival: "1:45 PM"),
+                Time(departure: "1:50 PM", arrival: "2:05 PM", weekDays: "Wednesday"),
                 Time(departure: "2:15 PM", arrival: "2:30 PM", weekDays: "Wednesday"),
                 Time(departure: "2:45 PM", arrival: "3:00 PM", weekDays: "Wed/Fri"),
                 Time(departure: "3:30 PM", arrival: "3:45 PM"),
                 Time(departure: "3:50 PM", arrival: "4:05 PM"),
-                Time(departure: "4:15 PM", departureSpot: nil, arrival: "4:30 PM", arrivalSpot: "Harvard Square", arrivalTwo: "4:45 PM", arrivalTwoSpot: "Grove St"),
+                Time(departure: "4:15 PM", arrival: "4:30 PM"),
                 Time(departure: "5:00 PM", arrival: "5:15 PM"),
-                Time(departure: "5:45 PM", departureSpot: nil, arrival: "6:00 PM", arrivalSpot: "Harvard Square", arrivalTwo: "6:15 PM", arrivalTwoSpot: "Grove St"),
-                Time(departure: "6:30 PM", departureSpot: nil, arrival: "6:45 PM", arrivalSpot: "Harvard Square", arrivalTwo: "7:00 PM", arrivalTwoSpot: "Grove St")
+                Time(departure: "5:30 PM", arrival: "5:45 PM"),
+                Time(departure: "6:00 PM", arrival: "6:15 PM"),
+                Time(departure: "6:30 PM", arrival: "6:45 PM")
+            ])
+        ]),
+        BusSection(title: "South Station & Harvard Square", buses: [
+            // South Station is Atlantic Ave & Essex St. Harvard Square is 16 Eliot Street.
+            // The 7:50 AM does not stop at Harvard Square, which is why it names its arrival
+            // rather than carrying a second one.
+            Bus(title: "South Station to Upper School", times: [
+                Time(departure: "6:50 AM", departureSpot: "South Station", arrival: "7:10 AM", arrivalSpot: "Harvard Square", arrivalTwo: "7:20 AM", arrivalTwoSpot: "Upper School"),
+                Time(departure: "7:50 AM", departureSpot: "South Station", arrival: "8:12 AM", arrivalSpot: "Upper School")
+            ]),
+            // BB&N marks every inbound-to-Cambridge arrival on this route as approximate:
+            // "due to heavy traffic in Cambridge drop-off times can fluctuate." That warning
+            // belongs where a student reads the times, not in a footnote nobody sees.
+            Bus(title: "Upper School to Harvard Square & South Station (arrivals approximate)", times: [
+                Time(departure: "1:50 PM", departureSpot: "Upper School", arrival: "2:15 PM", arrivalSpot: "Harvard Square", arrivalTwo: "2:45 PM", arrivalTwoSpot: "South Station", weekDays: "Wednesday"),
+                Time(departure: "3:40 PM", departureSpot: "Upper School", arrival: "3:55 PM", arrivalSpot: "Harvard Square", arrivalTwo: "4:25 PM", arrivalTwoSpot: "South Station", weekDays: "M/Tu/Th/F"),
+                Time(departure: "5:30 PM", departureSpot: "Upper School", arrival: "5:45 PM", arrivalSpot: "Harvard Square", arrivalTwo: "6:15 PM", arrivalTwoSpot: "South Station"),
+                Time(departure: "6:30 PM", departureSpot: "Upper School", arrival: "6:45 PM", arrivalSpot: "Harvard Square", arrivalTwo: "7:15 PM", arrivalTwoSpot: "South Station", weekDays: "M/Tu/Th/F"),
+                Time(departure: "7:00 PM", departureSpot: "Upper School", arrival: "7:15 PM", arrivalSpot: "Harvard Square", arrivalTwo: "7:45 PM", arrivalTwoSpot: "South Station", weekDays: "Wednesday (trial)")
             ])
         ])
     ]

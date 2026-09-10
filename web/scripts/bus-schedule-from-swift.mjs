@@ -6,14 +6,29 @@
 // transcription error is not one of the ways this can go wrong.
 //
 // Usage:
-//   node scripts/bus-schedule-from-swift.mjs           print the JSON
-//   node scripts/bus-schedule-from-swift.mjs --check    compare against the checked-in seed
+//   node scripts/bus-schedule-from-swift.mjs             print the JSON
+//   node scripts/bus-schedule-from-swift.mjs --snapshot  rewrite the seed from the Swift
+//   node scripts/bus-schedule-from-swift.mjs --check     validate both, report any drift
 //
-// --check is the drift guard: it fails when the bundled schedule and scripts/bus-schedule/
-// shuttle.json disagree, so editing one and forgetting the other is caught rather than
-// discovered by a student standing at a bus stop.
+// WHAT --check DOES AND DELIBERATELY DOES NOT DO.
+//
+// It first shipped comparing the two for equality and failing on any difference. That was
+// wrong, and wrong in the way that matters: the entire point of HQ-1042 is that Kai edits
+// shuttle.json and publishes without touching Swift, so the FIRST real use of the feature
+// would have turned CI red. A guard that fires on the intended workflow does not get fixed,
+// it gets deleted, and then nothing is guarding anything.
+//
+// The two are allowed to differ. The Swift literals are a snapshot taken at release time and
+// used only when Firestore cannot be read; the JSON is what students actually get. A snapshot
+// lagging the live document is the normal, correct state between releases.
+//
+// So --check enforces what must actually hold, and both of these can fail:
+//   - the bundled Swift schedule parses and is not empty
+//   - the seed JSON parses and is not empty
+// and it REPORTS drift with counts, so whoever cuts a release sees how stale the fallback is
+// and can run --snapshot on purpose rather than discovering it later.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -105,24 +120,47 @@ if (sections.length === 0 || totalTimes === 0) {
 
 const json = JSON.stringify({ sections }, null, 2);
 
-if (process.argv.includes('--check')) {
-  let onDisk;
+function countDepartures(secs) {
+  return secs.reduce(
+    (n, s) => n + (s.buses ?? []).reduce((m, b) => m + (b.times ?? []).length, 0),
+    0,
+  );
+}
+
+if (process.argv.includes('--snapshot')) {
+  writeFileSync(SEED, json + '\n');
+  console.log(`CHECKED wrote ${sections.length} sections, ${totalTimes} departures to ${SEED}`);
+} else if (process.argv.includes('--check')) {
+  console.log(`CHECKED bundled Swift schedule: ${sections.length} sections, ${totalTimes} departures`);
+
+  let seed;
   try {
-    onDisk = readFileSync(SEED, 'utf8');
-  } catch {
-    console.error(`FAIL: ${SEED} does not exist. Run without --check and write it.`);
+    seed = JSON.parse(readFileSync(SEED, 'utf8'));
+  } catch (err) {
+    console.error(`FAIL: cannot read or parse ${SEED} — ${err.message}`);
     process.exit(1);
   }
-  if (onDisk.trim() !== json.trim()) {
+  const seedSections = seed.sections ?? [];
+  const seedDepartures = countDepartures(seedSections);
+  if (seedDepartures === 0) {
     console.error(
-      'FAIL: the bundled Swift schedule and scripts/bus-schedule/shuttle.json disagree.\n' +
-        'Regenerate with: node scripts/bus-schedule-from-swift.mjs > scripts/bus-schedule/shuttle.json',
+      `FAIL: ${SEED} has 0 departures in it. Zero is a broken seed, not an empty schedule.`,
     );
     process.exit(1);
   }
-  console.log(
-    `CHECKED ${sections.length} sections, ${totalTimes} departures: bundled schedule matches the seed`,
-  );
+  console.log(`CHECKED seed JSON: ${seedSections.length} sections, ${seedDepartures} departures`);
+
+  // Drift is reported, never fatal. See the note at the top of this file.
+  if (JSON.stringify({ sections }) === JSON.stringify({ sections: seedSections })) {
+    console.log('CHECKED the bundled fallback and the seed are identical.');
+  } else {
+    console.log(
+      `NOTE: the bundled fallback and the seed differ ` +
+        `(${totalTimes} vs ${seedDepartures} departures). That is expected between releases: ` +
+        `the seed is what students get, the bundled copy is the offline fallback. ` +
+        `Run --snapshot to refresh the fallback when cutting a release.`,
+    );
+  }
 } else {
   console.log(json);
 }
