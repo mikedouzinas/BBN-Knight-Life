@@ -1,0 +1,19 @@
+{
+  "_comment": [
+    "Advisories that are outstanding and have been looked at. HQ-1043.",
+    "",
+    "An advisory NOT listed here fails the build, so a new one gets a person's attention.",
+    "An advisory listed here does not, so a tree that passed yesterday does not go red today",
+    "because somebody published something.",
+    "",
+    "Every entry needs a date and a reason someone else can check. 'accepted' is not a place",
+    "to park things indefinitely: if the reason is 'no fix exists yet', that is fine and it",
+    "should come out when one does. The checker reports entries that are no longer reported,",
+    "so cleaning up is prompted rather than remembered.",
+    "",
+    "Both packages are clean as of 2026-09-10, which is why both are empty. That is the",
+    "state to try to stay in."
+  ],
+  "web": {},
+  "mcp": {}
+}
