@@ -28,15 +28,29 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
     }
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     @IBAction func segmentedControlDidChange(_ sender: UISegmentedControl) {
-        let index = segmentedControl.selectedSegmentIndex
-        switch index {
+        applySelectedSegment()
+    }
+
+    // HQ-1042: the one place that decides what the table shows. Both the segmented control
+    // and the Firestore refresh route through here, so a schedule that arrives while the
+    // student is looking at the other segment cannot leave the two out of step.
+    //
+    // Empty sections are dropped rather than rendered. A BusSection with no buses draws a
+    // header with nothing under it, which is what the "Home" segment has looked like since
+    // 2024-09-14 (e2dd6c4) and reads as a broken app rather than as a route BB&N does not
+    // publish.
+    func applySelectedSegment() {
+        let selected: [BusSection]
+        switch segmentedControl.selectedSegmentIndex {
         case 0:
-            busSchedule = shuttleSchedule
+            selected = shuttleSchedule
         case 1:
-            busSchedule = homeSchedule
+            selected = homeSchedule
         default:
-            busSchedule = [BusSection]()
+            selected = [BusSection]()
         }
+        busSchedule = selected.filter { !$0.buses.isEmpty }
+        emptyLabel.isHidden = !busSchedule.isEmpty
         tableView.reloadData()
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -82,72 +96,125 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     public var tasks = [SchoolTask]()
     var busSchedule = [BusSection]()
-    var shuttleSchedule = [
-        BusSection(title: "Harvard Square", buses: [
-            Bus(title: "Harvard Square to Upper School", times: [
-                Time(departure: "7:20 AM", arrival: "7:28 AM"),
-                Time(departure: "7:40 AM", departureSpot: nil, arrival: "7:48 AM", arrivalSpot: "Middle School", arrivalTwo: "7:56 AM", arrivalTwoSpot: "Upper School"),
-                Time(departure: "8:05 AM", arrival: "8:13 AM"),
-                Time(departure: "8:05 AM", departureSpot: nil, arrival: "8:13 AM", arrivalSpot: "Middle School", arrivalTwo: "8:21 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday"),
-                Time(departure: "8:30 AM", departureSpot: nil, arrival: "8:38 AM", arrivalSpot: "Middle School", arrivalTwo: "8:46 AM", arrivalTwoSpot: "Upper School", weekDays: "Tuesday")
-            ]),
-            Bus(title: "Upper School to Harvard Square", times: [
-                Time(departure: "12:15 PM", arrival: "12:30 PM", weekDays: "Wednesday"),
-                Time(departure: "12:45 PM", arrival: "1:00 PM", weekDays: "Wednesday"),
-                Time(departure: "1:15 PM", arrival: "1:30 PM", weekDays: "Wednesday"),
-                Time(departure: "1:45 PM", arrival: "2:00 PM", weekDays: "Wednesday"),
-                Time(departure: "2:15 PM", arrival: "2:30 PM", weekDays: "Wednesday"),
-                Time(departure: "2:45 PM", arrival: "3:00 PM", weekDays: "Wed/Fri"),
-                Time(departure: "3:40 PM", arrival: "3:50 PM"),
-                Time(departure: "4:15 PM", departureSpot: nil, arrival: "4:30 PM", arrivalSpot: "Harvard Square", arrivalTwo: "4:45 PM", arrivalTwoSpot: "Grove St"),
-                Time(departure: "5:45 PM", departureSpot: nil, arrival: "6:00 PM", arrivalSpot: "Harvard Square", arrivalTwo: "6:15 PM", arrivalTwoSpot: "Grove St"),
-                Time(departure: "6:30 PM", departureSpot: nil, arrival: "6:45 PM", arrivalSpot: "Harvard Square", arrivalTwo: "7:00 PM", arrivalTwoSpot: "Grove St")
-            ])
-        ]),
+    var shuttleSchedule = BusSection.defaultShuttleSchedule
+    var homeSchedule = BusSection.defaultHomeSchedule
+
+    // HQ-1042: shown when the selected segment has no buses at all, in place of the blank
+    // headers that were there before. It says the times are missing rather than implying
+    // there are no buses, because those are different facts and only one of them is known.
+    let emptyLabel: UILabel = {
+        let label = UILabel()
+        label.text = "No routes listed yet.\nCheck with the front office."
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.textColor = UIColor(named: "lightGray")
+        label.font = .systemFont(ofSize: 15, weight: .regular)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = UIColor(named: "background")
+        tableView.register(busTimesTableViewCell.self, forCellReuseIdentifier: busTimesTableViewCell.identifier)
+        tableView.backgroundColor = UIColor(named: "background")
+        tableView.delegate = self
+        tableView.dataSource = self
+
+        view.addSubview(emptyLabel)
+        NSLayoutConstraint.activate([
+            emptyLabel.centerXAnchor.constraint(equalTo: tableView.centerXAnchor),
+            emptyLabel.centerYAnchor.constraint(equalTo: tableView.centerYAnchor),
+            emptyLabel.leftAnchor.constraint(greaterThanOrEqualTo: view.leftAnchor, constant: 24),
+            emptyLabel.rightAnchor.constraint(lessThanOrEqualTo: view.rightAnchor, constant: -24)
+        ])
+
+        applySelectedSegment()
+
+        // HQ-1042: refresh from Firestore. The table already shows the bundled schedule, so
+        // this is a silent update when the times have changed, not a loading state anyone
+        // waits on. Same shape as fetchSideMenuPublications (HQ-661).
+        fetchBusSchedules { [weak self] shuttle, home in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.shuttleSchedule = shuttle
+                self.homeSchedule = home
+                self.applySelectedSegment()
+            }
+        }
+    }
+}
+
+// HQ-1042: the schedule that ships inside the app. It is both the instant-display default,
+// so the tab is never empty while Firestore is still loading, and the fallback when the
+// document does not exist, is empty, or fails to read - so a school that has never touched
+// the new collection sees exactly what it saw before, never a blank tab.
+//
+// Editing these literals is no longer how a bus time gets changed. Publish to
+// busSchedule/shuttle or busSchedule/home instead; that reaches students who already have
+// the app, which a code change cannot do without an App Store release.
+extension BusSection {
+    // BB&N Shuttle Service, Fall/Winter 2026-27. South Station, Harvard Square, Upper School
+    // and Grove St. Rows are ordered by departure time, because a student reads this looking
+    // for the next bus rather than looking for a particular service.
+    static let defaultShuttleSchedule: [BusSection] = [
         BusSection(title: "Grove St", buses: [
             Bus(title: "Grove St to Upper School", times: [
-                Time(departure: "6:30 AM", arrival: "6:45 AM"),
+                Time(departure: "6:40 AM", arrival: "6:45 AM"),
                 Time(departure: "6:55 AM", arrival: "7:10 AM"),
                 Time(departure: "7:20 AM", arrival: "7:35 AM"),
                 Time(departure: "7:45 AM", arrival: "8:00 AM"),
                 Time(departure: "8:10 AM", arrival: "8:25 AM"),
                 Time(departure: "8:35 AM", arrival: "8:50 AM"),
                 Time(departure: "9:00 AM", arrival: "9:15 AM"),
-                Time(departure: "9:30 AM", arrival: "9:45 AM")
+                Time(departure: "9:30 AM", arrival: "9:45 AM"),
+                Time(departure: "10:30 AM", arrival: "10:45 AM")
             ]),
             Bus(title: "Upper School to Grove St", times: [
+                Time(departure: "12:00 PM", arrival: "12:15 PM"),
                 Time(departure: "12:15 PM", arrival: "12:30 PM", weekDays: "Wednesday"),
                 Time(departure: "12:45 PM", arrival: "1:00 PM", weekDays: "Wednesday"),
+                Time(departure: "1:00 PM", arrival: "1:15 PM"),
                 Time(departure: "1:15 PM", arrival: "1:30 PM", weekDays: "Wednesday"),
-                Time(departure: "1:45 PM", arrival: "2:00 PM", weekDays: "Wednesday"),
+                Time(departure: "1:30 PM", arrival: "1:45 PM"),
+                Time(departure: "1:50 PM", arrival: "2:05 PM", weekDays: "Wednesday"),
                 Time(departure: "2:15 PM", arrival: "2:30 PM", weekDays: "Wednesday"),
                 Time(departure: "2:45 PM", arrival: "3:00 PM", weekDays: "Wed/Fri"),
                 Time(departure: "3:30 PM", arrival: "3:45 PM"),
                 Time(departure: "3:50 PM", arrival: "4:05 PM"),
-                Time(departure: "4:15 PM", departureSpot: nil, arrival: "4:30 PM", arrivalSpot: "Harvard Square", arrivalTwo: "4:45 PM", arrivalTwoSpot: "Grove St"),
+                Time(departure: "4:15 PM", arrival: "4:30 PM"),
                 Time(departure: "5:00 PM", arrival: "5:15 PM"),
-                Time(departure: "5:45 PM", departureSpot: nil, arrival: "6:00 PM", arrivalSpot: "Harvard Square", arrivalTwo: "6:15 PM", arrivalTwoSpot: "Grove St"),
-                Time(departure: "6:30 PM", departureSpot: nil, arrival: "6:45 PM", arrivalSpot: "Harvard Square", arrivalTwo: "7:00 PM", arrivalTwoSpot: "Grove St")
+                Time(departure: "5:30 PM", arrival: "5:45 PM"),
+                Time(departure: "6:00 PM", arrival: "6:15 PM"),
+                Time(departure: "6:30 PM", arrival: "6:45 PM")
+            ])
+        ]),
+        BusSection(title: "South Station & Harvard Square", buses: [
+            // South Station is Atlantic Ave & Essex St. Harvard Square is 16 Eliot Street.
+            // The 7:50 AM does not stop at Harvard Square, which is why it names its arrival
+            // rather than carrying a second one.
+            Bus(title: "South Station to Upper School", times: [
+                Time(departure: "6:50 AM", departureSpot: "South Station", arrival: "7:10 AM", arrivalSpot: "Harvard Square", arrivalTwo: "7:20 AM", arrivalTwoSpot: "Upper School"),
+                Time(departure: "7:50 AM", departureSpot: "South Station", arrival: "8:12 AM", arrivalSpot: "Upper School")
+            ]),
+            // BB&N marks every inbound-to-Cambridge arrival on this route as approximate:
+            // "due to heavy traffic in Cambridge drop-off times can fluctuate." That warning
+            // belongs where a student reads the times, not in a footnote nobody sees.
+            Bus(title: "Upper School to Harvard Square & South Station (arrivals approximate)", times: [
+                Time(departure: "1:50 PM", departureSpot: "Upper School", arrival: "2:15 PM", arrivalSpot: "Harvard Square", arrivalTwo: "2:45 PM", arrivalTwoSpot: "South Station", weekDays: "Wednesday"),
+                Time(departure: "3:40 PM", departureSpot: "Upper School", arrival: "3:55 PM", arrivalSpot: "Harvard Square", arrivalTwo: "4:25 PM", arrivalTwoSpot: "South Station", weekDays: "M/Tu/Th/F"),
+                Time(departure: "5:30 PM", departureSpot: "Upper School", arrival: "5:45 PM", arrivalSpot: "Harvard Square", arrivalTwo: "6:15 PM", arrivalTwoSpot: "South Station"),
+                Time(departure: "6:30 PM", departureSpot: "Upper School", arrival: "6:45 PM", arrivalSpot: "Harvard Square", arrivalTwo: "7:15 PM", arrivalTwoSpot: "South Station", weekDays: "M/Tu/Th/F"),
+                Time(departure: "7:00 PM", departureSpot: "Upper School", arrival: "7:15 PM", arrivalSpot: "Harvard Square", arrivalTwo: "7:45 PM", arrivalTwoSpot: "South Station", weekDays: "Wednesday (trial)")
             ])
         ])
     ]
-    var homeSchedule = [
-        BusSection(title: "Morning", buses: [
-            
-        ]),
-        BusSection(title: "Afternoon", buses: [
-            
-        ])
-    ]
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        busSchedule = shuttleSchedule
-        view.backgroundColor = UIColor(named: "background")
-        tableView.register(busTimesTableViewCell.self, forCellReuseIdentifier: busTimesTableViewCell.identifier)
-        tableView.backgroundColor = UIColor(named: "background")
-        tableView.delegate = self
-        tableView.dataSource = self
-    }
+    // Empty since e2dd6c4 (2024-09-14), which replaced a working PM shuttle list with these
+    // two headers and never filled them in. Left empty on purpose rather than restored from
+    // that commit: those times are from 2022 and publishing them as current is how somebody
+    // misses a bus. The real ones go in busSchedule/home.
+    static let defaultHomeSchedule: [BusSection] = []
 }
 
 
@@ -159,11 +226,32 @@ class BusSection: NSObject {
         self.title = title
         self.buses = buses
     }
+
+    // HQ-1042. A section with no readable buses is dropped rather than rendered, because a
+    // header with nothing under it is exactly the failure this ticket exists to remove.
+    convenience init?(dict: [String: Any]) {
+        guard let title = dict["title"] as? String, !title.isEmpty else { return nil }
+        let buses = (dict["buses"] as? [[String: Any]] ?? []).compactMap { Bus(dict: $0) }
+        guard !buses.isEmpty else { return nil }
+        self.init(title: title, buses: buses)
+    }
 }
 
 struct Bus {
     let title: String
     let times: [Time]
+
+    init(title: String, times: [Time]) {
+        self.title = title
+        self.times = times
+    }
+
+    init?(dict: [String: Any]) {
+        guard let title = dict["title"] as? String, !title.isEmpty else { return nil }
+        let times = (dict["times"] as? [[String: Any]] ?? []).compactMap { Time(dict: $0) }
+        guard !times.isEmpty else { return nil }
+        self.init(title: title, times: times)
+    }
 }
 
 class Time: NSObject {
@@ -223,6 +311,31 @@ class Time: NSObject {
         self.arrivalTwo = arrivalTwo
         self.arrivalTwoSpot = arrivalTwoSpot
         self.weekDays = weekDays
+    }
+
+    // HQ-1042. Deliberately a separate labelled init rather than an all-optional memberwise
+    // one: an init whose parameters all had defaults would be ambiguous with the two-argument
+    // init above at every existing call site in the bundled schedule.
+    //
+    // departure and arrival are required because a row missing either shows a student a bus
+    // with no time on it. Everything else is decoration and defaults to absent.
+    init?(dict: [String: Any]) {
+        guard let departure = dict["departure"] as? String, !departure.isEmpty,
+              let arrival = dict["arrival"] as? String, !arrival.isEmpty else { return nil }
+        self.departure = departure
+        self.arrival = arrival
+        super.init()
+        self.departureSpot = (dict["departureSpot"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        self.arrivalSpot = (dict["arrivalSpot"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        self.weekDays = (dict["weekDays"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+
+        // Both halves of the second stop or neither. A time with an arrivalTwo and no
+        // arrivalTwoSpot renders the second leg as a blank line in the cell.
+        if let two = (dict["arrivalTwo"] as? String).flatMap({ $0.isEmpty ? nil : $0 }),
+           let twoSpot = (dict["arrivalTwoSpot"] as? String).flatMap({ $0.isEmpty ? nil : $0 }) {
+            self.arrivalTwo = two
+            self.arrivalTwoSpot = twoSpot
+        }
     }
 }
 

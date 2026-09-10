@@ -1,0 +1,197 @@
+{
+  "sections": [
+    {
+      "title": "Grove St",
+      "buses": [
+        {
+          "title": "Grove St to Upper School",
+          "times": [
+            {
+              "departure": "6:40 AM",
+              "arrival": "6:45 AM"
+            },
+            {
+              "departure": "6:55 AM",
+              "arrival": "7:10 AM"
+            },
+            {
+              "departure": "7:20 AM",
+              "arrival": "7:35 AM"
+            },
+            {
+              "departure": "7:45 AM",
+              "arrival": "8:00 AM"
+            },
+            {
+              "departure": "8:10 AM",
+              "arrival": "8:25 AM"
+            },
+            {
+              "departure": "8:35 AM",
+              "arrival": "8:50 AM"
+            },
+            {
+              "departure": "9:00 AM",
+              "arrival": "9:15 AM"
+            },
+            {
+              "departure": "9:30 AM",
+              "arrival": "9:45 AM"
+            },
+            {
+              "departure": "10:30 AM",
+              "arrival": "10:45 AM"
+            }
+          ]
+        },
+        {
+          "title": "Upper School to Grove St",
+          "times": [
+            {
+              "departure": "12:00 PM",
+              "arrival": "12:15 PM"
+            },
+            {
+              "departure": "12:15 PM",
+              "arrival": "12:30 PM",
+              "weekDays": "Wednesday"
+            },
+            {
+              "departure": "12:45 PM",
+              "arrival": "1:00 PM",
+              "weekDays": "Wednesday"
+            },
+            {
+              "departure": "1:00 PM",
+              "arrival": "1:15 PM"
+            },
+            {
+              "departure": "1:15 PM",
+              "arrival": "1:30 PM",
+              "weekDays": "Wednesday"
+            },
+            {
+              "departure": "1:30 PM",
+              "arrival": "1:45 PM"
+            },
+            {
+              "departure": "1:50 PM",
+              "arrival": "2:05 PM",
+              "weekDays": "Wednesday"
+            },
+            {
+              "departure": "2:15 PM",
+              "arrival": "2:30 PM",
+              "weekDays": "Wednesday"
+            },
+            {
+              "departure": "2:45 PM",
+              "arrival": "3:00 PM",
+              "weekDays": "Wed/Fri"
+            },
+            {
+              "departure": "3:30 PM",
+              "arrival": "3:45 PM"
+            },
+            {
+              "departure": "3:50 PM",
+              "arrival": "4:05 PM"
+            },
+            {
+              "departure": "4:15 PM",
+              "arrival": "4:30 PM"
+            },
+            {
+              "departure": "5:00 PM",
+              "arrival": "5:15 PM"
+            },
+            {
+              "departure": "5:30 PM",
+              "arrival": "5:45 PM"
+            },
+            {
+              "departure": "6:00 PM",
+              "arrival": "6:15 PM"
+            },
+            {
+              "departure": "6:30 PM",
+              "arrival": "6:45 PM"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "South Station & Harvard Square",
+      "buses": [
+        {
+          "title": "South Station to Upper School",
+          "times": [
+            {
+              "departure": "6:50 AM",
+              "departureSpot": "South Station",
+              "arrival": "7:10 AM",
+              "arrivalSpot": "Harvard Square",
+              "arrivalTwo": "7:20 AM",
+              "arrivalTwoSpot": "Upper School"
+            },
+            {
+              "departure": "7:50 AM",
+              "departureSpot": "South Station",
+              "arrival": "8:12 AM",
+              "arrivalSpot": "Upper School"
+            }
+          ]
+        },
+        {
+          "title": "Upper School to Harvard Square & South Station (arrivals approximate)",
+          "times": [
+            {
+              "departure": "1:50 PM",
+              "departureSpot": "Upper School",
+              "arrival": "2:15 PM",
+              "arrivalSpot": "Harvard Square",
+              "arrivalTwo": "2:45 PM",
+              "arrivalTwoSpot": "South Station",
+              "weekDays": "Wednesday"
+            },
+            {
+              "departure": "3:40 PM",
+              "departureSpot": "Upper School",
+              "arrival": "3:55 PM",
+              "arrivalSpot": "Harvard Square",
+              "arrivalTwo": "4:25 PM",
+              "arrivalTwoSpot": "South Station",
+              "weekDays": "M/Tu/Th/F"
+            },
+            {
+              "departure": "5:30 PM",
+              "departureSpot": "Upper School",
+              "arrival": "5:45 PM",
+              "arrivalSpot": "Harvard Square",
+              "arrivalTwo": "6:15 PM",
+              "arrivalTwoSpot": "South Station"
+            },
+            {
+              "departure": "6:30 PM",
+              "departureSpot": "Upper School",
+              "arrival": "6:45 PM",
+              "arrivalSpot": "Harvard Square",
+              "arrivalTwo": "7:15 PM",
+              "arrivalTwoSpot": "South Station",
+              "weekDays": "M/Tu/Th/F"
+            },
+            {
+              "departure": "7:00 PM",
+              "departureSpot": "Upper School",
+              "arrival": "7:15 PM",
+              "arrivalSpot": "Harvard Square",
+              "arrivalTwo": "7:45 PM",
+              "arrivalTwoSpot": "South Station"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

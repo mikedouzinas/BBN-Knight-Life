@@ -4,8 +4,12 @@
   "private": true,
   "description": "Publish BB&N Knight Life schedules from an AI agent, with a human confirming every write.",
   "type": "module",
-  "bin": { "knight-life-mcp": "dist/index.js" },
-  "files": ["dist"],
+  "bin": {
+    "knight-life-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -19,6 +23,6 @@
   "devDependencies": {
     "@types/node": "^24.5.2",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "vitest": "^5.0.0"
   }
 }

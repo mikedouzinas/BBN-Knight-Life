@@ -63,15 +63,22 @@ jobs:
       # Say what was examined. A security job that finds nothing and a security job that
       # looked at nothing print the same thing otherwise, and the second one is worse than
       # having no job at all.
+      #
+      # HQ-1043: this was `npm audit --audit-level=moderate`, which fails on the CALENDAR
+      # rather than on a diff -- an advisory published against a dependency that was already
+      # there turns a tree that passed yesterday red today. That blocked an unrelated merge on
+      # 2026-09-10. The cost is not the vulnerability, it is that people learn to merge past
+      # red and the gate stops working on the day one matters.
+      #
+      # check-audit.mjs fires on CHANGE instead: an advisory not in scripts/audit-baseline.json
+      # fails, a reviewed one does not, and it still refuses to call an install that resolved
+      # zero dependencies a clean audit.
+      #
+      # Runs from the repo root, overriding this job's working-directory, because the script
+      # takes the package directory as an argument and resolves it against its own cwd.
       - name: Audit dependencies
-        run: |
-          count=$(npm ls --all --parseable 2>/dev/null | wc -l | tr -d ' ')
-          echo "CHECKED $count installed packages in ${{ matrix.package }}/"
-          if [ "$count" -lt 2 ]; then
-            echo "::error::Resolved $count packages. That is a broken install, not a clean audit."
-            exit 1
-          fi
-          npm audit --audit-level=moderate
+        working-directory: .
+        run: node scripts/check-audit.mjs ${{ matrix.package }}
 
       # Source-level, and it runs BEFORE the build because it needs no server and it catches
       # the one class the asset check structurally cannot: a fetch happens from JavaScript in
@@ -81,6 +88,15 @@ jobs:
       - name: Check hand-written URLs carry the base path
         if: matrix.package == 'web'
         run: npm run check:basepath
+
+      # HQ-1042. The bus schedule now lives in two places that must agree: the Swift literals
+      # bundled in the app as the offline fallback, and scripts/bus-schedule/shuttle.json,
+      # which is what gets published to Firestore. Two copies of one fact is two chances for
+      # them to disagree, and neither can see the other, so this generates one from the other
+      # and fails on drift.
+      - name: Check the bundled bus schedule matches the published seed
+        if: matrix.package == 'web'
+        run: npm run check:bus
 
       - name: Typecheck
         run: npx tsc --noEmit

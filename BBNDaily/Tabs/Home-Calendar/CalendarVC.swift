@@ -292,8 +292,26 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         cell.configure(with: block(name: thisBlock.name, startTime: dateformatter.string(from: t3), endTime: dateformatter.string(from: t2), block: thisBlock.block), isLunch: isLunch, selectedDay: selectedDay)
         cell.selectionStyle = .none
         
+        // A block that has already ended is DIMMED, never removed. HQ-1044.
+        //
+        // Students look back at what room they were in and what got assigned, so a schedule
+        // that deletes its own morning is disorienting by the afternoon. Dimming says "done"
+        // without hiding it.
+        //
+        // That is what the app already did, but it was not what this code said. There used to
+        // be a branch here that replaced `currentDay` with `currentWeekday.blocks` -- a
+        // different, pruned array -- and called `tableView.reloadData()` FROM INSIDE
+        // `cellForRowAt`, which is re-entrant: a reload triggered while building a cell. It was
+        // unreachable in practice, because `setOld()` sets `dayIsOver` as soon as the pruned
+        // array empties, so the dimming branch is the one that ran. The visible behaviour was
+        // therefore correct by accident, as an emergent property of two paths disagreeing, and
+        // one edit to `dayIsOver` would have silently flipped it to deleting classes mid-day.
+        //
+        // Neither branch assigns `currentDay` now. It is owned by `setCurrentday`, which sets it
+        // from `resolveDay(date:).blocks`, and a data source must not be rewritten from inside
+        // the method that renders it.
         if currentDate == stringDate {
-            
+
             if Date().isBetweenTimeFrame(date1: t, date2: t2) {
                 currentBlock = currentDay[indexPath.row]
                 cell.alpha = 1
@@ -304,23 +322,9 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
                 cell.backView.backgroundColor = .clear
                 cell.backgroundColor = UIColor(named: "background")
                 cell.contentView.backgroundColor = UIColor(named: "background")
-                if Date() > t2 {
-                    if !dayIsOver {
-                        cell.alpha = 1
-                        cell.contentView.alpha = 1
-                        currentDay = currentWeekday.blocks
-                        tableView.reloadData()
-                    }
-                    else {
-                        currentDay = CalendarVC.todayBlocks
-                        cell.alpha = 0.3
-                        cell.contentView.alpha = 0.3
-                    }
-                }
-                else {
-                    cell.alpha = 1
-                    cell.contentView.alpha = 1
-                }
+                let isOver = Date() > t2
+                cell.alpha = isOver ? 0.3 : 1
+                cell.contentView.alpha = isOver ? 0.3 : 1
             }
         }
         else {

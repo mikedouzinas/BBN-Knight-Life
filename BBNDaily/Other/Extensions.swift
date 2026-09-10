@@ -824,6 +824,49 @@ extension UIViewController {
         }
     }
 
+    // HQ-1042: reads busSchedule/shuttle and busSchedule/home, falling back to the schedule
+    // bundled in the app on any failure - no document, a read error, or every section in it
+    // failing to parse. Same reasoning as fetchSideMenuPublications above: one malformed row
+    // is one missing bus, not a broken tab.
+    //
+    // The two documents are read independently and fall back independently, so a school that
+    // has published shuttle times but not home times gets the real shuttle times rather than
+    // having both fall back together.
+    //
+    // Why this exists at all: the bus schedule was the last thing in the app that could only
+    // be changed by editing Swift and shipping a release, which is why the shuttle times went
+    // two school years without an update and the home segment sat empty for two of them.
+    func fetchBusSchedules(completion: @escaping ([BusSection], [BusSection]) -> Void) {
+        let group = DispatchGroup()
+        var shuttle = BusSection.defaultShuttleSchedule
+        var home = BusSection.defaultHomeSchedule
+
+        func load(_ document: String, fallback: [BusSection], into assign: @escaping ([BusSection]) -> Void) {
+            group.enter()
+            Firestore.firestore().collection("busSchedule").document(document).getDocument { snapshot, error in
+                defer { group.leave() }
+                guard error == nil,
+                      let rawSections = snapshot?.data()?["sections"] as? [[String: Any]],
+                      !rawSections.isEmpty else {
+                    assign(fallback)
+                    return
+                }
+                let parsed = rawSections.compactMap { BusSection(dict: $0) }
+                assign(parsed.isEmpty ? fallback : parsed)
+            }
+        }
+
+        // The home fallback is an empty list on purpose (see defaultHomeSchedule). Falling
+        // back to empty is correct here: the app has no home times to show and says so,
+        // rather than showing times nobody has confirmed since 2022.
+        load("shuttle", fallback: BusSection.defaultShuttleSchedule) { shuttle = $0 }
+        load("home", fallback: BusSection.defaultHomeSchedule) { home = $0 }
+
+        group.notify(queue: .main) {
+            completion(shuttle, home)
+        }
+    }
+
     // Asset catalog first (the bundled publication logos), then an SF Symbol of the same
     // name, then a generic fallback - so a Firestore entry naming an icon that doesn't
     // exist gets a plain link icon instead of crashing on a force-unwrapped UIImage.
