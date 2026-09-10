@@ -63,10 +63,16 @@ class BusScheduleVC: UIViewController, UITableViewDelegate, UITableViewDataSourc
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         let sect = busSchedule[indexPath.section]
+        // Two lines and a shrink-to-fit floor, so a long route name wraps instead of running
+        // off the edge. The titles are short now, but they arrive from Firestore and whoever
+        // types the next one cannot be expected to know the width of this label.
         let sectionLabel: UILabel = {
             let label = UILabel()
             label.textColor = UIColor(named: "inverse")
             label.font = .systemFont(ofSize: 15, weight: .medium)
+            label.numberOfLines = 2
+            label.adjustsFontSizeToFitWidth = true
+            label.minimumScaleFactor = 0.75
             label.translatesAutoresizingMaskIntoConstraints = false
             return label
         } ()
@@ -160,7 +166,7 @@ extension BusSection {
     // for the next bus rather than looking for a particular service.
     static let defaultShuttleSchedule: [BusSection] = [
         BusSection(title: "Grove St", buses: [
-            Bus(title: "Grove St to Upper School", times: [
+            Bus(title: "To Upper School", times: [
                 Time(departure: "6:40 AM", arrival: "6:45 AM"),
                 Time(departure: "6:55 AM", arrival: "7:10 AM"),
                 Time(departure: "7:20 AM", arrival: "7:35 AM"),
@@ -171,7 +177,7 @@ extension BusSection {
                 Time(departure: "9:30 AM", arrival: "9:45 AM"),
                 Time(departure: "10:30 AM", arrival: "10:45 AM")
             ]),
-            Bus(title: "Upper School to Grove St", times: [
+            Bus(title: "To Grove St", times: [
                 Time(departure: "12:00 PM", arrival: "12:15 PM"),
                 Time(departure: "12:15 PM", arrival: "12:30 PM", weekDays: "Wednesday"),
                 Time(departure: "12:45 PM", arrival: "1:00 PM", weekDays: "Wednesday"),
@@ -194,14 +200,14 @@ extension BusSection {
             // South Station is Atlantic Ave & Essex St. Harvard Square is 16 Eliot Street.
             // The 7:50 AM does not stop at Harvard Square, which is why it names its arrival
             // rather than carrying a second one.
-            Bus(title: "South Station to Upper School", times: [
+            Bus(title: "To Upper School", times: [
                 Time(departure: "6:50 AM", departureSpot: "South Station", arrival: "7:10 AM", arrivalSpot: "Harvard Square", arrivalTwo: "7:20 AM", arrivalTwoSpot: "Upper School"),
                 Time(departure: "7:50 AM", departureSpot: "South Station", arrival: "8:12 AM", arrivalSpot: "Upper School")
             ]),
-            // BB&N marks every inbound-to-Cambridge arrival on this route as approximate:
-            // "due to heavy traffic in Cambridge drop-off times can fluctuate." That warning
-            // belongs where a student reads the times, not in a footnote nobody sees.
-            Bus(title: "Upper School to Harvard Square & South Station (arrivals approximate)", times: [
+            // BB&N marks every arrival on this route as approximate: "due to heavy traffic in
+            // Cambridge drop-off times can fluctuate." It rides in `note`, under the times,
+            // rather than in the title.
+            Bus(title: "From Upper School", note: "Arrival times are approximate. Heavy traffic in Cambridge means drop-off times can fluctuate. The 7:00 PM Wednesday run is on a trial basis.", times: [
                 Time(departure: "1:50 PM", departureSpot: "Upper School", arrival: "2:15 PM", arrivalSpot: "Harvard Square", arrivalTwo: "2:45 PM", arrivalTwoSpot: "South Station", weekDays: "Wednesday"),
                 Time(departure: "3:40 PM", departureSpot: "Upper School", arrival: "3:55 PM", arrivalSpot: "Harvard Square", arrivalTwo: "4:25 PM", arrivalTwoSpot: "South Station", weekDays: "M/Tu/Th/F"),
                 Time(departure: "5:30 PM", departureSpot: "Upper School", arrival: "5:45 PM", arrivalSpot: "Harvard Square", arrivalTwo: "6:15 PM", arrivalTwoSpot: "South Station"),
@@ -241,16 +247,31 @@ struct Bus {
     let title: String
     let times: [Time]
 
-    init(title: String, times: [Time]) {
+    // A caveat about the whole route, shown under the times rather than inside the title.
+    // HQ-1050: "(arrivals approximate)" started life appended to the title, which made the
+    // route name unreadable in the list and produced a navigation title of
+    // "South Station & Harvard Square: Upper School to Harvard Square & South Station
+    // (arrivals approximate)". A title is a name; a caveat is not part of a name.
+    let note: String?
+
+    // `note` sits before `times` so a caller reads the caveat next to the name rather than
+    // after a forty-line array. Defaulted, so every existing Bus(title:times:) call still
+    // compiles unchanged.
+    init(title: String, note: String? = nil, times: [Time]) {
         self.title = title
         self.times = times
+        self.note = note
     }
 
     init?(dict: [String: Any]) {
         guard let title = dict["title"] as? String, !title.isEmpty else { return nil }
         let times = (dict["times"] as? [[String: Any]] ?? []).compactMap { Time(dict: $0) }
         guard !times.isEmpty else { return nil }
-        self.init(title: title, times: times)
+        self.init(
+            title: title,
+            note: (dict["note"] as? String).flatMap { $0.isEmpty ? nil : $0 },
+            times: times
+        )
     }
 }
 
@@ -525,9 +546,19 @@ class BusTimesVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     private var tableView = UITableView()
     var viewModel: Bus!
     var titleTime = ""
+
+    // The route caveat, under the times. A footer is where a caveat belongs: it is readable,
+    // it scrolls with the times it qualifies, and it costs the title nothing.
+    func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        return viewModel.note
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "\(titleTime): \(viewModel.title)"
+        // The route name alone. This used to prepend the section title, which is the screen the
+        // student just tapped through from, so it said something they already knew at the cost
+        // of truncating the thing they came for. HQ-1050.
+        self.title = viewModel.title
         view.backgroundColor = UIColor(named: "background")
         view.addSubview(tableView)
         tableView.frame = view.bounds
