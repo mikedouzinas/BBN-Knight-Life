@@ -37,7 +37,7 @@ jobs:
         working-directory: ${{ matrix.package }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # firebase-tools needs Java 21 or newer for the Firestore emulator, and the runner's
       # default is older. Pinned rather than "latest" so a JDK release cannot break CI on a
