@@ -17,12 +17,12 @@
     "link-agent": "node scripts/link-agent.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.20.2",
+    "@modelcontextprotocol/sdk": "^1.30.1",
     "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
     "typescript": "^5.9.2",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   }
 }
