@@ -377,7 +377,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
             let item = selectedPlannerItems[indexPath.row]
             // A school key date is read-only: there is no document behind it to edit.
             guard !item.isSchoolKeyDate else { return }
-            let editor = PlannerItemEditorVC(existing: item)
+            let editor = PlannerItemEditorVC(existing: item, context: PlannerSteps.context(for: item, in: plannerIndex.allItems))
             editor.onChange = { [weak self] in self?.loadPlanner(force: true) }
             present(UINavigationController(rootViewController: editor), animated: true)
             return

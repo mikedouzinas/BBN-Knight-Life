@@ -26,13 +26,13 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         return 2
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return section == 0 ? entries.count : plannerItems.count
+        return section == 0 ? entries.count : plannerRows.count
     }
     // A header only on a section that has rows, so an empty one does not leave a title with
     // nothing under it.
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if section == 0 { return entries.isEmpty ? nil : "Classes" }
-        return plannerItems.isEmpty ? nil : "Upcoming"
+        return plannerRows.isEmpty ? nil : "Upcoming"
     }
     func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         // Said out loud: an empty Upcoming list that is really a failed load looks exactly like
@@ -49,11 +49,12 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if indexPath.section == 1 {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: PlannerItemCell.identifier, for: indexPath) as? PlannerItemCell,
-                  plannerItems.indices.contains(indexPath.row) else {
+                  plannerRows.indices.contains(indexPath.row) else {
                 return UITableViewCell()
             }
-            let item = plannerItems[indexPath.row]
-            cell.configure(with: item, today: PlannerItem.dayString(from: Date()))
+            let row = plannerRows[indexPath.row]
+            let item = row.item
+            cell.configure(with: item, today: PlannerItem.dayString(from: Date()), depth: row.depth, progress: row.progress)
             cell.onCheckBoxTapped = { [weak self] in self?.togglePlannerItem(id: item.id) }
             return cell
         }
@@ -79,17 +80,17 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // Upcoming items swipe: right to mark done, left to delete (HQ-116 had delete-by-swipe
     // before HQ-779 removed the freeform list). Classes have nothing to delete, so no swipes.
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        guard indexPath.section == 1, plannerItems.indices.contains(indexPath.row) else { return nil }
-        let id = plannerItems[indexPath.row].id
+        guard indexPath.section == 1, plannerRows.indices.contains(indexPath.row) else { return nil }
+        let id = plannerRows[indexPath.row].item.id
         let delete = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, done in
-            self?.deletePlannerItem(id: id)
+            self?.requestDeletePlannerItem(id: id)
             done(true)
         }
         return UISwipeActionsConfiguration(actions: [delete])
     }
     func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        guard indexPath.section == 1, plannerItems.indices.contains(indexPath.row) else { return nil }
-        let item = plannerItems[indexPath.row]
+        guard indexPath.section == 1, plannerRows.indices.contains(indexPath.row) else { return nil }
+        let item = plannerRows[indexPath.row].item
         let action = UIContextualAction(style: .normal, title: item.completed ? "Not done" : "Done") { [weak self] _, _, done in
             self?.togglePlannerItem(id: item.id)
             done(true)
@@ -108,8 +109,8 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         if indexPath.section == 1 {
-            guard plannerItems.indices.contains(indexPath.row) else { return }
-            presentPlannerEditor(for: plannerItems[indexPath.row])
+            guard plannerRows.indices.contains(indexPath.row) else { return }
+            presentPlannerEditor(for: plannerRows[indexPath.row].item)
             return
         }
         guard entries.indices.contains(indexPath.row), entries[indexPath.row].holdsHomework else { return }
@@ -144,7 +145,12 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     private var entries = [HomeworkEntry]()
     private var resolvedDateKey = ""
     // HQ-2181: what the student has planned, in display order, and whether the last load failed.
-    private var plannerItems = [PlannerItem]()
+    private var plannerItems = [PlannerItem]() {
+        // The list shown is the items with steps under their parents (HQ-2187); it is rebuilt from
+        // the items every time they change, so the two can't drift.
+        didSet { plannerRows = PlannerSteps.rows(plannerItems, today: PlannerItem.dayString(from: Date())) }
+    }
+    private var plannerRows = [PlannerListRow]()
     private var plannerLoadFailed = false
     // HQ-2184: Tomorrow (the classes list, as before) or This Week (the game plan).
     private enum Mode { case tomorrow, week }
@@ -413,7 +419,8 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     }
 
     private func presentPlannerEditor(for item: PlannerItem?) {
-        let editor = PlannerItemEditorVC(existing: item)
+        let context = item.map { PlannerSteps.context(for: $0, in: plannerItems) } ?? .none
+        let editor = PlannerItemEditorVC(existing: item, context: context)
         editor.onChange = { [weak self] in self?.loadPlanner() }
         present(UINavigationController(rootViewController: editor), animated: true)
     }
@@ -440,12 +447,34 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         }
     }
 
-    private func deletePlannerItem(id: String) {
-        plannerItems.removeAll { $0.id == id }
+    /// Asks first if the item has steps, since they go with it; otherwise deletes straight away, as before.
+    private func requestDeletePlannerItem(id: String) {
+        guard let item = plannerItems.first(where: { $0.id == id }) else { return }
+        let steps = PlannerSteps.context(for: item, in: plannerItems).steps
+        guard !steps.isEmpty else {
+            deletePlannerItems(ids: [id])
+            return
+        }
+        let alert = UIAlertController(title: PlannerSteps.deleteMessage(parentTitle: item.title, stepCount: steps.count),
+                                      message: nil, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
+            self?.deletePlannerItems(ids: [id] + steps.map { $0.id })
+        }))
+        present(alert, animated: true)
+    }
+
+    private func deletePlannerItems(ids: [String]) {
+        let gone = Set(ids)
+        plannerItems.removeAll { gone.contains($0.id) }
         tableView.reloadData()
         updateEmptyState()
-        if PlannerReminderScheduler.didDelete(id: id) { setNotifications() }
-        PlannerStore.shared.delete(id: id) { [weak self] result in
+        var changed = false
+        for id in ids where PlannerReminderScheduler.didDelete(id: id) { changed = true }
+        if changed { setNotifications() }
+        // One atomic write: a parent and its steps go together or not at all. On failure the list is
+        // reloaded from the server, which puts them all back.
+        PlannerStore.shared.deleteAll(ids: ids) { [weak self] result in
             DispatchQueue.main.async {
                 if case .failure(let error) = result {
                     ProgressHUD.colorAnimation = .red

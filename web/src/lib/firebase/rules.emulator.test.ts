@@ -27,7 +27,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, Timestamp, writeBatch } from 'firebase/firestore';
 
 const emulated = process.env.FIRESTORE_EMULATOR_HOST ? describe : describe.skip;
 
@@ -387,6 +387,15 @@ emulated('firestore.rules', () => {
     });
     const own = () => signedIn(env, STUDENT, STUDENT_EMAIL);
     const ownDoc = (id = 'item1') => doc(own(), 'users', STUDENT, 'planner', id);
+    // withSecurityRulesDisabled does not return its callback's value, so the answer is carried out
+    // through a variable. (Reading the result of the call itself gives undefined.)
+    async function existsIgnoringRules(id: string): Promise<boolean> {
+      let found = false;
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        found = (await getDoc(doc(ctx.firestore(), 'users', STUDENT, 'planner', id))).exists();
+      });
+      return found;
+    }
 
     beforeEach(async () => {
       await env.withSecurityRulesDisabled(async (ctx) => {
@@ -457,8 +466,10 @@ emulated('firestore.rules', () => {
 
     it('validates the optional fields when they are present', async () => {
       await assertSucceeds(setDoc(ownDoc('full'), {
-        ...ITEM(), dueTime: '15:30', classBlock: 'C', notes: 'bring calculator', parentId: 'abc123', isBig: true,
+        ...ITEM(), dueTime: '15:30', classBlock: 'C', notes: 'bring calculator', parentId: 'abc123',
       }));
+      // isBig is checked on an item that is not a step: a step can no longer be big (HQ-2187).
+      await assertSucceeds(setDoc(ownDoc('big'), { ...ITEM(), isBig: true }));
       await assertFails(setDoc(ownDoc('t1'), { ...ITEM(), dueTime: '25:00' }));
       await assertFails(setDoc(ownDoc('t2'), { ...ITEM(), dueTime: '3pm' }));
       await assertFails(setDoc(ownDoc('b1'), { ...ITEM(), classBlock: 'H' }));
@@ -493,6 +504,39 @@ emulated('firestore.rules', () => {
       await assertFails(setDoc(ownDoc('l1'), { ...ITEM(), isBig: true, rungs: ['hourly'] }));
       await assertFails(setDoc(ownDoc('l2'), { ...ITEM(), isBig: true, rungs: 'week' }));
       await assertFails(setDoc(ownDoc('l3'), { ...ITEM(), isBig: true, rungs: ['week', 'week', 'week', 'week', 'week'] }));
+    });
+
+    it('refuses a step marked big, since the countdown belongs to its parent', async () => {
+      await assertSucceeds(setDoc(ownDoc('step-ok'), { ...ITEM(), parentId: 'parent1', isBig: false }));
+      await assertFails(setDoc(ownDoc('step-big'), { ...ITEM(), parentId: 'parent1', isBig: true }));
+      await assertSucceeds(setDoc(ownDoc('parent-big'), { ...ITEM(), isBig: true }));
+    });
+
+    it('writes a batch of steps together, and none of them if any one is invalid', async () => {
+      const db = own();
+      const good = (id: string) => doc(db, 'users', STUDENT, 'planner', id);
+      const batch1 = writeBatch(db);
+      for (const id of ['s1', 's2', 's3']) batch1.set(good(id), { ...ITEM(), parentId: 'parent1', title: `step ${id}` });
+      await assertSucceeds(batch1.commit());
+      await assertSucceeds(getDoc(good('s1')));
+
+      const batch2 = writeBatch(db);
+      batch2.set(good('t1'), { ...ITEM(), parentId: 'parent1' });
+      batch2.set(good('t2'), { ...ITEM(), parentId: 'parent1', kind: 'party' });   // invalid
+      await assertFails(batch2.commit());
+      expect(await existsIgnoringRules('t1')).toBe(false);   // the valid one was not written either
+      expect(await existsIgnoringRules('t2')).toBe(false);
+      expect(await existsIgnoringRules('s1')).toBe(true);    // and the first batch really did land
+    });
+
+    it('deletes a parent and its steps in one batch', async () => {
+      const db = own();
+      const ref = (id: string) => doc(db, 'users', STUDENT, 'planner', id);
+      for (const id of ['p', 'a', 'b']) await assertSucceeds(setDoc(ref(id), { ...ITEM(), ...(id === 'p' ? {} : { parentId: 'p' }) }));
+      const batch = writeBatch(db);
+      for (const id of ['p', 'a', 'b']) batch.delete(ref(id));
+      await assertSucceeds(batch.commit());
+      for (const id of ['p', 'a', 'b']) expect(await existsIgnoringRules(id)).toBe(false);
     });
 
     it('still accepts an item written before reminders existed', async () => {
