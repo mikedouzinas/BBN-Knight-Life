@@ -483,6 +483,18 @@ emulated('firestore.rules', () => {
       await assertFails(setDoc(ownDoc('r4'), { ...ITEM(), reminder: 'evening', remindAt: 'tonight' }));
     });
 
+    it('accepts a ladder of any subset of the four rungs, including none', async () => {
+      for (const rungs of [['week', 'threeDays', 'dayBefore', 'morningOf'], ['dayBefore', 'morningOf'], ['morningOf'], []]) {
+        await assertSucceeds(setDoc(ownDoc(`l-${rungs.length}`), { ...ITEM(), isBig: true, rungs }));
+      }
+    });
+
+    it('rejects an unknown rung, a rung list that is not a list, and more than four', async () => {
+      await assertFails(setDoc(ownDoc('l1'), { ...ITEM(), isBig: true, rungs: ['hourly'] }));
+      await assertFails(setDoc(ownDoc('l2'), { ...ITEM(), isBig: true, rungs: 'week' }));
+      await assertFails(setDoc(ownDoc('l3'), { ...ITEM(), isBig: true, rungs: ['week', 'week', 'week', 'week', 'week'] }));
+    });
+
     it('still accepts an item written before reminders existed', async () => {
       await assertSucceeds(setDoc(ownDoc('old'), ITEM()));
     });

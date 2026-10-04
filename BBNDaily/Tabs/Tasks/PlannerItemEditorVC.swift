@@ -40,6 +40,13 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
     private let reminderNote = UILabel()
     private var customRow = UIView()
     private var permission = ReminderPermission.unknown
+    // HQ-2186: the big-deadline switch and its four countdown steps.
+    private let bigSwitch = UISwitch()
+    private var rungSwitches = [LadderRung: UISwitch]()
+    private var ladderBox = UIStackView()
+    private var reminderBox = UIStackView()
+    /// Once the student touches the Big switch, changing the kind stops changing it for them.
+    private var bigTouched = false
     private lazy var saveButton = UIBarButtonItem(title: "Save", style: .done, target: self, action: #selector(save))
 
     init(existing: PlannerItem? = nil, store: PlannerStore = .shared) {
@@ -96,8 +103,28 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         reminderNote.numberOfLines = 0
         reminderNote.isHidden = true
 
+        // The plain reminder choice (ordinary items).
+        reminderBox = UIStackView(arrangedSubviews: [reminderLabel, reminderControl, customRow])
+        reminderBox.axis = .vertical
+        reminderBox.spacing = 12
+
+        // The countdown (big deadlines): the reminder control is replaced by four switches.
+        bigSwitch.isOn = draft.isBig
+        bigSwitch.addTarget(self, action: #selector(bigChanged), for: .valueChanged)
+        let bigRow = row(label: "Big deadline (test, paper, project)", control: bigSwitch)
+        ladderBox = UIStackView(arrangedSubviews: LadderRung.allCases.map { rung in
+            let toggle = UISwitch()
+            toggle.isOn = draft.rungs.contains(rung)
+            toggle.addTarget(self, action: #selector(rungChanged), for: .valueChanged)
+            rungSwitches[rung] = toggle
+            return row(label: rung.label, control: toggle)
+        })
+        ladderBox.axis = .vertical
+        ladderBox.spacing = 10
+        applyBigVisibility()
+
         var views: [UIView] = [kindControl, titleField, dueRow, classRow, notesField,
-                               reminderLabel, reminderControl, customRow, reminderNote]
+                               bigRow, reminderBox, ladderBox, reminderNote]
         if existing != nil {
             let delete = UIButton(type: .system)
             delete.setTitle("Delete", for: .normal)
@@ -211,6 +238,34 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
 
     @objc private func kindChanged() {
         draft.kind = PlannerKind.allCases[kindControl.selectedSegmentIndex]
+        // A test is a big deadline unless the student has said otherwise; nothing else is.
+        if !bigTouched && existing == nil {
+            draft.isBig = draft.kind == .test
+            bigSwitch.setOn(draft.isBig, animated: true)
+            applyBigVisibility()
+            refreshReminderNote()
+        }
+    }
+
+    // MARK: Big deadline (HQ-2186)
+
+    @objc private func bigChanged() {
+        bigTouched = true
+        draft.isBig = bigSwitch.isOn
+        if draft.isBig { PlannerReminderScheduler.requestPermissionIfNeeded() }
+        applyBigVisibility()
+        refreshReminderNote()
+    }
+
+    @objc private func rungChanged() {
+        draft.rungs = Set(rungSwitches.filter { $0.value.isOn }.map { $0.key })
+        refreshReminderNote()
+    }
+
+    /// A big deadline's countdown replaces the plain reminder choice, so the two are never both shown.
+    private func applyBigVisibility() {
+        ladderBox.isHidden = !draft.isBig
+        reminderBox.isHidden = draft.isBig
     }
 
     @objc private func titleChanged() { updateSaveEnabled() }
