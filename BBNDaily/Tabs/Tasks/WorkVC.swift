@@ -74,6 +74,21 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         return noHomeworkKeywords.contains { lowered.contains($0) }
     }
 
+    /// The subject Tasks should list for one of the student's blocks, or nil when the block has
+    /// nothing to list: nothing set, or set to Free.
+    ///
+    /// A Free block is stored like any other class (`Free~~~D`, or `Free~NA~NA~G` from older
+    /// hand-entered data), so "has a `~`" alone lets it through and Tomorrow's Classes showed a
+    /// homework row for a period the student does not have. `ClassIdentity.isFree` is the app's
+    /// single definition of free (Free, Unscheduled, Study Hall, Open, and so on); this asks it
+    /// rather than keeping a second list. A course whose name merely contains a free-ish word
+    /// ("Free Speech in America") is still a course there, so it is still listed here.
+    static func listedSubject(forAssignment assignment: String) -> String? {
+        guard assignment.contains("~") else { return nil }
+        let subject = assignment.getValues()[0]
+        return ClassIdentity.isFree(subject) ? nil : subject
+    }
+
     private var entries = [HomeworkEntry]()
     private var resolvedDateKey = ""
 
@@ -138,8 +153,9 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         for scheduleBlock in resolved.blocks {
             let letter = scheduleBlock.block.uppercased()
             let assignment = (LoginVC.blocks[letter] as? String) ?? ""
-            // Only this student's own classes - not every block the school runs that day.
-            guard assignment.contains("~") else { continue }
+            // Only this student's own classes - not every block the school runs that day, and
+            // not a block the student has marked Free (HQ-2188).
+            guard let subject = Self.listedSubject(forAssignment: assignment) else { continue }
             // Free that day: this student has a class in this letter block, but
             // classMeetingDays says it doesn't meet on this specific weekday. Nothing to
             // do homework for, so no row - not a row that opens an empty prompt.
@@ -148,7 +164,6 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
                !meetsThisWeekday {
                 continue
             }
-            let subject = assignment.getValues()[0]
             let existing = stored.first { ($0["block"] as? String) == letter && ($0["date"] as? String) == resolvedDateKey }
             built.append(HomeworkEntry(
                 block: letter,
