@@ -147,6 +147,45 @@ final class PlannerItemTests: XCTestCase {
         XCTAssertEqual(item { $0.parentId = String(repeating: "p", count: PlannerItem.parentIdLimit + 1) }.validationError(), .badParent)
     }
 
+    // MARK: - Reminder (HQ-2185)
+
+    func testAReminderSurvivesAWriteAndARead() {
+        let moment = Date(timeIntervalSince1970: 1_792_000_000)
+        for original in [item { $0.reminder = .evening }, item { $0.reminder = .morning },
+                         item { $0.reminder = .custom; $0.remindAt = moment }] {
+            let read = PlannerItem(id: original.id, data: original.firestoreData)
+            XCTAssertEqual(read?.reminder, original.reminder)
+            XCTAssertEqual(read?.remindAt, original.remindAt)
+        }
+    }
+
+    func testNoReminderWritesNoReminderFieldsSoAnOldItemIsUnchanged() {
+        let data = item().firestoreData
+        XCTAssertNil(data["reminder"])
+        XCTAssertNil(data["remindAt"])
+    }
+
+    func testAStaleRemindAtIsNotWrittenForANonCustomReminder() {
+        XCTAssertNil(item { $0.reminder = .evening; $0.remindAt = Date() }.firestoreData["remindAt"])
+    }
+
+    func testAnItemWrittenBeforeRemindersExistedReadsAsNone() {
+        XCTAssertEqual(PlannerItem(id: "x", data: item().firestoreData)?.reminder, PlannerReminder.none)
+    }
+
+    func testAReminderKindFromANewerBuildReadsAsNoneNotAsADroppedItem() {
+        var data = item().firestoreData
+        data["reminder"] = "hourly"
+        XCTAssertEqual(PlannerItem(id: "x", data: data)?.reminder, PlannerReminder.none)
+        XCTAssertNotNil(PlannerItem(id: "x", data: data))
+    }
+
+    func testACustomReminderWithNoTimeCannotBeSaved() {
+        XCTAssertEqual(item { $0.reminder = .custom; $0.remindAt = nil }.validationError(), .missingReminderTime)
+        XCTAssertNil(item { $0.reminder = .custom; $0.remindAt = Date() }.validationError())
+        XCTAssertNil(item { $0.reminder = .evening }.validationError())
+    }
+
     // MARK: - Error wording
 
     /// A refused write is not a connection problem, and saying so sends a student looking for one.
@@ -169,7 +208,7 @@ final class PlannerItemTests: XCTestCase {
 
     func testEveryErrorHasAMessageForTheStudent() {
         let errors: [PlannerValidationError] = [.emptyTitle, .titleTooLong(limit: 80), .badDate, .badTime,
-                                                .badClassBlock, .notesTooLong(limit: 300), .badParent, .missingID]
+                                                .badClassBlock, .notesTooLong(limit: 300), .badParent, .missingID, .missingReminderTime]
         for error in errors { XCTAssertFalse(error.message.isEmpty) }
     }
 }

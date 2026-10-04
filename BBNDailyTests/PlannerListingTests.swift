@@ -157,6 +157,24 @@ final class PlannerListingTests: XCTestCase {
         XCTAssertEqual(edited.dueDate, "2026-10-25", "an unchanged date survives the round trip through the picker")
     }
 
+    func testANewItemStartsWithTheEveningBeforeReminder() {
+        let draft = PlannerDraft.new(now: now, timeZone: utc)
+        XCTAssertEqual(draft.reminder, .evening)
+        var named = draft
+        named.title = "x"
+        XCTAssertEqual(named.makeItem(id: "x", now: now, timeZone: utc).reminder, PlannerReminder.evening)
+    }
+
+    func testEditingKeepsTheItemsReminderAndDropsAStaleCustomTime() {
+        let moment = Date(timeIntervalSince1970: 1_792_000_000)
+        let original = PlannerItem(id: "r", kind: .test, title: "T", dueDate: "2026-10-25", reminder: .custom, remindAt: moment)
+        var draft = PlannerDraft(editing: original, timeZone: utc)
+        XCTAssertEqual(draft.reminder, .custom)
+        XCTAssertEqual(draft.makeItem(id: "r", replacing: original, now: now, timeZone: utc).remindAt, moment)
+        draft.reminder = .morning
+        XCTAssertNil(draft.makeItem(id: "r", replacing: original, now: now, timeZone: utc).remindAt, "a time that no longer applies is not carried")
+    }
+
     func testEditingPreFillsTheSheet() {
         let original = PlannerItem(id: "e", kind: .sports, title: "Game", dueDate: "2026-11-02", classBlock: "B", notes: "away")
         let draft = PlannerDraft(editing: original, timeZone: utc)
