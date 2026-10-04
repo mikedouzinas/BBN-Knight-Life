@@ -171,7 +171,11 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         title.text = label
         title.textColor = UIColor(named: "inverse")
         title.setContentHuggingPriority(.required, for: .horizontal)
-        let stack = UIStackView(arrangedSubviews: [title, control])
+        // A switch has a fixed size and would sit right beside its label; the spacer pushes it to
+        // the trailing edge like every other control in the form.
+        let spacer = UIView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        let stack = UIStackView(arrangedSubviews: control is UISwitch ? [title, spacer, control] : [title, control])
         stack.axis = .horizontal
         stack.alignment = .center
         stack.spacing = 12
