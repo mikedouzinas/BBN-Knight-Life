@@ -147,6 +147,26 @@ final class PlannerItemTests: XCTestCase {
         XCTAssertEqual(item { $0.parentId = String(repeating: "p", count: PlannerItem.parentIdLimit + 1) }.validationError(), .badParent)
     }
 
+    // MARK: - Error wording
+
+    /// A refused write is not a connection problem, and saying so sends a student looking for one.
+    func testAPermissionRefusalDoesNotBlameTheConnection() {
+        for code in [FirestoreErrorCode.Code.permissionDenied, .unauthenticated] {
+            let error = NSError(domain: FirestoreErrorDomain, code: code.rawValue)
+            let message = PlannerError.firestore(error).message
+            XCTAssertFalse(message.lowercased().contains("connection"), message)
+        }
+    }
+
+    func testAnUnreachableServerDoesBlameTheConnection() {
+        for code in [FirestoreErrorCode.Code.unavailable, .deadlineExceeded] {
+            let error = NSError(domain: FirestoreErrorDomain, code: code.rawValue)
+            XCTAssertTrue(PlannerError.firestore(error).message.lowercased().contains("connection"))
+        }
+        XCTAssertTrue(PlannerError.firestore(NSError(domain: NSURLErrorDomain, code: NSURLErrorNotConnectedToInternet))
+            .message.lowercased().contains("connection"))
+    }
+
     func testEveryErrorHasAMessageForTheStudent() {
         let errors: [PlannerValidationError] = [.emptyTitle, .titleTooLong(limit: 80), .badDate, .badTime,
                                                 .badClassBlock, .notesTooLong(limit: 300), .badParent, .missingID]

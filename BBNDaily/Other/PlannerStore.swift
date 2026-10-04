@@ -30,8 +30,26 @@ enum PlannerError: Error {
         switch self {
         case .notSignedIn: return "Please sign out and back in to fix your account."
         case .invalid(let reason): return reason.message
-        case .firestore: return "Couldn't reach your planner. Check your connection and try again."
+        case .firestore(let error): return PlannerError.studentMessage(for: error)
         }
+    }
+
+    /// Why a Firestore call failed, in words that point at the real cause. "Check your connection"
+    /// is right when the network is the problem and exactly wrong when the server refused the
+    /// write, which sends a student hunting for a connection fault that does not exist. Found on
+    /// a real device: the first build, run before the rules were deployed, told every student to
+    /// check their connection.
+    static func studentMessage(for error: Error) -> String {
+        let nsError = error as NSError
+        if nsError.domain == FirestoreErrorDomain {
+            switch FirestoreErrorCode.Code(rawValue: nsError.code) {
+            case .permissionDenied?, .unauthenticated?:
+                return "Your planner isn't available right now. Please try again later."
+            default:
+                break
+            }
+        }
+        return "Couldn't reach your planner. Check your connection and try again."
     }
 }
 
