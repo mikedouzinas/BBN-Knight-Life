@@ -38,6 +38,38 @@ service cloud.firestore {
       return ['classSetupSubmissionsRemaining', 'classSetupBudgetResetsAt'];
     }
 
+    // What a planner item (HQ-2180) may contain. Written out field by field because a client
+    // writes these directly, so this is the only thing standing between a student's phone and
+    // whatever shape of document a bug, or a curious student, decides to send.
+    //
+    // The two length limits mirror FieldLimits.plannerTitle and FieldLimits.plannerNotes in
+    // BBNDaily/Other/Structs.swift. Rules cannot import Swift, so a test
+    // (web/src/lib/firebase/plannerLimits.test.ts) fails if the numbers here and there drift.
+    //
+    //   kind       one of the four kinds the app knows how to draw
+    //   dueDate    a day, "YYYY-MM-DD" (the same ISO form schedules are keyed by since HQ-603)
+    //   dueTime    optional "HH:mm", 24-hour
+    //   classBlock optional A-G
+    //   parentId   optional, the item this is a step of (mini deadlines, HQ-2187)
+    //   isBig      optional, a big deadline (HQ-2186)
+    function validPlannerItem(d) {
+      return d.keys().hasAll(['kind', 'title', 'dueDate', 'completed', 'createdAt'])
+        && d.keys().hasOnly(['kind', 'title', 'dueDate', 'dueTime', 'classBlock', 'notes',
+                             'completed', 'createdAt', 'parentId', 'isBig'])
+        && d.kind in ['test', 'homework', 'sports', 'appointment']
+        && d.title is string && d.title.size() >= 1 && d.title.size() <= 80
+        && d.dueDate is string && d.dueDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.completed is bool
+        && d.createdAt is timestamp
+        && (!('dueTime' in d) || (d.dueTime is string
+              && d.dueTime.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')))
+        && (!('classBlock' in d) || d.classBlock in ['A', 'B', 'C', 'D', 'E', 'F', 'G'])
+        && (!('notes' in d) || (d.notes is string && d.notes.size() <= 300))
+        && (!('parentId' in d) || (d.parentId is string
+              && d.parentId.size() >= 1 && d.parentId.size() <= 40))
+        && (!('isBig' in d) || d.isBig is bool);
+    }
+
     // Who can publish schedules.
     //
     //   get   - your own row, or any row if you are an admin. The app reads its own row on
@@ -94,6 +126,26 @@ service cloud.firestore {
         || request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
       );
+    }
+
+    // A student's own planner: tests, homework, sports and appointments (HQ-2180).
+    //
+    // A SUBCOLLECTION, owner-only, and the reason is the rule above. `users/{uid}` is readable
+    // by any signed-in student, because ClassPopupVC needs it to show who else is in a class.
+    // Anything stored ON that document is therefore readable by the whole school. A test grade
+    // is private; "orthodontist Thursday 3pm", for a minor, more so. A subcollection is not
+    // covered by its parent's rule at all, so this block is the ONLY thing that grants access,
+    // and it grants it to one person. Not an admin either: nothing needs an admin to read a
+    // student's appointments, so nothing is allowed to.
+    //
+    // createdAt is fixed once written, so "when did I add this" cannot be rewritten later.
+    match /users/{uid}/planner/{itemId} {
+      allow read, delete: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid
+        && validPlannerItem(request.resource.data);
+      allow update: if signedIn() && request.auth.uid == uid
+        && validPlannerItem(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
     }
 
     // How many schedule scans a student has left this year (HQ-656). Server-authoritative:
