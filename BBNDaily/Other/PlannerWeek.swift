@@ -56,6 +56,28 @@ struct PlannerWeekDay: Equatable {
 
     var hasNothingPlanned: Bool { items.isEmpty }
 
+    /// Whether an item shows as a badge on its class's row instead of in the list below it (HQ-2194).
+    ///
+    /// Only a test or homework, only with a class attached, and only if that class is actually on this
+    /// day's schedule. Sports and appointments are not about a class and stay in the list, and so does
+    /// anything whose class is not meeting that day (due on a day it doesn't meet, a no-school day):
+    /// otherwise it would have nowhere to be shown and would silently disappear.
+    static func showsOnClassRow(_ item: PlannerItem, classBlocks: Set<String>) -> Bool {
+        guard let block = item.classBlock?.uppercased(), classBlocks.contains(block) else { return false }
+        return item.kind == .test || item.kind == .homework
+    }
+
+    private var classBlocks: Set<String> { Set(info.classes.map { $0.block.uppercased() }) }
+
+    /// The items to badge on the row for `block`: tests before homework, then in the order the day
+    /// already has them. Finished ones are included, so ticking something off doesn't make it jump
+    /// to a different place.
+    func itemsOnClassRow(_ block: String) -> [PlannerItem] {
+        let upper = block.uppercased()
+        let attached = items.filter { $0.classBlock?.uppercased() == upper && PlannerWeekDay.showsOnClassRow($0, classBlocks: classBlocks) }
+        return attached.filter { $0.kind == .test } + attached.filter { $0.kind == .homework }
+    }
+
     /// One row of a day's section.
     enum Row: Equatable {
         case schoolClass(WeekClass)
@@ -73,7 +95,9 @@ struct PlannerWeekDay: Equatable {
         } else {
             rows += info.classes.map { .schoolClass($0) }
         }
-        rows += items.map { .item($0) }
+        // Items badged on a class row are not repeated below it. Every item is in exactly one place.
+        let badged = classBlocks
+        rows += items.filter { !PlannerWeekDay.showsOnClassRow($0, classBlocks: badged) }.map { .item($0) }
         return rows
     }
 }
