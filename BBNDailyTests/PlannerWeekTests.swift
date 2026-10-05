@@ -264,4 +264,38 @@ final class PlannerClassRowTests: XCTestCase {
         XCTAssertEqual(d.heavyCount, 1, "a badged test still makes the day heavy")
         XCTAssertFalse(d.hasNothingPlanned)
     }
+
+    // MARK: - The Tomorrow view uses the same rule, on any list of items (HQ-2194)
+
+    func testBadgedItemsTakeOnlyTheDayAndBlockAsked() {
+        let items = [item("mon", .test, block: "A", day: "2026-10-05"), item("tue", .test, block: "A", day: "2026-10-06"),
+                     item("otherBlock", .test, block: "C", day: "2026-10-05")]
+        XCTAssertEqual(PlannerWeekDay.badgedItems(block: "A", day: "2026-10-05", in: items).map { $0.id }, ["mon"])
+        XCTAssertEqual(PlannerWeekDay.badgedItems(block: "a", day: "2026-10-05", in: items).map { $0.id }, ["mon"], "case-insensitive")
+        XCTAssertEqual(PlannerWeekDay.badgedItems(block: "E", day: "2026-10-05", in: items), [])
+    }
+
+    func testBadgedItemsAreTestsAndHomeworkOnlyTestsFirst() {
+        let items = [item("hw", .homework, block: "A"), item("game", .sports, block: "A"), item("appt", .appointment, block: "A"), item("test", .test, block: "A")]
+        XCTAssertEqual(PlannerWeekDay.badgedItems(block: "A", day: "2026-10-06", in: items).map { $0.id }, ["test", "hw"])
+    }
+
+    func testWithoutBadgedRemovesExactlyWhatIsBadgedAndNothingElse() {
+        let items = [item("t", .test, block: "A", day: "2026-10-05"),          // badged on A
+                     item("laterTest", .test, block: "A", day: "2026-10-20"),  // another day: stays listed
+                     item("game", .sports, block: "A", day: "2026-10-05"),     // not a badge kind: stays
+                     item("loose", .homework, block: nil, day: "2026-10-05"),  // no class: stays
+                     item("gone", .homework, block: "G", day: "2026-10-05")]   // class not being drawn: stays
+        let left = PlannerWeekDay.withoutBadged(items, day: "2026-10-05", classBlocks: ["A", "C"])
+        XCTAssertEqual(left.map { $0.id }, ["laterTest", "game", "loose", "gone"])
+    }
+
+    func testBadgedPlusListedIsEveryItemExactlyOnce() {
+        let items = [item("a", .test, block: "A", day: "2026-10-05"), item("b", .homework, block: "C", day: "2026-10-05"),
+                     item("c", .homework, block: "C", day: "2026-10-09"), item("d", .appointment, block: nil, day: "2026-10-05")]
+        let blocks = ["A", "C"]
+        let badged = blocks.flatMap { PlannerWeekDay.badgedItems(block: $0, day: "2026-10-05", in: items).map { $0.id } }
+        let listed = PlannerWeekDay.withoutBadged(items, day: "2026-10-05", classBlocks: blocks).map { $0.id }
+        XCTAssertEqual((badged + listed).sorted(), ["a", "b", "c", "d"])
+    }
 }

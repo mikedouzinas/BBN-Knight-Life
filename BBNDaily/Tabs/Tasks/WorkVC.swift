@@ -61,7 +61,10 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: TaskCell.identifier, for: indexPath) as? TaskCell else {
             fatalError()
         }
-        cell.configure(with: entries[indexPath.row])
+        let entry = entries[indexPath.row]
+        cell.configure(with: entry, badges: tomorrowBadges(forBlock: entry.block)) { [weak self] item in
+            self?.presentPlannerEditor(for: item)
+        }
         cell.onCheckBoxTapped = { [weak self] in
             self?.toggleCompleted(at: indexPath.row)
         }
@@ -75,7 +78,10 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         return tableView
     } ()
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return indexPath.section == 1 ? 72 : 100
+        if indexPath.section == 1 { return 72 }
+        guard entries.indices.contains(indexPath.row),
+              !tomorrowBadges(forBlock: entries[indexPath.row].block).isEmpty else { return 100 }
+        return TaskCell.heightWithBadges
     }
     // Upcoming items swipe: right to mark done, left to delete (HQ-116 had delete-by-swipe
     // before HQ-779 removed the freeform list). Classes have nothing to delete, so no swipes.
@@ -142,13 +148,26 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         return ClassIdentity.isFree(subject) ? nil : subject
     }
 
-    private var entries = [HomeworkEntry]()
+    // The classes shown, and the day they are for in the planner's "yyyy-MM-dd" form (resolvedDateKey
+    // below is the homework store's different "yyyy/M/d"). Either changing re-sorts the planner items
+    // into class badges and the Upcoming list.
+    private var entries = [HomeworkEntry]() { didSet { rebuildPlannerRows() } }
+    private var resolvedPlannerDay = "" { didSet { rebuildPlannerRows() } }
     private var resolvedDateKey = ""
     // HQ-2181: what the student has planned, in display order, and whether the last load failed.
     private var plannerItems = [PlannerItem]() {
         // The list shown is the items with steps under their parents (HQ-2187); it is rebuilt from
         // the items every time they change, so the two can't drift.
-        didSet { plannerRows = PlannerSteps.rows(plannerItems, today: PlannerItem.dayString(from: Date())) }
+        didSet { rebuildPlannerRows() }
+    }
+    // HQ-2194: a test or homework for one of tomorrow's classes is a badge on that class, so it is
+    // left out of the Upcoming list below it.
+    private func rebuildPlannerRows() {
+        let listed = PlannerWeekDay.withoutBadged(plannerItems, day: resolvedPlannerDay, classBlocks: entries.map { $0.block })
+        plannerRows = PlannerSteps.rows(listed, today: PlannerItem.dayString(from: Date()))
+    }
+    private func tomorrowBadges(forBlock block: String) -> [PlannerItem] {
+        PlannerWeekDay.badgedItems(block: block, day: resolvedPlannerDay, in: plannerItems)
     }
     private var plannerRows = [PlannerListRow]()
     private var plannerLoadFailed = false
@@ -228,6 +247,7 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         }
 
         guard let resolved = resolved else {
+            resolvedPlannerDay = ""
             entries = []
             resolvedDateKey = ""
             tableView.reloadData()
@@ -246,6 +266,7 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/M/d" // same key format resolveDay itself uses
         resolvedDateKey = dateFormatter.string(from: resolved.date)
+        resolvedPlannerDay = PlannerItem.dayString(from: resolved.date)
 
         let stored = (LoginVC.blocks["classHomework"] as? [[String: Any]]) ?? []
 

@@ -86,6 +86,8 @@ class TaskCell: UITableViewCell {
         contentView.addSubview(TitleLabel)
         contentView.addSubview(DescriptionLabel)
         contentView.addSubview(DateLabel)
+        contentView.addSubview(badgeStack)
+        installConstraints()
         contentView.backgroundColor = UIColor(named: "background")
         checkBox.addTarget(self, action: #selector(checkBoxTapped), for: .touchUpInside)
 
@@ -98,42 +100,74 @@ class TaskCell: UITableViewCell {
     required init?(coder: NSCoder) {
         fatalError()
     }
-    var constraint = NSLayoutConstraint()
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        backView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 5).isActive = true
-        backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5).isActive = true
-        backView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5).isActive = true
-        backView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5).isActive = true
-        
-        checkBox.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20).isActive = true
-        checkBox.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
-        checkBox.heightAnchor.constraint(equalToConstant: 30).isActive = true
-        checkBox.widthAnchor.constraint(equalTo: checkBox.heightAnchor).isActive = true
+    // HQ-2194: tests and homework attached to this class, drawn along the bottom of the row.
+    private let badgeStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 6
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.isHidden = true
+        return stack
+    } ()
+    // The description runs to the bottom of the row, or stops above the badges when there are any.
+    private var descriptionToBottom: NSLayoutConstraint!
+    private var descriptionToBadges: NSLayoutConstraint!
 
-        TitleLabel.leftAnchor.constraint(equalTo: checkBox.rightAnchor, constant: 10).isActive = true
-        
-        TitleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10).isActive = true
-        TitleLabel.centerXAnchor.constraint(equalTo: DescriptionLabel.centerXAnchor).isActive = true
-        TitleLabel.bottomAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10).isActive = true
-        TitleLabel.rightAnchor.constraint(equalTo: contentView.centerXAnchor).isActive = true
+    /// A row with badges needs the room for them. WorkVC asks for this height instead of its usual one.
+    static let heightWithBadges: CGFloat = 132
 
-        DescriptionLabel.topAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10).isActive = true
-        DescriptionLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10).isActive = true
-        DescriptionLabel.leftAnchor.constraint(equalTo: TitleLabel.leftAnchor).isActive = true
-        DescriptionLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20).isActive = true
-        
-        DateLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20).isActive = true
-        DateLabel.centerYAnchor.constraint(equalTo: TitleLabel.centerYAnchor).isActive = true
-        DateLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 160).isActive = true
-        DateLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 100).isActive = true
-        DateLabel.heightAnchor.constraint(equalToConstant: 20).isActive = true
-        DateLabel.leftAnchor.constraint(greaterThanOrEqualTo: contentView.centerXAnchor, constant: 5).isActive = true
+    // These used to be (re)built inside layoutSubviews, which adds another copy of every constraint on
+    // every layout pass. They are installed once, here, so the badges can swap one of them cleanly.
+    private func installConstraints() {
+        descriptionToBottom = DescriptionLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10)
+        descriptionToBadges = DescriptionLabel.bottomAnchor.constraint(equalTo: badgeStack.topAnchor, constant: -4)
+        NSLayoutConstraint.activate([
+            backView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 5),
+            backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5),
+            backView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5),
+            backView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5),
 
+            checkBox.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20),
+            checkBox.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            checkBox.heightAnchor.constraint(equalToConstant: 30),
+            checkBox.widthAnchor.constraint(equalTo: checkBox.heightAnchor),
+
+            TitleLabel.leftAnchor.constraint(equalTo: checkBox.rightAnchor, constant: 10),
+            TitleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            TitleLabel.centerXAnchor.constraint(equalTo: DescriptionLabel.centerXAnchor),
+            TitleLabel.bottomAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10),
+            TitleLabel.rightAnchor.constraint(equalTo: contentView.centerXAnchor),
+
+            DescriptionLabel.topAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10),
+            DescriptionLabel.leftAnchor.constraint(equalTo: TitleLabel.leftAnchor),
+            DescriptionLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20),
+            descriptionToBottom,
+
+            DateLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20),
+            DateLabel.centerYAnchor.constraint(equalTo: TitleLabel.centerYAnchor),
+            DateLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 160),
+            DateLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 100),
+            DateLabel.heightAnchor.constraint(equalToConstant: 20),
+            DateLabel.leftAnchor.constraint(greaterThanOrEqualTo: contentView.centerXAnchor, constant: 5),
+
+            badgeStack.leftAnchor.constraint(equalTo: TitleLabel.leftAnchor),
+            badgeStack.rightAnchor.constraint(lessThanOrEqualTo: contentView.rightAnchor, constant: -20),
+            badgeStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
+            badgeStack.heightAnchor.constraint(equalToConstant: 28),
+        ])
     }
+
     override func prepareForReuse(){
         super.prepareForReuse()
+        setBadges([], onTap: { _ in })
+    }
+
+    private func setBadges(_ items: [PlannerItem], onTap: @escaping (PlannerItem) -> Void) {
+        PlannerBadgeButton.fill(badgeStack, with: items, onTap: onTap)
+        badgeStack.isHidden = items.isEmpty
+        descriptionToBottom.isActive = items.isEmpty
+        descriptionToBadges.isActive = !items.isEmpty
     }
     func configure (with viewModel: SchoolTask){
         TitleLabel.text = "\(viewModel.title)"
@@ -143,7 +177,10 @@ class TaskCell: UITableViewCell {
 
     // HQ-779: checked homework fades rather than disappearing - still there to reopen and
     // edit, just visually out of the way once it's done.
-    func configure(with entry: HomeworkEntry) {
+    // HQ-2194: `badges` are this class's tests and homework for the day shown (decided by
+    // PlannerWeekDay.badgedItems); each is a tappable badge under the homework line.
+    func configure(with entry: HomeworkEntry, badges: [PlannerItem] = [], onBadgeTapped: @escaping (PlannerItem) -> Void = { _ in }) {
+        setBadges(badges, onTap: onBadgeTapped)
         isComplete = entry.completed
         TitleLabel.text = entry.subject
         DateLabel.text = "Block \(entry.block)"
@@ -155,6 +192,10 @@ class TaskCell: UITableViewCell {
             DescriptionLabel.text = entry.text.isEmpty ? "Tap to add homework" : entry.text
         }
         checkBox.setImage(UIImage(named: entry.completed ? "complete" : "incomplete"), for: .normal)
-        contentView.alpha = entry.completed ? 0.4 : 1.0
+        // Fade the row's own parts, not the whole contentView: the badges are separate items with
+        // their own done state, and a test is not finished because the class's homework is.
+        contentView.alpha = 1
+        let rowAlpha: CGFloat = entry.completed ? 0.4 : 1.0
+        [backView, checkBox, TitleLabel, DescriptionLabel, DateLabel].forEach { $0.alpha = rowAlpha }
     }
 }

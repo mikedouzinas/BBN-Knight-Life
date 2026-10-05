@@ -69,13 +69,31 @@ struct PlannerWeekDay: Equatable {
 
     private var classBlocks: Set<String> { Set(info.classes.map { $0.block.uppercased() }) }
 
+    /// `items` without the ones `badgedItems` puts on a class row for `day`, given the classes being
+    /// drawn. The Tomorrow view lists what is left under "Upcoming", so an item is on its class or in
+    /// the list, never both. Uses `badgedItems` itself, so the two cannot disagree.
+    static func withoutBadged(_ items: [PlannerItem], day: String, classBlocks: [String]) -> [PlannerItem] {
+        let badged = Set(classBlocks.flatMap { badgedItems(block: $0, day: day, in: items).map { $0.id } })
+        return items.filter { !badged.contains($0.id) }
+    }
+
+    /// The items to badge on one class's row for `day` (HQ-2194), from any list of items. The Tomorrow
+    /// view calls this too, so "what goes on a class row" is decided here and nowhere else. The class
+    /// is taken to be meeting (the caller only asks about rows it is drawing), so only the day, the
+    /// block and the kind are checked. Tests before homework, otherwise the order given.
+    static func badgedItems(block: String, day: String, in items: [PlannerItem]) -> [PlannerItem] {
+        let upper = block.uppercased()
+        let matching = items.filter { $0.dueDate == day && showsOnClassRow($0, classBlocks: [upper]) && $0.classBlock?.uppercased() == upper }
+        return matching.filter { $0.kind == .test } + matching.filter { $0.kind == .homework }
+    }
+
     /// The items to badge on the row for `block`: tests before homework, then in the order the day
     /// already has them. Finished ones are included, so ticking something off doesn't make it jump
     /// to a different place.
     func itemsOnClassRow(_ block: String) -> [PlannerItem] {
-        let upper = block.uppercased()
-        let attached = items.filter { $0.classBlock?.uppercased() == upper && PlannerWeekDay.showsOnClassRow($0, classBlocks: classBlocks) }
-        return attached.filter { $0.kind == .test } + attached.filter { $0.kind == .homework }
+        // Only if that class is on this day's schedule: otherwise the item belongs in the list below.
+        guard classBlocks.contains(block.uppercased()) else { return [] }
+        return PlannerWeekDay.badgedItems(block: block, day: day, in: items)
     }
 
     /// One row of a day's section.

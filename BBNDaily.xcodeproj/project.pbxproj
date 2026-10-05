@@ -44,6 +44,7 @@
 		27AEED84288B377600C6176C /* HomeworkDueDateVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED83288B377600C6176C /* HomeworkDueDateVC.swift */; };
 		27AEED86288B379A00C6176C /* HomeworkInfoVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED85288B379A00C6176C /* HomeworkInfoVC.swift */; };
 		27AEED88288B37B700C6176C /* HomeworkTitleVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED87288B37B700C6176C /* HomeworkTitleVC.swift */; };
+		HQ2194000000000000001002 /* PlannerBadgeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2194000000000000000002 /* PlannerBadgeButton.swift */; };
 		HQ2194000000000000001001 /* PlannerClassRowCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2194000000000000000001 /* PlannerClassRowCell.swift */; };
 		HQ2181000000000000001003 /* PlannerItemCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2181000000000000000003 /* PlannerItemCell.swift */; };
 		27AEED8A288B37E600C6176C /* TaskCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AEED89288B37E600C6176C /* TaskCell.swift */; };
@@ -188,6 +189,7 @@
 		27AEED83288B377600C6176C /* HomeworkDueDateVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeworkDueDateVC.swift; sourceTree = "<group>"; };
 		27AEED85288B379A00C6176C /* HomeworkInfoVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeworkInfoVC.swift; sourceTree = "<group>"; };
 		27AEED87288B37B700C6176C /* HomeworkTitleVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeworkTitleVC.swift; sourceTree = "<group>"; };
+		HQ2194000000000000000002 /* PlannerBadgeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerBadgeButton.swift; sourceTree = "<group>"; };
 		HQ2194000000000000000001 /* PlannerClassRowCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerClassRowCell.swift; sourceTree = "<group>"; };
 		HQ2181000000000000000003 /* PlannerItemCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerItemCell.swift; sourceTree = "<group>"; };
 		27AEED89288B37E600C6176C /* TaskCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCell.swift; sourceTree = "<group>"; };
@@ -338,6 +340,7 @@
 				27AEED89288B37E600C6176C /* TaskCell.swift */,
 				HQ2181000000000000000003 /* PlannerItemCell.swift */,
 				HQ2194000000000000000001 /* PlannerClassRowCell.swift */,
+				HQ2194000000000000000002 /* PlannerBadgeButton.swift */,
 				27AEED65288B34A200C6176C /* editClassTableViewCell.swift */,
 				27AEED7B288B365300C6176C /* ProfileTableViewCell.swift */,
 				27AEED7D288B367C00C6176C /* SettingsBlockTableViewCell.swift */,
@@ -836,6 +839,7 @@
 				27AEED8A288B37E600C6176C /* TaskCell.swift in Sources */,
 				HQ2181000000000000001003 /* PlannerItemCell.swift in Sources */,
 				HQ2194000000000000001001 /* PlannerClassRowCell.swift in Sources */,
+				HQ2194000000000000001002 /* PlannerBadgeButton.swift in Sources */,
 				27AEED5D288B33BB00C6176C /* LunchMenuVC.swift in Sources */,
 				8704E97226EEA617001826F8 /* Settings.swift in Sources */,
 				27AEED84288B377600C6176C /* HomeworkDueDateVC.swift in Sources */,
