@@ -83,6 +83,10 @@ struct PlannerDraft: Equatable {
     var dueDate: Date
     var classBlock: String?
     var notes: String = ""
+    /// A new item starts with the evening-before reminder, the default HQ-2185 asked for; the student
+    /// can switch it to none, morning-of, or a time of their own.
+    var reminder: PlannerReminder = .evening
+    var remindAt: Date?
 
     /// A new item's starting point: homework due tomorrow, the most common thing to add.
     static func new(now: Date = Date(), timeZone: TimeZone = .current) -> PlannerDraft {
@@ -98,6 +102,8 @@ struct PlannerDraft: Equatable {
         dueDate = PlannerItem.date(fromDay: item.dueDate, timeZone: timeZone) ?? Date()
         classBlock = item.classBlock
         notes = item.notes ?? ""
+        reminder = item.reminder
+        remindAt = item.remindAt
     }
 
     init(dueDate: Date) { self.dueDate = dueDate }
@@ -120,7 +126,10 @@ struct PlannerDraft: Equatable {
             completed: existing?.completed ?? false,
             createdAt: existing?.createdAt ?? now,
             parentId: existing?.parentId,
-            isBig: existing?.isBig ?? false
+            isBig: existing?.isBig ?? false,
+            reminder: reminder,
+            // Only a custom reminder carries a time; a stale one from an earlier choice is dropped.
+            remindAt: reminder == .custom ? remindAt : nil
         )
     }
 }

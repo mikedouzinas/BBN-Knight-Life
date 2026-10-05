@@ -34,6 +34,12 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
     private let datePicker = UIDatePicker()
     private let classButton = UIButton(type: .system)
     private let notesField = UITextField()
+    // HQ-2185: when to remind, a time for "Custom", and a line saying why it won't show up if it won't.
+    private let reminderControl = UISegmentedControl(items: ["None", "Night before", "That morning", "Custom"])
+    private let remindPicker = UIDatePicker()
+    private let reminderNote = UILabel()
+    private var customRow = UIView()
+    private var permission = ReminderPermission.unknown
     private lazy var saveButton = UIBarButtonItem(title: "Save", style: .done, target: self, action: #selector(save))
 
     init(existing: PlannerItem? = nil, store: PlannerStore = .shared) {
@@ -69,8 +75,29 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
 
         let dueRow = row(label: "Due", control: datePicker)
         let classRow = row(label: "Class", control: classButton)
+        datePicker.addTarget(self, action: #selector(dueChanged), for: .valueChanged)
 
-        var views: [UIView] = [kindControl, titleField, dueRow, classRow, notesField]
+        reminderControl.selectedSegmentIndex = PlannerReminder.allCases.firstIndex(of: draft.reminder) ?? 1
+        reminderControl.setTitleTextAttributes([.font: UIFont.systemFont(ofSize: 12)], for: .normal)
+        reminderControl.addTarget(self, action: #selector(reminderChanged), for: .valueChanged)
+        let reminderLabel = UILabel()
+        reminderLabel.text = "Remind me (7 PM the night before, or 7 AM that day)"
+        reminderLabel.font = .systemFont(ofSize: 13)
+        reminderLabel.textColor = UIColor(named: "inverse")?.withAlphaComponent(0.7)
+        reminderLabel.numberOfLines = 0
+        remindPicker.datePickerMode = .dateAndTime
+        remindPicker.preferredDatePickerStyle = .compact
+        remindPicker.date = draft.remindAt ?? PlannerReminders.defaultCustomTime(forDueDay: PlannerItem.dayString(from: draft.dueDate), now: Date())
+        remindPicker.addTarget(self, action: #selector(remindAtChanged), for: .valueChanged)
+        customRow = row(label: "At", control: remindPicker)
+        customRow.isHidden = draft.reminder != .custom
+        reminderNote.font = .systemFont(ofSize: 13)
+        reminderNote.textColor = .systemOrange
+        reminderNote.numberOfLines = 0
+        reminderNote.isHidden = true
+
+        var views: [UIView] = [kindControl, titleField, dueRow, classRow, notesField,
+                               reminderLabel, reminderControl, customRow, reminderNote]
         if existing != nil {
             let delete = UIButton(type: .system)
             delete.setTitle("Delete", for: .normal)
@@ -89,6 +116,11 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
             stack.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20),
         ])
         updateSaveEnabled()
+        PlannerReminderScheduler.permission { [weak self] permission in
+            self?.permission = permission
+            self?.refreshReminderNote()
+        }
+        refreshReminderNote()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -143,6 +175,38 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         classButton.menu = UIMenu(children: [none] + options)
         let current = classOptions().first { $0.block == draft.classBlock }
         classButton.setTitle(current.map { "\($0.block) · \($0.name)" } ?? "None", for: .normal)
+    }
+
+    // MARK: Reminder (HQ-2185)
+
+    @objc private func reminderChanged() {
+        draft.reminder = PlannerReminder.allCases[reminderControl.selectedSegmentIndex]
+        if draft.reminder == .custom {
+            draft.remindAt = remindPicker.date
+        }
+        customRow.isHidden = draft.reminder != .custom
+        if draft.reminder != .none { PlannerReminderScheduler.requestPermissionIfNeeded() }
+        refreshReminderNote()
+    }
+
+    @objc private func remindAtChanged() {
+        draft.remindAt = remindPicker.date
+        refreshReminderNote()
+    }
+
+    @objc private func dueChanged() {
+        draft.dueDate = datePicker.date
+        refreshReminderNote()
+    }
+
+    /// Says why this reminder won't show up, when it won't: a moment already past, notifications
+    /// off in iOS, or off in the app. Silence is the failure being avoided.
+    private func refreshReminderNote() {
+        let preview = draft.makeItem(id: "preview", replacing: existing)
+        let text = PlannerReminders.note(for: preview, now: Date(), permission: permission,
+                                         appNotificationsOn: PlannerReminderScheduler.appNotificationsOn)
+        reminderNote.text = text
+        reminderNote.isHidden = text == nil
     }
 
     @objc private func kindChanged() {
@@ -202,6 +266,11 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
             return
         }
 
+        // The reminder takes effect now rather than when the server answers: the write is already
+        // queued on the phone, and a student who saves a test while offline should still be reminded
+        // of it. If the server later refuses the write, the next planner load drops the item from
+        // the cache and the reminder goes with it.
+        if PlannerReminderScheduler.didSave(item) { setNotifications() }
         showLoader(text: "Saving...")
         var finished = false
         let giveUp = DispatchWorkItem { [weak self] in
@@ -224,6 +293,10 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
                     self.close()
                     self.onChange?()
                 case .failure(let error):
+                    // The save did not happen, so neither does its reminder. Without this a student
+                    // who sees "couldn't save" and cancels is still reminded at 7 PM about something
+                    // that was never put on their planner.
+                    self?.takeBackReminder(for: item)
                     if finished {
                         // The sheet already closed on the timeout; there is nothing to keep open.
                         ProgressHUD.colorAnimation = .red
@@ -239,6 +312,13 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         }
     }
 
+    /// Undoes the optimistic reminder from `save()`: a new item's goes away, and an edited item's goes
+    /// back to what it was.
+    private func takeBackReminder(for item: PlannerItem) {
+        let changed = existing.map { PlannerReminderScheduler.didSave($0) } ?? PlannerReminderScheduler.didDelete(id: item.id)
+        if changed { setNotifications() }
+    }
+
     @objc private func confirmDelete() {
         guard let existing = existing else { return }
         let alert = UIAlertController(title: "Delete \"\(existing.title)\"?", message: nil, preferredStyle: .alert)
@@ -248,6 +328,7 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
                 DispatchQueue.main.async {
                     switch result {
                     case .success:
+                        if PlannerReminderScheduler.didDelete(id: existing.id) { self?.setNotifications() }
                         self?.close()
                         self?.onChange?()
                     case .failure(let error):

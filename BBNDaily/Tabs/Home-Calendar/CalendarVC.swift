@@ -686,6 +686,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
                 case .success(let items):
                     self.plannerIndex = PlannerCalendarIndex(items: items, keyDateSources: SchoolKeyDates.sources,
                                                              from: window.start, through: window.end)
+                    if PlannerReminderScheduler.didLoad(items: items, window: window) { self.setNotifications() }
                     self.plannerLoadedWindow = window
                     self.calendar?.reloadData()
                     // Only the planner section: the schedule section has a live countdown and
