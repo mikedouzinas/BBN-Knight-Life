@@ -71,6 +71,9 @@ final class PlannerItemCell: UITableViewCell {
     }()
 
     var onCheckBoxTapped: (() -> Void)?
+    /// The card's left edge. Moved in to show a step under its parent (HQ-2187).
+    private var backLeading: NSLayoutConstraint!
+    private static let stepIndent: CGFloat = 28
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -88,8 +91,9 @@ final class PlannerItemCell: UITableViewCell {
         contentView.addSubview(subtitleLabel)
         checkBox.addTarget(self, action: #selector(checkBoxTapped), for: .touchUpInside)
 
+        backLeading = backView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 5)
         NSLayoutConstraint.activate([
-            backView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 5),
+            backLeading,
             backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5),
             backView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
             backView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
@@ -127,12 +131,14 @@ final class PlannerItemCell: UITableViewCell {
 
     @objc private func checkBoxTapped() { onCheckBoxTapped?() }
 
-    func configure(with item: PlannerItem, today: String) {
+    func configure(with item: PlannerItem, today: String, depth: Int = 0, progress: String? = nil) {
+        backLeading.constant = 5 + CGFloat(depth) * PlannerItemCell.stepIndent
         // Checked items fade and strike through rather than disappearing: still there to reopen.
         let attributes: [NSAttributedString.Key: Any] = item.completed
             ? [.strikethroughStyle: NSUnderlineStyle.single.rawValue] : [:]
         titleLabel.attributedText = NSAttributedString(string: item.title, attributes: attributes)
-        subtitleLabel.text = PlannerListing.subtitle(for: item, today: today)
+        // A parent carries its steps' progress on the same line ("... · 2 of 4 steps done").
+        subtitleLabel.text = [PlannerListing.subtitle(for: item, today: today), progress].compactMap { $0 }.joined(separator: " · ")
         kindStripe.backgroundColor = item.kind.color
         kindSymbol.image = item.kind.symbol
         kindSymbol.tintColor = item.kind.color
