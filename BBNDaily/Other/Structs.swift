@@ -31,6 +31,12 @@ enum FieldLimits {
     static let homeworkTitle = 60
     static let homeworkBody = 300
     static let scheduleBlockName = 150
+    // Planner items (HQ-2180). firebase/firestore.rules enforces the same two numbers, since a
+    // client writes these documents directly; rules cannot import Swift, so
+    // web/src/lib/firebase/plannerLimits.test.ts fails if the two sides drift. Change them here
+    // and in the rules together.
+    static let plannerTitle = 80
+    static let plannerNotes = 300
     // TimesVC's own limit - it has no visible UITextField in the file (its UI is date
     // pickers), so this looks vestigial rather than protecting real input. Kept as-is,
     // not investigated further here - out of this ticket's actual scope, which is class

@@ -27,7 +27,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, Timestamp } from 'firebase/firestore';
 
 const emulated = process.env.FIRESTORE_EMULATOR_HOST ? describe : describe.skip;
 
@@ -371,6 +371,126 @@ emulated('firestore.rules', () => {
     it('is not writable at all by a signed-out visitor', async () => {
       const db = env.unauthenticatedContext().firestore();
       await assertFails(setDoc(doc(db, 'classes', CLASS), { members: [] }, { merge: true }));
+    });
+  });
+
+  // HQ-2180. A student's planner is private to them. The point of putting it in a subcollection
+  // rather than on `users/{uid}` is that the user document is readable by any signed-in student,
+  // so these tests are mostly about who is NOT allowed in.
+  describe('a student\'s planner', () => {
+    const ITEM = () => ({
+      kind: 'test',
+      title: 'Chemistry unit 4',
+      dueDate: '2026-10-20',
+      completed: false,
+      createdAt: Timestamp.fromDate(new Date('2026-10-04T12:00:00Z')),
+    });
+    const own = () => signedIn(env, STUDENT, STUDENT_EMAIL);
+    const ownDoc = (id = 'item1') => doc(own(), 'users', STUDENT, 'planner', id);
+
+    beforeEach(async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), 'users', STUDENT, 'planner', 'seeded'), ITEM());
+      });
+    });
+
+    it('lets the owner create, read, update and delete an item', async () => {
+      await assertSucceeds(setDoc(ownDoc(), ITEM()));
+      await assertSucceeds(getDoc(ownDoc()));
+      await assertSucceeds(updateDoc(ownDoc(), { completed: true }));
+      await assertSucceeds(deleteDoc(ownDoc()));
+    });
+
+    it('lets the owner list their own items', async () => {
+      await assertSucceeds(getDocs(collection(own(), 'users', STUDENT, 'planner')));
+    });
+
+    it('does not let another student read an item, even though they can read the user document', async () => {
+      const other = signedIn(env, CLASSMATE, 'classmate@bbns.org');
+      // The control: the parent document IS readable, which is the whole reason for this test.
+      await assertSucceeds(getDoc(doc(other, 'users', STUDENT)));
+      await assertFails(getDoc(doc(other, 'users', STUDENT, 'planner', 'seeded')));
+    });
+
+    it('does not let another student list the planner', async () => {
+      const other = signedIn(env, CLASSMATE, 'classmate@bbns.org');
+      await assertFails(getDocs(collection(other, 'users', STUDENT, 'planner')));
+    });
+
+    it('does not let another student write, change or delete an item', async () => {
+      const other = signedIn(env, CLASSMATE, 'classmate@bbns.org');
+      await assertFails(setDoc(doc(other, 'users', STUDENT, 'planner', 'new'), ITEM()));
+      await assertFails(updateDoc(doc(other, 'users', STUDENT, 'planner', 'seeded'), { completed: true }));
+      await assertFails(deleteDoc(doc(other, 'users', STUDENT, 'planner', 'seeded')));
+    });
+
+    it('does not let an admin read a student\'s planner either', async () => {
+      const admin = signedIn(env, ADMIN, ADMIN_EMAIL);
+      await assertFails(getDoc(doc(admin, 'users', STUDENT, 'planner', 'seeded')));
+      await assertFails(getDocs(collection(admin, 'users', STUDENT, 'planner')));
+    });
+
+    it('does not let a signed-out visitor in', async () => {
+      const db = env.unauthenticatedContext().firestore();
+      await assertFails(getDoc(doc(db, 'users', STUDENT, 'planner', 'seeded')));
+      await assertFails(setDoc(doc(db, 'users', STUDENT, 'planner', 'x'), ITEM()));
+    });
+
+    it('accepts every kind the app can draw, and nothing else', async () => {
+      for (const kind of ['test', 'homework', 'sports', 'appointment']) {
+        await assertSucceeds(setDoc(ownDoc(`k-${kind}`), { ...ITEM(), kind }));
+      }
+      await assertFails(setDoc(ownDoc('bad-kind'), { ...ITEM(), kind: 'party' }));
+    });
+
+    it('rejects an empty title and a title over the limit, and accepts one exactly at it', async () => {
+      await assertFails(setDoc(ownDoc('empty'), { ...ITEM(), title: '' }));
+      await assertFails(setDoc(ownDoc('long'), { ...ITEM(), title: 'x'.repeat(81) }));
+      await assertSucceeds(setDoc(ownDoc('exact'), { ...ITEM(), title: 'x'.repeat(80) }));
+    });
+
+    it('rejects a due date that is not a plain YYYY-MM-DD day', async () => {
+      for (const dueDate of ['10/20/2026', '2026-10-20T09:00', 'tomorrow', '', '2026-1-5']) {
+        await assertFails(setDoc(ownDoc('d'), { ...ITEM(), dueDate }));
+      }
+    });
+
+    it('validates the optional fields when they are present', async () => {
+      await assertSucceeds(setDoc(ownDoc('full'), {
+        ...ITEM(), dueTime: '15:30', classBlock: 'C', notes: 'bring calculator', parentId: 'abc123', isBig: true,
+      }));
+      await assertFails(setDoc(ownDoc('t1'), { ...ITEM(), dueTime: '25:00' }));
+      await assertFails(setDoc(ownDoc('t2'), { ...ITEM(), dueTime: '3pm' }));
+      await assertFails(setDoc(ownDoc('b1'), { ...ITEM(), classBlock: 'H' }));
+      await assertFails(setDoc(ownDoc('n1'), { ...ITEM(), notes: 'x'.repeat(301) }));
+      await assertFails(setDoc(ownDoc('p1'), { ...ITEM(), parentId: '' }));
+      await assertFails(setDoc(ownDoc('i1'), { ...ITEM(), isBig: 'yes' }));
+    });
+
+    it('rejects a field it does not know about, and a missing required one', async () => {
+      await assertFails(setDoc(ownDoc('extra'), { ...ITEM(), grade: 'A+' }));
+      const { title: _title, ...noTitle } = ITEM();
+      await assertFails(setDoc(ownDoc('missing'), noTitle));
+    });
+
+    it('rejects wrong types for the required fields', async () => {
+      await assertFails(setDoc(ownDoc('c'), { ...ITEM(), completed: 'false' }));
+      await assertFails(setDoc(ownDoc('ts'), { ...ITEM(), createdAt: '2026-10-04' }));
+    });
+
+    it('does not let an update turn a valid item into an invalid one', async () => {
+      await assertFails(updateDoc(ownDoc('seeded'), { kind: 'party' }));
+      await assertFails(updateDoc(ownDoc('seeded'), { title: '' }));
+    });
+
+    it('does not let createdAt be rewritten after the fact', async () => {
+      await assertFails(updateDoc(ownDoc('seeded'), { createdAt: Timestamp.fromDate(new Date('2020-01-01T00:00:00Z')) }));
+    });
+
+    it('does not let a student write under someone else\'s uid', async () => {
+      // The path's uid, not anything in the document, decides who owns an item.
+      const db = own();
+      await assertFails(setDoc(doc(db, 'users', CLASSMATE, 'planner', 'sneaky'), ITEM()));
     });
   });
 
