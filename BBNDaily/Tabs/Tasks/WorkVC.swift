@@ -164,7 +164,15 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         let refresh = UIRefreshControl()
         refresh.addTarget(self, action: #selector(pullToRefresh), for: .valueChanged)
         tableView.refreshControl = refresh
+        // HQ-2182: what the four colors mean.
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "info.circle"), style: .plain, target: self, action: #selector(showLegend))
+        navigationItem.leftBarButtonItem?.accessibilityLabel = "What the colors mean"
         loadNextSchoolDay()
+    }
+
+    @objc private func showLegend() {
+        present(UINavigationController(rootViewController: PlannerLegendVC()), animated: true)
     }
 
     override func viewWillAppear(_ animated: Bool) {
