@@ -83,6 +83,18 @@ final class PlannerKindStyleTests: XCTestCase {
         }
     }
 
+    /// The calendar header is dark navy whatever the appearance, so its dots need the dark
+    /// variants. Checked against the app's dark background, which is lighter than the header: a
+    /// color that passes here passes on the darker header too.
+    func testCalendarDotsAreVisibleOnTheDarkHeaderEvenInLightMode() throws {
+        let darkBackground = try XCTUnwrap(UIColor(named: "background"))
+        for kind in PlannerKind.allCases {
+            XCTAssertGreaterThanOrEqual(contrast(kind.calendarDotColor, darkBackground, dark), 3.0, "\(kind) dot on dark")
+            XCTAssertEqual(rgb(kind.calendarDotColor, light).r, rgb(kind.color, dark).r, accuracy: 0.01,
+                           "\(kind) dot should be the dark variant even when resolved in light mode")
+        }
+    }
+
     func testTheRequestedColorsAreTheRequestedHues() {
         // Red tests, blue homework, green sports, yellow appointments: check the dominant channel
         // so a swap of two assets is caught.
