@@ -341,3 +341,234 @@ final class PlannerReminderNoteTests: XCTestCase {
         XCTAssertEqual(PlannerReminders.defaultCustomTime(forDueDay: "2026-10-04", now: now, timeZone: utc), now.addingTimeInterval(3600))
     }
 }
+
+final class PlannerLadderTests: XCTestCase {
+
+    private let utc = TimeZone(identifier: "UTC")!
+    private let ny = TimeZone(identifier: "America/New_York")!
+    /// 2026-10-04 12:00 UTC (Sunday).
+    private let now = Date(timeIntervalSince1970: 1_791_115_200)
+
+    private func big(_ id: String = "t", due: String, rungs: Set<LadderRung> = Set(LadderRung.allCases),
+                     completed: Bool = false, kind: PlannerKind = .test, block: String? = nil) -> PlannerItem {
+        PlannerItem(id: id, kind: kind, title: "Chemistry test", dueDate: due, classBlock: block, completed: completed,
+                    isBig: true, reminder: .none, rungs: rungs)
+    }
+    private func rungs(_ item: PlannerItem, now: Date? = nil, zone: TimeZone? = nil) -> [String] {
+        PlannerReminders.ladderRequests(for: item, now: now ?? self.now, timeZone: zone ?? utc).map { $0.title }
+    }
+    private func local(_ day: String, _ hour: Int, _ zone: TimeZone) -> Date {
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = zone
+        return cal.date(bySettingHour: hour, minute: 0, second: 0, of: PlannerItem.date(fromDay: day, timeZone: zone)!)!
+    }
+
+    // MARK: - The two cases the ticket names
+
+    /// A test added 10 days out schedules all four rungs.
+    func testATenDaysOutTestGetsAllFourRungs() {
+        let requests = PlannerReminders.ladderRequests(for: big(due: "2026-10-14"), now: now, timeZone: utc)
+        XCTAssertEqual(requests.count, 4)
+        XCTAssertEqual(requests.map { $0.title }, ["Chemistry test in 1 week", "Chemistry test in 3 days", "Chemistry test tomorrow", "Chemistry test today"])
+    }
+
+    /// One added 2 days out schedules only the two that are still in the future.
+    func testATwoDaysOutTestGetsOnlyTheTwoRungsStillAhead() {
+        XCTAssertEqual(rungs(big(due: "2026-10-06")), ["Chemistry test tomorrow", "Chemistry test today"])
+    }
+
+    // MARK: - When each rung fires
+
+    func testEachRungFiresOnItsOwnDayAtTheRightHour() {
+        let r = PlannerReminders.ladderRequests(for: big(due: "2026-10-20"), now: now, timeZone: ny)
+        XCTAssertEqual(r.map { $0.fireDate }, [local("2026-10-13", 19, ny), local("2026-10-17", 19, ny), local("2026-10-19", 19, ny), local("2026-10-20", 7, ny)])
+    }
+
+    func testARungIsSevenPMAcrossADaylightSavingChange() {
+        // Due Nov 2 2026: "a week before" is Oct 26 and "the night before" is Nov 1 (the fall-back day).
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = ny
+        for rung in [LadderRung.week, .threeDays, .dayBefore] {
+            let fire = PlannerReminders.fireDate(rung: rung, for: big(due: "2026-11-02"), now: now, timeZone: ny)!
+            XCTAssertEqual(cal.component(.hour, from: fire), 19, "\(rung)")
+        }
+        XCTAssertEqual(PlannerReminders.fireDate(rung: .dayBefore, for: big(due: "2026-11-02"), now: now, timeZone: ny), local("2026-11-01", 19, ny))
+    }
+
+    func testRungsCrossAMonthAndYearBoundary() {
+        XCTAssertEqual(PlannerReminders.fireDate(rung: .week, for: big(due: "2027-01-03"), now: now, timeZone: utc), local("2026-12-27", 19, utc))
+        XCTAssertEqual(PlannerReminders.fireDate(rung: .dayBefore, for: big(due: "2026-11-01"), now: now, timeZone: utc), local("2026-10-31", 19, utc))
+    }
+
+    // MARK: - Skipping, never firing late
+
+    func testADeadlineTodayGetsTheMorningRungOnlyIfThatHourIsStillAhead() {
+        XCTAssertEqual(rungs(big(due: "2026-10-04"), now: local("2026-10-04", 5, utc)), ["Chemistry test today"], "5 AM: 7 AM is ahead")
+        XCTAssertEqual(rungs(big(due: "2026-10-04"), now: local("2026-10-04", 8, utc)), [], "8 AM: it has gone")
+    }
+
+    func testAPastDeadlineGetsNothing() {
+        XCTAssertEqual(rungs(big(due: "2026-09-30")), [])
+    }
+
+    func testARungLessThanThirtySecondsAwayIsSkipped() {
+        let almost = local("2026-10-13", 19, utc).addingTimeInterval(-10)
+        XCTAssertFalse(rungs(big(due: "2026-10-20"), now: almost).contains("Chemistry test in 1 week"))
+    }
+
+    // MARK: - Turning rungs off
+
+    func testSwitchingARungOffRemovesJustThatRung() {
+        let item = big(due: "2026-10-20", rungs: [.week, .dayBefore, .morningOf])
+        XCTAssertEqual(rungs(item), ["Chemistry test in 1 week", "Chemistry test tomorrow", "Chemistry test today"])
+    }
+
+    func testAllRungsOffMeansNoReminders() {
+        XCTAssertEqual(rungs(big(due: "2026-10-20", rungs: [])), [])
+    }
+
+    // MARK: - Completing, deleting, and replacing the single reminder
+
+    func testACompletedBigItemLeavesNoRungs() {
+        XCTAssertTrue(PlannerReminders.plan(items: [big(due: "2026-10-20", completed: true)], now: now, timeZone: utc).isEmpty)
+    }
+
+    func testABigItemsCountdownReplacesItsSingleReminderInsteadOfAddingToIt() {
+        var both = big(due: "2026-10-20")
+        both.reminder = .evening
+        let plan = PlannerReminders.plan(items: [both], now: now, timeZone: utc)
+        XCTAssertEqual(plan.count, 4, "four rungs, not four plus a fifth 'night before'")
+        XCTAssertEqual(Set(plan.map { $0.identifier }).count, 4)
+    }
+
+    func testAnOrdinaryItemKeepsItsSingleReminder() {
+        let plain = PlannerItem(id: "hw", kind: .homework, title: "Worksheet", dueDate: "2026-10-20", reminder: .evening)
+        XCTAssertEqual(PlannerReminders.plan(items: [plain], now: now, timeZone: utc).map { $0.title }, ["Worksheet"])
+    }
+
+    func testRungIdentifiersAreDistinctStableAndRecognisable() {
+        let ids = PlannerReminders.ladderRequests(for: big(due: "2026-10-20"), now: now, timeZone: utc).map { $0.identifier }
+        XCTAssertEqual(ids, ["planner:t:1", "planner:t:2", "planner:t:3", "planner:t:4"])
+        XCTAssertTrue(ids.allSatisfy { PlannerReminders.isPlannerIdentifier($0) })
+    }
+
+    // MARK: - It uses the one scheduler and its one budget
+
+    func testRungsCountAgainstThePlannersTwentyAndNeverMore() {
+        let items = (1...10).map { big("b\($0)", due: "2026-11-\(String(format: "%02d", $0 + 5))") }   // 10 big items x 4 rungs = 40
+        let plan = PlannerReminders.plan(items: items, now: now, timeZone: utc)
+        XCTAssertEqual(plan.count, PlannerReminders.maxPending)
+        XCTAssertEqual(PlannerReminders.classBudget(plannerCount: plan.count), 44, "classes keep their 44")
+        XCTAssertEqual(plan.map { $0.fireDate }, plan.map { $0.fireDate }.sorted(), "soonest first across every item's rungs")
+    }
+
+    func testRungsAndOrdinaryRemindersShareOneSoonestFirstOrder() {
+        let plain = PlannerItem(id: "hw", kind: .homework, title: "Worksheet", dueDate: "2026-10-14", reminder: .evening)
+        let plan = PlannerReminders.plan(items: [big(due: "2026-10-20"), plain], now: now, timeZone: utc)
+        XCTAssertEqual(plan.map { $0.fireDate }, plan.map { $0.fireDate }.sorted())
+        XCTAssertTrue(plan.contains { $0.itemID == "hw" })
+        XCTAssertEqual(plan.filter { $0.itemID == "t" }.count, 4)
+    }
+
+    // MARK: - Wording
+
+    func testTheTitleSaysWhatAndWhen() {
+        XCTAssertEqual(PlannerReminders.ladderTitle("Chemistry test", rung: .threeDays), "Chemistry test in 3 days")
+        XCTAssertEqual(PlannerReminders.ladderTitle("Essay", rung: .dayBefore), "Essay tomorrow")
+        XCTAssertEqual(PlannerReminders.ladderTitle("Essay", rung: .morningOf), "Essay today")
+    }
+
+    func testTheBodyCarriesKindAndBlock() {
+        let r = PlannerReminders.ladderRequests(for: big(due: "2026-10-20", block: "C"), now: now, timeZone: utc)
+        XCTAssertEqual(r.first?.body, "Test · Block C")
+    }
+
+    // MARK: - The note
+
+    private func note(_ item: PlannerItem, _ permission: ReminderPermission = .granted, appOn: Bool = true) -> String? {
+        PlannerReminders.note(for: item, now: now, permission: permission, appNotificationsOn: appOn, timeZone: utc)
+    }
+
+    func testTheNoteForABigDeadline() {
+        XCTAssertNil(note(big(due: "2026-10-20")))
+        XCTAssertNil(note(big(due: "2026-10-20", rungs: [])), "all off is a choice, not a problem")
+        XCTAssertEqual(note(big(due: "2026-09-30")), "Those times have already passed, so there won't be a reminder.")
+        XCTAssertEqual(note(big(due: "2026-10-20"), .denied), "Notifications are off for Knight Life in your iPhone's Settings, so these reminders won't show up.")
+        XCTAssertEqual(note(big(due: "2026-10-20"), .granted, appOn: false), "Notifications are turned off in Knight Life's settings, so these reminders won't show up.")
+    }
+
+    func testRungsThatAreOnButAllGoneIsSaidButOnlyTheOnesTheStudentChose() {
+        // Due in 2 days with only the week and 3-day rungs on: both gone.
+        XCTAssertEqual(note(big(due: "2026-10-06", rungs: [.week, .threeDays])), "Those times have already passed, so there won't be a reminder.")
+        XCTAssertNil(note(big(due: "2026-10-06", rungs: [.week, .morningOf])), "the morning rung is still ahead")
+    }
+}
+
+final class PlannerLadderModelTests: XCTestCase {
+    private func item(_ mutate: (inout PlannerItem) -> Void = { _ in }) -> PlannerItem {
+        var v = PlannerItem(id: "i", kind: .test, title: "T", dueDate: "2026-10-20", createdAt: Date(timeIntervalSince1970: 1_790_000_000))
+        mutate(&v); return v
+    }
+
+    func testRungsRoundTripForABigDeadline() {
+        let original = item { $0.isBig = true; $0.rungs = [.dayBefore, .morningOf] }
+        XCTAssertEqual(PlannerItem(id: "i", data: original.firestoreData)?.rungs, [.dayBefore, .morningOf])
+    }
+
+    func testAnEmptyLadderIsWrittenAndReadBackAsEmptyNotAsFull() {
+        let original = item { $0.isBig = true; $0.rungs = [] }
+        XCTAssertEqual((original.firestoreData["rungs"] as? [String]), [])
+        XCTAssertEqual(PlannerItem(id: "i", data: original.firestoreData)?.rungs, [])
+    }
+
+    func testAnItemWithNoRungsFieldReadsAsAFullLadder() {
+        XCTAssertEqual(PlannerItem(id: "i", data: item().firestoreData)?.rungs, Set(LadderRung.allCases))
+    }
+
+    func testRungsAreNotWrittenForAnOrdinaryItem() {
+        XCTAssertNil(item { $0.rungs = [.week] }.firestoreData["rungs"])
+    }
+
+    func testRungsAreWrittenInLadderOrderWhateverTheSetOrder() {
+        let data = item { $0.isBig = true; $0.rungs = [.morningOf, .week] }.firestoreData
+        XCTAssertEqual(data["rungs"] as? [String], ["week", "morningOf"])
+    }
+
+    func testAnUnknownRungFromANewerBuildIsSkippedNotFatal() {
+        var data = item { $0.isBig = true }.firestoreData
+        data["rungs"] = ["week", "fortnight", "morningOf"]
+        XCTAssertEqual(PlannerItem(id: "i", data: data)?.rungs, [.week, .morningOf])
+    }
+
+    func testEveryRungHasADistinctLabelAndPosition() {
+        XCTAssertEqual(Set(LadderRung.allCases.map { $0.label }).count, 4)
+        XCTAssertEqual(LadderRung.allCases.map { $0.position }, [1, 2, 3, 4])
+        XCTAssertEqual(LadderRung.allCases.map { $0.daysBefore }, [7, 3, 1, 0])
+    }
+
+    func testTheCachePersistsABigDeadlineAndItsRungs() {
+        let original = item { $0.isBig = true; $0.reminder = .none; $0.rungs = [.week, .dayBefore] }
+        let restored = PlannerReminderCache(decoding: PlannerReminderCache(items: [original]).encoded()).items.first
+        XCTAssertEqual(restored?.isBig, true)
+        XCTAssertEqual(restored?.rungs, [.week, .dayBefore])
+    }
+
+    func testABigItemWithNoPlainReminderIsStillCachedAndAnOrdinaryOneWithoutIsNot() {
+        let big = item { $0.isBig = true; $0.reminder = .none }
+        let plain = item { $0.isBig = false; $0.reminder = .none }
+        XCTAssertEqual(PlannerReminderCache(decoding: PlannerReminderCache(items: [big]).encoded()).items.count, 1)
+        XCTAssertEqual(PlannerReminderCache(decoding: PlannerReminderCache(items: [plain]).encoded()).items.count, 0)
+    }
+
+    func testACacheSavedByThePreviousBuildStillReads() {
+        let old = #"[{"id":"a","kind":"test","title":"t","dueDate":"2026-10-10","reminder":"evening"}]"#
+        let item = PlannerReminderCache(decoding: Data(old.utf8)).items.first
+        XCTAssertEqual(item?.reminder, .evening)
+        XCTAssertEqual(item?.isBig, false)
+        XCTAssertEqual(item?.rungs, Set(LadderRung.allCases))
+    }
+
+    func testChangingARungCountsAsAChangeForTheCache() {
+        var cache = PlannerReminderCache(items: [item { $0.isBig = true }])
+        let edited = item { $0.isBig = true; $0.rungs = [.week] }
+        XCTAssertTrue(cache.apply(items: [edited], window: ("2026-10-01", "2026-10-31")))
+    }
+}

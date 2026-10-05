@@ -100,12 +100,15 @@ enum PlannerReminders {
     /// school key date (read-only, shown to everyone, never the student's to be reminded about
     /// through their own planner).
     static func plan(items: [PlannerItem], now: Date, timeZone: TimeZone = .current) -> [ReminderRequest] {
-        let requests: [ReminderRequest] = items.compactMap { item in
-            guard !item.completed, !item.isSchoolKeyDate,
-                  let fire = fireDate(for: item, now: now, timeZone: timeZone) else { return nil }
-            return ReminderRequest(identifier: identifier(itemID: item.id), fireDate: fire,
-                                   title: item.title, body: body(for: item, fireDate: fire, timeZone: timeZone),
-                                   itemID: item.id)
+        let requests: [ReminderRequest] = items.flatMap { item -> [ReminderRequest] in
+            guard !item.completed, !item.isSchoolKeyDate else { return [] }
+            // A big deadline's countdown REPLACES its single reminder rather than adding to it: a
+            // test with a "night before" reminder AND a "night before" rung would notify twice.
+            if item.isBig { return ladderRequests(for: item, now: now, timeZone: timeZone) }
+            guard let fire = fireDate(for: item, now: now, timeZone: timeZone) else { return [] }
+            return [ReminderRequest(identifier: identifier(itemID: item.id), fireDate: fire,
+                                    title: item.title, body: body(for: item, fireDate: fire, timeZone: timeZone),
+                                    itemID: item.id)]
         }
         let ordered = requests.sorted {
             $0.fireDate != $1.fireDate ? $0.fireDate < $1.fireDate : $0.identifier < $1.identifier
@@ -132,6 +135,64 @@ enum PlannerReminders {
         var parts = [item.kind.label, when]
         if let block = item.classBlock { parts.append("Block \(block)") }
         return parts.joined(separator: " · ")
+    }
+}
+
+// MARK: - The countdown for a big deadline (HQ-2186)
+
+extension PlannerReminders {
+
+    /// When one rung of an item's countdown fires, or nil if it has already passed.
+    ///
+    /// Skipped, never fired late. A test added two days out has no "a week before" and no "3 days
+    /// before" to give: firing those at once would be a notification about a deadline that is, by
+    /// now, closer than the reminder says, and an iOS trigger already in the past never fires at
+    /// all. So it simply gets the rungs that are still ahead.
+    ///
+    /// Before the due day a rung is 7 PM, like the plain "night before" reminder; the morning of is
+    /// 7 AM. The day is stepped on the calendar and then the hour set, so a rung is still 7 PM
+    /// across a daylight-saving change.
+    static func fireDate(rung: LadderRung, for item: PlannerItem, now: Date, timeZone: TimeZone = .current) -> Date? {
+        guard let due = PlannerItem.date(fromDay: item.dueDate, timeZone: timeZone) else { return nil }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        guard let day = calendar.date(byAdding: .day, value: -rung.daysBefore, to: due),
+              let moment = calendar.date(bySettingHour: rung == .morningOf ? morningHour : eveningHour,
+                                         minute: 0, second: 0, of: day),
+              moment > now.addingTimeInterval(30) else { return nil }
+        return moment
+    }
+
+    /// The reminders for a big deadline: one per rung that is on and still ahead.
+    static func ladderRequests(for item: PlannerItem, now: Date, timeZone: TimeZone = .current) -> [ReminderRequest] {
+        LadderRung.allCases.compactMap { rung in
+            guard item.rungs.contains(rung),
+                  let fire = fireDate(rung: rung, for: item, now: now, timeZone: timeZone) else { return nil }
+            return ReminderRequest(identifier: identifier(itemID: item.id, rung: rung.position), fireDate: fire,
+                                   title: ladderTitle(item.title, rung: rung), body: ladderBody(for: item),
+                                   itemID: item.id)
+        }
+    }
+
+    /// Says what and when: "Chemistry test in 3 days", not "Reminder".
+    static func ladderTitle(_ title: String, rung: LadderRung) -> String {
+        switch rung {
+        case .week: return "\(title) in 1 week"
+        case .threeDays: return "\(title) in 3 days"
+        case .dayBefore: return "\(title) tomorrow"
+        case .morningOf: return "\(title) today"
+        }
+    }
+
+    private static func ladderBody(for item: PlannerItem) -> String {
+        var parts = [item.kind.label]
+        if let block = item.classBlock { parts.append("Block \(block)") }
+        return parts.joined(separator: " · ")
+    }
+
+    /// Whether any rung of this item's countdown is both on and still ahead.
+    static func hasUpcomingRung(_ item: PlannerItem, now: Date, timeZone: TimeZone = .current) -> Bool {
+        !ladderRequests(for: item, now: now, timeZone: timeZone).isEmpty
     }
 }
 
@@ -184,9 +245,11 @@ struct PlannerReminderCache {
     private struct Signature: Equatable {
         var title: String, kind: PlannerKind, dueDate: String, classBlock: String?
         var completed: Bool, reminder: PlannerReminder, remindAt: Date?
+        var isBig: Bool, rungs: Set<LadderRung>
         init(_ item: PlannerItem) {
             title = item.title; kind = item.kind; dueDate = item.dueDate; classBlock = item.classBlock
             completed = item.completed; reminder = item.reminder; remindAt = item.remindAt
+            isBig = item.isBig; rungs = item.rungs
         }
     }
     private static func signatures(_ items: [String: PlannerItem]) -> [String: Signature] { items.mapValues(Signature.init) }
@@ -225,18 +288,25 @@ struct PlannerReminderCache {
 
     // MARK: Persistence
 
-    /// Only items a reminder could still come from: not finished, and carrying a reminder.
+    /// Only items a reminder could still come from: not finished, and carrying a reminder or a
+    /// countdown. `isBig` and `rungs` are optional so a cache saved by the previous build still reads.
     private struct Stored: Codable {
         var id: String, kind: String, title: String, dueDate: String
         var classBlock: String?, reminder: String, remindAt: Date?
+        var isBig: Bool?, rungs: [String]?
     }
 
     func encoded() -> Data? {
-        let stored = itemsByID.values
-            .filter { !$0.completed && $0.reminder != .none }
+        let keep = itemsByID.values
+            .filter { !$0.completed && ($0.reminder != .none || $0.isBig) }
             .sorted { $0.id < $1.id }
-            .map { Stored(id: $0.id, kind: $0.kind.rawValue, title: $0.title, dueDate: $0.dueDate,
-                          classBlock: $0.classBlock, reminder: $0.reminder.rawValue, remindAt: $0.remindAt) }
+        let stored: [Stored] = keep.map { item in
+            // In ladder order, so the saved copy doesn't reorder between writes.
+            let rungNames = LadderRung.allCases.filter { item.rungs.contains($0) }.map { $0.rawValue }
+            return Stored(id: item.id, kind: item.kind.rawValue, title: item.title, dueDate: item.dueDate,
+                          classBlock: item.classBlock, reminder: item.reminder.rawValue, remindAt: item.remindAt,
+                          isBig: item.isBig ? true : nil, rungs: item.isBig ? rungNames : nil)
+        }
         return try? JSONEncoder().encode(stored)
     }
 
@@ -245,10 +315,11 @@ struct PlannerReminderCache {
             self.init(items: [])
             return
         }
-        self.init(items: stored.compactMap {
-            guard let kind = PlannerKind(rawValue: $0.kind), let reminder = PlannerReminder(rawValue: $0.reminder) else { return nil }
-            return PlannerItem(id: $0.id, kind: kind, title: $0.title, dueDate: $0.dueDate, classBlock: $0.classBlock,
-                               reminder: reminder, remindAt: $0.remindAt)
+        self.init(items: stored.compactMap { entry -> PlannerItem? in
+            guard let kind = PlannerKind(rawValue: entry.kind), let reminder = PlannerReminder(rawValue: entry.reminder) else { return nil }
+            let rungs = entry.rungs.map { names in Set(names.compactMap { LadderRung(rawValue: $0) }) } ?? Set(LadderRung.allCases)
+            return PlannerItem(id: entry.id, kind: kind, title: entry.title, dueDate: entry.dueDate, classBlock: entry.classBlock,
+                               isBig: entry.isBig ?? false, reminder: reminder, remindAt: entry.remindAt, rungs: rungs)
         })
     }
 }
@@ -271,6 +342,21 @@ extension PlannerReminders {
     /// just picked; the others are about the phone.
     static func note(for item: PlannerItem, now: Date, permission: ReminderPermission, appNotificationsOn: Bool,
                      timeZone: TimeZone = .current) -> String? {
+        if item.isBig {
+            // Nothing switched on is a choice, not a problem. Rungs switched on but all already gone
+            // is the case worth saying out loud.
+            guard !item.rungs.isEmpty else { return nil }
+            if !hasUpcomingRung(item, now: now, timeZone: timeZone) {
+                return "Those times have already passed, so there won't be a reminder."
+            }
+            if permission == .denied {
+                return "Notifications are off for Knight Life in your iPhone's Settings, so these reminders won't show up."
+            }
+            if !appNotificationsOn {
+                return "Notifications are turned off in Knight Life's settings, so these reminders won't show up."
+            }
+            return nil
+        }
         guard item.reminder != .none else { return nil }
         if fireDate(for: item, now: now, timeZone: timeZone) == nil {
             return item.reminder == .custom

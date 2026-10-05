@@ -38,6 +38,38 @@ enum PlannerReminder: String, CaseIterable {
     case custom
 }
 
+/// One step of a big deadline's countdown (HQ-2186): a reminder a set number of days before the due
+/// day. The raw values are what is stored, and the same strings the rules accept.
+enum LadderRung: String, CaseIterable {
+    case week
+    case threeDays
+    case dayBefore
+    case morningOf
+
+    /// 0 for the morning of the due day itself.
+    var daysBefore: Int {
+        switch self {
+        case .week: return 7
+        case .threeDays: return 3
+        case .dayBefore: return 1
+        case .morningOf: return 0
+        }
+    }
+
+    /// Its place in the ladder, for identifiers: 1...4 (0 is the single reminder's).
+    var position: Int { (LadderRung.allCases.firstIndex(of: self) ?? 0) + 1 }
+
+    /// What the student sees on the switch.
+    var label: String {
+        switch self {
+        case .week: return "A week before"
+        case .threeDays: return "3 days before"
+        case .dayBefore: return "The night before"
+        case .morningOf: return "That morning"
+        }
+    }
+}
+
 struct PlannerItem: Equatable {
     var id: String
     var kind: PlannerKind
@@ -62,11 +94,15 @@ struct PlannerItem: Equatable {
     var reminder: PlannerReminder
     /// The moment for `.custom`; ignored otherwise.
     var remindAt: Date?
+    /// Which steps of the countdown are on, for a big deadline (HQ-2186). All four by default, so an
+    /// item that never set this behaves like the ticket says: a full ladder.
+    var rungs: Set<LadderRung>
 
     init(id: String, kind: PlannerKind, title: String, dueDate: String, dueTime: String? = nil,
          classBlock: String? = nil, notes: String? = nil, completed: Bool = false,
          createdAt: Date = Date(), parentId: String? = nil, isBig: Bool = false,
-         reminder: PlannerReminder = .none, remindAt: Date? = nil) {
+         reminder: PlannerReminder = .none, remindAt: Date? = nil,
+         rungs: Set<LadderRung> = Set(LadderRung.allCases)) {
         self.id = id
         self.kind = kind
         self.title = title
@@ -80,6 +116,7 @@ struct PlannerItem: Equatable {
         self.isBig = isBig
         self.reminder = reminder
         self.remindAt = remindAt
+        self.rungs = rungs
     }
 }
 
@@ -216,7 +253,10 @@ extension PlannerItem {
             isBig: (data["isBig"] as? Bool) ?? false,
             // An unknown reminder (a newer build's) reads as none rather than dropping the item.
             reminder: (data["reminder"] as? String).flatMap { PlannerReminder(rawValue: $0) } ?? .none,
-            remindAt: (data["remindAt"] as? Timestamp)?.dateValue()
+            remindAt: (data["remindAt"] as? Timestamp)?.dateValue(),
+            // Absent means a full ladder. A rung name from a newer build is skipped, not fatal.
+            rungs: (data["rungs"] as? [String]).map { Set($0.compactMap { LadderRung(rawValue: $0) }) }
+                ?? Set(LadderRung.allCases)
         )
     }
 
@@ -240,6 +280,9 @@ extension PlannerItem {
         // document it was before this field existed.
         if reminder != .none { data["reminder"] = reminder.rawValue }
         if reminder == .custom, let remindAt = remindAt { data["remindAt"] = Timestamp(date: remindAt) }
+        // Written for a big deadline only, and always then (even all four), so "no rungs on" can be
+        // told apart from "never set". In ladder order so a document doesn't reorder between writes.
+        if isBig { data["rungs"] = LadderRung.allCases.filter { rungs.contains($0) }.map { $0.rawValue } }
         return data
     }
 }

@@ -175,6 +175,29 @@ final class PlannerListingTests: XCTestCase {
         XCTAssertNil(draft.makeItem(id: "r", replacing: original, now: now, timeZone: utc).remindAt, "a time that no longer applies is not carried")
     }
 
+    func testANewDraftIsNotBigAndOnlyATestIsTurnedBigByTheEditor() {
+        let draft = PlannerDraft.new(now: now, timeZone: utc)
+        XCTAssertFalse(draft.isBig)
+        XCTAssertEqual(draft.rungs, Set(LadderRung.allCases))
+    }
+
+    func testTheSheetNowCarriesBigAndItsRungsThroughAnEdit() {
+        let original = PlannerItem(id: "b", kind: .test, title: "T", dueDate: "2026-10-25", isBig: true, rungs: [.dayBefore])
+        var draft = PlannerDraft(editing: original, timeZone: utc)
+        XCTAssertTrue(draft.isBig)
+        XCTAssertEqual(draft.rungs, [.dayBefore])
+        draft.isBig = false
+        XCTAssertFalse(draft.makeItem(id: "b", replacing: original, now: now, timeZone: utc).isBig, "the student can turn it off")
+    }
+
+    func testABigDeadlineIsMarkedInWordsInItsSubtitle() {
+        let big = PlannerItem(id: "x", kind: .test, title: "Chem", dueDate: "2026-10-21", isBig: true)
+        let plain = PlannerItem(id: "y", kind: .test, title: "Quiz", dueDate: "2026-10-21")
+        let en = Locale(identifier: "en_US")
+        XCTAssertEqual(PlannerListing.subtitle(for: big, today: today, now: now, timeZone: utc, locale: en), "Tomorrow · Big test")
+        XCTAssertEqual(PlannerListing.subtitle(for: plain, today: today, now: now, timeZone: utc, locale: en), "Tomorrow · Test")
+    }
+
     func testEditingPreFillsTheSheet() {
         let original = PlannerItem(id: "e", kind: .sports, title: "Game", dueDate: "2026-11-02", classBlock: "B", notes: "away")
         let draft = PlannerDraft(editing: original, timeZone: utc)
