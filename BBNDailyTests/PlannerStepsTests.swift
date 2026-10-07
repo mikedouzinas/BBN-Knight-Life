@@ -284,4 +284,25 @@ final class PlannerStepsTests: XCTestCase {
         let again = PlannerDraft(editing: saved, timeZone: utc).makeItem(id: "s1", replacing: saved, timeZone: utc)
         XCTAssertEqual(again.parentId, "test")
     }
+
+    // MARK: - Folding a test's steps away
+
+    func testAFoldedParentHidesItsStepsButStillCountsThem() {
+        let items = [item("test", "2026-10-14"), item("s1", "2026-10-08", parent: "test", completed: true), item("s2", "2026-10-10", parent: "test")]
+        let open = PlannerSteps.rows(items, today: "2026-10-04")
+        XCTAssertEqual(open.map { $0.item.id }, ["test", "s1", "s2"])
+        XCTAssertEqual(open[0].expanded, true)
+        XCTAssertNil(open[1].expanded)
+
+        let folded = PlannerSteps.rows(items, today: "2026-10-04", collapsed: ["test"])
+        XCTAssertEqual(folded.map { $0.item.id }, ["test"])
+        XCTAssertEqual(folded[0].expanded, false)
+        XCTAssertEqual(folded[0].progress, "1 of 2 steps done", "folding hides steps, it does not forget them")
+    }
+
+    func testAnItemWithNoStepsHasNothingToFold() {
+        let rows = PlannerSteps.rows([item("a", "2026-10-06")], today: "2026-10-04", collapsed: ["a"])
+        XCTAssertEqual(rows.map { $0.item.id }, ["a"])
+        XCTAssertNil(rows[0].expanded)
+    }
 }

@@ -213,3 +213,43 @@ enum PlannerWeek {
         return day == today ? "\(title) · Today" : title
     }
 }
+
+// MARK: - The Schedule tab (a day's blocks, with tests and homework under their class)
+
+/// One row of the Schedule tab's day list.
+enum PlannerScheduleRow: Equatable {
+    /// The block at this position in the day's blocks.
+    case block(Int)
+    /// A test or homework for the class in the block row above it.
+    case item(PlannerItem)
+}
+
+enum PlannerSchedule {
+
+    /// The day's rows: each block, and under a block the student's tests and homework for its class
+    /// (`PlannerWeekDay.badgedItems`, so the rule is the one the week and Tomorrow views use).
+    ///
+    /// `hasClass` says whether the student has a class in that letter that actually meets this day. A
+    /// block that is not theirs, is Free, or does not meet gets nothing under it, so its items stay in
+    /// the Planned list instead of vanishing. A letter that appears twice in a day takes its items under
+    /// the first row only, so nothing is shown twice.
+    static func rows(blockLetters: [String], hasClass: (String) -> Bool, items: [PlannerItem], day: String) -> [PlannerScheduleRow] {
+        var seen = Set<String>()
+        var rows = [PlannerScheduleRow]()
+        for (index, letter) in blockLetters.enumerated() {
+            rows.append(.block(index))
+            let block = letter.uppercased()
+            guard block != "N/A", hasClass(block), seen.insert(block).inserted else { continue }
+            rows += PlannerWeekDay.badgedItems(block: block, day: day, in: items).map { .item($0) }
+        }
+        return rows
+    }
+
+    /// `items` without the ones `rows` puts under a block: what is left goes in the Planned list, so an
+    /// item is under its class or in the list, never both.
+    static func unattached(_ items: [PlannerItem], rows: [PlannerScheduleRow]) -> [PlannerItem] {
+        let placed = Set(rows.compactMap { row -> String? in if case .item(let item) = row { return item.id } else { return nil } })
+        return items.filter { !placed.contains($0.id) }
+    }
+}
+

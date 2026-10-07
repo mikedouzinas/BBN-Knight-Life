@@ -30,17 +30,18 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
 //    func sessionDidDeactivate(_ session: WCSession) {
 //        print("deactivated?")
 //    }
-    // Section 0 is the day's schedule, exactly as before. Section 1 (HQ-2183) is whatever the
-    // student has planned for the selected day; it has no rows, and so no header and no height,
-    // unless they have planned something.
+    // Section 0 is the day's schedule, with a class's tests and homework as rows directly under its
+    // block. Section 1 (HQ-2183) is the rest of what the student has planned for the selected day
+    // (games, appointments, anything without a class that meets that day); it has no rows, and so no
+    // header and no height, unless there is something.
     func numberOfSections(in tableView: UITableView) -> Int {
         return 2
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return section == 0 ? currentDay.count : selectedPlannerItems.count
+        return section == 0 ? scheduleRows.count : plannerListItems.count
     }
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return section == 1 && !selectedPlannerItems.isEmpty ? "Planned" : nil
+        return section == 1 && !plannerListItems.isEmpty ? "Planned" : nil
     }
     var xc = 0
     // HQ-628. The old version of setTimes rescheduled itself every second, forever, redoing
@@ -272,13 +273,12 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
     static var todayBlocks = [block]()
     var currentWeekday = CustomWeekday(blocks: [block](), weekday: nil, date: nil, hasImage: false)
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath.section == 1 {
-            guard let cell = tableView.dequeueReusableCell(withIdentifier: PlannerItemCell.identifier, for: indexPath) as? PlannerItemCell,
-                  selectedPlannerItems.indices.contains(indexPath.row) else {
+        if let item = plannerItem(at: indexPath) {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: PlannerItemCell.identifier, for: indexPath) as? PlannerItemCell else {
                 return UITableViewCell()
             }
-            let item = selectedPlannerItems[indexPath.row]
-            cell.configure(with: item, today: PlannerItem.dayString(from: Date()))
+            // Under its block a test sits indented, as a step sits under its test.
+            cell.configure(with: item, today: PlannerItem.dayString(from: Date()), depth: indexPath.section == 0 ? 1 : 0)
             // The checkbox is the Tasks tab's job; here a row is something to look at and tap.
             cell.onCheckBoxTapped = nil
             return cell
@@ -286,10 +286,10 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
         guard let cell = tableView.dequeueReusableCell(withIdentifier: coverTableViewCell.identifier, for: indexPath) as? coverTableViewCell else {
             fatalError()
         }
-        if indexPath.row > currentDay.count - 1 {
+        guard let blockIndex = blockIndex(at: indexPath), currentDay.indices.contains(blockIndex) else {
             return coverTableViewCell()
         }
-        let thisBlock = currentDay[indexPath.row]
+        let thisBlock = currentDay[blockIndex]
         var isLunch = false
         if thisBlock.name.lowercased().contains("lunch") {
             isLunch = true
@@ -303,7 +303,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
         dateformatter.dateFormat = "h:mm a"
         dateformatter.amSymbol = "AM"
         dateformatter.pmSymbol = "PM"
-        let dates = getReturnDates(currBlock: currentDay[indexPath.row])
+        let dates = getReturnDates(currBlock: currentDay[blockIndex])
         let t = dates[1]
         let t2 = dates[3]
         let t3 = dates[2]
@@ -333,7 +333,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
         if currentDate == stringDate {
 
             if Date().isBetweenTimeFrame(date1: t, date2: t2) {
-                currentBlock = currentDay[indexPath.row]
+                currentBlock = currentDay[blockIndex]
                 cell.alpha = 1
                 cell.contentView.alpha = 1
                 cell.backView.backgroundColor = UIColor(named: "current-cell")?.withAlphaComponent(0.1)
@@ -371,10 +371,8 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
         return panGesture
     }()
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if indexPath.section == 1 {
+        if let item = plannerItem(at: indexPath) {
             tableView.deselectRow(at: indexPath, animated: true)
-            guard selectedPlannerItems.indices.contains(indexPath.row) else { return }
-            let item = selectedPlannerItems[indexPath.row]
             // A school key date is read-only: there is no document behind it to edit.
             guard !item.isSchoolKeyDate else { return }
             let editor = PlannerItemEditorVC(existing: item, context: PlannerSteps.context(for: item, in: plannerIndex.allItems))
@@ -382,7 +380,8 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
             present(UINavigationController(rootViewController: editor), animated: true)
             return
         }
-        let block = currentDay[indexPath.row]
+        guard let blockIndex = blockIndex(at: indexPath), currentDay.indices.contains(blockIndex) else { return }
+        let block = currentDay[blockIndex]
         if block.name.lowercased().contains("lunch") {
             // Set LunchMenuVC.week to the date of the current week's Monday in the form "m/d"
             let formatter = DateFormatter()
@@ -411,7 +410,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
         }
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return indexPath.section == 1 ? 72 : 60
+        return plannerItem(at: indexPath) != nil ? 72 : 60
     }
     var currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n")
     static var isLunch1 = false
@@ -668,6 +667,47 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
         plannerIndex.items(onDay: selectedPlannerDay, today: PlannerItem.dayString(from: Date()))
     }
 
+    /// Whether the student has a class in this block letter that meets the selected day: their own,
+    /// not Free, and not a day its meeting pattern skips (the same three rules Tasks applies).
+    private func studentHasClass(inBlock letter: String) -> Bool {
+        guard let assignment = LoginVC.blocks[letter] as? String, assignment.contains("~"),
+              !ClassIdentity.isFree(assignment.getValues()[0]) else { return false }
+        if let meets = LoginVC.classMeetingDays[letter.lowercased()], meets.indices.contains(selectedDay), !meets[selectedDay] {
+            return false
+        }
+        return true
+    }
+
+    /// The schedule section: each block with its class's tests and homework under it.
+    private var scheduleRows: [PlannerScheduleRow] {
+        PlannerSchedule.rows(blockLetters: currentDay.map { $0.block }, hasClass: studentHasClass(inBlock:),
+                             items: selectedPlannerItems, day: selectedPlannerDay)
+    }
+
+    /// The Planned section: everything for the day that is not under a block.
+    private var plannerListItems: [PlannerItem] {
+        PlannerSchedule.unattached(selectedPlannerItems, rows: scheduleRows)
+    }
+
+    /// The planner item at a row, in either section, or nil if the row is a block.
+    private func plannerItem(at indexPath: IndexPath) -> PlannerItem? {
+        if indexPath.section == 1 {
+            let items = plannerListItems
+            return items.indices.contains(indexPath.row) ? items[indexPath.row] : nil
+        }
+        let rows = scheduleRows
+        guard rows.indices.contains(indexPath.row), case .item(let item) = rows[indexPath.row] else { return nil }
+        return item
+    }
+
+    /// The position in `currentDay` of the block at a row of the schedule section, or nil.
+    private func blockIndex(at indexPath: IndexPath) -> Int? {
+        guard indexPath.section == 0 else { return nil }
+        let rows = scheduleRows
+        guard rows.indices.contains(indexPath.row), case .block(let index) = rows[indexPath.row] else { return nil }
+        return index
+    }
+
     /// Loads the window around the page being shown, unless the window already held covers it.
     /// `force` reloads regardless: after an edit, or when the tab comes back to the front.
     private func loadPlanner(force: Bool) {
@@ -689,9 +729,10 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
                     if PlannerReminderScheduler.didLoad(items: items, window: window) { self.setNotifications() }
                     self.plannerLoadedWindow = window
                     self.calendar?.reloadData()
-                    // Only the planner section: the schedule section has a live countdown and
-                    // block dimming that a full reload would disturb.
-                    self.ScheduleCalendar?.reloadSections(IndexSet(integer: 1), with: .none)
+                    // Both sections: a class's tests sit under its block now, so the schedule's own
+                    // row count can change. The countdown is on its own timer and block dimming is
+                    // recomputed in cellForRow, so a reload does not disturb either.
+                    self.ScheduleCalendar?.reloadSections(IndexSet([0, 1]), with: .none)
                 case .failure:
                     // Quietly keep what is shown. The home screen is the wrong place to nag about
                     // the planner; Tasks says so when its own load fails.

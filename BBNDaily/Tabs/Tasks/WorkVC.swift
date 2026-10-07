@@ -54,8 +54,10 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             }
             let row = plannerRows[indexPath.row]
             let item = row.item
-            cell.configure(with: item, today: PlannerItem.dayString(from: Date()), depth: row.depth, progress: row.progress)
+            cell.configure(with: item, today: PlannerItem.dayString(from: Date()), depth: row.depth, progress: row.progress,
+                           expanded: row.expanded)
             cell.onCheckBoxTapped = { [weak self] in self?.togglePlannerItem(id: item.id) }
+            cell.onToggleSteps = { [weak self] in self?.toggleSteps(of: item.id) }
             return cell
         }
         guard let cell = tableView.dequeueReusableCell(withIdentifier: TaskCell.identifier, for: indexPath) as? TaskCell else {
@@ -175,7 +177,14 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // left out of the Upcoming list below it.
     private func rebuildPlannerRows() {
         let listed = PlannerWeekDay.withoutBadged(plannerItems, day: resolvedPlannerDay, classBlocks: entries.map { $0.block })
-        plannerRows = PlannerSteps.rows(listed, today: PlannerItem.dayString(from: Date()))
+        plannerRows = PlannerSteps.rows(listed, today: PlannerItem.dayString(from: Date()), collapsed: collapsedParents)
+    }
+    // Tests the student has folded up in Upcoming. Kept for the session only.
+    private var collapsedParents = Set<String>()
+    private func toggleSteps(of id: String) {
+        if collapsedParents.contains(id) { collapsedParents.remove(id) } else { collapsedParents.insert(id) }
+        rebuildPlannerRows()
+        tableView.reloadData()
     }
     private func tomorrowBadges(forBlock block: String) -> [PlannerItem] {
         PlannerWeekDay.badgedItems(block: block, day: resolvedPlannerDay, in: plannerItems)

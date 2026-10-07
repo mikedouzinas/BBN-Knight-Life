@@ -46,6 +46,8 @@ struct PlannerListRow: Equatable {
     var depth: Int
     /// "2 of 4 steps done" on a parent that has steps.
     var progress: String?
+    /// On a parent that has steps: whether they are shown under it. nil on a row with nothing to expand.
+    var expanded: Bool? = nil
 }
 
 enum PlannerSteps {
@@ -180,18 +182,23 @@ enum PlannerSteps {
     /// Under a parent its steps run by their own date, whatever bucket they fall in: a step due next
     /// week sits under a parent due in a month. A step whose parent isn't in this list (outside the
     /// loaded window, or deleted elsewhere) is shown as an ordinary item rather than vanishing.
-    static func rows(_ items: [PlannerItem], today: String) -> [PlannerListRow] {
+    ///
+    /// A parent in `collapsed` hides its steps (the student folded it away). Its progress line still
+    /// counts them, and the steps are still in `items`, so nothing is lost by folding.
+    static func rows(_ items: [PlannerItem], today: String, collapsed: Set<String> = []) -> [PlannerListRow] {
         let ids = Set(items.map { $0.id })
         let nested = items.filter { $0.parentId != nil && ids.contains($0.parentId!) }
         let stepsByParent = Dictionary(grouping: nested, by: { $0.parentId! })
         let top = items.filter { !($0.parentId != nil && ids.contains($0.parentId!)) }
         var rows = [PlannerListRow]()
         for item in PlannerListing.ordered(top, today: today) {
-            rows.append(PlannerListRow(item: item, depth: 0, progress: progress(of: item, in: items)))
             let steps = (stepsByParent[item.id] ?? []).sorted {
                 $0.dueDate != $1.dueDate ? $0.dueDate < $1.dueDate : $0.createdAt < $1.createdAt
             }
-            rows += steps.map { PlannerListRow(item: $0, depth: 1, progress: nil) }
+            let folded = collapsed.contains(item.id)
+            rows.append(PlannerListRow(item: item, depth: 0, progress: progress(of: item, in: items),
+                                       expanded: steps.isEmpty ? nil : !folded))
+            if !folded { rows += steps.map { PlannerListRow(item: $0, depth: 1, progress: nil) } }
         }
         return rows
     }

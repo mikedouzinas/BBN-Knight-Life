@@ -360,3 +360,55 @@ final class PlannerPastDaysTests: XCTestCase {
                        "so it stays in the Upcoming list under its test")
     }
 }
+
+/// A class's tests and homework sit under its block on the Schedule tab.
+final class PlannerScheduleRowsTests: XCTestCase {
+
+    private func item(_ id: String, _ kind: PlannerKind, block: String?, day: String = "2026-10-07", parent: String? = nil) -> PlannerItem {
+        PlannerItem(id: id, kind: kind, title: id, dueDate: day, classBlock: block, createdAt: Date(timeIntervalSince1970: 0), parentId: parent)
+    }
+    private func label(_ rows: [PlannerScheduleRow]) -> [String] {
+        rows.map { row in
+            switch row {
+            case .block(let i): return "block\(i)"
+            case .item(let item): return "item:\(item.id)"
+            }
+        }
+    }
+    private let letters = ["A", "N/A", "B", "D"]
+    private func rows(_ items: [PlannerItem], has: Set<String> = ["A", "B", "D"], letters: [String]? = nil) -> [PlannerScheduleRow] {
+        PlannerSchedule.rows(blockLetters: letters ?? self.letters, hasClass: { has.contains($0) }, items: items, day: "2026-10-07")
+    }
+
+    func testATestSitsDirectlyUnderItsBlockAndTestsComeBeforeHomework() {
+        let r = rows([item("hw", .homework, block: "B"), item("test", .test, block: "B"), item("other", .test, block: "D")])
+        XCTAssertEqual(label(r), ["block0", "block1", "block2", "item:test", "item:hw", "block3", "item:other"])
+    }
+
+    func testNothingIsPlacedUnderANonClassRowOrAClassThatIsNotTheirs() {
+        let r = rows([item("t", .test, block: "A")], has: ["B", "D"])
+        XCTAssertEqual(label(r), ["block0", "block1", "block2", "block3"], "A is not their class: the test stays in the list")
+    }
+
+    func testOnlyTestsAndHomeworkForThatDayAndNeverSteps() {
+        let r = rows([item("game", .sports, block: "A"), item("later", .test, block: "A", day: "2026-10-09"),
+                      item("step", .test, block: "A", parent: "t"), item("loose", .homework, block: nil)])
+        XCTAssertEqual(label(r), ["block0", "block1", "block2", "block3"])
+    }
+
+    func testALetterThatAppearsTwiceTakesItsItemsUnderTheFirstRowOnly() {
+        let r = rows([item("t", .test, block: "D")], letters: ["D", "B", "D"])
+        XCTAssertEqual(label(r), ["block0", "item:t", "block1", "block2"])
+    }
+
+    func testEveryItemIsUnderItsBlockOrInTheListExactlyOnce() {
+        let items = [item("a", .test, block: "A"), item("b", .homework, block: "G"), item("c", .sports, block: "A"), item("d", .homework, block: nil)]
+        let r = rows(items)
+        let under = r.compactMap { row -> String? in if case .item(let i) = row { return i.id } else { return nil } }
+        let left = PlannerSchedule.unattached(items, rows: r).map { $0.id }
+        XCTAssertEqual((under + left).sorted(), ["a", "b", "c", "d"])
+        XCTAssertEqual(under, ["a"])
+        XCTAssertEqual(left, ["b", "c", "d"])
+    }
+}
+

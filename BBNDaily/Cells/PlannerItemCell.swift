@@ -70,10 +70,22 @@ final class PlannerItemCell: UITableViewCell {
         return label
     }()
 
+    // The fold arrow on a test that has steps: points down while its steps show, right when they are folded.
+    private let chevron: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.tintColor = UIColor(named: "inverse")
+        return button
+    }()
+
     var onCheckBoxTapped: (() -> Void)?
-    /// The card's left edge. Moved in to show a step under its parent (HQ-2187).
+    var onToggleSteps: (() -> Void)?
+    /// The card's edges. Moved in on both sides to show a step as a narrower card under its parent
+    /// (HQ-2187); everything inside the card is anchored to the card, so it moves with it.
     private var backLeading: NSLayoutConstraint!
-    private static let stepIndent: CGFloat = 28
+    private var backTrailing: NSLayoutConstraint!
+    private var chevronWidth: NSLayoutConstraint!
+    private static let stepIndent: CGFloat = 20
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -87,14 +99,18 @@ final class PlannerItemCell: UITableViewCell {
         contentView.addSubview(kindSymbol)
         contentView.addSubview(bigFlag)
         contentView.addSubview(checkBox)
+        contentView.addSubview(chevron)
+        chevron.addTarget(self, action: #selector(chevronTapped), for: .touchUpInside)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
         checkBox.addTarget(self, action: #selector(checkBoxTapped), for: .touchUpInside)
 
         backLeading = backView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 5)
+        backTrailing = backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5)
+        chevronWidth = chevron.widthAnchor.constraint(equalToConstant: 0)
         NSLayoutConstraint.activate([
             backLeading,
-            backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5),
+            backTrailing,
             backView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
             backView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
 
@@ -103,12 +119,12 @@ final class PlannerItemCell: UITableViewCell {
             kindStripe.bottomAnchor.constraint(equalTo: backView.bottomAnchor),
             kindStripe.widthAnchor.constraint(equalToConstant: 6),
 
-            kindSymbol.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20),
+            kindSymbol.rightAnchor.constraint(equalTo: backView.rightAnchor, constant: -15),
             kindSymbol.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             kindSymbol.widthAnchor.constraint(equalToConstant: 24),
             kindSymbol.heightAnchor.constraint(equalToConstant: 24),
 
-            checkBox.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20),
+            checkBox.leftAnchor.constraint(equalTo: backView.leftAnchor, constant: 15),
             checkBox.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             checkBox.heightAnchor.constraint(equalToConstant: 30),
             checkBox.widthAnchor.constraint(equalTo: checkBox.heightAnchor),
@@ -118,7 +134,11 @@ final class PlannerItemCell: UITableViewCell {
             bigFlag.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
             bigFlag.widthAnchor.constraint(equalToConstant: 14),
             bigFlag.heightAnchor.constraint(equalToConstant: 14),
-            titleLabel.rightAnchor.constraint(equalTo: bigFlag.leftAnchor, constant: -6),
+            chevron.rightAnchor.constraint(equalTo: bigFlag.leftAnchor, constant: -2),
+            chevron.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            chevron.heightAnchor.constraint(equalToConstant: 36),
+            chevronWidth,
+            titleLabel.rightAnchor.constraint(equalTo: chevron.leftAnchor, constant: -4),
             titleLabel.bottomAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 2),
 
             subtitleLabel.leftAnchor.constraint(equalTo: titleLabel.leftAnchor),
@@ -130,9 +150,15 @@ final class PlannerItemCell: UITableViewCell {
     required init?(coder: NSCoder) { fatalError() }
 
     @objc private func checkBoxTapped() { onCheckBoxTapped?() }
+    @objc private func chevronTapped() { onToggleSteps?() }
 
-    func configure(with item: PlannerItem, today: String, depth: Int = 0, progress: String? = nil) {
+    func configure(with item: PlannerItem, today: String, depth: Int = 0, progress: String? = nil, expanded: Bool? = nil) {
         backLeading.constant = 5 + CGFloat(depth) * PlannerItemCell.stepIndent
+        backTrailing.constant = -(5 + CGFloat(depth) * PlannerItemCell.stepIndent)
+        chevronWidth.constant = expanded == nil ? 0 : 36
+        chevron.isHidden = expanded == nil
+        chevron.setImage(UIImage(systemName: expanded == false ? "chevron.right" : "chevron.down"), for: .normal)
+        chevron.accessibilityLabel = expanded == false ? "Show steps" : "Hide steps"
         // Checked items fade and strike through rather than disappearing: still there to reopen.
         let attributes: [NSAttributedString.Key: Any] = item.completed
             ? [.strikethroughStyle: NSUnderlineStyle.single.rawValue] : [:]
