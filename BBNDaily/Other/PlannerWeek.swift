@@ -62,8 +62,13 @@ struct PlannerWeekDay: Equatable {
     /// day's schedule. Sports and appointments are not about a class and stay in the list, and so does
     /// anything whose class is not meeting that day (due on a day it doesn't meet, a no-school day):
     /// otherwise it would have nowhere to be shown and would silently disappear.
+    ///
+    /// A step (HQ-2187) is never badged: it belongs under its test in the Upcoming list, where its
+    /// parent counts "2 of 4 steps done". Badged away, a step due tomorrow would leave its test and
+    /// the count would drop.
     static func showsOnClassRow(_ item: PlannerItem, classBlocks: Set<String>) -> Bool {
-        guard let block = item.classBlock?.uppercased(), classBlocks.contains(block) else { return false }
+        guard item.parentId == nil,
+              let block = item.classBlock?.uppercased(), classBlocks.contains(block) else { return false }
         return item.kind == .test || item.kind == .homework
     }
 
@@ -159,6 +164,30 @@ enum PlannerWeek {
             let forDay = items.filter { $0.dueDate == day }
             return PlannerWeekDay(day: day, info: resolve(date), items: PlannerListing.ordered(forDay, today: today))
         }
+    }
+
+    /// The week without the days that have already happened: a finished day is not a plan.
+    ///
+    /// A past day with something still undone is kept, showing only what is undone (its classes and its
+    /// finished items are over), so overdue work does not drop out of sight the moment its day passes.
+    /// Today and later are untouched.
+    static func hidingPast(_ days: [PlannerWeekDay], today: String) -> [PlannerWeekDay] {
+        days.compactMap { day in
+            guard day.day < today else { return day }
+            let open = day.items.filter { !$0.completed }
+            guard !open.isEmpty else { return nil }
+            var kept = day
+            kept.info = WeekDayInfo(weekdayName: day.info.weekdayName, classes: [], emptyMessage: nil)
+            kept.items = open
+            return kept
+        }
+    }
+
+    /// Whether the school week starting `monday` is over (its Friday is before `today`), so there is
+    /// nothing in it worth going back to.
+    static func isWhollyPast(monday: Date, today: String, timeZone: TimeZone = .current) -> Bool {
+        let friday = calendar(timeZone).date(byAdding: .day, value: 4, to: monday) ?? monday
+        return PlannerItem.dayString(from: friday, timeZone: timeZone) < today
     }
 
     /// "Mon, Oct 5 - Fri, Oct 9"-style range for the header, from the Monday.

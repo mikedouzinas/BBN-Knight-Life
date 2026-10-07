@@ -299,3 +299,64 @@ final class PlannerClassRowTests: XCTestCase {
         XCTAssertEqual((badged + listed).sorted(), ["a", "b", "c", "d"])
     }
 }
+
+/// Past days leave the week view (and the arrow back), and a step is never badged away from its test.
+final class PlannerPastDaysTests: XCTestCase {
+
+    private let utc = TimeZone(identifier: "UTC")!
+    private func item(_ id: String, _ day: String, completed: Bool = false, kind: PlannerKind = .homework,
+                      block: String? = nil, parent: String? = nil) -> PlannerItem {
+        PlannerItem(id: id, kind: kind, title: id, dueDate: day, classBlock: block, completed: completed,
+                    createdAt: Date(timeIntervalSince1970: 0), parentId: parent)
+    }
+    /// Monday 2026-10-05 through Friday, each with a class, so a kept past day visibly loses it.
+    private func week(_ items: [PlannerItem]) -> [PlannerWeekDay] {
+        PlannerWeek.days(startingMonday: PlannerItem.date(fromDay: "2026-10-05", timeZone: utc)!, items: items,
+                         today: "2026-10-07", timeZone: utc) { _ in
+            WeekDayInfo(weekdayName: "x", classes: [WeekClass(block: "A", subject: "Spanish")], emptyMessage: nil)
+        }
+    }
+
+    func testDaysBeforeTodayAreDroppedAndTodayOnwardStay() {
+        let days = PlannerWeek.hidingPast(week([]), today: "2026-10-07")
+        XCTAssertEqual(days.map { $0.day }, ["2026-10-07", "2026-10-08", "2026-10-09"])
+    }
+
+    func testAPastDayWithOnlyFinishedItemsIsDropped() {
+        let days = PlannerWeek.hidingPast(week([item("done", "2026-10-05", completed: true)]), today: "2026-10-07")
+        XCTAssertFalse(days.map { $0.day }.contains("2026-10-05"))
+    }
+
+    func testAPastDayWithAnUnfinishedItemStaysShowingOnlyThatItem() {
+        let days = PlannerWeek.hidingPast(week([item("open", "2026-10-05"), item("done", "2026-10-05", completed: true)]),
+                                          today: "2026-10-07")
+        XCTAssertEqual(days.map { $0.day }, ["2026-10-05", "2026-10-07", "2026-10-08", "2026-10-09"])
+        XCTAssertEqual(days[0].items.map { $0.id }, ["open"], "the finished one has happened")
+        XCTAssertTrue(days[0].info.classes.isEmpty, "its classes are over")
+        XCTAssertEqual(days[0].rows.count, 1, "just the open item, no class rows")
+    }
+
+    func testTodayIsNeverTrimmed() {
+        let today = PlannerWeek.hidingPast(week([item("done", "2026-10-07", completed: true)]), today: "2026-10-07")[0]
+        XCTAssertEqual(today.items.map { $0.id }, ["done"])
+        XCTAssertEqual(today.info.classes.count, 1)
+    }
+
+    func testAWeekIsWhollyPastOnlyAfterItsFriday() {
+        let monday = PlannerItem.date(fromDay: "2026-09-28", timeZone: utc)!   // Mon-Fri Sep 28 - Oct 2
+        XCTAssertTrue(PlannerWeek.isWhollyPast(monday: monday, today: "2026-10-03", timeZone: utc), "Saturday: over")
+        XCTAssertFalse(PlannerWeek.isWhollyPast(monday: monday, today: "2026-10-02", timeZone: utc), "Friday itself is not past")
+        XCTAssertFalse(PlannerWeek.isWhollyPast(monday: PlannerItem.date(fromDay: "2026-10-05", timeZone: utc)!,
+                                                today: "2026-10-07", timeZone: utc))
+    }
+
+    // MARK: - A step stays under its test
+
+    func testAStepIsNeverBadgedOnAClassRow() {
+        let step = item("study", "2026-10-06", kind: .test, block: "A", parent: "test")
+        XCTAssertFalse(PlannerWeekDay.showsOnClassRow(step, classBlocks: ["A"]))
+        XCTAssertTrue(PlannerWeekDay.showsOnClassRow(item("test", "2026-10-06", kind: .test, block: "A"), classBlocks: ["A"]))
+        XCTAssertEqual(PlannerWeekDay.withoutBadged([step], day: "2026-10-06", classBlocks: ["A"]).map { $0.id }, ["study"],
+                       "so it stays in the Upcoming list under its test")
+    }
+}

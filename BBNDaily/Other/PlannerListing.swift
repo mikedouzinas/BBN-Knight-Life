@@ -92,6 +92,20 @@ struct PlannerDraft: Equatable {
     /// being reminded about gets the most, without burying a worksheet in notifications.
     var isBig = false
     var rungs = Set(LadderRung.allCases)
+    /// Set on a step the student is adding to a deadline (HQ-2187). An edit keeps the saved item's own
+    /// `parentId`; this is for the one that does not exist yet.
+    var parentId: String?
+
+    /// A step of `parent`, to be typed in: the parent's kind and class (so it is drawn and filed with
+    /// it), never a big deadline (the countdown is the parent's), the ordinary evening reminder.
+    static func newStep(of parent: PlannerItem, today: String, timeZone: TimeZone = .current) -> PlannerDraft {
+        let day = PlannerSteps.defaultStepDay(parentDue: parent.dueDate, today: today, timeZone: timeZone)
+        var draft = PlannerDraft(dueDate: PlannerItem.date(fromDay: day, timeZone: timeZone) ?? Date())
+        draft.kind = parent.kind
+        draft.classBlock = parent.classBlock
+        draft.parentId = parent.id
+        return draft
+    }
 
     /// A new item's starting point: homework due tomorrow, the most common thing to add.
     static func new(now: Date = Date(), timeZone: TimeZone = .current) -> PlannerDraft {
@@ -132,7 +146,7 @@ struct PlannerDraft: Equatable {
             notes: cleanNotes.isEmpty ? nil : cleanNotes,
             completed: existing?.completed ?? false,
             createdAt: existing?.createdAt ?? now,
-            parentId: existing?.parentId,
+            parentId: existing?.parentId ?? parentId,
             isBig: isBig,
             reminder: reminder,
             // Only a custom reminder carries a time; a stale one from an earlier choice is dropped.

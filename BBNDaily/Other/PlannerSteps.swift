@@ -91,6 +91,17 @@ enum PlannerSteps {
         }
     }
 
+    /// Where a step the student adds by hand starts: the day before its parent is due, so there is a
+    /// day between finishing the step and the deadline, but never earlier than today and never after
+    /// the parent. A parent due today (or already past) gets a step on its own day.
+    static func defaultStepDay(parentDue: String, today: String, timeZone: TimeZone = .current) -> String {
+        guard let due = PlannerItem.date(fromDay: parentDue, timeZone: timeZone) else { return parentDue }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let before = calendar.date(byAdding: .day, value: -1, to: due).map { PlannerItem.dayString(from: $0, timeZone: timeZone) } ?? parentDue
+        return min(max(before, today), parentDue)
+    }
+
     /// "Chem paper: step 2 of 4". A long parent title is shortened so the whole thing still fits
     /// the one title limit the rules enforce (FieldLimits.plannerTitle) instead of being refused.
     static func stepTitle(parentTitle: String, index: Int, of total: Int) -> String {

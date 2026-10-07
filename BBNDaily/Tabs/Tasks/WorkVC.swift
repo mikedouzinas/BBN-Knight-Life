@@ -92,7 +92,18 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             self?.requestDeletePlannerItem(id: id)
             done(true)
         }
-        return UISwipeActionsConfiguration(actions: [delete])
+        // A top-level, unfinished item can take a step of the student's own: "study for this", "pen in time".
+        let row = plannerRows[indexPath.row]
+        guard row.depth == 0, !row.item.completed, PlannerSteps.canHaveSteps(row.item) else {
+            return UISwipeActionsConfiguration(actions: [delete])
+        }
+        let parent = row.item
+        let addStep = UIContextualAction(style: .normal, title: "Add step") { [weak self] _, _, done in
+            self?.presentStepEditor(for: parent)
+            done(true)
+        }
+        addStep.backgroundColor = .systemBlue
+        return UISwipeActionsConfiguration(actions: [delete, addStep])
     }
     func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         guard indexPath.section == 1, plannerRows.indices.contains(indexPath.row) else { return nil }
@@ -184,6 +195,7 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     }
     private let weekSource = PlannerWeekDataSource()
     private let modeHeader = PlannerWeekHeaderView(frame: CGRect(x: 0, y: 0, width: 0, height: PlannerWeekHeaderView.tomorrowHeight))
+    private var modeHeaderHeight: NSLayoutConstraint!
     // Why the classes section is empty, if it is: the message shown when there is nothing else
     // on screen either.
     private var classesEmptyMessage: String?
@@ -193,7 +205,22 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         view.backgroundColor = UIColor(named: "background")
         tableView.backgroundColor = UIColor(named: "background")
         view.addSubview(tableView)
-        tableView.frame = view.bounds
+        // The Tomorrow | This Week switch stays put above the table however far down the list is
+        // scrolled; as the table's header it scrolled away with the first row.
+        view.addSubview(modeHeader)
+        modeHeader.translatesAutoresizingMaskIntoConstraints = false
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        modeHeaderHeight = modeHeader.heightAnchor.constraint(equalToConstant: PlannerWeekHeaderView.tomorrowHeight)
+        NSLayoutConstraint.activate([
+            modeHeader.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            modeHeader.leftAnchor.constraint(equalTo: view.leftAnchor),
+            modeHeader.rightAnchor.constraint(equalTo: view.rightAnchor),
+            modeHeaderHeight,
+            tableView.topAnchor.constraint(equalTo: modeHeader.bottomAnchor),
+            tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
+            tableView.rightAnchor.constraint(equalTo: view.rightAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
         tableView.delegate = self
         tableView.dataSource = self
         tableView.separatorStyle = .none
@@ -207,8 +234,6 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         modeHeader.onPreviousWeek = { [weak self] in self?.moveWeek(by: -1) }
         modeHeader.onNextWeek = { [weak self] in self?.moveWeek(by: 1) }
         weekSource.onSelectItem = { [weak self] item in self?.presentPlannerEditor(for: item) }
-        modeHeader.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: PlannerWeekHeaderView.tomorrowHeight)
-        tableView.tableHeaderView = modeHeader
         // HQ-2182: what the four colors mean.
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "info.circle"), style: .plain, target: self, action: #selector(showLegend))
@@ -397,18 +422,20 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         let height = modeHeader.setWeekMode(
             mode == .week,
             range: PlannerWeek.rangeLabel(monday: weekMonday),
-            canGoBack: canShow(weekStarting: PlannerWeek.shift(weekMonday, byWeeks: -1)),
+            // A week that is already over has nothing to go back to (past days are not shown).
+            canGoBack: canShow(weekStarting: PlannerWeek.shift(weekMonday, byWeeks: -1))
+                && !PlannerWeek.isWhollyPast(monday: PlannerWeek.shift(weekMonday, byWeeks: -1), today: PlannerItem.dayString(from: Date())),
             canGoForward: canShow(weekStarting: PlannerWeek.shift(weekMonday, byWeeks: 1)))
-        modeHeader.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: height)
-        tableView.tableHeaderView = modeHeader   // reassigned so the table picks up the new height
+        modeHeaderHeight.constant = height
     }
 
     private func rebuildWeek() {
         let today = PlannerItem.dayString(from: Date())
         weekSource.today = today
-        weekSource.days = PlannerWeek.days(startingMonday: weekMonday, items: plannerItems, today: today) { [weak self] date in
+        let week = PlannerWeek.days(startingMonday: weekMonday, items: plannerItems, today: today) { [weak self] date in
             self?.weekDayInfo(for: date) ?? WeekDayInfo(weekdayName: "", classes: [], emptyMessage: nil)
         }
+        weekSource.days = PlannerWeek.hidingPast(week, today: today)
         tableView.reloadData()
     }
 
@@ -442,6 +469,12 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     private func presentPlannerEditor(for item: PlannerItem?) {
         let context = item.map { PlannerSteps.context(for: $0, in: plannerItems) } ?? .none
         let editor = PlannerItemEditorVC(existing: item, context: context)
+        editor.onChange = { [weak self] in self?.loadPlanner() }
+        present(UINavigationController(rootViewController: editor), animated: true)
+    }
+
+    private func presentStepEditor(for parent: PlannerItem) {
+        let editor = PlannerItemEditorVC(newStepOf: parent)
         editor.onChange = { [weak self] in self?.loadPlanner() }
         present(UINavigationController(rootViewController: editor), animated: true)
     }
