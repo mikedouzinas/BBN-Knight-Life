@@ -242,3 +242,29 @@ enum PlannerSchedule {
         return items.filter { !placed.contains($0.id) }
     }
 }
+
+// MARK: - A class row on Tomorrow: homework beside the checkbox, tests as badges
+
+/// What Tomorrow's class row shows for the planner items badged on it (`PlannerWeekDay.badgedItems`).
+struct TomorrowClassItems: Equatable {
+    /// Homework, drawn as the row's own line next to the checkbox, which ticks it.
+    var homework: [PlannerItem]
+    /// Everything else (tests), drawn as badges under it.
+    var badges: [PlannerItem]
+
+    /// True when there is homework and every piece of it is done; the row fades and the checkbox is ticked.
+    var homeworkDone: Bool { !homework.isEmpty && homework.allSatisfy { $0.completed } }
+
+    /// The line next to the checkbox: the titles, in order.
+    var homeworkLine: String { homework.map { $0.title }.joined(separator: " · ") }
+
+    /// `badged` split for one class row. A row that already holds an old-style homework note keeps that
+    /// note on its line and checkbox, so planner homework stays a badge there rather than fighting it for
+    /// the same line.
+    static func split(_ badged: [PlannerItem], legacyNote: String) -> TomorrowClassItems {
+        guard legacyNote.isEmpty else { return TomorrowClassItems(homework: [], badges: badged) }
+        return TomorrowClassItems(homework: badged.filter { $0.kind == .homework },
+                                  badges: badged.filter { $0.kind != .homework })
+    }
+}
+
