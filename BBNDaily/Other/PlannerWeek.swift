@@ -214,42 +214,31 @@ enum PlannerWeek {
     }
 }
 
-// MARK: - The Schedule tab (a day's blocks, with tests and homework under their class)
-
-/// One row of the Schedule tab's day list.
-enum PlannerScheduleRow: Equatable {
-    /// The block at this position in the day's blocks.
-    case block(Int)
-    /// A test or homework for the class in the block row above it.
-    case item(PlannerItem)
-}
+// MARK: - The Schedule tab (a day's blocks, with tests and homework inside their class's row)
 
 enum PlannerSchedule {
 
-    /// The day's rows: each block, and under a block the student's tests and homework for its class
-    /// (`PlannerWeekDay.badgedItems`, so the rule is the one the week and Tomorrow views use).
+    /// For each block of the day, in order, the student's tests and homework for its class
+    /// (`PlannerWeekDay.badgedItems`, so the rule is the one the week and Tomorrow views use). The row
+    /// shows them as tags inside itself.
     ///
     /// `hasClass` says whether the student has a class in that letter that actually meets this day. A
-    /// block that is not theirs, is Free, or does not meet gets nothing under it, so its items stay in
-    /// the Planned list instead of vanishing. A letter that appears twice in a day takes its items under
-    /// the first row only, so nothing is shown twice.
-    static func rows(blockLetters: [String], hasClass: (String) -> Bool, items: [PlannerItem], day: String) -> [PlannerScheduleRow] {
+    /// block that is not theirs, is Free, or does not meet gets none, so its items stay in the Planned
+    /// list instead of vanishing. A letter that appears twice in a day takes its items on the first row
+    /// only, so nothing is shown twice.
+    static func attachments(blockLetters: [String], hasClass: (String) -> Bool, items: [PlannerItem], day: String) -> [[PlannerItem]] {
         var seen = Set<String>()
-        var rows = [PlannerScheduleRow]()
-        for (index, letter) in blockLetters.enumerated() {
-            rows.append(.block(index))
+        return blockLetters.map { letter in
             let block = letter.uppercased()
-            guard block != "N/A", hasClass(block), seen.insert(block).inserted else { continue }
-            rows += PlannerWeekDay.badgedItems(block: block, day: day, in: items).map { .item($0) }
+            guard block != "N/A", hasClass(block), seen.insert(block).inserted else { return [] }
+            return PlannerWeekDay.badgedItems(block: block, day: day, in: items)
         }
-        return rows
     }
 
-    /// `items` without the ones `rows` puts under a block: what is left goes in the Planned list, so an
-    /// item is under its class or in the list, never both.
-    static func unattached(_ items: [PlannerItem], rows: [PlannerScheduleRow]) -> [PlannerItem] {
-        let placed = Set(rows.compactMap { row -> String? in if case .item(let item) = row { return item.id } else { return nil } })
+    /// `items` without the ones in `attachments`: what is left goes in the Planned list, so an item is in
+    /// its class's row or in the list, never both.
+    static func unattached(_ items: [PlannerItem], attachments: [[PlannerItem]]) -> [PlannerItem] {
+        let placed = Set(attachments.flatMap { $0.map { $0.id } })
         return items.filter { !placed.contains($0.id) }
     }
 }
-

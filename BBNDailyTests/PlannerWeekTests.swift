@@ -361,54 +361,44 @@ final class PlannerPastDaysTests: XCTestCase {
     }
 }
 
-/// A class's tests and homework sit under its block on the Schedule tab.
+/// A class's tests and homework sit inside its block's row on the Schedule tab.
 final class PlannerScheduleRowsTests: XCTestCase {
 
     private func item(_ id: String, _ kind: PlannerKind, block: String?, day: String = "2026-10-07", parent: String? = nil) -> PlannerItem {
         PlannerItem(id: id, kind: kind, title: id, dueDate: day, classBlock: block, createdAt: Date(timeIntervalSince1970: 0), parentId: parent)
     }
-    private func label(_ rows: [PlannerScheduleRow]) -> [String] {
-        rows.map { row in
-            switch row {
-            case .block(let i): return "block\(i)"
-            case .item(let item): return "item:\(item.id)"
-            }
-        }
-    }
     private let letters = ["A", "N/A", "B", "D"]
-    private func rows(_ items: [PlannerItem], has: Set<String> = ["A", "B", "D"], letters: [String]? = nil) -> [PlannerScheduleRow] {
-        PlannerSchedule.rows(blockLetters: letters ?? self.letters, hasClass: { has.contains($0) }, items: items, day: "2026-10-07")
+    private func attach(_ items: [PlannerItem], has: Set<String> = ["A", "B", "D"], letters: [String]? = nil) -> [[String]] {
+        PlannerSchedule.attachments(blockLetters: letters ?? self.letters, hasClass: { has.contains($0) }, items: items, day: "2026-10-07")
+            .map { $0.map { $0.id } }
     }
 
-    func testATestSitsDirectlyUnderItsBlockAndTestsComeBeforeHomework() {
-        let r = rows([item("hw", .homework, block: "B"), item("test", .test, block: "B"), item("other", .test, block: "D")])
-        XCTAssertEqual(label(r), ["block0", "block1", "block2", "item:test", "item:hw", "block3", "item:other"])
+    func testATestGoesInItsBlocksRowAndTestsComeBeforeHomework() {
+        let a = attach([item("hw", .homework, block: "B"), item("test", .test, block: "B"), item("other", .test, block: "D")])
+        XCTAssertEqual(a, [[], [], ["test", "hw"], ["other"]], "one entry per block, in order")
     }
 
-    func testNothingIsPlacedUnderANonClassRowOrAClassThatIsNotTheirs() {
-        let r = rows([item("t", .test, block: "A")], has: ["B", "D"])
-        XCTAssertEqual(label(r), ["block0", "block1", "block2", "block3"], "A is not their class: the test stays in the list")
+    func testNothingGoesInANonClassRowOrAClassThatIsNotTheirs() {
+        XCTAssertEqual(attach([item("t", .test, block: "A")], has: ["B", "D"]), [[], [], [], []], "A is not their class: the test stays in the list")
     }
 
     func testOnlyTestsAndHomeworkForThatDayAndNeverSteps() {
-        let r = rows([item("game", .sports, block: "A"), item("later", .test, block: "A", day: "2026-10-09"),
-                      item("step", .test, block: "A", parent: "t"), item("loose", .homework, block: nil)])
-        XCTAssertEqual(label(r), ["block0", "block1", "block2", "block3"])
+        let a = attach([item("game", .sports, block: "A"), item("later", .test, block: "A", day: "2026-10-09"),
+                        item("step", .test, block: "A", parent: "t"), item("loose", .homework, block: nil)])
+        XCTAssertEqual(a, [[], [], [], []])
     }
 
-    func testALetterThatAppearsTwiceTakesItsItemsUnderTheFirstRowOnly() {
-        let r = rows([item("t", .test, block: "D")], letters: ["D", "B", "D"])
-        XCTAssertEqual(label(r), ["block0", "item:t", "block1", "block2"])
+    func testALetterThatAppearsTwiceTakesItsItemsOnTheFirstRowOnly() {
+        XCTAssertEqual(attach([item("t", .test, block: "D")], letters: ["D", "B", "D"]), [["t"], [], []])
     }
 
-    func testEveryItemIsUnderItsBlockOrInTheListExactlyOnce() {
+    func testEveryItemIsInItsRowOrInTheListExactlyOnce() {
         let items = [item("a", .test, block: "A"), item("b", .homework, block: "G"), item("c", .sports, block: "A"), item("d", .homework, block: nil)]
-        let r = rows(items)
-        let under = r.compactMap { row -> String? in if case .item(let i) = row { return i.id } else { return nil } }
-        let left = PlannerSchedule.unattached(items, rows: r).map { $0.id }
-        XCTAssertEqual((under + left).sorted(), ["a", "b", "c", "d"])
-        XCTAssertEqual(under, ["a"])
+        let attachments = PlannerSchedule.attachments(blockLetters: letters, hasClass: { ["A", "B", "D"].contains($0) }, items: items, day: "2026-10-07")
+        let inRows = attachments.flatMap { $0.map { $0.id } }
+        let left = PlannerSchedule.unattached(items, attachments: attachments).map { $0.id }
+        XCTAssertEqual((inRows + left).sorted(), ["a", "b", "c", "d"])
+        XCTAssertEqual(inRows, ["a"])
         XCTAssertEqual(left, ["b", "c", "d"])
     }
 }
-
