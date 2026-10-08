@@ -189,7 +189,7 @@ class TaskCell: UITableViewCell {
             // WorkVC only opens the entry prompt when holdsHomework is true.
             DescriptionLabel.text = "No homework for this class"
         } else {
-            DescriptionLabel.text = entry.text.isEmpty ? "Tap to add homework" : entry.text
+            DescriptionLabel.text = entry.text.isEmpty ? "Tap to add homework or a test" : entry.text
         }
         checkBox.setImage(UIImage(named: entry.completed ? "complete" : "incomplete"), for: .normal)
         // Fade the row's own parts, not the whole contentView: the badges are separate items with

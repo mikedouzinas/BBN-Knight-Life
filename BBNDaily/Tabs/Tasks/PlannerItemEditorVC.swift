@@ -58,13 +58,14 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
     private lazy var saveButton = UIBarButtonItem(title: "Save", style: .done, target: self, action: #selector(save))
 
     init(existing: PlannerItem? = nil, context: PlannerStepContext = .none, newStepOf parent: PlannerItem? = nil,
-         store: PlannerStore = .shared) {
+         draft: PlannerDraft? = nil, store: PlannerStore = .shared) {
         self.existing = existing
         self.newStepOf = parent
         self.context = parent.map { PlannerStepContext(parent: $0, steps: []) } ?? context
         self.store = store
         self.draft = existing.map { PlannerDraft(editing: $0) }
             ?? parent.map { PlannerDraft.newStep(of: $0, today: PlannerItem.dayString(from: Date())) }
+            ?? draft
             ?? PlannerDraft.new()
         super.init(nibName: nil, bundle: nil)
     }
@@ -547,3 +548,91 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         }
     }
 }
+
+// MARK: - Quick add from a class
+
+/// The small prompt behind tapping a class: "Add to AP Calculus" with a title and Homework / Test /
+/// More... buttons. The class and the day are already known, so nothing else is asked; Homework and
+/// Test save a planner item straight away, and More... opens the full editor with what was typed.
+enum PlannerQuickAdd {
+
+    static func present(from vc: UIViewController, subject: String, block: String, day: String,
+                        store: PlannerStore = .shared, onChange: @escaping () -> Void) {
+        let alert = UIAlertController(title: "Add to \(subject)",
+                                      message: "Block \(block) · due \(PlannerListing.dayLabel(forDay: day))",
+                                      preferredStyle: .alert)
+        func typed() -> String { alert.textFields?.first?.text ?? "" }
+        let homework = UIAlertAction(title: "Homework", style: .default) { [weak vc] _ in
+            guard let vc = vc else { return }
+            save(from: vc, kind: .homework, title: typed(), block: block, day: day, store: store, onChange: onChange)
+        }
+        let test = UIAlertAction(title: "Test", style: .default) { [weak vc] _ in
+            guard let vc = vc else { return }
+            save(from: vc, kind: .test, title: typed(), block: block, day: day, store: store, onChange: onChange)
+        }
+        let more = UIAlertAction(title: "More…", style: .default) { [weak vc] _ in
+            let editor = PlannerItemEditorVC(draft: PlannerDraft.forClass(block, day: day, title: typed()), store: store)
+            editor.onChange = onChange
+            vc?.present(UINavigationController(rootViewController: editor), animated: true)
+        }
+        // Nothing to save until something is typed; More... still opens the editor to type it there.
+        homework.isEnabled = false
+        test.isEnabled = false
+        alert.addTextField { field in
+            field.placeholder = "What is it?"
+            field.autocapitalizationType = .sentences
+            field.returnKeyType = .done
+            field.addAction(UIAction { [weak homework, weak test] action in
+                let text = (action.sender as? UITextField)?.text ?? ""
+                let has = !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                homework?.isEnabled = has
+                test?.isEnabled = has
+            }, for: .editingChanged)
+        }
+        alert.addAction(homework)
+        alert.addAction(test)
+        alert.addAction(more)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.preferredAction = homework
+        vc.present(alert, animated: true)
+    }
+
+    /// Saves one item for a class and day. The reminder takes effect now, as in the editor, and is taken
+    /// back if the save fails. `onSaved` runs only once the server has confirmed (the old homework note is
+    /// cleared on that, never before). The list refreshes when the write is confirmed, or after a wait if
+    /// there is no signal: the write is queued on the phone and goes through when the connection does.
+    static func save(from vc: UIViewController, kind: PlannerKind, title: String, block: String, day: String,
+                     store: PlannerStore = .shared, onSaved: (() -> Void)? = nil, onChange: @escaping () -> Void) {
+        func fail(_ message: String) {
+            ProgressHUD.colorAnimation = .red
+            ProgressHUD.failed(message)
+        }
+        guard let id = store.newID() else { fail(PlannerError.notSignedIn.message); return }
+        let item = PlannerDraft.forClass(block, day: day, kind: kind, title: title).makeItem(id: id)
+        if let reason = item.validationError() { fail(reason.message); return }
+        if PlannerReminderScheduler.didSave(item) { vc.setNotifications() }
+        var finished = false
+        let giveUp = DispatchWorkItem {
+            guard !finished else { return }
+            finished = true
+            onChange()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8, execute: giveUp)
+        store.save(item) { [weak vc] result in
+            DispatchQueue.main.async {
+                giveUp.cancel()
+                finished = true
+                switch result {
+                case .success:
+                    onSaved?()
+                case .failure(let error):
+                    // The save did not happen, so neither does its reminder.
+                    if PlannerReminderScheduler.didDelete(id: item.id) { vc?.setNotifications() }
+                    fail(error.message)
+                }
+                onChange()
+            }
+        }
+    }
+}
+
