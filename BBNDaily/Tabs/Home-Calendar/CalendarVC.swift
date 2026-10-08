@@ -274,12 +274,28 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
     var currentWeekday = CustomWeekday(blocks: [block](), weekday: nil, date: nil, hasImage: false)
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if let item = plannerItem(at: indexPath) {
+            // Under its block a test is one small tag, not a full card.
+            if indexPath.section == 0 {
+                guard let tag = tableView.dequeueReusableCell(withIdentifier: PlannerSubRowCell.identifier, for: indexPath) as? PlannerSubRowCell else {
+                    return UITableViewCell()
+                }
+                tag.configure(with: item)
+                // One line under the last tag of a group, none between tags.
+                let rows = scheduleRows
+                let nextIsTag: Bool = {
+                    guard rows.indices.contains(indexPath.row + 1), case .item = rows[indexPath.row + 1] else { return false }
+                    return true
+                }()
+                tag.separatorInset = nextIsTag ? UIEdgeInsets(top: 0, left: tableView.bounds.width, bottom: 0, right: 0)
+                                               : UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+                return tag
+            }
             guard let cell = tableView.dequeueReusableCell(withIdentifier: PlannerItemCell.identifier, for: indexPath) as? PlannerItemCell else {
                 return UITableViewCell()
             }
-            // Under its block a test sits indented, as a step sits under its test.
-            cell.configure(with: item, today: PlannerItem.dayString(from: Date()), depth: indexPath.section == 0 ? 1 : 0)
-            // The checkbox is the Tasks tab's job; here a row is something to look at and tap.
+            // Ticking things off is the Tasks tab's job; here a row is something to look at and tap, so
+            // it has no checkbox to tap.
+            cell.configure(with: item, today: PlannerItem.dayString(from: Date()), checkable: false)
             cell.onCheckBoxTapped = nil
             return cell
         }
@@ -410,7 +426,8 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
         }
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return plannerItem(at: indexPath) != nil ? 72 : 60
+        guard plannerItem(at: indexPath) != nil else { return 60 }
+        return indexPath.section == 0 ? PlannerSubRowCell.height : 72
     }
     var currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n")
     static var isLunch1 = false
@@ -546,6 +563,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
         v = 2
         ScheduleCalendar.register(coverTableViewCell.self, forCellReuseIdentifier: coverTableViewCell.identifier)
         ScheduleCalendar.register(PlannerItemCell.self, forCellReuseIdentifier: PlannerItemCell.identifier)
+        ScheduleCalendar.register(PlannerSubRowCell.self, forCellReuseIdentifier: PlannerSubRowCell.identifier)
         ScheduleCalendar.backgroundColor = UIColor(named: "background")
         height = view.frame.height/4
         configureRefreshPull()

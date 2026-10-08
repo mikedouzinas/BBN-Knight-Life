@@ -86,8 +86,8 @@ final class PlannerWeekDataSource: NSObject, UITableViewDataSource, UITableViewD
             guard let cell = tableView.dequeueReusableCell(withIdentifier: PlannerItemCell.identifier, for: indexPath) as? PlannerItemCell else {
                 return UITableViewCell()
             }
-            cell.configure(with: item, today: today)
-            cell.onCheckBoxTapped = nil   // checking things off is the Tomorrow view's job; here a row is looked at
+            cell.configure(with: item, today: today, checkable: false)   // checking things off is the Tomorrow view's job; here a row is looked at
+            cell.onCheckBoxTapped = nil
             return cell
         case .schoolClass(let schoolClass):
             let attached = days[indexPath.section].itemsOnClassRow(schoolClass.block)

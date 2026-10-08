@@ -85,6 +85,7 @@ final class PlannerItemCell: UITableViewCell {
     private var backLeading: NSLayoutConstraint!
     private var backTrailing: NSLayoutConstraint!
     private var chevronWidth: NSLayoutConstraint!
+    private var checkBoxWidth: NSLayoutConstraint!
     private static let stepIndent: CGFloat = 20
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -108,6 +109,7 @@ final class PlannerItemCell: UITableViewCell {
         backLeading = backView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 5)
         backTrailing = backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5)
         chevronWidth = chevron.widthAnchor.constraint(equalToConstant: 0)
+        checkBoxWidth = checkBox.widthAnchor.constraint(equalToConstant: 30)
         NSLayoutConstraint.activate([
             backLeading,
             backTrailing,
@@ -127,7 +129,7 @@ final class PlannerItemCell: UITableViewCell {
             checkBox.leftAnchor.constraint(equalTo: backView.leftAnchor, constant: 15),
             checkBox.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             checkBox.heightAnchor.constraint(equalToConstant: 30),
-            checkBox.widthAnchor.constraint(equalTo: checkBox.heightAnchor),
+            checkBoxWidth,
 
             titleLabel.leftAnchor.constraint(equalTo: checkBox.rightAnchor, constant: 10),
             bigFlag.rightAnchor.constraint(equalTo: kindSymbol.leftAnchor, constant: -10),
@@ -152,7 +154,12 @@ final class PlannerItemCell: UITableViewCell {
     @objc private func checkBoxTapped() { onCheckBoxTapped?() }
     @objc private func chevronTapped() { onToggleSteps?() }
 
-    func configure(with item: PlannerItem, today: String, depth: Int = 0, progress: String? = nil, expanded: Bool? = nil) {
+    /// `checkable` false hides the checkbox, for a list where a row can only be looked at and tapped
+    /// (the Schedule tab and the week view): a box that does nothing is clutter.
+    func configure(with item: PlannerItem, today: String, depth: Int = 0, progress: String? = nil, expanded: Bool? = nil,
+                   checkable: Bool = true) {
+        checkBox.isHidden = !checkable
+        checkBoxWidth.constant = checkable ? 30 : 0
         backLeading.constant = 5 + CGFloat(depth) * PlannerItemCell.stepIndent
         backTrailing.constant = -(5 + CGFloat(depth) * PlannerItemCell.stepIndent)
         chevronWidth.constant = expanded == nil ? 0 : 36
@@ -174,5 +181,83 @@ final class PlannerItemCell: UITableViewCell {
         checkBox.setImage(UIImage(named: item.completed ? "complete" : "incomplete"), for: .normal)
         checkBox.accessibilityLabel = item.completed ? "Mark not done" : "Mark done"
         contentView.alpha = item.completed ? 0.4 : 1.0
+    }
+}
+
+/// A test or homework under its class's block on the Schedule tab: one small tag, indented to line up
+/// with the class name above it, with no checkbox (ticking things off is the Tasks tab's job). Tapping
+/// it opens the item. The full-size row is for lists where the item is the main thing.
+final class PlannerSubRowCell: UITableViewCell {
+    static let identifier = "PlannerSubRowCell"
+    static let height: CGFloat = 36
+
+    private let pill = UIView()
+    private let symbol = UIImageView()
+    private let titleLabel = UILabel()
+    private let bigFlag = UIImageView(image: UIImage(systemName: "flag.fill"))
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        selectionStyle = .none
+        backgroundColor = UIColor(named: "background")
+        contentView.backgroundColor = UIColor(named: "background")
+
+        pill.translatesAutoresizingMaskIntoConstraints = false
+        pill.layer.cornerRadius = 9
+        symbol.translatesAutoresizingMaskIntoConstraints = false
+        symbol.contentMode = .scaleAspectFit
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        titleLabel.textColor = UIColor(named: "inverse")
+        titleLabel.numberOfLines = 1
+        titleLabel.lineBreakMode = .byTruncatingTail
+        bigFlag.translatesAutoresizingMaskIntoConstraints = false
+        bigFlag.contentMode = .scaleAspectFit
+        bigFlag.tintColor = UIColor(named: "inverse")
+        contentView.addSubview(pill)
+        pill.addSubview(symbol)
+        pill.addSubview(titleLabel)
+        pill.addSubview(bigFlag)
+
+        // The block row above puts its text a fifth of the way across; the tag starts there.
+        let indent = UILayoutGuide()
+        contentView.addLayoutGuide(indent)
+        NSLayoutConstraint.activate([
+            indent.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            indent.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.2),
+            pill.leadingAnchor.constraint(equalTo: indent.trailingAnchor, constant: 10),
+            pill.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
+            pill.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 3),
+            pill.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -3),
+
+            symbol.leadingAnchor.constraint(equalTo: pill.leadingAnchor, constant: 9),
+            symbol.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
+            symbol.widthAnchor.constraint(equalToConstant: 14),
+            symbol.heightAnchor.constraint(equalToConstant: 14),
+
+            bigFlag.trailingAnchor.constraint(equalTo: pill.trailingAnchor, constant: -9),
+            bigFlag.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
+            bigFlag.widthAnchor.constraint(equalToConstant: 11),
+            bigFlag.heightAnchor.constraint(equalToConstant: 11),
+
+            titleLabel.leadingAnchor.constraint(equalTo: symbol.trailingAnchor, constant: 6),
+            titleLabel.trailingAnchor.constraint(equalTo: bigFlag.leadingAnchor, constant: -6),
+            titleLabel.centerYAnchor.constraint(equalTo: pill.centerYAnchor),
+        ])
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    func configure(with item: PlannerItem) {
+        let attributes: [NSAttributedString.Key: Any] = item.completed
+            ? [.strikethroughStyle: NSUnderlineStyle.single.rawValue] : [:]
+        titleLabel.attributedText = NSAttributedString(string: item.title, attributes: attributes)
+        pill.backgroundColor = item.kind.color.withAlphaComponent(0.14)
+        symbol.image = item.kind.symbol
+        symbol.tintColor = item.kind.color
+        bigFlag.isHidden = !item.isBig
+        pill.alpha = item.completed ? 0.45 : 1
+        isAccessibilityElement = true
+        accessibilityLabel = "\(item.isBig ? "Big " : "")\(item.kind.label): \(item.title)"
     }
 }
