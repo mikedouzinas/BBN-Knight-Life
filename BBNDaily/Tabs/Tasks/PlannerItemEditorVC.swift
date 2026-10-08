@@ -24,6 +24,9 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
     var onChange: (() -> Void)?
 
     private let existing: PlannerItem?
+    /// Set when the sheet is adding a new step to this deadline (a step the student writes themselves,
+    /// not one of the evenly spaced ones "Split into steps" makes).
+    private let newStepOf: PlannerItem?
     /// The parent of this item, or its steps (HQ-2187). Lets the sheet keep a step from being dated
     /// after its parent, move steps when the parent moves earlier, and say how many go when a parent
     /// is deleted. `.none` when opened without context, in which case none of that applies.
@@ -54,11 +57,15 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
     private var bigTouched = false
     private lazy var saveButton = UIBarButtonItem(title: "Save", style: .done, target: self, action: #selector(save))
 
-    init(existing: PlannerItem? = nil, context: PlannerStepContext = .none, store: PlannerStore = .shared) {
+    init(existing: PlannerItem? = nil, context: PlannerStepContext = .none, newStepOf parent: PlannerItem? = nil,
+         store: PlannerStore = .shared) {
         self.existing = existing
-        self.context = context
+        self.newStepOf = parent
+        self.context = parent.map { PlannerStepContext(parent: $0, steps: []) } ?? context
         self.store = store
-        self.draft = existing.map { PlannerDraft(editing: $0) } ?? PlannerDraft.new()
+        self.draft = existing.map { PlannerDraft(editing: $0) }
+            ?? parent.map { PlannerDraft.newStep(of: $0, today: PlannerItem.dayString(from: Date())) }
+            ?? PlannerDraft.new()
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -66,7 +73,7 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = existing == nil ? "New Item" : "Edit Item"
+        title = newStepOf != nil ? "New Step" : (existing == nil ? "New Item" : "Edit Item")
         view.backgroundColor = UIColor(named: "background")
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancel))
         navigationItem.rightBarButtonItem = saveButton
@@ -74,12 +81,15 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         kindControl.selectedSegmentIndex = PlannerKind.allCases.firstIndex(of: draft.kind) ?? 0
         kindControl.addTarget(self, action: #selector(kindChanged), for: .valueChanged)
 
-        configure(titleField, placeholder: "Title, e.g. Chemistry unit 4 test", text: draft.title)
+        configure(titleField, placeholder: newStepOf != nil ? "e.g. Study chapters 1-3" : "Title, e.g. Chemistry unit 4 test",
+                  text: draft.title)
         configure(notesField, placeholder: "Notes (optional)", text: draft.notes)
         titleField.addTarget(self, action: #selector(titleChanged), for: .editingChanged)
 
         datePicker.datePickerMode = .date
         datePicker.preferredDatePickerStyle = .compact
+        // A step can't be due after the deadline it belongs to, so the picker doesn't offer such a day.
+        if let parent = context.parent, let latest = PlannerItem.date(fromDay: parent.dueDate) { datePicker.maximumDate = latest }
         datePicker.date = draft.dueDate
 
         classButton.contentHorizontalAlignment = .trailing
@@ -129,15 +139,23 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         ladderBox.spacing = 10
         applyBigVisibility()
 
-        var views: [UIView] = [kindControl, titleField, dueRow, classRow, notesField,
-                               bigRow, reminderBox, ladderBox, reminderNote]
-        if let existing = existing, PlannerSteps.canHaveSteps(existing), context.steps.isEmpty {
-            let split = UIButton(type: .system)
-            split.setTitle("Split into steps…", for: .normal)
-            split.addTarget(self, action: #selector(chooseStepCount), for: .touchUpInside)
-            views.append(split)
+        // A new step takes its kind and class from its deadline, so neither is asked for.
+        var views: [UIView] = newStepOf != nil
+            ? [titleField, dueRow, notesField, reminderBox, reminderNote]
+            : [kindControl, titleField, dueRow, classRow, notesField, bigRow, reminderBox, ladderBox, reminderNote]
+        if let existing = existing, PlannerSteps.canHaveSteps(existing) {
+            let add = UIButton(type: .system)
+            add.setTitle("Add a step…", for: .normal)
+            add.addTarget(self, action: #selector(addStep), for: .touchUpInside)
+            views.append(add)
+            if context.steps.isEmpty {
+                let split = UIButton(type: .system)
+                split.setTitle("Split into steps…", for: .normal)
+                split.addTarget(self, action: #selector(chooseStepCount), for: .touchUpInside)
+                views.append(split)
+            }
         }
-        if let parent = context.parent, existing != nil {
+        if let parent = context.parent {
             let note = UILabel()
             note.text = "A step of \"\(parent.title)\", due \(PlannerListing.dayLabel(forDay: parent.dueDate)). It can't be dated after it."
             note.font = .systemFont(ofSize: 13)
@@ -289,7 +307,7 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
     /// A big deadline's countdown replaces the plain reminder choice, so the two are never both shown.
     /// A step is never a big deadline (the countdown belongs to the deadline it is part of), so a step's
     /// sheet has no Big switch and always shows the ordinary reminder.
-    private var isStep: Bool { existing?.parentId != nil }
+    private var isStep: Bool { existing?.parentId != nil || newStepOf != nil }
 
     private func applyBigVisibility() {
         bigRow.isHidden = isStep
@@ -452,6 +470,18 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
             }
         }))
         present(alert, animated: true)
+    }
+
+    // MARK: Add a step by hand
+
+    /// Opens the sheet for one new step of this deadline, pushed on top so Back returns to this sheet
+    /// with what was typed. Saving it closes both and refreshes the list.
+    @objc private func addStep() {
+        guard let existing = existing else { return }
+        view.endEditing(true)
+        let step = PlannerItemEditorVC(newStepOf: existing, store: store)
+        step.onChange = onChange
+        navigationController?.pushViewController(step, animated: true)
     }
 
     // MARK: Split into steps (HQ-2187)
