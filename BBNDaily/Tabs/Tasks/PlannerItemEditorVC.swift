@@ -24,6 +24,10 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
     var onChange: (() -> Void)?
 
     private let existing: PlannerItem?
+    /// The parent of this item, or its steps (HQ-2187). Lets the sheet keep a step from being dated
+    /// after its parent, move steps when the parent moves earlier, and say how many go when a parent
+    /// is deleted. `.none` when opened without context, in which case none of that applies.
+    private let context: PlannerStepContext
     private let store: PlannerStore
     private var draft: PlannerDraft
     /// How long to wait for the server to confirm before closing anyway. See the note above.
@@ -41,6 +45,7 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
     private var customRow = UIView()
     private var permission = ReminderPermission.unknown
     // HQ-2186: the big-deadline switch and its four countdown steps.
+    private var bigRow = UIView()
     private let bigSwitch = UISwitch()
     private var rungSwitches = [LadderRung: UISwitch]()
     private var ladderBox = UIStackView()
@@ -49,8 +54,9 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
     private var bigTouched = false
     private lazy var saveButton = UIBarButtonItem(title: "Save", style: .done, target: self, action: #selector(save))
 
-    init(existing: PlannerItem? = nil, store: PlannerStore = .shared) {
+    init(existing: PlannerItem? = nil, context: PlannerStepContext = .none, store: PlannerStore = .shared) {
         self.existing = existing
+        self.context = context
         self.store = store
         self.draft = existing.map { PlannerDraft(editing: $0) } ?? PlannerDraft.new()
         super.init(nibName: nil, bundle: nil)
@@ -111,7 +117,7 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         // The countdown (big deadlines): the reminder control is replaced by four switches.
         bigSwitch.isOn = draft.isBig
         bigSwitch.addTarget(self, action: #selector(bigChanged), for: .valueChanged)
-        let bigRow = row(label: "Big deadline (test, paper, project)", control: bigSwitch)
+        bigRow = row(label: "Big deadline (test, paper, project)", control: bigSwitch)
         ladderBox = UIStackView(arrangedSubviews: LadderRung.allCases.map { rung in
             let toggle = UISwitch()
             toggle.isOn = draft.rungs.contains(rung)
@@ -125,6 +131,20 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
 
         var views: [UIView] = [kindControl, titleField, dueRow, classRow, notesField,
                                bigRow, reminderBox, ladderBox, reminderNote]
+        if let existing = existing, PlannerSteps.canHaveSteps(existing), context.steps.isEmpty {
+            let split = UIButton(type: .system)
+            split.setTitle("Split into steps…", for: .normal)
+            split.addTarget(self, action: #selector(chooseStepCount), for: .touchUpInside)
+            views.append(split)
+        }
+        if let parent = context.parent, existing != nil {
+            let note = UILabel()
+            note.text = "A step of \"\(parent.title)\", due \(PlannerListing.dayLabel(forDay: parent.dueDate)). It can't be dated after it."
+            note.font = .systemFont(ofSize: 13)
+            note.textColor = UIColor(named: "inverse")?.withAlphaComponent(0.7)
+            note.numberOfLines = 0
+            views.append(note)
+        }
         if existing != nil {
             let delete = UIButton(type: .system)
             delete.setTitle("Delete", for: .normal)
@@ -267,9 +287,14 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
     }
 
     /// A big deadline's countdown replaces the plain reminder choice, so the two are never both shown.
+    /// A step is never a big deadline (the countdown belongs to the deadline it is part of), so a step's
+    /// sheet has no Big switch and always shows the ordinary reminder.
+    private var isStep: Bool { existing?.parentId != nil }
+
     private func applyBigVisibility() {
-        ladderBox.isHidden = !draft.isBig
-        reminderBox.isHidden = draft.isBig
+        bigRow.isHidden = isStep
+        ladderBox.isHidden = isStep || !draft.isBig
+        reminderBox.isHidden = !isStep && draft.isBig
     }
 
     @objc private func titleChanged() { updateSaveEnabled() }
@@ -325,11 +350,23 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
             return
         }
 
+        // A step can never be dated after the deadline it belongs to (HQ-2187).
+        if let problem = PlannerSteps.dateProblem(step: item, parent: context.parent) {
+            alert(problem)
+            return
+        }
+        // Moving a parent earlier moves the steps that would now be late, in the same atomic write,
+        // and the student is told. Leaving them would be a plan that contradicts itself.
+        let movedSteps = existing == nil ? [] : PlannerSteps.reconcile(steps: context.steps, toParentDue: item.dueDate)
+        let everything = [item] + movedSteps
+
         // The reminder takes effect now rather than when the server answers: the write is already
         // queued on the phone, and a student who saves a test while offline should still be reminded
         // of it. If the server later refuses the write, the next planner load drops the item from
         // the cache and the reminder goes with it.
-        if PlannerReminderScheduler.didSave(item) { setNotifications() }
+        var remindersChanged = false
+        for each in everything where PlannerReminderScheduler.didSave(each) { remindersChanged = true }
+        if remindersChanged { setNotifications() }
         showLoader(text: "Saving...")
         var finished = false
         let giveUp = DispatchWorkItem { [weak self] in
@@ -341,11 +378,15 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + saveTimeout, execute: giveUp)
 
-        store.save(item) { [weak self] result in
+        let finish: (Result<Void, PlannerError>) -> Void = { [weak self] result in
             DispatchQueue.main.async {
                 giveUp.cancel()
                 switch result {
                 case .success:
+                    if !movedSteps.isEmpty {
+                        ProgressHUD.colorAnimation = .green
+                        ProgressHUD.succeed("Moved \(movedSteps.count) step\(movedSteps.count == 1 ? "" : "s") to match the new deadline")
+                    }
                     guard let self = self, !finished else { self?.onChange?(); return }
                     finished = true
                     self.hideLoader(completion: nil)
@@ -355,7 +396,7 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
                     // The save did not happen, so neither does its reminder. Without this a student
                     // who sees "couldn't save" and cancels is still reminded at 7 PM about something
                     // that was never put on their planner.
-                    self?.takeBackReminder(for: item)
+                    self?.takeBackReminders(for: everything)
                     if finished {
                         // The sheet already closed on the timeout; there is nothing to keep open.
                         ProgressHUD.colorAnimation = .red
@@ -369,25 +410,39 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
                 }
             }
         }
+        if movedSteps.isEmpty { store.save(item, completion: finish) } else { store.saveAll(everything, completion: finish) }
     }
 
     /// Undoes the optimistic reminder from `save()`: a new item's goes away, and an edited item's goes
     /// back to what it was.
-    private func takeBackReminder(for item: PlannerItem) {
-        let changed = existing.map { PlannerReminderScheduler.didSave($0) } ?? PlannerReminderScheduler.didDelete(id: item.id)
+    private func takeBackReminders(for items: [PlannerItem]) {
+        var changed = false
+        for item in items {
+            // The saved copy goes back if there was one (an edit, or a step that was moved); a brand
+            // new item has nothing to go back to and is removed.
+            let original = item.id == existing?.id ? existing : context.steps.first { $0.id == item.id }
+            let did = original.map { PlannerReminderScheduler.didSave($0) } ?? PlannerReminderScheduler.didDelete(id: item.id)
+            if did { changed = true }
+        }
         if changed { setNotifications() }
     }
 
     @objc private func confirmDelete() {
         guard let existing = existing else { return }
-        let alert = UIAlertController(title: "Delete \"\(existing.title)\"?", message: nil, preferredStyle: .alert)
+        // A parent's steps go with it, and the confirmation says how many (HQ-2187).
+        let stepIDs = context.steps.map { $0.id }
+        let alert = UIAlertController(title: PlannerSteps.deleteMessage(parentTitle: existing.title, stepCount: stepIDs.count),
+                                      message: nil, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { [weak self] _ in
-            self?.store.delete(id: existing.id) { result in
+            let ids = [existing.id] + stepIDs
+            self?.store.deleteAll(ids: ids) { result in
                 DispatchQueue.main.async {
                     switch result {
                     case .success:
-                        if PlannerReminderScheduler.didDelete(id: existing.id) { self?.setNotifications() }
+                        var changed = false
+                        for id in ids where PlannerReminderScheduler.didDelete(id: id) { changed = true }
+                        if changed { self?.setNotifications() }
                         self?.close()
                         self?.onChange?()
                     case .failure(let error):
@@ -397,5 +452,68 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
             }
         }))
         present(alert, animated: true)
+    }
+
+    // MARK: Split into steps (HQ-2187)
+
+    @objc private func chooseStepCount() {
+        guard let existing = existing else { return }
+        let sheet = UIAlertController(title: "Split into steps", message: "How many steps?", preferredStyle: .actionSheet)
+        for count in 2...PlannerSteps.maxSteps {
+            sheet.addAction(UIAlertAction(title: "\(count) steps", style: .default, handler: { [weak self] _ in
+                self?.proposeSteps(for: existing, count: count)
+            }))
+        }
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        sheet.popoverPresentationController?.sourceView = view
+        sheet.popoverPresentationController?.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 1, height: 1)
+        present(sheet, animated: true)
+    }
+
+    /// Shows the dates before anything is saved, so the student sees what they are about to get.
+    private func proposeSteps(for parent: PlannerItem, count: Int) {
+        let suggestions = PlannerSteps.suggest(parentTitle: parent.title, dueDate: parent.dueDate,
+                                               today: PlannerItem.dayString(from: Date()), count: count)
+        guard !suggestions.isEmpty else {
+            alert("There's no room to split this: it's due today or already past.")
+            return
+        }
+        let dates = suggestions.map { PlannerListing.dayLabel(forDay: $0.dueDate) }.joined(separator: "\n")
+        let confirm = UIAlertController(title: "Add \(suggestions.count) step\(suggestions.count == 1 ? "" : "s")?",
+                                        message: "Evenly spaced up to the deadline:\n\(dates)\n\nYou can change each one afterwards.",
+                                        preferredStyle: .alert)
+        confirm.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        confirm.addAction(UIAlertAction(title: "Add", style: .default, handler: { [weak self] _ in
+            self?.createSteps(for: parent, suggestions: suggestions)
+        }))
+        present(confirm, animated: true)
+    }
+
+    private func createSteps(for parent: PlannerItem, suggestions: [StepSuggestion]) {
+        guard let ids = store.newIDs(suggestions.count) else {
+            alert(PlannerError.notSignedIn.message)
+            return
+        }
+        let steps = PlannerSteps.makeSteps(for: parent, suggestions: suggestions, ids: ids)
+        showLoader(text: "Adding steps...")
+        var changed = false
+        for step in steps where PlannerReminderScheduler.didSave(step) { changed = true }
+        if changed { setNotifications() }
+        store.saveAll(steps) { [weak self] result in
+            DispatchQueue.main.async {
+                self?.hideLoader(completion: nil)
+                switch result {
+                case .success:
+                    self?.close()
+                    self?.onChange?()
+                case .failure(let error):
+                    // All or nothing: none were saved, so none of their reminders stay.
+                    var undone = false
+                    for step in steps where PlannerReminderScheduler.didDelete(id: step.id) { undone = true }
+                    if undone { self?.setNotifications() }
+                    self?.alert(error.message)
+                }
+            }
+        }
     }
 }

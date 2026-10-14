@@ -38,6 +38,9 @@ struct PlannerCalendarIndex {
 
     private let byDay: [String: [PlannerItem]]
 
+    /// Every item the index holds, for finding an item's parent or steps.
+    var allItems: [PlannerItem] { byDay.values.flatMap { $0 } }
+
     /// - Parameters:
     ///   - items: the student's own items.
     ///   - keyDateSources: where school-wide dates come from. Empty today.

@@ -181,6 +181,7 @@ enum PlannerValidationError: Error, Equatable {
     case badParent
     case missingID
     case missingReminderTime
+    case stepCannotBeBig
 
     var message: String {
         switch self {
@@ -193,6 +194,7 @@ enum PlannerValidationError: Error, Equatable {
         case .badParent: return "A step can't belong to itself."
         case .missingID: return "That item couldn't be found."
         case .missingReminderTime: return "Pick a time for the reminder."
+        case .stepCannotBeBig: return "A step can't be a big deadline: the countdown belongs to the deadline it is part of."
         }
     }
 }
@@ -215,6 +217,7 @@ extension PlannerItem {
             if parentId.isEmpty || parentId.count > PlannerItem.parentIdLimit || parentId == id { return .badParent }
         }
         if reminder == .custom && remindAt == nil { return .missingReminderTime }
+        if parentId != nil && isBig { return .stepCannotBeBig }
         return nil
     }
 }

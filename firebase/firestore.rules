@@ -75,7 +75,8 @@ service cloud.firestore {
         && (!('remindAt' in d) || d.remindAt is timestamp)
         && (!('rungs' in d) || (d.rungs is list && d.rungs.size() <= 4
               && d.rungs.hasOnly(['week', 'threeDays', 'dayBefore', 'morningOf'])))
-        && (!('reminder' in d) || d.reminder != 'custom' || 'remindAt' in d);
+        && (!('reminder' in d) || d.reminder != 'custom' || 'remindAt' in d)
+        && (!('parentId' in d && 'isBig' in d) || d.isBig == false);
     }
 
     // Who can publish schedules.

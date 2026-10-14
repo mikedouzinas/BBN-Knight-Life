@@ -103,6 +103,63 @@ final class PlannerStore {
         }
     }
 
+    /// Saves several items as one atomic write: all of them or none. A split into steps and a change
+    /// that moves a parent's steps must not be able to stop halfway, which would leave a plan that
+    /// contradicts itself. Firestore allows 500 writes in a batch; a parent has at most
+    /// PlannerSteps.maxSteps steps, so this never comes close.
+    func saveAll(_ items: [PlannerItem], completion: @escaping (Result<Void, PlannerError>) -> Void) {
+        guard !items.isEmpty else { completion(.success(())); return }
+        for item in items {
+            if let reason = item.validationError() {
+                completion(.failure(.invalid(reason)))
+                return
+            }
+        }
+        guard let uid = uid() else {
+            completion(.failure(.notSignedIn))
+            return
+        }
+        let batch = db.batch()
+        for item in items { batch.setData(item.firestoreData, forDocument: collection(uid).document(item.id)) }
+        batch.commit { error in
+            if let error = error {
+                print("PlannerStore.saveAll(\(items.count)) failed: \(error)")
+                completion(.failure(.firestore(error)))
+            } else {
+                completion(.success(()))
+            }
+        }
+    }
+
+    /// Deletes several items as one atomic write: a parent and its steps go together or not at all.
+    func deleteAll(ids: [String], completion: @escaping (Result<Void, PlannerError>) -> Void) {
+        guard !ids.isEmpty else { completion(.success(())); return }
+        guard !ids.contains(where: { $0.isEmpty }) else {
+            completion(.failure(.invalid(.missingID)))
+            return
+        }
+        guard let uid = uid() else {
+            completion(.failure(.notSignedIn))
+            return
+        }
+        let batch = db.batch()
+        for id in ids { batch.deleteDocument(collection(uid).document(id)) }
+        batch.commit { error in
+            if let error = error {
+                print("PlannerStore.deleteAll(\(ids.count)) failed: \(error)")
+                completion(.failure(.firestore(error)))
+            } else {
+                completion(.success(()))
+            }
+        }
+    }
+
+    /// A fresh id for each of `count` new items, with no network.
+    func newIDs(_ count: Int) -> [String]? {
+        guard let uid = uid() else { return nil }
+        return (0..<count).map { _ in collection(uid).document().documentID }
+    }
+
     func delete(id: String, completion: @escaping (Result<Void, PlannerError>) -> Void) {
         guard let uid = uid() else {
             completion(.failure(.notSignedIn))
