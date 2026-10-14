@@ -70,10 +70,23 @@ final class PlannerItemCell: UITableViewCell {
         return label
     }()
 
+    // The fold arrow on a test that has steps: points down while its steps show, right when they are folded.
+    private let chevron: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.tintColor = UIColor(named: "inverse")
+        return button
+    }()
+
     var onCheckBoxTapped: (() -> Void)?
-    /// The card's left edge. Moved in to show a step under its parent (HQ-2187).
+    var onToggleSteps: (() -> Void)?
+    /// The card's edges. Moved in on both sides to show a step as a narrower card under its parent
+    /// (HQ-2187); everything inside the card is anchored to the card, so it moves with it.
     private var backLeading: NSLayoutConstraint!
-    private static let stepIndent: CGFloat = 28
+    private var backTrailing: NSLayoutConstraint!
+    private var chevronWidth: NSLayoutConstraint!
+    private var checkBoxWidth: NSLayoutConstraint!
+    private static let stepIndent: CGFloat = 20
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -87,14 +100,19 @@ final class PlannerItemCell: UITableViewCell {
         contentView.addSubview(kindSymbol)
         contentView.addSubview(bigFlag)
         contentView.addSubview(checkBox)
+        contentView.addSubview(chevron)
+        chevron.addTarget(self, action: #selector(chevronTapped), for: .touchUpInside)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
         checkBox.addTarget(self, action: #selector(checkBoxTapped), for: .touchUpInside)
 
         backLeading = backView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 5)
+        backTrailing = backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5)
+        chevronWidth = chevron.widthAnchor.constraint(equalToConstant: 0)
+        checkBoxWidth = checkBox.widthAnchor.constraint(equalToConstant: 30)
         NSLayoutConstraint.activate([
             backLeading,
-            backView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -5),
+            backTrailing,
             backView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
             backView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
 
@@ -103,22 +121,26 @@ final class PlannerItemCell: UITableViewCell {
             kindStripe.bottomAnchor.constraint(equalTo: backView.bottomAnchor),
             kindStripe.widthAnchor.constraint(equalToConstant: 6),
 
-            kindSymbol.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20),
+            kindSymbol.rightAnchor.constraint(equalTo: backView.rightAnchor, constant: -15),
             kindSymbol.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             kindSymbol.widthAnchor.constraint(equalToConstant: 24),
             kindSymbol.heightAnchor.constraint(equalToConstant: 24),
 
-            checkBox.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20),
+            checkBox.leftAnchor.constraint(equalTo: backView.leftAnchor, constant: 15),
             checkBox.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             checkBox.heightAnchor.constraint(equalToConstant: 30),
-            checkBox.widthAnchor.constraint(equalTo: checkBox.heightAnchor),
+            checkBoxWidth,
 
             titleLabel.leftAnchor.constraint(equalTo: checkBox.rightAnchor, constant: 10),
             bigFlag.rightAnchor.constraint(equalTo: kindSymbol.leftAnchor, constant: -10),
             bigFlag.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
             bigFlag.widthAnchor.constraint(equalToConstant: 14),
             bigFlag.heightAnchor.constraint(equalToConstant: 14),
-            titleLabel.rightAnchor.constraint(equalTo: bigFlag.leftAnchor, constant: -6),
+            chevron.rightAnchor.constraint(equalTo: bigFlag.leftAnchor, constant: -2),
+            chevron.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            chevron.heightAnchor.constraint(equalToConstant: 36),
+            chevronWidth,
+            titleLabel.rightAnchor.constraint(equalTo: chevron.leftAnchor, constant: -4),
             titleLabel.bottomAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 2),
 
             subtitleLabel.leftAnchor.constraint(equalTo: titleLabel.leftAnchor),
@@ -130,9 +152,20 @@ final class PlannerItemCell: UITableViewCell {
     required init?(coder: NSCoder) { fatalError() }
 
     @objc private func checkBoxTapped() { onCheckBoxTapped?() }
+    @objc private func chevronTapped() { onToggleSteps?() }
 
-    func configure(with item: PlannerItem, today: String, depth: Int = 0, progress: String? = nil) {
+    /// `checkable` false hides the checkbox, for a list where a row can only be looked at and tapped
+    /// (the Schedule tab and the week view): a box that does nothing is clutter.
+    func configure(with item: PlannerItem, today: String, depth: Int = 0, progress: String? = nil, expanded: Bool? = nil,
+                   checkable: Bool = true) {
+        checkBox.isHidden = !checkable
+        checkBoxWidth.constant = checkable ? 30 : 0
         backLeading.constant = 5 + CGFloat(depth) * PlannerItemCell.stepIndent
+        backTrailing.constant = -(5 + CGFloat(depth) * PlannerItemCell.stepIndent)
+        chevronWidth.constant = expanded == nil ? 0 : 36
+        chevron.isHidden = expanded == nil
+        chevron.setImage(UIImage(systemName: expanded == false ? "chevron.right" : "chevron.down"), for: .normal)
+        chevron.accessibilityLabel = expanded == false ? "Show steps" : "Hide steps"
         // Checked items fade and strike through rather than disappearing: still there to reopen.
         let attributes: [NSAttributedString.Key: Any] = item.completed
             ? [.strikethroughStyle: NSUnderlineStyle.single.rawValue] : [:]
@@ -149,4 +182,69 @@ final class PlannerItemCell: UITableViewCell {
         checkBox.accessibilityLabel = item.completed ? "Mark not done" : "Mark done"
         contentView.alpha = item.completed ? 0.4 : 1.0
     }
+}
+
+/// A test or homework inside its class's block row on the Schedule tab: one small tag (kind symbol,
+/// title, big flag) with no checkbox, since ticking things off is the Tasks tab's job. Tapping it
+/// hands back the item so the screen can open it.
+final class PlannerTagButton: UIButton {
+    static let height: CGFloat = 30
+    static let spacing: CGFloat = 6
+
+    let item: PlannerItem
+    var onTap: ((PlannerItem) -> Void)?
+
+    init(item: PlannerItem) {
+        self.item = item
+        super.init(frame: .zero)
+        translatesAutoresizingMaskIntoConstraints = false
+        layer.cornerRadius = 9
+        backgroundColor = item.kind.color.withAlphaComponent(0.14)
+
+        let symbol = UIImageView(image: item.kind.symbol)
+        symbol.tintColor = item.kind.color
+        symbol.contentMode = .scaleAspectFit
+        symbol.translatesAutoresizingMaskIntoConstraints = false
+        symbol.isUserInteractionEnabled = false
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isUserInteractionEnabled = false
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.textColor = UIColor(named: "inverse")
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
+        label.attributedText = NSAttributedString(string: item.title,
+                                                  attributes: item.completed ? [.strikethroughStyle: NSUnderlineStyle.single.rawValue] : [:])
+        let flag = UIImageView(image: UIImage(systemName: "flag.fill"))
+        flag.tintColor = UIColor(named: "inverse")
+        flag.contentMode = .scaleAspectFit
+        flag.translatesAutoresizingMaskIntoConstraints = false
+        flag.isUserInteractionEnabled = false
+        flag.isHidden = !item.isBig
+        addSubview(symbol)
+        addSubview(label)
+        addSubview(flag)
+        NSLayoutConstraint.activate([
+            heightAnchor.constraint(equalToConstant: PlannerTagButton.height),
+            symbol.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 9),
+            symbol.centerYAnchor.constraint(equalTo: centerYAnchor),
+            symbol.widthAnchor.constraint(equalToConstant: 14),
+            symbol.heightAnchor.constraint(equalToConstant: 14),
+            flag.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -9),
+            flag.centerYAnchor.constraint(equalTo: centerYAnchor),
+            flag.widthAnchor.constraint(equalToConstant: 11),
+            flag.heightAnchor.constraint(equalToConstant: 11),
+            label.leadingAnchor.constraint(equalTo: symbol.trailingAnchor, constant: 6),
+            label.trailingAnchor.constraint(equalTo: flag.leadingAnchor, constant: -6),
+            label.centerYAnchor.constraint(equalTo: centerYAnchor),
+        ])
+        alpha = item.completed ? 0.45 : 1
+        accessibilityLabel = "\(item.isBig ? "Big " : "")\(item.kind.label): \(item.title)"
+        accessibilityHint = "Opens it"
+        addTarget(self, action: #selector(tapped), for: .touchUpInside)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    @objc private func tapped() { onTap?(item) }
 }

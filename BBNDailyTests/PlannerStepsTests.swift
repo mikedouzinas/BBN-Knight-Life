@@ -247,4 +247,62 @@ final class PlannerStepsTests: XCTestCase {
     }
 
     func testNoItemsNoRows() { XCTAssertEqual(PlannerSteps.rows([], today: listToday), []) }
+
+    // MARK: - A step the student adds by hand
+
+    func testDefaultStepDayIsTheDayBeforeTheDeadline() {
+        XCTAssertEqual(PlannerSteps.defaultStepDay(parentDue: "2026-10-14", today: "2026-10-04", timeZone: utc), "2026-10-13")
+    }
+
+    func testDefaultStepDayIsNeverBeforeTodayOrAfterTheDeadline() {
+        XCTAssertEqual(PlannerSteps.defaultStepDay(parentDue: "2026-10-05", today: "2026-10-05", timeZone: utc), "2026-10-05", "due today: today")
+        XCTAssertEqual(PlannerSteps.defaultStepDay(parentDue: "2026-10-06", today: "2026-10-05", timeZone: utc), "2026-10-05", "due tomorrow: today")
+        XCTAssertEqual(PlannerSteps.defaultStepDay(parentDue: "2026-10-01", today: "2026-10-05", timeZone: utc), "2026-10-01", "overdue parent: its own day, never after it")
+        XCTAssertEqual(PlannerSteps.defaultStepDay(parentDue: "2026-10-01", today: "2026-09-20", timeZone: utc), "2026-09-30", "across a month boundary")
+    }
+
+    func testANewStepIsFiledWithItsParentAndCannotBeBig() {
+        var parent = PlannerItem(id: "test", kind: .test, title: "Unit 3 test", dueDate: "2026-10-14", classBlock: "C",
+                                 createdAt: Date(timeIntervalSince1970: 0), isBig: true)
+        parent.reminder = .none
+        var draft = PlannerDraft.newStep(of: parent, today: "2026-10-04", timeZone: utc)
+        draft.title = "  Study chapters 1-3  "
+        let step = draft.makeItem(id: "s1", timeZone: utc)
+        XCTAssertEqual(step.parentId, "test")
+        XCTAssertEqual(step.kind, .test)
+        XCTAssertEqual(step.classBlock, "C")
+        XCTAssertEqual(step.title, "Study chapters 1-3")
+        XCTAssertEqual(step.dueDate, "2026-10-13")
+        XCTAssertFalse(step.isBig, "the countdown belongs to the test")
+        XCTAssertFalse(step.completed)
+        XCTAssertNil(PlannerSteps.dateProblem(step: step, parent: parent))
+        XCTAssertNil(step.validationError())
+    }
+
+    func testEditingAStepKeepsItsParentEvenThoughTheDraftHasNone() {
+        let saved = item("s1", "2026-10-06", parent: "test")
+        let again = PlannerDraft(editing: saved, timeZone: utc).makeItem(id: "s1", replacing: saved, timeZone: utc)
+        XCTAssertEqual(again.parentId, "test")
+    }
+
+    // MARK: - Folding a test's steps away
+
+    func testAFoldedParentHidesItsStepsButStillCountsThem() {
+        let items = [item("test", "2026-10-14"), item("s1", "2026-10-08", parent: "test", completed: true), item("s2", "2026-10-10", parent: "test")]
+        let open = PlannerSteps.rows(items, today: "2026-10-04")
+        XCTAssertEqual(open.map { $0.item.id }, ["test", "s1", "s2"])
+        XCTAssertEqual(open[0].expanded, true)
+        XCTAssertNil(open[1].expanded)
+
+        let folded = PlannerSteps.rows(items, today: "2026-10-04", collapsed: ["test"])
+        XCTAssertEqual(folded.map { $0.item.id }, ["test"])
+        XCTAssertEqual(folded[0].expanded, false)
+        XCTAssertEqual(folded[0].progress, "1 of 2 steps done", "folding hides steps, it does not forget them")
+    }
+
+    func testAnItemWithNoStepsHasNothingToFold() {
+        let rows = PlannerSteps.rows([item("a", "2026-10-06")], today: "2026-10-04", collapsed: ["a"])
+        XCTAssertEqual(rows.map { $0.item.id }, ["a"])
+        XCTAssertNil(rows[0].expanded)
+    }
 }

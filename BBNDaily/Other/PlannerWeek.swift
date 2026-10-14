@@ -62,8 +62,13 @@ struct PlannerWeekDay: Equatable {
     /// day's schedule. Sports and appointments are not about a class and stay in the list, and so does
     /// anything whose class is not meeting that day (due on a day it doesn't meet, a no-school day):
     /// otherwise it would have nowhere to be shown and would silently disappear.
+    ///
+    /// A step (HQ-2187) is never badged: it belongs under its test in the Upcoming list, where its
+    /// parent counts "2 of 4 steps done". Badged away, a step due tomorrow would leave its test and
+    /// the count would drop.
     static func showsOnClassRow(_ item: PlannerItem, classBlocks: Set<String>) -> Bool {
-        guard let block = item.classBlock?.uppercased(), classBlocks.contains(block) else { return false }
+        guard item.parentId == nil,
+              let block = item.classBlock?.uppercased(), classBlocks.contains(block) else { return false }
         return item.kind == .test || item.kind == .homework
     }
 
@@ -161,6 +166,30 @@ enum PlannerWeek {
         }
     }
 
+    /// The week without the days that have already happened: a finished day is not a plan.
+    ///
+    /// A past day with something still undone is kept, showing only what is undone (its classes and its
+    /// finished items are over), so overdue work does not drop out of sight the moment its day passes.
+    /// Today and later are untouched.
+    static func hidingPast(_ days: [PlannerWeekDay], today: String) -> [PlannerWeekDay] {
+        days.compactMap { day in
+            guard day.day < today else { return day }
+            let open = day.items.filter { !$0.completed }
+            guard !open.isEmpty else { return nil }
+            var kept = day
+            kept.info = WeekDayInfo(weekdayName: day.info.weekdayName, classes: [], emptyMessage: nil)
+            kept.items = open
+            return kept
+        }
+    }
+
+    /// Whether the school week starting `monday` is over (its Friday is before `today`), so there is
+    /// nothing in it worth going back to.
+    static func isWhollyPast(monday: Date, today: String, timeZone: TimeZone = .current) -> Bool {
+        let friday = calendar(timeZone).date(byAdding: .day, value: 4, to: monday) ?? monday
+        return PlannerItem.dayString(from: friday, timeZone: timeZone) < today
+    }
+
     /// "Mon, Oct 5 - Fri, Oct 9"-style range for the header, from the Monday.
     static func rangeLabel(monday: Date, timeZone: TimeZone = .current, locale: Locale = .current) -> String {
         let cal = calendar(timeZone)
@@ -182,5 +211,34 @@ enum PlannerWeek {
         formatter.setLocalizedDateFormatFromTemplate("EEEEMMMd")
         let title = formatter.string(from: date)
         return day == today ? "\(title) · Today" : title
+    }
+}
+
+// MARK: - The Schedule tab (a day's blocks, with tests and homework inside their class's row)
+
+enum PlannerSchedule {
+
+    /// For each block of the day, in order, the student's tests and homework for its class
+    /// (`PlannerWeekDay.badgedItems`, so the rule is the one the week and Tomorrow views use). The row
+    /// shows them as tags inside itself.
+    ///
+    /// `hasClass` says whether the student has a class in that letter that actually meets this day. A
+    /// block that is not theirs, is Free, or does not meet gets none, so its items stay in the Planned
+    /// list instead of vanishing. A letter that appears twice in a day takes its items on the first row
+    /// only, so nothing is shown twice.
+    static func attachments(blockLetters: [String], hasClass: (String) -> Bool, items: [PlannerItem], day: String) -> [[PlannerItem]] {
+        var seen = Set<String>()
+        return blockLetters.map { letter in
+            let block = letter.uppercased()
+            guard block != "N/A", hasClass(block), seen.insert(block).inserted else { return [] }
+            return PlannerWeekDay.badgedItems(block: block, day: day, in: items)
+        }
+    }
+
+    /// `items` without the ones in `attachments`: what is left goes in the Planned list, so an item is in
+    /// its class's row or in the list, never both.
+    static func unattached(_ items: [PlannerItem], attachments: [[PlannerItem]]) -> [PlannerItem] {
+        let placed = Set(attachments.flatMap { $0.map { $0.id } })
+        return items.filter { !placed.contains($0.id) }
     }
 }
