@@ -172,3 +172,130 @@ final class PlannerWeekTests: XCTestCase {
         XCTAssertEqual(PlannerWeek.rangeLabel(monday: date("2026-09-28"), timeZone: utc, locale: en), "Sep 28 – Oct 2")
     }
 }
+
+final class PlannerClassRowTests: XCTestCase {
+
+    private func item(_ id: String, _ kind: PlannerKind, block: String?, completed: Bool = false, day: String = "2026-10-06") -> PlannerItem {
+        PlannerItem(id: id, kind: kind, title: id, dueDate: day, classBlock: block, completed: completed, createdAt: Date(timeIntervalSince1970: 0))
+    }
+    private func day(_ items: [PlannerItem], classes: [String] = ["A", "C", "E"], reason: String? = nil) -> PlannerWeekDay {
+        PlannerWeekDay(day: "2026-10-06",
+                       info: WeekDayInfo(weekdayName: "tuesday", classes: classes.map { WeekClass(block: $0, subject: "Class \($0)") }, emptyMessage: reason),
+                       items: items)
+    }
+    private func ids(_ rows: [PlannerWeekDay.Row]) -> [String] {
+        rows.map { row in
+            switch row {
+            case .schoolClass(let c): return "class:\(c.block)"
+            case .note(let n): return "note:\(n)"
+            case .item(let i): return "item:\(i.id)"
+            }
+        }
+    }
+
+    // MARK: - What goes on a class row
+
+    func testATestOrHomeworkWithAClassThatMeetsThatDayGoesOnThatClassRow() {
+        let d = day([item("spanishTest", .test, block: "A"), item("calcHW", .homework, block: "C")])
+        XCTAssertEqual(d.itemsOnClassRow("A").map { $0.id }, ["spanishTest"])
+        XCTAssertEqual(d.itemsOnClassRow("C").map { $0.id }, ["calcHW"])
+        XCTAssertEqual(d.itemsOnClassRow("E"), [])
+        XCTAssertEqual(ids(d.rows), ["class:A", "class:C", "class:E"], "nothing left to list below")
+    }
+
+    func testSportsAndAppointmentsStayInTheBottomListEvenWithAClass() {
+        let d = day([item("game", .sports, block: "A"), item("dentist", .appointment, block: "C")])
+        XCTAssertEqual(d.itemsOnClassRow("A"), [])
+        XCTAssertEqual(ids(d.rows), ["class:A", "class:C", "class:E", "item:game", "item:dentist"])
+    }
+
+    func testAnItemWithNoClassStaysInTheBottomList() {
+        let d = day([item("loose", .homework, block: nil), item("looseTest", .test, block: nil)])
+        XCTAssertEqual(ids(d.rows), ["class:A", "class:C", "class:E", "item:loose", "item:looseTest"])
+    }
+
+    // MARK: - The fallbacks that must not lose an item
+
+    func testAnItemForAClassThatDoesNotMeetThatDayFallsToTheBottom() {
+        let d = day([item("gTest", .test, block: "G")])    // G isn't on Tuesday's schedule
+        XCTAssertEqual(d.itemsOnClassRow("G"), [])
+        XCTAssertEqual(ids(d.rows), ["class:A", "class:C", "class:E", "item:gTest"])
+    }
+
+    func testOnANoSchoolDayEverythingIsListBelowTheReasonNotLost() {
+        let d = day([item("hw", .homework, block: "A"), item("t", .test, block: "C")], classes: [], reason: "No Class - Columbus Day")
+        XCTAssertEqual(ids(d.rows), ["note:No Class - Columbus Day", "item:hw", "item:t"])
+    }
+
+    func testBlockLettersCompareCaseInsensitively() {
+        let d = day([item("t", .test, block: "a")])
+        XCTAssertEqual(d.itemsOnClassRow("A").map { $0.id }, ["t"])
+        XCTAssertEqual(d.itemsOnClassRow("a").map { $0.id }, ["t"])
+        XCTAssertEqual(ids(d.rows), ["class:A", "class:C", "class:E"])
+    }
+
+    // MARK: - Order, and finished items
+
+    func testSeveralItemsOnOneClassShowTestsBeforeHomework() {
+        let d = day([item("hw1", .homework, block: "A"), item("test", .test, block: "A"), item("hw2", .homework, block: "A")])
+        XCTAssertEqual(d.itemsOnClassRow("A").map { $0.id }, ["test", "hw1", "hw2"])
+    }
+
+    func testAFinishedItemStaysOnItsClassRow() {
+        let d = day([item("done", .homework, block: "A", completed: true)])
+        XCTAssertEqual(d.itemsOnClassRow("A").map { $0.id }, ["done"])
+        XCTAssertEqual(ids(d.rows), ["class:A", "class:C", "class:E"])
+    }
+
+    // MARK: - Exactly once, everywhere
+
+    func testEveryItemAppearsExactlyOnceAcrossBadgesAndTheBottomList() {
+        let items = [item("t1", .test, block: "A"), item("h1", .homework, block: "C"), item("s1", .sports, block: "A"), item("a1", .appointment, block: nil),
+                     item("g", .test, block: "G"), item("loose", .homework, block: nil), item("d", .homework, block: "E", completed: true)]
+        let d = day(items)
+        let onRows = ["A", "C", "E", "G"].flatMap { d.itemsOnClassRow($0).map { $0.id } }
+        let below = d.rows.compactMap { row -> String? in if case .item(let i) = row { return i.id } else { return nil } }
+        XCTAssertEqual((onRows + below).sorted(), items.map { $0.id }.sorted(), "each once")
+        XCTAssertTrue(Set(onRows).isDisjoint(with: Set(below)), "never both")
+    }
+
+    func testBadgingChangesNeitherTheHeavyCountNorWhetherTheDayHasAnything() {
+        let d = day([item("t", .test, block: "A"), item("h", .homework, block: "C")])
+        XCTAssertEqual(d.heavyCount, 1, "a badged test still makes the day heavy")
+        XCTAssertFalse(d.hasNothingPlanned)
+    }
+
+    // MARK: - The Tomorrow view uses the same rule, on any list of items (HQ-2194)
+
+    func testBadgedItemsTakeOnlyTheDayAndBlockAsked() {
+        let items = [item("mon", .test, block: "A", day: "2026-10-05"), item("tue", .test, block: "A", day: "2026-10-06"),
+                     item("otherBlock", .test, block: "C", day: "2026-10-05")]
+        XCTAssertEqual(PlannerWeekDay.badgedItems(block: "A", day: "2026-10-05", in: items).map { $0.id }, ["mon"])
+        XCTAssertEqual(PlannerWeekDay.badgedItems(block: "a", day: "2026-10-05", in: items).map { $0.id }, ["mon"], "case-insensitive")
+        XCTAssertEqual(PlannerWeekDay.badgedItems(block: "E", day: "2026-10-05", in: items), [])
+    }
+
+    func testBadgedItemsAreTestsAndHomeworkOnlyTestsFirst() {
+        let items = [item("hw", .homework, block: "A"), item("game", .sports, block: "A"), item("appt", .appointment, block: "A"), item("test", .test, block: "A")]
+        XCTAssertEqual(PlannerWeekDay.badgedItems(block: "A", day: "2026-10-06", in: items).map { $0.id }, ["test", "hw"])
+    }
+
+    func testWithoutBadgedRemovesExactlyWhatIsBadgedAndNothingElse() {
+        let items = [item("t", .test, block: "A", day: "2026-10-05"),          // badged on A
+                     item("laterTest", .test, block: "A", day: "2026-10-20"),  // another day: stays listed
+                     item("game", .sports, block: "A", day: "2026-10-05"),     // not a badge kind: stays
+                     item("loose", .homework, block: nil, day: "2026-10-05"),  // no class: stays
+                     item("gone", .homework, block: "G", day: "2026-10-05")]   // class not being drawn: stays
+        let left = PlannerWeekDay.withoutBadged(items, day: "2026-10-05", classBlocks: ["A", "C"])
+        XCTAssertEqual(left.map { $0.id }, ["laterTest", "game", "loose", "gone"])
+    }
+
+    func testBadgedPlusListedIsEveryItemExactlyOnce() {
+        let items = [item("a", .test, block: "A", day: "2026-10-05"), item("b", .homework, block: "C", day: "2026-10-05"),
+                     item("c", .homework, block: "C", day: "2026-10-09"), item("d", .appointment, block: nil, day: "2026-10-05")]
+        let blocks = ["A", "C"]
+        let badged = blocks.flatMap { PlannerWeekDay.badgedItems(block: $0, day: "2026-10-05", in: items).map { $0.id } }
+        let listed = PlannerWeekDay.withoutBadged(items, day: "2026-10-05", classBlocks: blocks).map { $0.id }
+        XCTAssertEqual((badged + listed).sorted(), ["a", "b", "c", "d"])
+    }
+}

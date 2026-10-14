@@ -68,8 +68,13 @@ final class PlannerWeekDataSource: NSObject, UITableViewDataSource, UITableViewD
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         guard days.indices.contains(indexPath.section), days[indexPath.section].rows.indices.contains(indexPath.row) else { return 44 }
-        if case .item = days[indexPath.section].rows[indexPath.row] { return 72 }
-        return 40
+        let day = days[indexPath.section]
+        switch day.rows[indexPath.row] {
+        case .item: return 72
+        case .schoolClass(let schoolClass):
+            return day.itemsOnClassRow(schoolClass.block).isEmpty ? 40 : PlannerClassRowCell.height
+        case .note: return 40
+        }
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -85,7 +90,13 @@ final class PlannerWeekDataSource: NSObject, UITableViewDataSource, UITableViewD
             cell.onCheckBoxTapped = nil   // checking things off is the Tomorrow view's job; here a row is looked at
             return cell
         case .schoolClass(let schoolClass):
-            return plainCell("\(schoolClass.block) · \(schoolClass.subject)", secondary: false)
+            let attached = days[indexPath.section].itemsOnClassRow(schoolClass.block)
+            if attached.isEmpty { return plainCell("\(schoolClass.block) · \(schoolClass.subject)", secondary: false) }
+            // Tests and homework for this class sit on its row, in their kind's color (HQ-2194).
+            let cell = PlannerClassRowCell(style: .default, reuseIdentifier: nil)
+            cell.configure(block: schoolClass.block, subject: schoolClass.subject, items: attached)
+            cell.onSelectItem = { [weak self] item in if !item.isSchoolKeyDate { self?.onSelectItem?(item) } }
+            return cell
         case .note(let message):
             return plainCell(message, secondary: true)
         }
