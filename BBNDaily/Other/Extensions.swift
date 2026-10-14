@@ -1132,38 +1132,37 @@ extension UIViewController {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         let calendar = Calendar.current
         LoginVC.upcomingDays = [ResolvedDay]()
-        var scheduled = 0
-        var budgetFull = false
         let notifsOn = ((LoginVC.blocks["notifs"] as? String) ?? "") == "true"
         let maxLookaheadDays = 14
-        let requestBudget = 64
+        // HQ-2185: planner reminders share the 64. They are chosen first (soonest, at most 20) and
+        // classes get what is left, so a busy fortnight of classes cannot eat the reminder for a
+        // test and a long planner cannot take more than its 20. See PlannerReminders.
+        let plannerPlan = PlannerReminderScheduler.currentPlan(notificationsOn: notifsOn)
+        let requestBudget = PlannerReminders.classBudget(plannerCount: plannerPlan.count)
+
+        // Every day is resolved and appended to upcomingDays whether or not it gets reminders:
+        // that list has a second job (CalendarVC walks it to find "Next Day of Classes", and this
+        // function is the only thing that ever writes it), so a notification budget must never
+        // shorten it. Which days get reminders is NotificationBudget.fit, the same walk-forward,
+        // stop-at-the-first-overflow, never-skip-a-day-in-the-middle rule HQ-639 introduced, now
+        // a function that can be tested.
+        var days = [ResolvedDay]()
         for i in 0..<maxLookaheadDays {
             let tempDate = calendar.date(byAdding: .day, value: i, to: Date())!
             // resolveDay is the same call the calendar makes, so a notification can no longer
             // describe a different day from the one on screen.
             let day = resolveDay(date: tempDate)
             LoginVC.upcomingDays.append(day)
-            guard notifsOn, day.hasClasses, !budgetFull else { continue }
-            // `continue`, never `break`. This loop has a second job: every iteration appends
-            // to LoginVC.upcomingDays, which CalendarVC walks to find "Next Day of Classes",
-            // and setNotifications is the only thing that ever writes it. Leaving the loop
-            // early to stop scheduling would also stop filling that list, so a student with
-            // notifications ON would get a shorter calendar lookahead than one with them
-            // off - a notification budget silently truncating an unrelated feature.
-            //
-            // budgetFull latches rather than being re-tested per day, so the window stays
-            // contiguous. Without the latch a later, lighter day could slip under the cap
-            // after a heavier one was skipped, which is exactly the "days silently missing
-            // from the middle" shape this ticket set out to remove.
-            guard scheduled + day.blocks.count <= requestBudget else {
-                budgetFull = true
-                continue
-            }
+            days.append(day)
+        }
+        let counts = days.map { notifsOn && $0.hasClasses ? $0.blocks.count : 0 }
+        let scheduleDay = NotificationBudget.fit(dayBlockCounts: counts, budget: requestBudget)
+        for (day, scheduled) in zip(days, scheduleDay) where scheduled {
             for x in day.blocks {
                 addNotif(x: x, weekDay: day.weekdayName, date: day.date)
             }
-            scheduled += day.blocks.count
         }
+        PlannerReminderScheduler.schedule(plannerPlan)
     }
     func getBlockOnDate(date: Date, time: String) -> Date {
         var dateComponents = DateComponents()

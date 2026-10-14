@@ -467,6 +467,26 @@ emulated('firestore.rules', () => {
       await assertFails(setDoc(ownDoc('i1'), { ...ITEM(), isBig: 'yes' }));
     });
 
+    it('accepts a reminder of each kind, with a time for a custom one', async () => {
+      for (const reminder of ['none', 'evening', 'morning']) {
+        await assertSucceeds(setDoc(ownDoc(`r-${reminder}`), { ...ITEM(), reminder }));
+      }
+      await assertSucceeds(setDoc(ownDoc('r-custom'), {
+        ...ITEM(), reminder: 'custom', remindAt: Timestamp.fromDate(new Date('2026-10-19T23:00:00Z')),
+      }));
+    });
+
+    it('rejects an unknown reminder, a custom one with no time, and a time that is not a timestamp', async () => {
+      await assertFails(setDoc(ownDoc('r1'), { ...ITEM(), reminder: 'hourly' }));
+      await assertFails(setDoc(ownDoc('r2'), { ...ITEM(), reminder: 'custom' }));
+      await assertFails(setDoc(ownDoc('r3'), { ...ITEM(), reminder: 'custom', remindAt: '2026-10-19T23:00' }));
+      await assertFails(setDoc(ownDoc('r4'), { ...ITEM(), reminder: 'evening', remindAt: 'tonight' }));
+    });
+
+    it('still accepts an item written before reminders existed', async () => {
+      await assertSucceeds(setDoc(ownDoc('old'), ITEM()));
+    });
+
     it('rejects a field it does not know about, and a missing required one', async () => {
       await assertFails(setDoc(ownDoc('extra'), { ...ITEM(), grade: 'A+' }));
       const { title: _title, ...noTitle } = ITEM();

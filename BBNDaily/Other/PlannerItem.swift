@@ -26,6 +26,18 @@ enum PlannerKind: String, CaseIterable {
     case appointment
 }
 
+/// When, if at all, to remind the student about an item (HQ-2185). The raw values are what is
+/// stored, and the same strings the rules accept.
+enum PlannerReminder: String, CaseIterable {
+    case none
+    /// The evening before it is due.
+    case evening
+    /// The morning it is due.
+    case morning
+    /// An exact moment the student picked, stored in `remindAt`.
+    case custom
+}
+
 struct PlannerItem: Equatable {
     var id: String
     var kind: PlannerKind
@@ -45,10 +57,16 @@ struct PlannerItem: Equatable {
     var parentId: String?
     /// A big deadline (HQ-2186).
     var isBig: Bool
+    /// Whether and when to remind the student (HQ-2185). `.none` when absent, so every item written
+    /// before this field existed simply has no reminder.
+    var reminder: PlannerReminder
+    /// The moment for `.custom`; ignored otherwise.
+    var remindAt: Date?
 
     init(id: String, kind: PlannerKind, title: String, dueDate: String, dueTime: String? = nil,
          classBlock: String? = nil, notes: String? = nil, completed: Bool = false,
-         createdAt: Date = Date(), parentId: String? = nil, isBig: Bool = false) {
+         createdAt: Date = Date(), parentId: String? = nil, isBig: Bool = false,
+         reminder: PlannerReminder = .none, remindAt: Date? = nil) {
         self.id = id
         self.kind = kind
         self.title = title
@@ -60,6 +78,8 @@ struct PlannerItem: Equatable {
         self.createdAt = createdAt
         self.parentId = parentId
         self.isBig = isBig
+        self.reminder = reminder
+        self.remindAt = remindAt
     }
 }
 
@@ -123,6 +143,7 @@ enum PlannerValidationError: Error, Equatable {
     case notesTooLong(limit: Int)
     case badParent
     case missingID
+    case missingReminderTime
 
     var message: String {
         switch self {
@@ -134,6 +155,7 @@ enum PlannerValidationError: Error, Equatable {
         case .notesTooLong(let limit): return "Notes can be up to \(limit) characters."
         case .badParent: return "A step can't belong to itself."
         case .missingID: return "That item couldn't be found."
+        case .missingReminderTime: return "Pick a time for the reminder."
         }
     }
 }
@@ -155,6 +177,7 @@ extension PlannerItem {
         if let parentId = parentId {
             if parentId.isEmpty || parentId.count > PlannerItem.parentIdLimit || parentId == id { return .badParent }
         }
+        if reminder == .custom && remindAt == nil { return .missingReminderTime }
         return nil
     }
 }
@@ -190,7 +213,10 @@ extension PlannerItem {
             completed: (data["completed"] as? Bool) ?? false,
             createdAt: createdAt,
             parentId: data["parentId"] as? String,
-            isBig: (data["isBig"] as? Bool) ?? false
+            isBig: (data["isBig"] as? Bool) ?? false,
+            // An unknown reminder (a newer build's) reads as none rather than dropping the item.
+            reminder: (data["reminder"] as? String).flatMap { PlannerReminder(rawValue: $0) } ?? .none,
+            remindAt: (data["remindAt"] as? Timestamp)?.dateValue()
         )
     }
 
@@ -210,6 +236,10 @@ extension PlannerItem {
         if let notes = notes, !notes.isEmpty { data["notes"] = notes }
         if let parentId = parentId { data["parentId"] = parentId }
         if isBig { data["isBig"] = true }
+        // Written only when set, like every other optional: an item with no reminder is the same
+        // document it was before this field existed.
+        if reminder != .none { data["reminder"] = reminder.rawValue }
+        if reminder == .custom, let remindAt = remindAt { data["remindAt"] = Timestamp(date: remindAt) }
         return data
     }
 }

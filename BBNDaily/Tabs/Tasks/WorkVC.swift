@@ -311,6 +311,8 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
                 case .success(let items):
                     self.plannerLoadFailed = false
                     self.plannerItems = PlannerListing.ordered(items, today: PlannerItem.dayString(from: Date()))
+                    // HQ-2185: reminders are rebuilt from what was just read, but only if one could differ.
+                    if PlannerReminderScheduler.didLoad(items: items, window: window) { self.setNotifications() }
                 case .failure(let error):
                     if case .notSignedIn = error {
                         // Account not loaded yet: nothing to show, and nothing to apologise for.
@@ -425,6 +427,8 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         plannerItems[index] = item
         plannerItems = PlannerListing.ordered(plannerItems, today: PlannerItem.dayString(from: Date()))
         tableView.reloadData()
+        // A finished item stops reminding, and an un-finished one starts again, straight away.
+        if PlannerReminderScheduler.didSave(item) { setNotifications() }
         PlannerStore.shared.save(item) { [weak self] result in
             DispatchQueue.main.async {
                 if case .failure(let error) = result {
@@ -440,6 +444,7 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         plannerItems.removeAll { $0.id == id }
         tableView.reloadData()
         updateEmptyState()
+        if PlannerReminderScheduler.didDelete(id: id) { setNotifications() }
         PlannerStore.shared.delete(id: id) { [weak self] result in
             DispatchQueue.main.async {
                 if case .failure(let error) = result {
