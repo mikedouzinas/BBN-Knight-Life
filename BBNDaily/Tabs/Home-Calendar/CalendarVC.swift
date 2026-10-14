@@ -14,7 +14,7 @@ import FSCalendar
 import WebKit
 import SkeletonView
 
-class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate, WKNavigationDelegate {
+class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDelegateAppearance, UITableViewDataSource, UITableViewDelegate, UIGestureRecognizerDelegate, WKNavigationDelegate {
     @IBOutlet var sideMenuBtn: UIBarButtonItem!
     @IBOutlet var webView: WKWebView!
     static var hasPressedSideMenu = false
@@ -30,8 +30,17 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
 //    func sessionDidDeactivate(_ session: WCSession) {
 //        print("deactivated?")
 //    }
+    // Section 0 is the day's schedule, exactly as before. Section 1 (HQ-2183) is whatever the
+    // student has planned for the selected day; it has no rows, and so no header and no height,
+    // unless they have planned something.
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 2
+    }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return currentDay.count
+        return section == 0 ? currentDay.count : selectedPlannerItems.count
+    }
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return section == 1 && !selectedPlannerItems.isEmpty ? "Planned" : nil
     }
     var xc = 0
     // HQ-628. The old version of setTimes rescheduled itself every second, forever, redoing
@@ -263,6 +272,17 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
     static var todayBlocks = [block]()
     var currentWeekday = CustomWeekday(blocks: [block](), weekday: nil, date: nil, hasImage: false)
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if indexPath.section == 1 {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: PlannerItemCell.identifier, for: indexPath) as? PlannerItemCell,
+                  selectedPlannerItems.indices.contains(indexPath.row) else {
+                return UITableViewCell()
+            }
+            let item = selectedPlannerItems[indexPath.row]
+            cell.configure(with: item, today: PlannerItem.dayString(from: Date()))
+            // The checkbox is the Tasks tab's job; here a row is something to look at and tap.
+            cell.onCheckBoxTapped = nil
+            return cell
+        }
         guard let cell = tableView.dequeueReusableCell(withIdentifier: coverTableViewCell.identifier, for: indexPath) as? coverTableViewCell else {
             fatalError()
         }
@@ -351,6 +371,17 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         return panGesture
     }()
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if indexPath.section == 1 {
+            tableView.deselectRow(at: indexPath, animated: true)
+            guard selectedPlannerItems.indices.contains(indexPath.row) else { return }
+            let item = selectedPlannerItems[indexPath.row]
+            // A school key date is read-only: there is no document behind it to edit.
+            guard !item.isSchoolKeyDate else { return }
+            let editor = PlannerItemEditorVC(existing: item)
+            editor.onChange = { [weak self] in self?.loadPlanner(force: true) }
+            present(UINavigationController(rootViewController: editor), animated: true)
+            return
+        }
         let block = currentDay[indexPath.row]
         if block.name.lowercased().contains("lunch") {
             // Set LunchMenuVC.week to the date of the current week's Monday in the form "m/d"
@@ -380,7 +411,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         }
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 60
+        return indexPath.section == 1 ? 72 : 60
     }
     var currentBlock = block(name: "b4r0n", startTime: "b4r0n", endTime: "b4r0n", block: "b4r0n")
     static var isLunch1 = false
@@ -410,6 +441,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         isActive = true
         reloadPage()
         v+=1
+        loadPlanner(force: true)
     }
     @objc func screenReopened() {
         isActive = true
@@ -514,6 +546,7 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
         dateFormatter.dateFormat = " MMM d, YYYY, HH:mm:ss"
         v = 2
         ScheduleCalendar.register(coverTableViewCell.self, forCellReuseIdentifier: coverTableViewCell.identifier)
+        ScheduleCalendar.register(PlannerItemCell.self, forCellReuseIdentifier: PlannerItemCell.identifier)
         ScheduleCalendar.backgroundColor = UIColor(named: "background")
         height = view.frame.height/4
         configureRefreshPull()
@@ -613,9 +646,74 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, UITableViewD
     // reversed range is simply not a match.
 
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
+        selectedPlannerDay = PlannerItem.dayString(from: date)
         setOld()
         setCurrentday(date: date, shouldEdit: false, completion: { _ in
             self.ScheduleCalendar.reloadData()
         })
+    }
+
+    // MARK: - Planner (HQ-2183)
+
+    // What the student has planned, as the calendar needs it: dots per day, and the items under
+    // the selected day. One read covers a window around the visible page and is kept until the page
+    // moves outside it, so paging through a month does not read once per swipe and nothing reads
+    // once per day cell.
+    private var plannerIndex = PlannerCalendarIndex(items: [])
+    private var plannerLoadedWindow: (start: String, end: String)?
+    private var plannerLoadGeneration = 0
+    private var selectedPlannerDay = PlannerItem.dayString(from: Date())
+
+    private var selectedPlannerItems: [PlannerItem] {
+        plannerIndex.items(onDay: selectedPlannerDay, today: PlannerItem.dayString(from: Date()))
+    }
+
+    /// Loads the window around the page being shown, unless the window already held covers it.
+    /// `force` reloads regardless: after an edit, or when the tab comes back to the front.
+    private func loadPlanner(force: Bool) {
+        let page = calendar?.currentPage ?? Date()
+        let needed = PlannerCalendarWindow.needed(forPage: page)
+        if !force, let held = plannerLoadedWindow, PlannerCalendarWindow.covers(held, needed) { return }
+        let window = PlannerCalendarWindow.toLoad(forPage: page)
+
+        // Newest load wins: a slow earlier response must not overwrite a newer one.
+        plannerLoadGeneration += 1
+        let generation = plannerLoadGeneration
+        PlannerStore.shared.items(from: window.start, through: window.end) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self, generation == self.plannerLoadGeneration else { return }
+                switch result {
+                case .success(let items):
+                    self.plannerIndex = PlannerCalendarIndex(items: items, keyDateSources: SchoolKeyDates.sources,
+                                                             from: window.start, through: window.end)
+                    self.plannerLoadedWindow = window
+                    self.calendar?.reloadData()
+                    // Only the planner section: the schedule section has a live countdown and
+                    // block dimming that a full reload would disturb.
+                    self.ScheduleCalendar?.reloadSections(IndexSet(integer: 1), with: .none)
+                case .failure:
+                    // Quietly keep what is shown. The home screen is the wrong place to nag about
+                    // the planner; Tasks says so when its own load fails.
+                    break
+                }
+            }
+        }
+    }
+
+    func calendarCurrentPageDidChange(_ calendar: FSCalendar) {
+        loadPlanner(force: false)
+    }
+
+    func calendar(_ calendar: FSCalendar, numberOfEventsFor date: Date) -> Int {
+        return plannerIndex.kinds(onDay: PlannerItem.dayString(from: date)).count
+    }
+
+    func calendar(_ calendar: FSCalendar, appearance: FSCalendarAppearance, eventDefaultColorsFor date: Date) -> [UIColor]? {
+        let kinds = plannerIndex.kinds(onDay: PlannerItem.dayString(from: date))
+        return kinds.isEmpty ? nil : kinds.map { $0.calendarDotColor }
+    }
+
+    func calendar(_ calendar: FSCalendar, appearance: FSCalendarAppearance, eventSelectionColorsFor date: Date) -> [UIColor]? {
+        return self.calendar(calendar, appearance: appearance, eventDefaultColorsFor: date)
     }
 }

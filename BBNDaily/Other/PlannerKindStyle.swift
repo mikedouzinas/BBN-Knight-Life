@@ -66,3 +66,12 @@ extension PlannerKind {
         }
     }
 }
+
+extension PlannerKind {
+    /// The color for a dot on the calendar. The calendar's header is dark navy in BOTH light and
+    /// dark mode, so the light-mode variants (made for a white page: a deep blue, a deep green) all
+    /// but vanish on it. Always the dark-mode variant, which is the one made for a dark ground.
+    var calendarDotColor: UIColor {
+        color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
+    }
+}
