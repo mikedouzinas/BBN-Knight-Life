@@ -146,6 +146,19 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // HQ-2181: what the student has planned, in display order, and whether the last load failed.
     private var plannerItems = [PlannerItem]()
     private var plannerLoadFailed = false
+    // HQ-2184: Tomorrow (the classes list, as before) or This Week (the game plan).
+    private enum Mode { case tomorrow, week }
+    private var mode = Mode.tomorrow
+    private var weekMonday = PlannerWeek.monday(for: Date())
+    // The Tomorrow view's title ("Tomorrow's Classes" or "Tuesday's Classes"), kept so the title can
+    // follow the mode. loadNextSchoolDay() runs on refresh and on every reappear, in either mode, and
+    // setting the title directly there put "Tomorrow's Classes" over the week view.
+    private var tomorrowTitle = "Tomorrow's Classes"
+    private func applyTitle() {
+        navigationItem.title = mode == .week ? "This Week" : tomorrowTitle
+    }
+    private let weekSource = PlannerWeekDataSource()
+    private let modeHeader = PlannerWeekHeaderView(frame: CGRect(x: 0, y: 0, width: 0, height: PlannerWeekHeaderView.tomorrowHeight))
     // Why the classes section is empty, if it is: the message shown when there is nothing else
     // on screen either.
     private var classesEmptyMessage: String?
@@ -164,6 +177,13 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         let refresh = UIRefreshControl()
         refresh.addTarget(self, action: #selector(pullToRefresh), for: .valueChanged)
         tableView.refreshControl = refresh
+        // HQ-2184: Tomorrow | This Week.
+        modeHeader.onModeChanged = { [weak self] week in self?.setMode(week ? .week : .tomorrow) }
+        modeHeader.onPreviousWeek = { [weak self] in self?.moveWeek(by: -1) }
+        modeHeader.onNextWeek = { [weak self] in self?.moveWeek(by: 1) }
+        weekSource.onSelectItem = { [weak self] item in self?.presentPlannerEditor(for: item) }
+        modeHeader.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: PlannerWeekHeaderView.tomorrowHeight)
+        tableView.tableHeaderView = modeHeader
         // HQ-2182: what the four colors mean.
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "info.circle"), style: .plain, target: self, action: #selector(showLegend))
@@ -214,7 +234,8 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         // weekday name instead when a weekend or a break pushed it further out, so the
         // title never says "Tomorrow" about a day that isn't.
         let isTomorrow = calendar.isDate(resolved.date, inSameDayAs: calendar.date(byAdding: .day, value: 1, to: Date()) ?? Date())
-        navigationItem.title = isTomorrow ? "Tomorrow's Classes" : "\(resolved.weekdayName.capitalized)'s Classes"
+        tomorrowTitle = isTomorrow ? "Tomorrow's Classes" : "\(resolved.weekdayName.capitalized)'s Classes"
+        applyTitle()
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/M/d" // same key format resolveDay itself uses
@@ -257,6 +278,13 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // The empty message covers the whole table, so it may only show when BOTH lists are empty.
     // Showing "no classes" over a student's upcoming tests would hide them.
     private func updateEmptyState() {
+        // The week view has its own empty states ("Nothing planned"); a table-wide message here
+        // would sit on top of it.
+        if mode == .week {
+            tableView.restore()
+            tableView.separatorStyle = .none
+            return
+        }
         if entries.isEmpty && plannerItems.isEmpty {
             tableView.setEmptyMessage(classesEmptyMessage ?? "Nothing coming up. Tap + to add a test, homework, game or appointment.")
         } else {
@@ -293,11 +321,88 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
                         self.plannerLoadFailed = true
                     }
                 }
-                self.tableView.reloadData()
+                if self.mode == .week { self.rebuildWeek() } else { self.tableView.reloadData() }
                 self.updateEmptyState()
                 self.tableView.refreshControl?.endRefreshing()
             }
         }
+    }
+
+    // MARK: - Week (HQ-2184)
+
+    private func setMode(_ newMode: Mode) {
+        guard newMode != mode else { return }
+        mode = newMode
+        if newMode == .week {
+            weekMonday = PlannerWeek.monday(for: Date())
+            tableView.dataSource = weekSource
+            tableView.delegate = weekSource
+            applyTitle()
+            rebuildWeek()
+        } else {
+            tableView.dataSource = self
+            tableView.delegate = self
+            loadNextSchoolDay()      // sets the title and the list as before
+            tableView.reloadData()
+        }
+        updateModeHeader()
+        updateEmptyState()
+    }
+
+    private func moveWeek(by weeks: Int) {
+        weekMonday = PlannerWeek.shift(weekMonday, byWeeks: weeks)
+        rebuildWeek()
+        updateModeHeader()
+    }
+
+    /// Weeks wholly inside what has been loaded. Going past either end would show empty days that
+    /// are only empty because nothing was read for them, which looks exactly like "nothing planned".
+    private func canShow(weekStarting monday: Date) -> Bool {
+        let window = PlannerListing.loadWindow()
+        let start = PlannerItem.dayString(from: monday)
+        let end = PlannerItem.dayString(from: PlannerWeek.shift(monday, byWeeks: 0).addingTimeInterval(4 * 86_400))
+        return start >= window.start && end <= window.end
+    }
+
+    private func updateModeHeader() {
+        let height = modeHeader.setWeekMode(
+            mode == .week,
+            range: PlannerWeek.rangeLabel(monday: weekMonday),
+            canGoBack: canShow(weekStarting: PlannerWeek.shift(weekMonday, byWeeks: -1)),
+            canGoForward: canShow(weekStarting: PlannerWeek.shift(weekMonday, byWeeks: 1)))
+        modeHeader.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: height)
+        tableView.tableHeaderView = modeHeader   // reassigned so the table picks up the new height
+    }
+
+    private func rebuildWeek() {
+        let today = PlannerItem.dayString(from: Date())
+        weekSource.today = today
+        weekSource.days = PlannerWeek.days(startingMonday: weekMonday, items: plannerItems, today: today) { [weak self] date in
+            self?.weekDayInfo(for: date) ?? WeekDayInfo(weekdayName: "", classes: [], emptyMessage: nil)
+        }
+        tableView.reloadData()
+    }
+
+    /// What one day holds for this student, from the same resolver everything else uses. A class is
+    /// listed once per letter, not at all if the student marked the block Free, and not on a weekday
+    /// it does not meet: the same three rules the Tomorrow list applies.
+    private func weekDayInfo(for date: Date) -> WeekDayInfo {
+        let resolved = resolveDay(date: date)
+        var classes = [WeekClass]()
+        var seen = Set<String>()
+        for scheduleBlock in resolved.blocks {
+            let letter = scheduleBlock.block.uppercased()
+            guard !seen.contains(letter),
+                  let assignment = LoginVC.blocks[letter] as? String, assignment.contains("~") else { continue }
+            let subject = assignment.getValues()[0]
+            if ClassIdentity.isFree(subject) { continue }
+            if resolved.weekdayIndex >= 0 && resolved.weekdayIndex <= 4,
+               let meets = LoginVC.classMeetingDays[letter.lowercased()]?[resolved.weekdayIndex], !meets { continue }
+            seen.insert(letter)
+            classes.append(WeekClass(block: letter, subject: subject))
+        }
+        return WeekDayInfo(weekdayName: resolved.weekdayName, classes: classes,
+                           emptyMessage: resolved.hasClasses ? nil : resolved.emptyMessage)
     }
 
     @objc private func pullToRefresh() {

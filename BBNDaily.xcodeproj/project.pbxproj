@@ -51,6 +51,7 @@
 		HQ2181000000000000001001 /* PlannerListing.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2181000000000000000001 /* PlannerListing.swift */; };
 		HQ2182000000000000001001 /* PlannerKindStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2182000000000000000001 /* PlannerKindStyle.swift */; };
 		HQ2183000000000000001001 /* PlannerCalendarIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2183000000000000000001 /* PlannerCalendarIndex.swift */; };
+		HQ2184000000000000001001 /* PlannerWeek.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2184000000000000000001 /* PlannerWeek.swift */; };
 		HQ2180000000000000001001 /* PlannerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2180000000000000000001 /* PlannerItem.swift */; };
 		HQ2180000000000000001002 /* PlannerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2180000000000000000002 /* PlannerStore.swift */; };
 		HQ6560000000000000001001 /* ClassIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ6560000000000000000001 /* ClassIdentity.swift */; };
@@ -73,6 +74,7 @@
 		HQ6400000000000000001001 /* ResolveDayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ6400000000000000000001 /* ResolveDayTests.swift */; };
 		HQ2182000000000000001003 /* PlannerKindStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2182000000000000000003 /* PlannerKindStyleTests.swift */; };
 		HQ2183000000000000001002 /* PlannerCalendarIndexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2183000000000000000002 /* PlannerCalendarIndexTests.swift */; };
+		HQ2184000000000000001002 /* PlannerWeekTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2184000000000000000002 /* PlannerWeekTests.swift */; };
 		HQ2181000000000000001004 /* PlannerListingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2181000000000000000004 /* PlannerListingTests.swift */; };
 		HQ2180000000000000001003 /* PlannerItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2180000000000000000003 /* PlannerItemTests.swift */; };
 		HQ2188000000000000001001 /* TasksListingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2188000000000000000001 /* TasksListingTests.swift */; };
@@ -83,6 +85,8 @@
 		87AAFC4327062AC6006AF8DC /* demo.gif in Resources */ = {isa = PBXBuildFile; fileRef = 87AAFC4227062AC6006AF8DC /* demo.gif */; };
 		87D3254526E6BCB5009B28CB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */; };
 		HQ2182000000000000001002 /* PlannerLegendVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2182000000000000000002 /* PlannerLegendVC.swift */; };
+		HQ2184000000000000001003 /* PlannerWeekDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2184000000000000000003 /* PlannerWeekDataSource.swift */; };
+		HQ2184000000000000001004 /* PlannerWeekHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2184000000000000000004 /* PlannerWeekHeaderView.swift */; };
 		HQ2181000000000000001002 /* PlannerItemEditorVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2181000000000000000002 /* PlannerItemEditorVC.swift */; };
 		87D3D39027A8512000E3A1E1 /* WorkVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D3D38F27A8512000E3A1E1 /* WorkVC.swift */; };
 		87FDD7BE285E36B300E07ABA /* SideMenuCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 87FDD7BD285E36B300E07ABA /* SideMenuCell.xib */; };
@@ -185,6 +189,7 @@
 		HQ2181000000000000000001 /* PlannerListing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerListing.swift; sourceTree = "<group>"; };
 		HQ2182000000000000000001 /* PlannerKindStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerKindStyle.swift; sourceTree = "<group>"; };
 		HQ2183000000000000000001 /* PlannerCalendarIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerCalendarIndex.swift; sourceTree = "<group>"; };
+		HQ2184000000000000000001 /* PlannerWeek.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerWeek.swift; sourceTree = "<group>"; };
 		HQ2180000000000000000001 /* PlannerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerItem.swift; sourceTree = "<group>"; };
 		HQ2180000000000000000002 /* PlannerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerStore.swift; sourceTree = "<group>"; };
 		HQ6560000000000000000001 /* ClassIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassIdentity.swift; sourceTree = "<group>"; };
@@ -214,6 +219,7 @@
 		HQ6400000000000000000001 /* ResolveDayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolveDayTests.swift; sourceTree = "<group>"; };
 		HQ2182000000000000000003 /* PlannerKindStyleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerKindStyleTests.swift; sourceTree = "<group>"; };
 		HQ2183000000000000000002 /* PlannerCalendarIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerCalendarIndexTests.swift; sourceTree = "<group>"; };
+		HQ2184000000000000000002 /* PlannerWeekTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerWeekTests.swift; sourceTree = "<group>"; };
 		HQ2181000000000000000004 /* PlannerListingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerListingTests.swift; sourceTree = "<group>"; };
 		HQ2180000000000000000003 /* PlannerItemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerItemTests.swift; sourceTree = "<group>"; };
 		HQ2188000000000000000001 /* TasksListingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksListingTests.swift; sourceTree = "<group>"; };
@@ -227,6 +233,8 @@
 		87AAFC4227062AC6006AF8DC /* demo.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = demo.gif; sourceTree = "<group>"; };
 		87D3254426E6BCB5009B28CB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		HQ2182000000000000000002 /* PlannerLegendVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerLegendVC.swift; sourceTree = "<group>"; };
+		HQ2184000000000000000003 /* PlannerWeekDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerWeekDataSource.swift; sourceTree = "<group>"; };
+		HQ2184000000000000000004 /* PlannerWeekHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerWeekHeaderView.swift; sourceTree = "<group>"; };
 		HQ2181000000000000000002 /* PlannerItemEditorVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerItemEditorVC.swift; sourceTree = "<group>"; };
 		87D3D38F27A8512000E3A1E1 /* WorkVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkVC.swift; sourceTree = "<group>"; };
 		87FDD7BD285E36B300E07ABA /* SideMenuCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SideMenuCell.xib; sourceTree = "<group>"; };
@@ -344,6 +352,8 @@
 			children = (
 				87D3D38F27A8512000E3A1E1 /* WorkVC.swift */,
 				HQ2181000000000000000002 /* PlannerItemEditorVC.swift */,
+				HQ2184000000000000000004 /* PlannerWeekHeaderView.swift */,
+				HQ2184000000000000000003 /* PlannerWeekDataSource.swift */,
 				HQ2182000000000000000002 /* PlannerLegendVC.swift */,
 				27AEED82288B376600C6176C /* Detail */,
 			);
@@ -431,6 +441,7 @@
 				HQ6560000000000000000001 /* ClassIdentity.swift */,
 				HQ2180000000000000000002 /* PlannerStore.swift */,
 				HQ2180000000000000000001 /* PlannerItem.swift */,
+				HQ2184000000000000000001 /* PlannerWeek.swift */,
 				HQ2183000000000000000001 /* PlannerCalendarIndex.swift */,
 				HQ2182000000000000000001 /* PlannerKindStyle.swift */,
 				HQ2181000000000000000001 /* PlannerListing.swift */,
@@ -504,6 +515,7 @@
 				HQ2180000000000000000003 /* PlannerItemTests.swift */,
 				HQ2188000000000000000001 /* TasksListingTests.swift */,
 				HQ2181000000000000000004 /* PlannerListingTests.swift */,
+				HQ2184000000000000000002 /* PlannerWeekTests.swift */,
 				HQ2183000000000000000002 /* PlannerCalendarIndexTests.swift */,
 				HQ2182000000000000000003 /* PlannerKindStyleTests.swift */,
 				HQ9540000000000000000001 /* NewYearPromptTests.swift */,
@@ -777,6 +789,7 @@
 				HQ6560000000000000001001 /* ClassIdentity.swift in Sources */,
 				HQ2180000000000000001002 /* PlannerStore.swift in Sources */,
 				HQ2180000000000000001001 /* PlannerItem.swift in Sources */,
+				HQ2184000000000000001001 /* PlannerWeek.swift in Sources */,
 				HQ2183000000000000001001 /* PlannerCalendarIndex.swift in Sources */,
 				HQ2182000000000000001001 /* PlannerKindStyle.swift in Sources */,
 				HQ2181000000000000001001 /* PlannerListing.swift in Sources */,
@@ -824,6 +837,8 @@
 				27AEED7E288B367C00C6176C /* SettingsBlockTableViewCell.swift in Sources */,
 				87D3D39027A8512000E3A1E1 /* WorkVC.swift in Sources */,
 				HQ2181000000000000001002 /* PlannerItemEditorVC.swift in Sources */,
+				HQ2184000000000000001004 /* PlannerWeekHeaderView.swift in Sources */,
+				HQ2184000000000000001003 /* PlannerWeekDataSource.swift in Sources */,
 				HQ2182000000000000001002 /* PlannerLegendVC.swift in Sources */,
 				27AEED55288B32E400C6176C /* TextEditVC.swift in Sources */,
 				27AEED7A288B363300C6176C /* CreditsVC.swift in Sources */,
@@ -840,6 +855,7 @@
 				HQ2180000000000000001003 /* PlannerItemTests.swift in Sources */,
 				HQ2188000000000000001001 /* TasksListingTests.swift in Sources */,
 				HQ2181000000000000001004 /* PlannerListingTests.swift in Sources */,
+				HQ2184000000000000001002 /* PlannerWeekTests.swift in Sources */,
 				HQ2183000000000000001002 /* PlannerCalendarIndexTests.swift in Sources */,
 				HQ2182000000000000001003 /* PlannerKindStyleTests.swift in Sources */,
 				HQ9540000000000000001001 /* NewYearPromptTests.swift in Sources */,
