@@ -58,10 +58,13 @@ enum PlannerSteps {
 
     // MARK: - Which items can have steps
 
-    /// A top-level item the student owns. Not a step (one level only), and not a school key date
-    /// (read-only, nothing behind it to attach children to).
+    /// A top-level item the student owns that is work to prepare for: a test, homework, or anything
+    /// marked a big deadline. Not a step (one level only), not a school key date (read-only, nothing
+    /// behind it to attach children to), and not a game or an appointment, which are things to show
+    /// up to rather than work to break down.
     static func canHaveSteps(_ item: PlannerItem) -> Bool {
         item.parentId == nil && !item.isSchoolKeyDate
+            && (item.kind == .test || item.kind == .homework || item.isBig)
     }
 
     // MARK: - Suggesting dates
@@ -71,7 +74,9 @@ enum PlannerSteps {
     /// Offsets are whole calendar days, rounded to the nearest (half up) so the spacing is as even as
     /// whole days allow: ten days out with four steps is +3, +5, +8, +10. Never more steps than
     /// there are days (one a day at most), so a deadline three days out offered four steps gets
-    /// three. Due today, or already past, has no room: empty.
+    /// three. Due tomorrow, today or already past has no room: empty. With one day between now and
+    /// the deadline the only step would land on the deadline itself, which is the deadline again,
+    /// not a step toward it.
     ///
     /// Days are stepped on the calendar and formatted, not computed by adding 86,400 seconds, so a
     /// daylight-saving change cannot put a step on the wrong date.
@@ -83,7 +88,7 @@ enum PlannerSteps {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
         let span = calendar.dateComponents([.day], from: start, to: due).day ?? 0
-        guard span >= 1 else { return [] }
+        guard span >= 2 else { return [] }
         let steps = min(count, maxSteps, span)
         return (1...steps).compactMap { index in
             let offset = (index * span + steps / 2) / steps

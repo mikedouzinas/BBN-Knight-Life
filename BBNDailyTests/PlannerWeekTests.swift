@@ -120,6 +120,14 @@ final class PlannerWeekTests: XCTestCase {
         XCTAssertEqual(weekDay([item("t", .test, "d"), item("b", .homework, "d", big: true)]).heavyCount, 2)
     }
 
+    /// A step carries its test's kind, but it is part of that test, not a second one.
+    func testAStepDoesNotCountAsAnotherDeadline() {
+        var step = item("s", .test, "d")
+        step.parentId = "t"
+        XCTAssertEqual(weekDay([item("t", .test, "d"), step]).heavyCount, 1)
+        XCTAssertEqual(weekDay([step]).heavyCount, 0, "a step alone on a day")
+    }
+
     func testHeavyWording() {
         XCTAssertNil(weekDay([]).heavyLabel)
         XCTAssertEqual(weekDay([item("t", .test, "d")]).heavyLabel, "1 test or deadline")

@@ -30,8 +30,9 @@ final class PlannerStepsTests: XCTestCase {
         XCTAssertEqual(suggest(due: "2026-10-14").map { $0.dueDate }, ["2026-10-07", "2026-10-09", "2026-10-12", "2026-10-14"])
     }
 
+    /// From two days out (due tomorrow has no room: testDueTomorrowHasNoRoom).
     func testTheLastStepLandsOnTheDueDateAndNoneIsEverAfterIt() {
-        for days in 1...40 {
+        for days in 2...40 {
             let due = PlannerItem.dayString(from: PlannerItem.date(fromDay: today, timeZone: utc)!.addingTimeInterval(Double(days) * 86_400), timeZone: utc)
             for count in 1...8 {
                 let dates = suggest(due: due, count: count).map { $0.dueDate }
@@ -46,7 +47,27 @@ final class PlannerStepsTests: XCTestCase {
     /// Three days out and four steps asked for: only three days exist, so three steps.
     func testNeverMoreStepsThanDays() {
         XCTAssertEqual(suggest(due: "2026-10-07", count: 4).map { $0.dueDate }, ["2026-10-05", "2026-10-06", "2026-10-07"])
-        XCTAssertEqual(suggest(due: "2026-10-05", count: 4).map { $0.dueDate }, ["2026-10-05"], "due tomorrow: one step")
+    }
+
+    /// Due tomorrow, the only step would be dated the deadline itself: nothing to split.
+    func testDueTomorrowHasNoRoom() {
+        XCTAssertEqual(suggest(due: "2026-10-05", count: 4), [], "due tomorrow")
+        XCTAssertEqual(suggest(due: "2026-10-06", count: 2).map { $0.dueDate }, ["2026-10-05", "2026-10-06"], "two days out: two steps")
+    }
+
+    /// Steps are for work to prepare for. A game or an appointment is something to show up to.
+    func testOnlyTestsHomeworkAndBigDeadlinesTakeSteps() {
+        func top(_ kind: PlannerKind, big: Bool = false) -> PlannerItem {
+            PlannerItem(id: "x", kind: kind, title: "x", dueDate: "2026-10-14", isBig: big)
+        }
+        XCTAssertTrue(PlannerSteps.canHaveSteps(top(.test)))
+        XCTAssertTrue(PlannerSteps.canHaveSteps(top(.homework)))
+        XCTAssertFalse(PlannerSteps.canHaveSteps(top(.sports)))
+        XCTAssertFalse(PlannerSteps.canHaveSteps(top(.appointment)))
+        XCTAssertTrue(PlannerSteps.canHaveSteps(top(.appointment, big: true)), "marked a big deadline")
+        var step = top(.test)
+        step.parentId = "p"
+        XCTAssertFalse(PlannerSteps.canHaveSteps(step), "one level only")
     }
 
     func testDueTodayOrPastHasNoRoom() {

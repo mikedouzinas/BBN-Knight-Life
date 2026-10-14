@@ -138,6 +138,7 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         })
         ladderBox.axis = .vertical
         ladderBox.spacing = 10
+        refreshRungAvailability()
         applyBigVisibility()
 
         // A new step takes its kind and class from its deadline, so neither is asked for.
@@ -266,7 +267,21 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
 
     @objc private func dueChanged() {
         draft.dueDate = datePicker.date
+        refreshRungAvailability()
         refreshReminderNote()
+    }
+
+    /// A countdown rung already behind the due date cannot fire (PlannerReminders.fireDate skips it),
+    /// so its switch is shown off and greyed rather than on and silently doing nothing: a test due
+    /// tomorrow has no "a week before". The student's choice is kept in the draft, so moving the due
+    /// date later brings the rung back as they left it.
+    private func refreshRungAvailability() {
+        let preview = draft.makeItem(id: "preview", replacing: existing)
+        for (rung, toggle) in rungSwitches {
+            let available = PlannerReminders.fireDate(rung: rung, for: preview, now: Date()) != nil
+            toggle.isEnabled = available
+            toggle.setOn(available && draft.rungs.contains(rung), animated: false)
+        }
     }
 
     /// Says why this reminder won't show up, when it won't: a moment already past, notifications
@@ -301,7 +316,8 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func rungChanged() {
-        draft.rungs = Set(rungSwitches.filter { $0.value.isOn }.map { $0.key })
+        // A greyed rung keeps whatever the student chose for it (see refreshRungAvailability).
+        draft.rungs = Set(rungSwitches.filter { $0.value.isEnabled ? $0.value.isOn : draft.rungs.contains($0.key) }.map { $0.key })
         refreshReminderNote()
     }
 
@@ -506,7 +522,7 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         let suggestions = PlannerSteps.suggest(parentTitle: parent.title, dueDate: parent.dueDate,
                                                today: PlannerItem.dayString(from: Date()), count: count)
         guard !suggestions.isEmpty else {
-            alert("There's no room to split this: it's due today or already past.")
+            alert("There's no room to split this: it's due tomorrow or sooner.")
             return
         }
         let dates = suggestions.map { PlannerListing.dayLabel(forDay: $0.dueDate) }.joined(separator: "\n")
