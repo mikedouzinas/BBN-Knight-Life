@@ -20,17 +20,43 @@ import SkeletonView
 // resolver the rest of the app already uses for the calendar and notifications -
 // rather than a second, separate notion of the school calendar living here.
 class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return entries.count
+    // Section 0 is tomorrow's classes (HQ-779), section 1 is what the student has planned
+    // (HQ-2181): tests, homework, games and appointments, from PlannerStore.
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return 2
     }
-    // Repurposed from the old "add a task" flow (which no longer applies - there's
-    // nothing to add, the list is the day's actual classes) into a manual refresh,
-    // in case the app has been open across midnight and the "next school day" has
-    // quietly become today.
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return section == 0 ? entries.count : plannerItems.count
+    }
+    // A header only on a section that has rows, so an empty one does not leave a title with
+    // nothing under it.
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if section == 0 { return entries.isEmpty ? nil : "Classes" }
+        return plannerItems.isEmpty ? nil : "Upcoming"
+    }
+    func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        // Said out loud: an empty Upcoming list that is really a failed load looks exactly like
+        // "nothing planned", and a student would stop trusting it the first time it was wrong.
+        return section == 1 && plannerLoadFailed ? "Couldn't load your items. Pull down to retry." : nil
+    }
+    // HQ-779 turned this button into a silent refresh, which to a student looked like a + that
+    // does nothing. HQ-2181 gives it its job back: add a test, homework, game or appointment.
+    // The refresh it used to do is not lost - viewWillAppear already re-runs
+    // loadNextSchoolDay(), which is what catches an app left open across midnight.
     @IBAction func addClass(_ sender: UIBarButtonItem) {
-        loadNextSchoolDay()
+        presentPlannerEditor(for: nil)
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if indexPath.section == 1 {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: PlannerItemCell.identifier, for: indexPath) as? PlannerItemCell,
+                  plannerItems.indices.contains(indexPath.row) else {
+                return UITableViewCell()
+            }
+            let item = plannerItems[indexPath.row]
+            cell.configure(with: item, today: PlannerItem.dayString(from: Date()))
+            cell.onCheckBoxTapped = { [weak self] in self?.togglePlannerItem(id: item.id) }
+            return cell
+        }
         guard let cell = tableView.dequeueReusableCell(withIdentifier: TaskCell.identifier, for: indexPath) as? TaskCell else {
             fatalError()
         }
@@ -43,11 +69,32 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     public var tableView: UITableView = {
         let tableView = UITableView()
         tableView.register(TaskCell.self, forCellReuseIdentifier: TaskCell.identifier)
+        tableView.register(PlannerItemCell.self, forCellReuseIdentifier: PlannerItemCell.identifier)
         tableView.backgroundColor = UIColor(named: "background")
         return tableView
     } ()
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 100
+        return indexPath.section == 1 ? 72 : 100
+    }
+    // Upcoming items swipe: right to mark done, left to delete (HQ-116 had delete-by-swipe
+    // before HQ-779 removed the freeform list). Classes have nothing to delete, so no swipes.
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        guard indexPath.section == 1, plannerItems.indices.contains(indexPath.row) else { return nil }
+        let id = plannerItems[indexPath.row].id
+        let delete = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, done in
+            self?.deletePlannerItem(id: id)
+            done(true)
+        }
+        return UISwipeActionsConfiguration(actions: [delete])
+    }
+    func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        guard indexPath.section == 1, plannerItems.indices.contains(indexPath.row) else { return nil }
+        let item = plannerItems[indexPath.row]
+        let action = UIContextualAction(style: .normal, title: item.completed ? "Not done" : "Done") { [weak self] _, _, done in
+            self?.togglePlannerItem(id: item.id)
+            done(true)
+        }
+        return UISwipeActionsConfiguration(actions: [action])
     }
     // HQ-116's swipe-to-delete doesn't carry over: it removed a user-created entry from
     // LoginVC.blocks["tasks"], which HQ-779 replaces entirely with per-class homework
@@ -60,6 +107,11 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // homework - type it, tap out, done. Not a separate detail screen.
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        if indexPath.section == 1 {
+            guard plannerItems.indices.contains(indexPath.row) else { return }
+            presentPlannerEditor(for: plannerItems[indexPath.row])
+            return
+        }
         guard entries.indices.contains(indexPath.row), entries[indexPath.row].holdsHomework else { return }
         presentHomeworkEntry(at: indexPath.row)
     }
@@ -91,6 +143,12 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
     private var entries = [HomeworkEntry]()
     private var resolvedDateKey = ""
+    // HQ-2181: what the student has planned, in display order, and whether the last load failed.
+    private var plannerItems = [PlannerItem]()
+    private var plannerLoadFailed = false
+    // Why the classes section is empty, if it is: the message shown when there is nothing else
+    // on screen either.
+    private var classesEmptyMessage: String?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -101,6 +159,11 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.separatorStyle = .none
+        // The footer on a failed load says "pull down to retry", so there has to be something to
+        // pull. Reloads both lists: the classes too, in case the app was left open across midnight.
+        let refresh = UIRefreshControl()
+        refresh.addTarget(self, action: #selector(pullToRefresh), for: .valueChanged)
+        tableView.refreshControl = refresh
         loadNextSchoolDay()
     }
 
@@ -110,6 +173,7 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         // the same day produces the same list, and catches a midnight rollover if
         // the app was left open.
         loadNextSchoolDay()
+        loadPlanner()
     }
 
     // Walks forward from tomorrow using resolveDay(date:) until it finds a day with
@@ -133,7 +197,8 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             entries = []
             resolvedDateKey = ""
             tableView.reloadData()
-            tableView.setEmptyMessage("Couldn't find an upcoming school day with classes.")
+            classesEmptyMessage = "Couldn't find an upcoming school day with classes."
+            updateEmptyState()
             return
         }
 
@@ -177,11 +242,99 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
         applySortedEntries(built)
 
-        if entries.isEmpty {
-            tableView.setEmptyMessage("No classes set up yet - add them in Settings.")
+        classesEmptyMessage = entries.isEmpty ? "No classes set up yet - add them in Settings." : nil
+        updateEmptyState()
+    }
+
+    // The empty message covers the whole table, so it may only show when BOTH lists are empty.
+    // Showing "no classes" over a student's upcoming tests would hide them.
+    private func updateEmptyState() {
+        if entries.isEmpty && plannerItems.isEmpty {
+            tableView.setEmptyMessage(classesEmptyMessage ?? "Nothing coming up. Tap + to add a test, homework, game or appointment.")
         } else {
             tableView.restore()
             tableView.separatorStyle = .none
+        }
+    }
+
+    // MARK: - Planner (HQ-2181)
+
+    // Each load takes a number, and only the newest is allowed to apply. Without it a slow
+    // response from an earlier load lands after a newer one and puts back an item that was
+    // just deleted or un-completes one that was just finished.
+    private var plannerLoadGeneration = 0
+
+    private func loadPlanner() {
+        plannerLoadGeneration += 1
+        let generation = plannerLoadGeneration
+        let window = PlannerListing.loadWindow()
+        PlannerStore.shared.items(from: window.start, through: window.end) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self, generation == self.plannerLoadGeneration else { return }
+                switch result {
+                case .success(let items):
+                    self.plannerLoadFailed = false
+                    self.plannerItems = PlannerListing.ordered(items, today: PlannerItem.dayString(from: Date()))
+                case .failure(let error):
+                    if case .notSignedIn = error {
+                        // Account not loaded yet: nothing to show, and nothing to apologise for.
+                        self.plannerItems = []
+                        self.plannerLoadFailed = false
+                    } else {
+                        // Keep what is already on screen and say the load failed (see the footer).
+                        self.plannerLoadFailed = true
+                    }
+                }
+                self.tableView.reloadData()
+                self.updateEmptyState()
+                self.tableView.refreshControl?.endRefreshing()
+            }
+        }
+    }
+
+    @objc private func pullToRefresh() {
+        loadNextSchoolDay()
+        loadPlanner()
+    }
+
+    private func presentPlannerEditor(for item: PlannerItem?) {
+        let editor = PlannerItemEditorVC(existing: item)
+        editor.onChange = { [weak self] in self?.loadPlanner() }
+        present(UINavigationController(rootViewController: editor), animated: true)
+    }
+
+    // The row changes straight away and the write follows. If the write fails the list is
+    // reloaded from the server, which puts the row back, and the student is told.
+    private func togglePlannerItem(id: String) {
+        guard let index = plannerItems.firstIndex(where: { $0.id == id }) else { return }
+        var item = plannerItems[index]
+        item.completed.toggle()
+        plannerItems[index] = item
+        plannerItems = PlannerListing.ordered(plannerItems, today: PlannerItem.dayString(from: Date()))
+        tableView.reloadData()
+        PlannerStore.shared.save(item) { [weak self] result in
+            DispatchQueue.main.async {
+                if case .failure(let error) = result {
+                    ProgressHUD.colorAnimation = .red
+                    ProgressHUD.failed(error.message)
+                    self?.loadPlanner()
+                }
+            }
+        }
+    }
+
+    private func deletePlannerItem(id: String) {
+        plannerItems.removeAll { $0.id == id }
+        tableView.reloadData()
+        updateEmptyState()
+        PlannerStore.shared.delete(id: id) { [weak self] result in
+            DispatchQueue.main.async {
+                if case .failure(let error) = result {
+                    ProgressHUD.colorAnimation = .red
+                    ProgressHUD.failed(error.message)
+                    self?.loadPlanner()
+                }
+            }
         }
     }
 
