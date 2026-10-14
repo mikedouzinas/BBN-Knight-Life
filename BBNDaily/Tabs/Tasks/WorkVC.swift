@@ -133,7 +133,16 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             return
         }
         guard entries.indices.contains(indexPath.row), entries[indexPath.row].holdsHomework else { return }
-        presentHomeworkEntry(at: indexPath.row)
+        let entry = entries[indexPath.row]
+        // Homework typed the old way (a text note on the class) is still edited as before. Anything new is
+        // a planner item, so it shows as a badge, on the calendar, and in reminders like everything else.
+        guard entry.text.isEmpty else {
+            presentHomeworkEntry(at: indexPath.row)
+            return
+        }
+        PlannerQuickAdd.present(from: self, subject: entry.subject, block: entry.block, day: resolvedPlannerDay) { [weak self] in
+            self?.loadPlanner()
+        }
     }
 
     // A keyword match on the subject, not a real classification - there is no dedicated
@@ -579,6 +588,21 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             self.entries[index].text = alert.textFields?.first?.text ?? ""
             self.persistEntries()
             self.tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .fade)
+        }))
+        // Moves the note into the planner. The old text is cleared only once the planner item is saved,
+        // so a failed save never costs the student what they wrote.
+        alert.addAction(UIAlertAction(title: "Move to planner", style: .default, handler: { [weak self, weak alert] _ in
+            guard let self = self, self.entries.indices.contains(index) else { return }
+            let text = (alert?.textFields?.first?.text ?? entry.text).trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { return }
+            PlannerQuickAdd.save(from: self, kind: .homework, title: text, block: entry.block, day: self.resolvedPlannerDay,
+                                 onSaved: { [weak self] in
+                guard let self = self,
+                      let current = self.entries.firstIndex(where: { $0.block == entry.block && $0.date == entry.date }) else { return }
+                self.entries[current].text = ""
+                self.persistEntries()
+                self.tableView.reloadData()
+            }, onChange: { [weak self] in self?.loadPlanner() })
         }))
         present(alert, animated: true)
     }

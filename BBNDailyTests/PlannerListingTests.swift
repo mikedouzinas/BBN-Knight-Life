@@ -213,3 +213,45 @@ final class PlannerListingTests: XCTestCase {
         XCTAssertEqual(draft.makeItem(id: "x", now: now, timeZone: utc).validationError(), .emptyTitle)
     }
 }
+
+/// The item a tap on a class row saves (HQ-2347): the class and day are known, only a title is typed.
+final class PlannerQuickAddItemTests: XCTestCase {
+
+    private let utc = TimeZone(identifier: "UTC")!
+    private func item(_ kind: PlannerKind, title: String = "Problem set 12", block: String = "d", day: String = "2026-10-09") -> PlannerItem {
+        PlannerDraft.forClass(block, day: day, kind: kind, title: title, timeZone: utc).makeItem(id: "x", timeZone: utc)
+    }
+
+    func testTheItemTakesTheClassAndTheDayOfTheRowTapped() {
+        let homework = item(.homework)
+        XCTAssertEqual(homework.classBlock, "D", "block letters are stored upper case")
+        XCTAssertEqual(homework.dueDate, "2026-10-09")
+        XCTAssertEqual(homework.kind, .homework)
+        XCTAssertNil(homework.parentId)
+        XCTAssertFalse(homework.completed)
+        XCTAssertNil(homework.validationError())
+    }
+
+    func testOnlyATestIsABigDeadline() {
+        XCTAssertTrue(item(.test).isBig, "as in the full editor")
+        XCTAssertFalse(item(.homework).isBig)
+    }
+
+    func testTheTitleIsTrimmedAndCutToTheLimitRatherThanRefused() {
+        XCTAssertEqual(item(.homework, title: "  Read ch. 4  \n").title, "Read ch. 4")
+        let long = String(repeating: "a", count: FieldLimits.plannerTitle + 40)
+        let saved = item(.homework, title: long)
+        XCTAssertEqual(saved.title.count, FieldLimits.plannerTitle)
+        XCTAssertNil(saved.validationError())
+    }
+
+    func testAnEmptyTitleIsNotSavable() {
+        XCTAssertEqual(item(.homework, title: "   ").validationError(), .emptyTitle)
+    }
+
+    func testTheItemIsFiledWhereTheTomorrowAndScheduleViewsLookForIt() {
+        // A test for block D on the day shown is exactly what goes on D's row there.
+        let test = item(.test)
+        XCTAssertEqual(PlannerWeekDay.badgedItems(block: "D", day: "2026-10-09", in: [test]).map { $0.id }, ["x"])
+    }
+}

@@ -319,6 +319,20 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
         cell.setTags(attached.indices.contains(blockIndex) ? attached[blockIndex] : []) { [weak self] item in
             self?.openPlannerItem(item)
         }
+        // A + on the student's own classes, for today and the days ahead (nothing is due in the past).
+        let letter = thisBlock.block.uppercased()
+        if letter != "N/A", studentHasClass(inBlock: letter), selectedPlannerDay >= PlannerItem.dayString(from: Date()),
+           let assignment = LoginVC.blocks[letter] as? String {
+            let subject = assignment.getValues()[0]
+            cell.setAddAction { [weak self] in
+                guard let self = self else { return }
+                PlannerQuickAdd.present(from: self, subject: subject, block: letter, day: self.selectedPlannerDay) { [weak self] in
+                    self?.loadPlanner(force: true)
+                }
+            }
+        } else {
+            cell.setAddAction(nil)
+        }
         
         // A block that has already ended is DIMMED, never removed. HQ-1044.
         //

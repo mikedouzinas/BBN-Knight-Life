@@ -188,10 +188,31 @@ final class ScheduleBlockCell: coverTableViewCell {
         return tagsTop + CGFloat(count) * PlannerTagButton.height + CGFloat(count - 1) * PlannerTagButton.spacing + tagsBottom
     }
 
+    /// A small + at the right of the class's first line: add a test or homework for this class and day.
+    private let addButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setImage(UIImage(systemName: "plus.circle", withConfiguration: UIImage.SymbolConfiguration(pointSize: 18, weight: .regular)), for: .normal)
+        button.tintColor = UIColor(named: "lightGray")
+        button.accessibilityLabel = "Add a test or homework"
+        button.isHidden = true
+        return button
+    }()
+    private var onAdd: (() -> Void)?
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         contentView.addSubview(tagStack)
+        contentView.addSubview(addButton)
+        addButton.addTarget(self, action: #selector(addTapped), for: .touchUpInside)
         NSLayoutConstraint.activate([
+            addButton.centerYAnchor.constraint(equalTo: contentView.topAnchor, constant: 30),
+            addButton.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -6),
+            addButton.widthAnchor.constraint(equalToConstant: 36),
+            addButton.heightAnchor.constraint(equalToConstant: 36),
+            // The class name gives way to the button rather than running under it.
+            RightLabel.rightAnchor.constraint(lessThanOrEqualTo: addButton.leftAnchor, constant: -2),
+            BottomRightLabel.rightAnchor.constraint(lessThanOrEqualTo: addButton.leftAnchor, constant: -2),
             tagStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: ScheduleBlockCell.tagsTop),
             tagStack.leftAnchor.constraint(equalTo: lineView.rightAnchor, constant: 10),
             tagStack.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -12),
@@ -202,6 +223,15 @@ final class ScheduleBlockCell: coverTableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         setTags([], onTap: { _ in })
+        setAddAction(nil)
+    }
+
+    @objc private func addTapped() { onAdd?() }
+
+    /// Shows the + and what it does, or hides it (nil) on a row that is not one of the student's classes.
+    func setAddAction(_ action: (() -> Void)?) {
+        onAdd = action
+        addButton.isHidden = action == nil
     }
 
     /// Replaces the tags. Tapping one hands back its item; tapping anywhere else on the row still opens the class.

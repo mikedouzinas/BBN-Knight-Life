@@ -107,6 +107,19 @@ struct PlannerDraft: Equatable {
         return draft
     }
 
+    /// A new item for a class and day that are already known (the student tapped that class's row): its
+    /// class and due day filled in, a Test a big deadline as the editor makes it. The title is trimmed and
+    /// cut to the one limit the rules enforce, so a long one is saved rather than refused.
+    static func forClass(_ block: String, day: String, kind: PlannerKind = .homework, title: String = "",
+                         timeZone: TimeZone = .current) -> PlannerDraft {
+        var draft = PlannerDraft(dueDate: PlannerItem.date(fromDay: day, timeZone: timeZone) ?? Date())
+        draft.kind = kind
+        draft.title = String(title.trimmingCharacters(in: .whitespacesAndNewlines).prefix(FieldLimits.plannerTitle))
+        draft.classBlock = block.uppercased()
+        draft.isBig = kind == .test
+        return draft
+    }
+
     /// A new item's starting point: homework due tomorrow, the most common thing to add.
     static func new(now: Date = Date(), timeZone: TimeZone = .current) -> PlannerDraft {
         var calendar = Calendar(identifier: .gregorian)
