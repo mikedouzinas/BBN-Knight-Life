@@ -54,10 +54,11 @@ service cloud.firestore {
     //   isBig      optional, a big deadline (HQ-2186)
     //   reminder   optional, none | evening | morning | custom (HQ-2185)
     //   remindAt   optional, the moment for a custom reminder
+    //   rungs      optional, which countdown steps are on for a big deadline (HQ-2186)
     function validPlannerItem(d) {
       return d.keys().hasAll(['kind', 'title', 'dueDate', 'completed', 'createdAt'])
         && d.keys().hasOnly(['kind', 'title', 'dueDate', 'dueTime', 'classBlock', 'notes',
-                             'completed', 'createdAt', 'parentId', 'isBig', 'reminder', 'remindAt'])
+                             'completed', 'createdAt', 'parentId', 'isBig', 'reminder', 'remindAt', 'rungs'])
         && d.kind in ['test', 'homework', 'sports', 'appointment']
         && d.title is string && d.title.size() >= 1 && d.title.size() <= 80
         && d.dueDate is string && d.dueDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
@@ -72,6 +73,8 @@ service cloud.firestore {
         && (!('isBig' in d) || d.isBig is bool)
         && (!('reminder' in d) || d.reminder in ['none', 'evening', 'morning', 'custom'])
         && (!('remindAt' in d) || d.remindAt is timestamp)
+        && (!('rungs' in d) || (d.rungs is list && d.rungs.size() <= 4
+              && d.rungs.hasOnly(['week', 'threeDays', 'dayBefore', 'morningOf'])))
         && (!('reminder' in d) || d.reminder != 'custom' || 'remindAt' in d);
     }
 

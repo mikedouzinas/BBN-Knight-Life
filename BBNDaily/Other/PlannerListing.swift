@@ -87,6 +87,11 @@ struct PlannerDraft: Equatable {
     /// can switch it to none, morning-of, or a time of their own.
     var reminder: PlannerReminder = .evening
     var remindAt: Date?
+    /// A big deadline carries a countdown (HQ-2186). Off for ordinary homework; a test turns it on
+    /// by default (the editor does that when the kind becomes Test) so the one thing most worth
+    /// being reminded about gets the most, without burying a worksheet in notifications.
+    var isBig = false
+    var rungs = Set(LadderRung.allCases)
 
     /// A new item's starting point: homework due tomorrow, the most common thing to add.
     static func new(now: Date = Date(), timeZone: TimeZone = .current) -> PlannerDraft {
@@ -104,6 +109,8 @@ struct PlannerDraft: Equatable {
         notes = item.notes ?? ""
         reminder = item.reminder
         remindAt = item.remindAt
+        isBig = item.isBig
+        rungs = item.rungs
     }
 
     init(dueDate: Date) { self.dueDate = dueDate }
@@ -126,10 +133,11 @@ struct PlannerDraft: Equatable {
             completed: existing?.completed ?? false,
             createdAt: existing?.createdAt ?? now,
             parentId: existing?.parentId,
-            isBig: existing?.isBig ?? false,
+            isBig: isBig,
             reminder: reminder,
             // Only a custom reminder carries a time; a stale one from an earlier choice is dropped.
-            remindAt: reminder == .custom ? remindAt : nil
+            remindAt: reminder == .custom ? remindAt : nil,
+            rungs: rungs
         )
     }
 }
@@ -155,7 +163,8 @@ extension PlannerListing {
         var parts = [String]()
         if isOverdue(item, today: today) { parts.append("Overdue") }
         parts.append(dayLabel(forDay: item.dueDate, now: now, timeZone: timeZone, locale: locale))
-        parts.append(item.kind.label)
+        // A big deadline says so in words as well as with the mark on its row (HQ-2186).
+        parts.append(item.isBig ? "Big \(item.kind.label.lowercased())" : item.kind.label)
         if let block = item.classBlock { parts.append("Block \(block)") }
         return parts.joined(separator: " · ")
     }

@@ -28,6 +28,16 @@ final class PlannerItemCell: UITableViewCell {
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
+    // HQ-2186: a big deadline carries a flag next to its title, in addition to the words "Big" in the
+    // subtitle, so it reads at a glance and is not told apart by color alone.
+    private let bigFlag: UIImageView = {
+        let view = UIImageView(image: UIImage(systemName: "flag.fill"))
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.contentMode = .scaleAspectFit
+        view.tintColor = UIColor(named: "inverse")
+        view.isHidden = true
+        return view
+    }()
     private let kindSymbol: UIImageView = {
         let view = UIImageView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -72,6 +82,7 @@ final class PlannerItemCell: UITableViewCell {
         // instead of sticking out past the rounded edge as a square strip.
         backView.addSubview(kindStripe)
         contentView.addSubview(kindSymbol)
+        contentView.addSubview(bigFlag)
         contentView.addSubview(checkBox)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
@@ -99,7 +110,11 @@ final class PlannerItemCell: UITableViewCell {
             checkBox.widthAnchor.constraint(equalTo: checkBox.heightAnchor),
 
             titleLabel.leftAnchor.constraint(equalTo: checkBox.rightAnchor, constant: 10),
-            titleLabel.rightAnchor.constraint(equalTo: kindSymbol.leftAnchor, constant: -10),
+            bigFlag.rightAnchor.constraint(equalTo: kindSymbol.leftAnchor, constant: -10),
+            bigFlag.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
+            bigFlag.widthAnchor.constraint(equalToConstant: 14),
+            bigFlag.heightAnchor.constraint(equalToConstant: 14),
+            titleLabel.rightAnchor.constraint(equalTo: bigFlag.leftAnchor, constant: -6),
             titleLabel.bottomAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 2),
 
             subtitleLabel.leftAnchor.constraint(equalTo: titleLabel.leftAnchor),
@@ -122,6 +137,8 @@ final class PlannerItemCell: UITableViewCell {
         kindSymbol.image = item.kind.symbol
         kindSymbol.tintColor = item.kind.color
         kindSymbol.accessibilityLabel = item.kind.label
+        bigFlag.isHidden = !item.isBig
+        bigFlag.accessibilityLabel = "Big deadline"
         checkBox.setImage(UIImage(named: item.completed ? "complete" : "incomplete"), for: .normal)
         checkBox.accessibilityLabel = item.completed ? "Mark not done" : "Mark done"
         contentView.alpha = item.completed ? 0.4 : 1.0
