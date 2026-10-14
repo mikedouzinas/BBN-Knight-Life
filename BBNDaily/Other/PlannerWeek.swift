@@ -40,9 +40,10 @@ struct PlannerWeekDay: Equatable {
 
     /// Open tests and big deadlines: the things that make a day heavy. Homework and appointments
     /// do not, however many there are, and a completed item no longer counts. This is a count the
-    /// student can check against the list, not a score.
+    /// student can check against the list, not a score. A step is part of its deadline, not a
+    /// second one, even though it carries the deadline's kind.
     var heavyCount: Int {
-        items.filter { !$0.completed && ($0.kind == .test || $0.isBig) }.count
+        items.filter { !$0.completed && $0.parentId == nil && ($0.kind == .test || $0.isBig) }.count
     }
 
     /// "1 test or deadline" / "3 tests or deadlines", or nil on a day with none.

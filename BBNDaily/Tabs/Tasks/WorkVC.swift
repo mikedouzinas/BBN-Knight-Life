@@ -72,8 +72,10 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         }
         return cell
     }
+    // Grouped, so a section's title and footer ("Classes", "Nothing planned") scroll with its rows.
+    // A plain table pins them, each in a grey band, and Friday's footer sat over the content above it.
     public var tableView: UITableView = {
-        let tableView = UITableView()
+        let tableView = UITableView(frame: .zero, style: .grouped)
         tableView.register(TaskCell.self, forCellReuseIdentifier: TaskCell.identifier)
         tableView.register(PlannerItemCell.self, forCellReuseIdentifier: PlannerItemCell.identifier)
         tableView.backgroundColor = UIColor(named: "background")
