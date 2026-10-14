@@ -65,6 +65,7 @@
 		87507FD326E6ADEB005DDFB4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87507FD126E6ADEB005DDFB4 /* LaunchScreen.storyboard */; };
 		87507FDE26E6ADEB005DDFB4 /* BBNDailyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87507FDD26E6ADEB005DDFB4 /* BBNDailyTests.swift */; };
 		HQ6400000000000000001001 /* ResolveDayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ6400000000000000000001 /* ResolveDayTests.swift */; };
+		HQ2188000000000000001001 /* TasksListingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ2188000000000000000001 /* TasksListingTests.swift */; };
 		HQ6560000000000000001002 /* ClassIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ6560000000000000000002 /* ClassIdentityTests.swift */; };
 		HQ9540000000000000001001 /* NewYearPromptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ9540000000000000000001 /* NewYearPromptTests.swift */; };
 		HQ6270000000000000001001 /* FirestoreParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = HQ6270000000000000000001 /* FirestoreParsingTests.swift */; };
@@ -193,6 +194,7 @@
 		87507FD926E6ADEB005DDFB4 /* BBNDailyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BBNDailyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		87507FDD26E6ADEB005DDFB4 /* BBNDailyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBNDailyTests.swift; sourceTree = "<group>"; };
 		HQ6400000000000000000001 /* ResolveDayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolveDayTests.swift; sourceTree = "<group>"; };
+		HQ2188000000000000000001 /* TasksListingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksListingTests.swift; sourceTree = "<group>"; };
 		HQ6560000000000000000002 /* ClassIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassIdentityTests.swift; sourceTree = "<group>"; };
 		HQ9540000000000000000001 /* NewYearPromptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewYearPromptTests.swift; sourceTree = "<group>"; };
 		HQ6270000000000000000001 /* FirestoreParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreParsingTests.swift; sourceTree = "<group>"; };
@@ -467,6 +469,7 @@
 				87507FDD26E6ADEB005DDFB4 /* BBNDailyTests.swift */,
 				HQ6400000000000000000001 /* ResolveDayTests.swift */,
 				HQ6560000000000000000002 /* ClassIdentityTests.swift */,
+				HQ2188000000000000000001 /* TasksListingTests.swift */,
 				HQ9540000000000000000001 /* NewYearPromptTests.swift */,
 				HQ6270000000000000000001 /* FirestoreParsingTests.swift */,
 				87507FDF26E6ADEB005DDFB4 /* Info.plist */,
@@ -790,6 +793,7 @@
 				87507FDE26E6ADEB005DDFB4 /* BBNDailyTests.swift in Sources */,
 				HQ6400000000000000001001 /* ResolveDayTests.swift in Sources */,
 				HQ6560000000000000001002 /* ClassIdentityTests.swift in Sources */,
+				HQ2188000000000000001001 /* TasksListingTests.swift in Sources */,
 				HQ9540000000000000001001 /* NewYearPromptTests.swift in Sources */,
 				HQ6270000000000000001001 /* FirestoreParsingTests.swift in Sources */,
 			);
