@@ -21,6 +21,19 @@ final class PlannerItemCell: UITableViewCell {
         view.backgroundColor = UIColor(named: "current-cell")?.withAlphaComponent(0.1)
         return view
     }()
+    // The kind's color (HQ-2182): a stripe down the left edge, and its symbol at the right. Both,
+    // and the kind's word in the subtitle, so color is never the only thing telling kinds apart.
+    private let kindStripe: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    private let kindSymbol: UIImageView = {
+        let view = UIImageView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.contentMode = .scaleAspectFit
+        return view
+    }()
     private let checkBox: UIButton = {
         let button = UIButton(type: .custom)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -55,6 +68,10 @@ final class PlannerItemCell: UITableViewCell {
         backgroundColor = UIColor(named: "background")
         contentView.backgroundColor = UIColor(named: "background")
         contentView.addSubview(backView)
+        // Inside backView, not beside it: the card clips its corners, so the stripe follows them
+        // instead of sticking out past the rounded edge as a square strip.
+        backView.addSubview(kindStripe)
+        contentView.addSubview(kindSymbol)
         contentView.addSubview(checkBox)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
@@ -66,13 +83,23 @@ final class PlannerItemCell: UITableViewCell {
             backView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
             backView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
 
+            kindStripe.leftAnchor.constraint(equalTo: backView.leftAnchor),
+            kindStripe.topAnchor.constraint(equalTo: backView.topAnchor),
+            kindStripe.bottomAnchor.constraint(equalTo: backView.bottomAnchor),
+            kindStripe.widthAnchor.constraint(equalToConstant: 6),
+
+            kindSymbol.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20),
+            kindSymbol.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            kindSymbol.widthAnchor.constraint(equalToConstant: 24),
+            kindSymbol.heightAnchor.constraint(equalToConstant: 24),
+
             checkBox.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20),
             checkBox.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             checkBox.heightAnchor.constraint(equalToConstant: 30),
             checkBox.widthAnchor.constraint(equalTo: checkBox.heightAnchor),
 
             titleLabel.leftAnchor.constraint(equalTo: checkBox.rightAnchor, constant: 10),
-            titleLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20),
+            titleLabel.rightAnchor.constraint(equalTo: kindSymbol.leftAnchor, constant: -10),
             titleLabel.bottomAnchor.constraint(equalTo: contentView.centerYAnchor, constant: 2),
 
             subtitleLabel.leftAnchor.constraint(equalTo: titleLabel.leftAnchor),
@@ -91,6 +118,10 @@ final class PlannerItemCell: UITableViewCell {
             ? [.strikethroughStyle: NSUnderlineStyle.single.rawValue] : [:]
         titleLabel.attributedText = NSAttributedString(string: item.title, attributes: attributes)
         subtitleLabel.text = PlannerListing.subtitle(for: item, today: today)
+        kindStripe.backgroundColor = item.kind.color
+        kindSymbol.image = item.kind.symbol
+        kindSymbol.tintColor = item.kind.color
+        kindSymbol.accessibilityLabel = item.kind.label
         checkBox.setImage(UIImage(named: item.completed ? "complete" : "incomplete"), for: .normal)
         checkBox.accessibilityLabel = item.completed ? "Mark not done" : "Mark done"
         contentView.alpha = item.completed ? 0.4 : 1.0
