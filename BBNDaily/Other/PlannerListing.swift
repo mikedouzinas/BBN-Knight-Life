@@ -181,7 +181,7 @@ extension PlannerKind {
         case .test: return "Test"
         case .homework: return "Homework"
         case .sports: return "Sports"
-        case .appointment: return "Appointment"
+        case .appointment: return "Meeting"   // stored as "appointment" (the rules know that word); only the label differs
         }
     }
 }

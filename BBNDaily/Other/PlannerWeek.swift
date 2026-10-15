@@ -20,6 +20,9 @@ import Foundation
 struct WeekClass: Equatable {
     var block: String
     var subject: String
+    /// A block the student has free that day (marked Free, or a class that does not meet that weekday). It
+    /// is a place to plan something rather than a class, so any kind of item can sit on it.
+    var isFree: Bool = false
 }
 
 /// What the resolver says about one calendar day.
@@ -66,13 +69,17 @@ struct PlannerWeekDay: Equatable {
     /// A step (HQ-2187) is never badged: it belongs under its test in the Upcoming list, where its
     /// parent counts "2 of 4 steps done". Badged away, a step due tomorrow would leave its test and
     /// the count would drop.
-    static func showsOnClassRow(_ item: PlannerItem, classBlocks: Set<String>) -> Bool {
-        guard item.parentId == nil,
-              let block = item.classBlock?.uppercased(), classBlocks.contains(block) else { return false }
+    ///
+    /// A Free block (`freeBlocks`) takes an item of any kind attached to it: a meeting, study time, a game.
+    static func showsOnClassRow(_ item: PlannerItem, classBlocks: Set<String>, freeBlocks: Set<String> = []) -> Bool {
+        guard item.parentId == nil, let block = item.classBlock?.uppercased() else { return false }
+        if freeBlocks.contains(block) { return true }
+        guard classBlocks.contains(block) else { return false }
         return item.kind == .test || item.kind == .homework
     }
 
-    private var classBlocks: Set<String> { Set(info.classes.map { $0.block.uppercased() }) }
+    private var classBlocks: Set<String> { Set(info.classes.filter { !$0.isFree }.map { $0.block.uppercased() }) }
+    private var freeBlocks: Set<String> { Set(info.classes.filter { $0.isFree }.map { $0.block.uppercased() }) }
 
     /// `items` without the ones `badgedItems` puts on a class row for `day`, given the classes being
     /// drawn. The Tomorrow view lists what is left under "Upcoming", so an item is on its class or in
@@ -86,10 +93,15 @@ struct PlannerWeekDay: Equatable {
     /// view calls this too, so "what goes on a class row" is decided here and nowhere else. The class
     /// is taken to be meeting (the caller only asks about rows it is drawing), so only the day, the
     /// block and the kind are checked. Tests before homework, otherwise the order given.
-    static func badgedItems(block: String, day: String, in items: [PlannerItem]) -> [PlannerItem] {
+    static func badgedItems(block: String, day: String, in items: [PlannerItem], isFree: Bool = false) -> [PlannerItem] {
         let upper = block.uppercased()
-        let matching = items.filter { $0.dueDate == day && showsOnClassRow($0, classBlocks: [upper]) && $0.classBlock?.uppercased() == upper }
+        let matching = items.filter {
+            $0.dueDate == day && $0.classBlock?.uppercased() == upper
+                && showsOnClassRow($0, classBlocks: isFree ? [] : [upper], freeBlocks: isFree ? [upper] : [])
+        }
+        // Tests, then homework, then anything else (a Free block's meetings and games), each in the order given.
         return matching.filter { $0.kind == .test } + matching.filter { $0.kind == .homework }
+            + matching.filter { $0.kind != .test && $0.kind != .homework }
     }
 
     /// The items to badge on the row for `block`: tests before homework, then in the order the day
@@ -97,8 +109,9 @@ struct PlannerWeekDay: Equatable {
     /// to a different place.
     func itemsOnClassRow(_ block: String) -> [PlannerItem] {
         // Only if that class is on this day's schedule: otherwise the item belongs in the list below.
-        guard classBlocks.contains(block.uppercased()) else { return [] }
-        return PlannerWeekDay.badgedItems(block: block, day: day, in: items)
+        let upper = block.uppercased()
+        guard classBlocks.contains(upper) || freeBlocks.contains(upper) else { return [] }
+        return PlannerWeekDay.badgedItems(block: block, day: day, in: items, isFree: freeBlocks.contains(upper))
     }
 
     /// One row of a day's section.
@@ -119,8 +132,8 @@ struct PlannerWeekDay: Equatable {
             rows += info.classes.map { .schoolClass($0) }
         }
         // Items badged on a class row are not repeated below it. Every item is in exactly one place.
-        let badged = classBlocks
-        rows += items.filter { !PlannerWeekDay.showsOnClassRow($0, classBlocks: badged) }.map { .item($0) }
+        let badged = classBlocks, free = freeBlocks
+        rows += items.filter { !PlannerWeekDay.showsOnClassRow($0, classBlocks: badged, freeBlocks: free) }.map { .item($0) }
         return rows
     }
 }
@@ -226,12 +239,14 @@ enum PlannerSchedule {
     /// block that is not theirs, is Free, or does not meet gets none, so its items stay in the Planned
     /// list instead of vanishing. A letter that appears twice in a day takes its items on the first row
     /// only, so nothing is shown twice.
-    static func attachments(blockLetters: [String], hasClass: (String) -> Bool, items: [PlannerItem], day: String) -> [[PlannerItem]] {
+    static func attachments(blockLetters: [String], hasClass: (String) -> Bool, isFree: (String) -> Bool = { _ in false },
+                            items: [PlannerItem], day: String) -> [[PlannerItem]] {
         var seen = Set<String>()
         return blockLetters.map { letter in
             let block = letter.uppercased()
-            guard block != "N/A", hasClass(block), seen.insert(block).inserted else { return [] }
-            return PlannerWeekDay.badgedItems(block: block, day: day, in: items)
+            let free = isFree(block)
+            guard block != "N/A", free || hasClass(block), seen.insert(block).inserted else { return [] }
+            return PlannerWeekDay.badgedItems(block: block, day: day, in: items, isFree: free)
         }
     }
 

@@ -321,12 +321,13 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
         }
         // A + on the student's own classes, for today and the days ahead (nothing is due in the past).
         let letter = thisBlock.block.uppercased()
-        if letter != "N/A", studentHasClass(inBlock: letter), selectedPlannerDay >= PlannerItem.dayString(from: Date()),
+        let isFree = letter != "N/A" && studentHasFree(inBlock: letter)
+        if letter != "N/A", isFree || studentHasClass(inBlock: letter), selectedPlannerDay >= PlannerItem.dayString(from: Date()),
            let assignment = LoginVC.blocks[letter] as? String {
             let subject = assignment.getValues()[0]
             cell.setAddAction { [weak self] in
                 guard let self = self else { return }
-                PlannerQuickAdd.present(from: self, subject: subject, block: letter, day: self.selectedPlannerDay) { [weak self] in
+                PlannerQuickAdd.present(from: self, subject: subject, block: letter, day: self.selectedPlannerDay, isFree: isFree) { [weak self] in
                     self?.loadPlanner(force: true)
                 }
             }
@@ -700,11 +701,22 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
         return true
     }
 
-    /// For each of the day's blocks, the student's tests and homework for its class: they are drawn as
-    /// tags inside that block's row.
+    /// Whether this block is one the student has free on the selected day: set to Free, or a class that does
+    /// not meet that weekday (the schedule shows both as "Free"). A place to plan something.
+    private func studentHasFree(inBlock letter: String) -> Bool {
+        guard let assignment = LoginVC.blocks[letter] as? String, assignment.contains("~") else { return false }
+        if ClassIdentity.isFree(assignment.getValues()[0]) { return true }
+        if let meets = LoginVC.classMeetingDays[letter.lowercased()], meets.indices.contains(selectedDay), !meets[selectedDay] {
+            return true
+        }
+        return false
+    }
+
+    /// For each of the day's blocks, the student's items for it: a class's tests and homework, or anything
+    /// planned in a Free block. They are drawn as tags inside that block's row.
     private var blockAttachments: [[PlannerItem]] {
         PlannerSchedule.attachments(blockLetters: currentDay.map { $0.block }, hasClass: studentHasClass(inBlock:),
-                                    items: selectedPlannerItems, day: selectedPlannerDay)
+                                    isFree: studentHasFree(inBlock:), items: selectedPlannerItems, day: selectedPlannerDay)
     }
 
     /// The Planned section: everything for the day that is not inside a block's row.

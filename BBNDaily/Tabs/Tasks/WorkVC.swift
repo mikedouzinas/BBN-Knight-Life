@@ -288,6 +288,12 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         modeHeader.onPreviousWeek = { [weak self] in self?.moveWeek(by: -1) }
         modeHeader.onNextWeek = { [weak self] in self?.moveWeek(by: 1) }
         weekSource.onSelectItem = { [weak self] item in self?.presentPlannerEditor(for: item) }
+        // Tapping a class or Free block on a day that is not over adds something to it.
+        weekSource.onSelectClass = { [weak self] schoolClass, day in
+            guard let self = self, day >= PlannerItem.dayString(from: Date()) else { return }
+            PlannerQuickAdd.present(from: self, subject: schoolClass.subject, block: schoolClass.block, day: day,
+                                    isFree: schoolClass.isFree) { [weak self] in self?.loadPlanner() }
+        }
         // HQ-2182: what the four colors mean.
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "info.circle"), style: .plain, target: self, action: #selector(showLegend))
@@ -392,7 +398,7 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             return
         }
         if entries.isEmpty && plannerItems.isEmpty {
-            tableView.setEmptyMessage(classesEmptyMessage ?? "Nothing coming up. Tap + to add a test, homework, game or appointment.")
+            tableView.setEmptyMessage(classesEmptyMessage ?? "Nothing coming up. Tap + to add a test, homework, game or meeting.")
         } else {
             tableView.restore()
             tableView.separatorStyle = .none
@@ -505,11 +511,16 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             guard !seen.contains(letter),
                   let assignment = LoginVC.blocks[letter] as? String, assignment.contains("~") else { continue }
             let subject = assignment.getValues()[0]
-            if ClassIdentity.isFree(subject) { continue }
-            if resolved.weekdayIndex >= 0 && resolved.weekdayIndex <= 4,
-               let meets = LoginVC.classMeetingDays[letter.lowercased()]?[resolved.weekdayIndex], !meets { continue }
+            // A Free block, or a class that does not meet this weekday, is kept as a Free row: a place to plan
+            // something. It was left out before.
+            let doesNotMeet = resolved.weekdayIndex >= 0 && resolved.weekdayIndex <= 4
+                && (LoginVC.classMeetingDays[letter.lowercased()]?[resolved.weekdayIndex] == false)
             seen.insert(letter)
-            classes.append(WeekClass(block: letter, subject: subject))
+            if ClassIdentity.isFree(subject) || doesNotMeet {
+                classes.append(WeekClass(block: letter, subject: "Free", isFree: true))
+            } else {
+                classes.append(WeekClass(block: letter, subject: subject))
+            }
         }
         return WeekDayInfo(weekdayName: resolved.weekdayName, classes: classes,
                            emptyMessage: resolved.hasClasses ? nil : resolved.emptyMessage)

@@ -437,3 +437,51 @@ final class TomorrowClassItemsTests: XCTestCase {
     }
 }
 
+/// A Free block takes any kind of item, on the Schedule and the week view.
+final class PlannerFreeBlockTests: XCTestCase {
+
+    private func item(_ id: String, _ kind: PlannerKind, block: String?, parent: String? = nil) -> PlannerItem {
+        PlannerItem(id: id, kind: kind, title: id, dueDate: "2026-10-16", classBlock: block, createdAt: Date(timeIntervalSince1970: 0), parentId: parent)
+    }
+    private func day(_ items: [PlannerItem]) -> PlannerWeekDay {
+        PlannerWeekDay(day: "2026-10-16",
+                       info: WeekDayInfo(weekdayName: "friday",
+                                         classes: [WeekClass(block: "A", subject: "Spanish"), WeekClass(block: "B", subject: "Free", isFree: true)],
+                                         emptyMessage: nil),
+                       items: items)
+    }
+
+    func testAnyKindOfItemSitsOnAFreeBlockButOnlyTestsAndHomeworkOnAClass() {
+        let d = day([item("meet", .appointment, block: "B"), item("game", .sports, block: "B"), item("study", .homework, block: "B"),
+                     item("dentist", .appointment, block: "A"), item("exam", .test, block: "A")])
+        XCTAssertEqual(d.itemsOnClassRow("B").map { $0.id }, ["study", "meet", "game"], "homework first, then the rest in order")
+        XCTAssertEqual(d.itemsOnClassRow("A").map { $0.id }, ["exam"])
+    }
+
+    func testEachItemIsOnItsRowOrInTheListExactlyOnce() {
+        let items = [item("meet", .appointment, block: "B"), item("dentist", .appointment, block: "A"), item("loose", .appointment, block: nil)]
+        let d = day(items)
+        let onRows = ["A", "B"].flatMap { d.itemsOnClassRow($0).map { $0.id } }
+        let below = d.rows.compactMap { row -> String? in if case .item(let i) = row { return i.id } else { return nil } }
+        XCTAssertEqual((onRows + below).sorted(), ["dentist", "loose", "meet"])
+        XCTAssertEqual(onRows, ["meet"])
+    }
+
+    func testAStepIsNeverPutOnAFreeBlock() {
+        XCTAssertTrue(day([item("s", .homework, block: "B", parent: "p")]).itemsOnClassRow("B").isEmpty)
+    }
+
+    func testTheScheduleAttachesAnythingToAFreeBlockButNotToAnUnsetOne() {
+        let items = [item("meet", .appointment, block: "B"), item("lost", .appointment, block: "C")]
+        let a = PlannerSchedule.attachments(blockLetters: ["A", "B", "C"], hasClass: { $0 == "A" }, isFree: { $0 == "B" },
+                                            items: items, day: "2026-10-16")
+        XCTAssertEqual(a.map { $0.map { $0.id } }, [[], ["meet"], []])
+        XCTAssertEqual(PlannerSchedule.unattached(items, attachments: a).map { $0.id }, ["lost"])
+    }
+
+    func testAMeetingHasItsOwnWordButIsStoredAsBefore() {
+        XCTAssertEqual(PlannerKind.appointment.label, "Meeting")
+        XCTAssertEqual(PlannerKind.appointment.rawValue, "appointment", "the rules validate this word")
+    }
+}
+

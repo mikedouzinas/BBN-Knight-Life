@@ -221,13 +221,14 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         return stack
     }
 
-    /// The student's own classes, A to G. Anything unset or marked Free is not worth attaching a
-    /// test to, so it is not offered (ClassIdentity.isFree is the app's one definition of free).
+    /// The student's own blocks, A to G: their classes, and a Free block as "Free" (ClassIdentity.isFree is
+    /// the app's one definition of free). A block that is not set up at all is not offered.
     private func classOptions() -> [(block: String, name: String)] {
         ["A", "B", "C", "D", "E", "F", "G"].compactMap { letter in
             guard let assignment = LoginVC.blocks[letter] as? String, assignment.contains("~") else { return nil }
             let subject = assignment.getValues()[0]
-            return ClassIdentity.isFree(subject) ? nil : (letter, subject)
+            // A Free block is offered too, as "Free": something can be planned in it (a meeting, study time).
+            return ClassIdentity.isFree(subject) ? (letter, "Free") : (letter, subject)
         }
     }
 
@@ -556,9 +557,11 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
 /// Test save a planner item straight away, and More... opens the full editor with what was typed.
 enum PlannerQuickAdd {
 
-    static func present(from vc: UIViewController, subject: String, block: String, day: String,
+    /// `isFree`: the block is one the student has free. It offers Homework and Meeting (a place to plan
+    /// something) instead of Homework and Test.
+    static func present(from vc: UIViewController, subject: String, block: String, day: String, isFree: Bool = false,
                         store: PlannerStore = .shared, onChange: @escaping () -> Void) {
-        let alert = UIAlertController(title: "Add to \(subject)",
+        let alert = UIAlertController(title: isFree ? "Plan something in your Free block" : "Add to \(subject)",
                                       message: "Block \(block) · due \(PlannerListing.dayLabel(forDay: day))",
                                       preferredStyle: .alert)
         func typed() -> String { alert.textFields?.first?.text ?? "" }
@@ -566,12 +569,14 @@ enum PlannerQuickAdd {
             guard let vc = vc else { return }
             save(from: vc, kind: .homework, title: typed(), block: block, day: day, store: store, onChange: onChange)
         }
-        let test = UIAlertAction(title: "Test", style: .default) { [weak vc] _ in
+        let secondKind: PlannerKind = isFree ? .appointment : .test
+        let test = UIAlertAction(title: secondKind.label, style: .default) { [weak vc] _ in
             guard let vc = vc else { return }
-            save(from: vc, kind: .test, title: typed(), block: block, day: day, store: store, onChange: onChange)
+            save(from: vc, kind: secondKind, title: typed(), block: block, day: day, store: store, onChange: onChange)
         }
         let more = UIAlertAction(title: "More…", style: .default) { [weak vc] _ in
-            let editor = PlannerItemEditorVC(draft: PlannerDraft.forClass(block, day: day, title: typed()), store: store)
+            let editor = PlannerItemEditorVC(draft: PlannerDraft.forClass(block, day: day, kind: isFree ? .appointment : .homework,
+                                                                         title: typed()), store: store)
             editor.onChange = onChange
             vc?.present(UINavigationController(rootViewController: editor), animated: true)
         }
