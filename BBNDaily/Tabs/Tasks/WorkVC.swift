@@ -64,14 +64,11 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             fatalError()
         }
         let entry = entries[indexPath.row]
-        let items = tomorrowItems(for: entry)
-        cell.configure(with: entry, items: items) { [weak self] item in
+        cell.configure(with: entry, badges: tomorrowBadges(forBlock: entry.block)) { [weak self] item in
             self?.presentPlannerEditor(for: item)
         }
         cell.onCheckBoxTapped = { [weak self] in
-            // With planner homework on the row the checkbox ticks that homework; otherwise it is the old
-            // per-class one, as before.
-            if items.homework.isEmpty { self?.toggleCompleted(at: indexPath.row) } else { self?.toggleHomework(items.homework) }
+            self?.toggleCompleted(at: indexPath.row)
         }
         return cell
     }
@@ -85,7 +82,7 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         if indexPath.section == 1 { return 72 }
         guard entries.indices.contains(indexPath.row),
-              !tomorrowItems(for: entries[indexPath.row]).badges.isEmpty else { return 100 }
+              !tomorrowBadges(forBlock: entries[indexPath.row].block).isEmpty else { return 100 }
         return TaskCell.heightWithBadges
     }
     // Upcoming items swipe: right to mark done, left to delete (HQ-116 had delete-by-swipe
@@ -137,29 +134,6 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         }
         guard entries.indices.contains(indexPath.row), entries[indexPath.row].holdsHomework else { return }
         let entry = entries[indexPath.row]
-        // Planner homework on the row: tapping it opens that homework (a choice when there are several).
-        let homework = tomorrowItems(for: entry).homework
-        if homework.count == 1 {
-            presentPlannerEditor(for: homework[0])
-            return
-        }
-        if homework.count > 1 {
-            let sheet = UIAlertController(title: entry.subject, message: "Homework for Block \(entry.block)", preferredStyle: .actionSheet)
-            for item in homework {
-                sheet.addAction(UIAlertAction(title: item.title, style: .default) { [weak self] _ in self?.presentPlannerEditor(for: item) })
-            }
-            sheet.addAction(UIAlertAction(title: "Add another…", style: .default) { [weak self] _ in
-                guard let self = self else { return }
-                PlannerQuickAdd.present(from: self, subject: entry.subject, block: entry.block, day: self.resolvedPlannerDay) { [weak self] in
-                    self?.loadPlanner()
-                }
-            })
-            sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            sheet.popoverPresentationController?.sourceView = tableView
-            sheet.popoverPresentationController?.sourceRect = tableView.rectForRow(at: indexPath)
-            present(sheet, animated: true)
-            return
-        }
         // Homework typed the old way (a text note on the class) is still edited as before. Anything new is
         // a planner item, so it shows as a badge, on the calendar, and in reminders like everything else.
         guard entry.text.isEmpty else {
@@ -223,16 +197,6 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     }
     private func tomorrowBadges(forBlock block: String) -> [PlannerItem] {
         PlannerWeekDay.badgedItems(block: block, day: resolvedPlannerDay, in: plannerItems)
-    }
-    // HQ-2350: homework goes on the row's own line, tests under it as badges.
-    private func tomorrowItems(for entry: HomeworkEntry) -> TomorrowClassItems {
-        TomorrowClassItems.split(tomorrowBadges(forBlock: entry.block), legacyNote: entry.text)
-    }
-    /// Ticks a class's homework: all done if any is open, otherwise all open again. One write each,
-    /// through the same path as the Upcoming checkboxes.
-    private func toggleHomework(_ homework: [PlannerItem]) {
-        let makeDone = homework.contains { !$0.completed }
-        for item in homework where item.completed != makeDone { togglePlannerItem(id: item.id) }
     }
     private var plannerRows = [PlannerListRow]()
     private var plannerLoadFailed = false

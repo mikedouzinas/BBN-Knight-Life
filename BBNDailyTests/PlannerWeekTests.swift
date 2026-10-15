@@ -403,40 +403,6 @@ final class PlannerScheduleRowsTests: XCTestCase {
     }
 }
 
-/// Tomorrow's class row: homework on its own line beside the checkbox, tests as badges (HQ-2350).
-final class TomorrowClassItemsTests: XCTestCase {
-
-    private func item(_ id: String, _ kind: PlannerKind, done: Bool = false) -> PlannerItem {
-        PlannerItem(id: id, kind: kind, title: id, dueDate: "2026-10-09", classBlock: "D", completed: done,
-                    createdAt: Date(timeIntervalSince1970: 0))
-    }
-
-    func testHomeworkGoesOnTheLineAndTestsStayBadges() {
-        let split = TomorrowClassItems.split([item("exam", .test), item("pset", .homework)], legacyNote: "")
-        XCTAssertEqual(split.homework.map { $0.id }, ["pset"])
-        XCTAssertEqual(split.badges.map { $0.id }, ["exam"])
-    }
-
-    func testEveryItemIsInExactlyOnePlace() {
-        let all = [item("t1", .test), item("h1", .homework), item("h2", .homework), item("t2", .test)]
-        let split = TomorrowClassItems.split(all, legacyNote: "")
-        XCTAssertEqual((split.homework + split.badges).map { $0.id }.sorted(), ["h1", "h2", "t1", "t2"])
-    }
-
-    func testAnOldStyleNoteKeepsTheLineSoHomeworkStaysABadge() {
-        let split = TomorrowClassItems.split([item("pset", .homework), item("exam", .test)], legacyNote: "do p. 40")
-        XCTAssertTrue(split.homework.isEmpty)
-        XCTAssertEqual(split.badges.map { $0.id }, ["pset", "exam"])
-    }
-
-    func testTheLineJoinsTitlesAndIsDoneOnlyWhenAllAre() {
-        XCTAssertEqual(TomorrowClassItems.split([item("A", .homework), item("B", .homework)], legacyNote: "").homeworkLine, "A · B")
-        XCTAssertFalse(TomorrowClassItems.split([item("A", .homework, done: true), item("B", .homework)], legacyNote: "").homeworkDone)
-        XCTAssertTrue(TomorrowClassItems.split([item("A", .homework, done: true), item("B", .homework, done: true)], legacyNote: "").homeworkDone)
-        XCTAssertFalse(TomorrowClassItems.split([item("exam", .test, done: true)], legacyNote: "").homeworkDone, "no homework is not done homework")
-    }
-}
-
 /// A Free block takes any kind of item, on the Schedule and the week view.
 final class PlannerFreeBlockTests: XCTestCase {
 

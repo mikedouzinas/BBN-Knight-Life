@@ -179,35 +179,23 @@ class TaskCell: UITableViewCell {
     // edit, just visually out of the way once it's done.
     // HQ-2194: `badges` are this class's tests and homework for the day shown (decided by
     // PlannerWeekDay.badgedItems); each is a tappable badge under the homework line.
-    // HQ-2350: `homework` is this class's planner homework, shown as the line next to the checkbox (which
-    // then ticks it); `badges` is what is left (tests), under it.
-    func configure(with entry: HomeworkEntry, items: TomorrowClassItems = TomorrowClassItems(homework: [], badges: []),
-                   onBadgeTapped: @escaping (PlannerItem) -> Void = { _ in }) {
-        let badges = items.badges
+    func configure(with entry: HomeworkEntry, badges: [PlannerItem] = [], onBadgeTapped: @escaping (PlannerItem) -> Void = { _ in }) {
         setBadges(badges, onTap: onBadgeTapped)
-        let hasPlannerHomework = !items.homework.isEmpty
-        let completed = hasPlannerHomework ? items.homeworkDone : entry.completed
-        isComplete = completed
+        isComplete = entry.completed
         TitleLabel.text = entry.subject
         DateLabel.text = "Block \(entry.block)"
-        DescriptionLabel.attributedText = nil
-        if hasPlannerHomework {
-            DescriptionLabel.attributedText = NSAttributedString(
-                string: items.homeworkLine,
-                attributes: completed ? [.strikethroughStyle: NSUnderlineStyle.single.rawValue] : [:])
-        } else if !entry.holdsHomework {
+        if !entry.holdsHomework {
             // Never "Tap to add homework" here - tapping this row does nothing, since
             // WorkVC only opens the entry prompt when holdsHomework is true.
             DescriptionLabel.text = "No homework for this class"
         } else {
             DescriptionLabel.text = entry.text.isEmpty ? "Tap to add homework or a test" : entry.text
         }
-        checkBox.setImage(UIImage(named: completed ? "complete" : "incomplete"), for: .normal)
-        checkBox.accessibilityLabel = hasPlannerHomework ? (completed ? "Mark homework not done" : "Mark homework done") : nil
+        checkBox.setImage(UIImage(named: entry.completed ? "complete" : "incomplete"), for: .normal)
         // Fade the row's own parts, not the whole contentView: the badges are separate items with
         // their own done state, and a test is not finished because the class's homework is.
         contentView.alpha = 1
-        let rowAlpha: CGFloat = completed ? 0.4 : 1.0
+        let rowAlpha: CGFloat = entry.completed ? 0.4 : 1.0
         [backView, checkBox, TitleLabel, DescriptionLabel, DateLabel].forEach { $0.alpha = rowAlpha }
     }
 }
