@@ -149,7 +149,7 @@ struct PlannerDraft: Equatable {
     func makeItem(id: String, replacing existing: PlannerItem? = nil, now: Date = Date(),
                   timeZone: TimeZone = .current) -> PlannerItem {
         let cleanNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-        return PlannerItem(
+        var item = PlannerItem(
             id: id,
             kind: kind,
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -166,6 +166,9 @@ struct PlannerDraft: Equatable {
             remindAt: reminder == .custom ? remindAt : nil,
             rungs: rungs
         )
+        // An edit keeps the exact stored timestamp, or the rules refuse the update (see PlannerItem).
+        item.storedCreatedAt = existing?.storedCreatedAt
+        return item
     }
 }
 
