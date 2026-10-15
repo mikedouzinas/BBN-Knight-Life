@@ -122,6 +122,9 @@ class TaskCell: UITableViewCell {
         return stack
     } ()
     // The description runs to the bottom of the row, or stops above the badges when there are any.
+    // The bottom row starts under the title, or at the checkboxes' edge when homework lines sit above it.
+    private var badgeLeftToTitle: NSLayoutConstraint!
+    private var badgeLeftToEdge: NSLayoutConstraint!
     private var descriptionToBottom: NSLayoutConstraint!
     private var descriptionToBadges: NSLayoutConstraint!
 
@@ -131,6 +134,8 @@ class TaskCell: UITableViewCell {
     // These used to be (re)built inside layoutSubviews, which adds another copy of every constraint on
     // every layout pass. They are installed once, here, so the badges can swap one of them cleanly.
     private func installConstraints() {
+        badgeLeftToTitle = badgeStack.leftAnchor.constraint(equalTo: TitleLabel.leftAnchor)
+        badgeLeftToEdge = badgeStack.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20)
         descriptionToBottom = DescriptionLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10)
         descriptionToBadges = DescriptionLabel.bottomAnchor.constraint(equalTo: badgeStack.topAnchor, constant: -4)
         NSLayoutConstraint.activate([
@@ -162,7 +167,7 @@ class TaskCell: UITableViewCell {
             DateLabel.heightAnchor.constraint(equalToConstant: 20),
             DateLabel.leftAnchor.constraint(greaterThanOrEqualTo: contentView.centerXAnchor, constant: 5),
 
-            badgeStack.leftAnchor.constraint(equalTo: TitleLabel.leftAnchor),
+            badgeLeftToTitle,
             badgeStack.rightAnchor.constraint(lessThanOrEqualTo: contentView.rightAnchor, constant: -20),
             badgeStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
             badgeStack.heightAnchor.constraint(equalToConstant: 28),
@@ -212,10 +217,13 @@ class TaskCell: UITableViewCell {
             plus.setImage(UIImage(systemName: "plus.circle", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)), for: .normal)
             plus.tintColor = UIColor(named: "inverse")
             plus.accessibilityLabel = "Add another"
-            plus.widthAnchor.constraint(equalToConstant: 28).isActive = true
+            plus.widthAnchor.constraint(equalToConstant: 30).isActive = true
             plus.addTarget(self, action: #selector(addTapped), for: .touchUpInside)
-            badgeStack.addArrangedSubview(plus)
+            // With homework lines above, the + sits first, straight under their checkboxes.
+            if alwaysPlus { badgeStack.insertArrangedSubview(plus, at: 0) } else { badgeStack.addArrangedSubview(plus) }
         }
+        badgeLeftToTitle.isActive = !alwaysPlus
+        badgeLeftToEdge.isActive = alwaysPlus
         badgeStack.isHidden = items.isEmpty && !alwaysPlus
         descriptionToBottom.isActive = items.isEmpty && !alwaysPlus
         descriptionToBadges.isActive = !items.isEmpty && !alwaysPlus
