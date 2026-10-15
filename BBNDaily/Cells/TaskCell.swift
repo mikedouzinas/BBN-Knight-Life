@@ -161,10 +161,25 @@ class TaskCell: UITableViewCell {
     override func prepareForReuse(){
         super.prepareForReuse()
         setBadges([], onTap: { _ in })
+        onAddTapped = nil
     }
+
+    /// A small + after the blue blocks: add another to this class. Only drawn once something has been added;
+    /// before that, tapping the row is how the first one is added.
+    var onAddTapped: (() -> Void)?
+    @objc private func addTapped() { onAddTapped?() }
 
     private func setBadges(_ items: [PlannerItem], onTap: @escaping (PlannerItem) -> Void) {
         PlannerBadgeButton.fill(badgeStack, with: items, onTap: onTap)
+        if !items.isEmpty {
+            let plus = UIButton(type: .system)
+            plus.setImage(UIImage(systemName: "plus.circle", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)), for: .normal)
+            plus.tintColor = UIColor(named: "inverse")
+            plus.accessibilityLabel = "Add another"
+            plus.widthAnchor.constraint(equalToConstant: 28).isActive = true
+            plus.addTarget(self, action: #selector(addTapped), for: .touchUpInside)
+            badgeStack.addArrangedSubview(plus)
+        }
         badgeStack.isHidden = items.isEmpty
         descriptionToBottom.isActive = items.isEmpty
         descriptionToBadges.isActive = !items.isEmpty
@@ -189,7 +204,7 @@ class TaskCell: UITableViewCell {
             // WorkVC only opens the entry prompt when holdsHomework is true.
             DescriptionLabel.text = "No homework for this class"
         } else {
-            DescriptionLabel.text = entry.text.isEmpty ? "Tap to add homework or a test" : entry.text
+            DescriptionLabel.text = entry.text
         }
         checkBox.setImage(UIImage(named: entry.completed ? "complete" : "incomplete"), for: .normal)
         // Fade the row's own parts, not the whole contentView: the badges are separate items with

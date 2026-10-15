@@ -67,6 +67,12 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         cell.configure(with: entry, badges: tomorrowBadges(forBlock: entry.block)) { [weak self] item in
             self?.presentPlannerEditor(for: item)
         }
+        cell.onAddTapped = { [weak self] in
+            guard let self = self else { return }
+            PlannerQuickAdd.present(from: self, subject: entry.subject, block: entry.block, day: self.resolvedPlannerDay) { [weak self] in
+                self?.loadPlanner()
+            }
+        }
         cell.onCheckBoxTapped = { [weak self] in
             self?.toggleCompleted(at: indexPath.row)
         }
