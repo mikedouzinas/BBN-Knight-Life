@@ -85,6 +85,11 @@ struct PlannerItem: Equatable {
     var notes: String?
     var completed: Bool
     var createdAt: Date
+    /// The exact timestamp the server holds, kept so a save writes it back unchanged. The rules refuse any
+    /// update that changes `createdAt`, and a round trip through `Date` moves it by a microsecond for almost
+    /// every stored time, so an item rebuilt from `createdAt` alone could not be updated (ticked off, edited).
+    /// Nil for an item that has not been read from the server yet.
+    var storedCreatedAt: Timestamp? = nil
     /// The item this is a step of (mini deadlines, HQ-2187). Nil for a top-level item.
     var parentId: String?
     /// A big deadline (HQ-2186).
@@ -261,6 +266,12 @@ extension PlannerItem {
             rungs: (data["rungs"] as? [String]).map { Set($0.compactMap { LadderRung(rawValue: $0) }) }
                 ?? Set(LadderRung.allCases)
         )
+        storedCreatedAt = data["createdAt"] as? Timestamp
+    }
+
+    private var createdAtForWrite: Timestamp {
+        if let stored = storedCreatedAt, abs(stored.dateValue().timeIntervalSince(createdAt)) < 0.001 { return stored }
+        return Timestamp(date: createdAt)
     }
 
     /// What is written. Optional fields are left out rather than written empty, because the rules
@@ -272,7 +283,8 @@ extension PlannerItem {
             "title": title,
             "dueDate": dueDate,
             "completed": completed,
-            "createdAt": Timestamp(date: createdAt),
+            // The stored value when it is still this item's createdAt, so an update leaves it unchanged.
+            "createdAt": createdAtForWrite,
         ]
         if let dueTime = dueTime { data["dueTime"] = dueTime }
         if let classBlock = classBlock { data["classBlock"] = classBlock }

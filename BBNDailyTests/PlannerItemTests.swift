@@ -30,7 +30,9 @@ final class PlannerItemTests: XCTestCase {
             $0.dueTime = "15:30"; $0.classBlock = "C"; $0.notes = "bring calculator"
             $0.parentId = "parent1"; $0.isBig = true; $0.completed = true
         }
-        let read = PlannerItem(id: original.id, data: original.firestoreData)
+        var read = PlannerItem(id: original.id, data: original.firestoreData)
+        XCTAssertNotNil(read?.storedCreatedAt, "a read item remembers the exact timestamp it was stored with")
+        read?.storedCreatedAt = nil
         XCTAssertEqual(read, original)
     }
 
@@ -210,5 +212,40 @@ final class PlannerItemTests: XCTestCase {
         let errors: [PlannerValidationError] = [.emptyTitle, .titleTooLong(limit: 80), .badDate, .badTime,
                                                 .badClassBlock, .notesTooLong(limit: 300), .badParent, .missingID, .missingReminderTime]
         for error in errors { XCTAssertFalse(error.message.isEmpty) }
+    }
+}
+
+/// The rules refuse an update that changes `createdAt`, so every save of an item read from the server must write
+/// back exactly the timestamp the server holds.
+final class PlannerCreatedAtTests: XCTestCase {
+
+    private func stored(micro: Int) -> [String: Any] {
+        ["kind": "homework", "title": "Study", "dueDate": "2026-10-09", "completed": false, "classBlock": "A",
+         "createdAt": Timestamp(seconds: 1_791_000_000, nanoseconds: Int32(micro * 1000))]
+    }
+
+    func testAnItemReadFromTheServerWritesItsCreatedAtBackUnchanged() {
+        var wrong = 0
+        for micro in stride(from: 1, to: 1_000_000, by: 997) {
+            let data = stored(micro: micro)
+            guard let item = PlannerItem(id: "x", data: data) else { return XCTFail("did not parse") }
+            var ticked = item
+            ticked.completed.toggle()
+            if (ticked.firestoreData["createdAt"] as? Timestamp) != (data["createdAt"] as? Timestamp) { wrong += 1 }
+        }
+        XCTAssertEqual(wrong, 0)
+    }
+
+    func testEditingThroughTheSheetKeepsTheStoredTimestamp() {
+        let data = stored(micro: 123_457)
+        let item = PlannerItem(id: "x", data: data)!
+        let edited = PlannerDraft(editing: item).makeItem(id: "x", replacing: item)
+        XCTAssertEqual(edited.firestoreData["createdAt"] as? Timestamp, data["createdAt"] as? Timestamp)
+    }
+
+    func testANewItemGetsATimestampFromItsCreatedAt() {
+        let now = Date(timeIntervalSince1970: 1_791_000_000.5)
+        let item = PlannerItem(id: "n", kind: .test, title: "t", dueDate: "2026-10-09", createdAt: now)
+        XCTAssertEqual((item.firestoreData["createdAt"] as? Timestamp)?.dateValue(), now)
     }
 }
