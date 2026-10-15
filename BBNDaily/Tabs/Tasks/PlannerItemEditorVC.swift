@@ -144,18 +144,8 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
         var views: [UIView] = newStepOf != nil
             ? [titleField, dueRow, notesField, reminderBox, reminderNote]
             : [kindControl, titleField, dueRow, classRow, notesField, bigRow, reminderBox, ladderBox, reminderNote]
-        if let existing = existing, PlannerSteps.canHaveSteps(existing) {
-            let add = UIButton(type: .system)
-            add.setTitle("Add a step…", for: .normal)
-            add.addTarget(self, action: #selector(addStep), for: .touchUpInside)
-            views.append(add)
-            if context.steps.isEmpty {
-                let split = UIButton(type: .system)
-                split.setTitle("Split into steps…", for: .normal)
-                split.addTarget(self, action: #selector(chooseStepCount), for: .touchUpInside)
-                views.append(split)
-            }
-        }
+        // No "Add a step" or "Split into steps": a student adds their own sub-items as homework. Steps that
+        // already exist still show under their parent and can be edited here.
         if let parent = context.parent {
             let note = UILabel()
             note.text = "A step of \"\(parent.title)\", due \(PlannerListing.dayLabel(forDay: parent.dueDate)). It can't be dated after it."

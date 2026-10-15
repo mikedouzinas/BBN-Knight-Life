@@ -451,3 +451,38 @@ final class PlannerFreeBlockTests: XCTestCase {
     }
 }
 
+/// Tomorrow's class row: each homework on its own line, tests as blocks.
+final class TomorrowClassItemsTests: XCTestCase {
+
+    private func item(_ id: String, _ kind: PlannerKind) -> PlannerItem {
+        PlannerItem(id: id, kind: kind, title: id, dueDate: "2026-10-16", classBlock: "A", createdAt: Date(timeIntervalSince1970: 0))
+    }
+
+    func testHomeworkGetsALineEachAndTestsStayBlocks() {
+        let split = TomorrowClassItems.split([item("exam", .test), item("memorize", .homework), item("read", .homework)], legacyNote: "")
+        XCTAssertEqual(split.homework.map { $0.id }, ["memorize", "read"])
+        XCTAssertEqual(split.tests.map { $0.id }, ["exam"])
+    }
+
+    func testAnOldStyleNoteKeepsTheLineSoHomeworkStaysABlock() {
+        let split = TomorrowClassItems.split([item("memorize", .homework), item("exam", .test)], legacyNote: "do p. 40")
+        XCTAssertTrue(split.homework.isEmpty)
+        XCTAssertEqual(split.tests.map { $0.id }, ["memorize", "exam"])
+    }
+
+    func testEveryItemIsInExactlyOnePlace() {
+        let all = [item("t", .test), item("h1", .homework), item("h2", .homework), item("s", .sports)]
+        let split = TomorrowClassItems.split(all, legacyNote: "")
+        XCTAssertEqual((split.homework + split.tests).map { $0.id }.sorted(), ["h1", "h2", "s", "t"])
+    }
+
+    func testTheRowIsTallEnoughForItsLines() {
+        XCTAssertEqual(TomorrowClassItems.split([], legacyNote: "").rowHeight, 100, "nothing added: as before")
+        XCTAssertEqual(TomorrowClassItems.split([item("t", .test)], legacyNote: "").rowHeight, 132, "tests only: as before")
+        let one = TomorrowClassItems.split([item("h", .homework)], legacyNote: "").rowHeight
+        let two = TomorrowClassItems.split([item("h", .homework), item("h2", .homework)], legacyNote: "").rowHeight
+        XCTAssertEqual(two - one, 36, "each homework line adds one line")
+        XCTAssertGreaterThan(one, 100)
+    }
+}
+

@@ -64,9 +64,9 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             fatalError()
         }
         let entry = entries[indexPath.row]
-        cell.configure(with: entry, badges: tomorrowBadges(forBlock: entry.block)) { [weak self] item in
-            self?.presentPlannerEditor(for: item)
-        }
+        cell.configure(with: entry, items: tomorrowItems(for: entry),
+                       onItemTapped: { [weak self] item in self?.presentPlannerEditor(for: item) },
+                       onHomeworkToggled: { [weak self] item in self?.togglePlannerItem(id: item.id) })
         cell.onAddTapped = { [weak self] in
             guard let self = self else { return }
             PlannerQuickAdd.present(from: self, subject: entry.subject, block: entry.block, day: self.resolvedPlannerDay) { [weak self] in
@@ -87,9 +87,8 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     } ()
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         if indexPath.section == 1 { return 72 }
-        guard entries.indices.contains(indexPath.row),
-              !tomorrowBadges(forBlock: entries[indexPath.row].block).isEmpty else { return 100 }
-        return TaskCell.heightWithBadges
+        guard entries.indices.contains(indexPath.row) else { return TomorrowClassItems.plainHeight }
+        return tomorrowItems(for: entries[indexPath.row]).rowHeight
     }
     // Upcoming items swipe: right to mark done, left to delete (HQ-116 had delete-by-swipe
     // before HQ-779 removed the freeform list). Classes have nothing to delete, so no swipes.
@@ -100,18 +99,7 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             self?.requestDeletePlannerItem(id: id)
             done(true)
         }
-        // A top-level, unfinished item can take a step of the student's own: "study for this", "pen in time".
-        let row = plannerRows[indexPath.row]
-        guard row.depth == 0, !row.item.completed, PlannerSteps.canHaveSteps(row.item) else {
-            return UISwipeActionsConfiguration(actions: [delete])
-        }
-        let parent = row.item
-        let addStep = UIContextualAction(style: .normal, title: "Add step") { [weak self] _, _, done in
-            self?.presentStepEditor(for: parent)
-            done(true)
-        }
-        addStep.backgroundColor = .systemBlue
-        return UISwipeActionsConfiguration(actions: [delete, addStep])
+        return UISwipeActionsConfiguration(actions: [delete])
     }
     func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         guard indexPath.section == 1, plannerRows.indices.contains(indexPath.row) else { return nil }
@@ -203,6 +191,10 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     }
     private func tomorrowBadges(forBlock block: String) -> [PlannerItem] {
         PlannerWeekDay.badgedItems(block: block, day: resolvedPlannerDay, in: plannerItems)
+    }
+    // Homework gets a line and checkbox of its own, tests are blocks (a row with an old-style note keeps it).
+    private func tomorrowItems(for entry: HomeworkEntry) -> TomorrowClassItems {
+        TomorrowClassItems.split(tomorrowBadges(forBlock: entry.block), legacyNote: entry.text)
     }
     private var plannerRows = [PlannerListRow]()
     private var plannerLoadFailed = false

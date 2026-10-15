@@ -87,6 +87,7 @@ class TaskCell: UITableViewCell {
         contentView.addSubview(DescriptionLabel)
         contentView.addSubview(DateLabel)
         contentView.addSubview(badgeStack)
+        contentView.addSubview(homeworkStack)
         installConstraints()
         contentView.backgroundColor = UIColor(named: "background")
         checkBox.addTarget(self, action: #selector(checkBoxTapped), for: .touchUpInside)
@@ -106,6 +107,16 @@ class TaskCell: UITableViewCell {
         stack.axis = .horizontal
         stack.spacing = 6
         stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.isHidden = true
+        return stack
+    } ()
+    // Each of the class's homework as its own line: a checkbox and the blue block.
+    private let homeworkStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 6
+        stack.alignment = .fill
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.isHidden = true
         return stack
@@ -136,10 +147,10 @@ class TaskCell: UITableViewCell {
             TitleLabel.leftAnchor.constraint(equalTo: checkBox.rightAnchor, constant: 10),
             TitleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
             TitleLabel.centerXAnchor.constraint(equalTo: DescriptionLabel.centerXAnchor),
-            TitleLabel.bottomAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10),
+            TitleLabel.bottomAnchor.constraint(equalTo: contentView.topAnchor, constant: 40),
             TitleLabel.rightAnchor.constraint(equalTo: contentView.centerXAnchor),
 
-            DescriptionLabel.topAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -10),
+            DescriptionLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 40),
             DescriptionLabel.leftAnchor.constraint(equalTo: TitleLabel.leftAnchor),
             DescriptionLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20),
             descriptionToBottom,
@@ -155,13 +166,37 @@ class TaskCell: UITableViewCell {
             badgeStack.rightAnchor.constraint(lessThanOrEqualTo: contentView.rightAnchor, constant: -20),
             badgeStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
             badgeStack.heightAnchor.constraint(equalToConstant: 28),
+
+            homeworkStack.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 20),
+            homeworkStack.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -20),
+            homeworkStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 44),
         ])
     }
 
     override func prepareForReuse(){
         super.prepareForReuse()
-        setBadges([], onTap: { _ in })
+        setBadges([], onTap: { _ in }, alwaysPlus: false)
+        setHomework([], onTap: { _ in }, onToggle: { _ in })
         onAddTapped = nil
+    }
+
+    private func setHomework(_ items: [PlannerItem], onTap: @escaping (PlannerItem) -> Void, onToggle: @escaping (PlannerItem) -> Void) {
+        homeworkStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        for item in items {
+            let box = ItemCheckButton(item: item)
+            box.onToggle = onToggle
+            let badge = PlannerBadgeButton(item: item)
+            badge.onTap = onTap
+            // Takes up the rest of the line, so the block keeps its own width instead of stretching.
+            let spacer = UIView()
+            spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            let line = UIStackView(arrangedSubviews: [box, badge, spacer])
+            line.axis = .horizontal
+            line.alignment = .center
+            line.spacing = 10
+            homeworkStack.addArrangedSubview(line)
+        }
+        homeworkStack.isHidden = items.isEmpty
     }
 
     /// A small + after the blue blocks: add another to this class. Only drawn once something has been added;
@@ -169,9 +204,10 @@ class TaskCell: UITableViewCell {
     var onAddTapped: (() -> Void)?
     @objc private func addTapped() { onAddTapped?() }
 
-    private func setBadges(_ items: [PlannerItem], onTap: @escaping (PlannerItem) -> Void) {
+    /// `alwaysPlus`: draw the + even with no blocks (the row has homework lines above it).
+    private func setBadges(_ items: [PlannerItem], onTap: @escaping (PlannerItem) -> Void, alwaysPlus: Bool) {
         PlannerBadgeButton.fill(badgeStack, with: items, onTap: onTap)
-        if !items.isEmpty {
+        if !items.isEmpty || alwaysPlus {
             let plus = UIButton(type: .system)
             plus.setImage(UIImage(systemName: "plus.circle", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)), for: .normal)
             plus.tintColor = UIColor(named: "inverse")
@@ -180,9 +216,9 @@ class TaskCell: UITableViewCell {
             plus.addTarget(self, action: #selector(addTapped), for: .touchUpInside)
             badgeStack.addArrangedSubview(plus)
         }
-        badgeStack.isHidden = items.isEmpty
-        descriptionToBottom.isActive = items.isEmpty
-        descriptionToBadges.isActive = !items.isEmpty
+        badgeStack.isHidden = items.isEmpty && !alwaysPlus
+        descriptionToBottom.isActive = items.isEmpty && !alwaysPlus
+        descriptionToBadges.isActive = !items.isEmpty && !alwaysPlus
     }
     func configure (with viewModel: SchoolTask){
         TitleLabel.text = "\(viewModel.title)"
@@ -192,25 +228,55 @@ class TaskCell: UITableViewCell {
 
     // HQ-779: checked homework fades rather than disappearing - still there to reopen and
     // edit, just visually out of the way once it's done.
-    // HQ-2194: `badges` are this class's tests and homework for the day shown (decided by
-    // PlannerWeekDay.badgedItems); each is a tappable badge under the homework line.
-    func configure(with entry: HomeworkEntry, badges: [PlannerItem] = [], onBadgeTapped: @escaping (PlannerItem) -> Void = { _ in }) {
-        setBadges(badges, onTap: onBadgeTapped)
+    // HQ-2194 / HQ-2632: `items` are this class's planner items for the day shown (split by
+    // TomorrowClassItems): each homework is a line of its own with its own checkbox, tests are blocks along the
+    // bottom, and a + after them adds another. With none of either, the row shows the old placeholder and
+    // checkbox, and tapping the row adds the first.
+    func configure(with entry: HomeworkEntry, items: TomorrowClassItems = TomorrowClassItems(homework: [], tests: []),
+                   onItemTapped: @escaping (PlannerItem) -> Void = { _ in },
+                   onHomeworkToggled: @escaping (PlannerItem) -> Void = { _ in }) {
+        let hasLines = !items.homework.isEmpty
+        setHomework(items.homework, onTap: onItemTapped, onToggle: onHomeworkToggled)
+        setBadges(items.tests, onTap: onItemTapped, alwaysPlus: hasLines)
         isComplete = entry.completed
         TitleLabel.text = entry.subject
         DateLabel.text = "Block \(entry.block)"
-        if !entry.holdsHomework {
+        if hasLines {
+            DescriptionLabel.text = ""
+        } else if !entry.holdsHomework {
             // Never "Tap to add homework" here - tapping this row does nothing, since
             // WorkVC only opens the entry prompt when holdsHomework is true.
             DescriptionLabel.text = "No homework for this class"
         } else {
-            DescriptionLabel.text = entry.text
+            DescriptionLabel.text = entry.text.isEmpty ? "Tap to add homework or a test" : entry.text
         }
+        // The class's own checkbox is for the old-style note; with homework lines each line has its own.
+        checkBox.isHidden = hasLines
         checkBox.setImage(UIImage(named: entry.completed ? "complete" : "incomplete"), for: .normal)
-        // Fade the row's own parts, not the whole contentView: the badges are separate items with
+        // Fade the row's own parts, not the whole contentView: the blocks are separate items with
         // their own done state, and a test is not finished because the class's homework is.
         contentView.alpha = 1
-        let rowAlpha: CGFloat = entry.completed ? 0.4 : 1.0
+        let rowAlpha: CGFloat = entry.completed && !hasLines ? 0.4 : 1.0
         [backView, checkBox, TitleLabel, DescriptionLabel, DateLabel].forEach { $0.alpha = rowAlpha }
     }
+}
+
+/// The checkbox on one homework line: ticked when that item is done, and hands the item back when tapped.
+final class ItemCheckButton: UIButton {
+    let item: PlannerItem
+    var onToggle: ((PlannerItem) -> Void)?
+
+    init(item: PlannerItem) {
+        self.item = item
+        super.init(frame: .zero)
+        translatesAutoresizingMaskIntoConstraints = false
+        setImage(UIImage(named: item.completed ? "complete" : "incomplete"), for: .normal)
+        tintColor = UIColor(named: "inverse")
+        widthAnchor.constraint(equalToConstant: 30).isActive = true
+        heightAnchor.constraint(equalToConstant: 30).isActive = true
+        accessibilityLabel = item.completed ? "Mark \(item.title) not done" : "Mark \(item.title) done"
+        addTarget(self, action: #selector(tapped), for: .touchUpInside)
+    }
+    required init?(coder: NSCoder) { fatalError() }
+    @objc private func tapped() { onToggle?(item) }
 }

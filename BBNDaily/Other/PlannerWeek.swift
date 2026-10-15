@@ -257,3 +257,32 @@ enum PlannerSchedule {
         return items.filter { !placed.contains($0.id) }
     }
 }
+
+// MARK: - A class row on Tomorrow: each homework on its own line, tests as blocks
+
+/// What Tomorrow's class row draws for the planner items badged on it (`PlannerWeekDay.badgedItems`).
+struct TomorrowClassItems: Equatable {
+    /// Homework: each is its own line with its own checkbox, under the class name.
+    var homework: [PlannerItem]
+    /// Everything else (tests): blocks along the bottom, with the + after them.
+    var tests: [PlannerItem]
+
+    /// `badged` split for one class row. A row that already holds an old-style typed note keeps that note on
+    /// its line and checkbox, so planner homework stays a block there rather than a line of its own.
+    static func split(_ badged: [PlannerItem], legacyNote: String) -> TomorrowClassItems {
+        guard legacyNote.isEmpty else { return TomorrowClassItems(homework: [], tests: badged) }
+        return TomorrowClassItems(homework: badged.filter { $0.kind == .homework },
+                                  tests: badged.filter { $0.kind != .homework })
+    }
+
+    static let plainHeight: CGFloat = 100
+    static let testsOnlyHeight: CGFloat = 132
+
+    /// The row's height. With homework lines there is a 44pt header, 36pt per line, and a 46pt row below for
+    /// the blocks and the + (which is always there once something has been added).
+    var rowHeight: CGFloat {
+        if !homework.isEmpty { return 84 + 36 * CGFloat(homework.count) }
+        return tests.isEmpty ? TomorrowClassItems.plainHeight : TomorrowClassItems.testsOnlyHeight
+    }
+}
+
