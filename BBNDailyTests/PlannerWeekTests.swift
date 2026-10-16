@@ -550,7 +550,7 @@ final class PlannerLimitsTests: XCTestCase {
                      item("soon", .test, day: "2026-10-20"), item("game", .sports, day: "2026-10-12")]
         let split = PlannerLimits.splitPast(items, today: "2026-10-16")
         XCTAssertEqual(split.past.map { $0.id }, ["late", "lateStep", "game"])
-        XCTAssertEqual(split.upcoming.map { $0.id }, ["doneLate", "today", "soon"], "finished things stay where they were, faded")
+        XCTAssertEqual(split.upcoming.map { $0.id }, ["today", "soon"], "a finished item from a past day is gone")
     }
 
     func testAPastTestIsInNeitherSection() {
@@ -564,7 +564,15 @@ final class PlannerLimitsTests: XCTestCase {
         let items = [item("a", .homework, day: "2026-10-01"), item("b", .test, day: "2026-10-01"), item("c", .homework, day: "2026-10-30"),
                      item("d", .appointment, day: "2026-10-16"), item("e", .homework, day: "2026-10-01", done: true)]
         let split = PlannerLimits.splitPast(items, today: "2026-10-16")
-        XCTAssertEqual((split.upcoming + split.past).map { $0.id }.sorted(), ["a", "c", "d", "e"])
+        XCTAssertEqual((split.upcoming + split.past).map { $0.id }.sorted(), ["a", "c", "d"], "b is a past test, e is finished and past")
+    }
+
+    func testAFinishedItemStaysFadedUntilItsDayHasPassed() {
+        let items = [item("todayDone", .homework, day: "2026-10-16", done: true), item("laterDone", .homework, day: "2026-10-20", done: true),
+                     item("yesterdayDone", .homework, day: "2026-10-15", done: true)]
+        let split = PlannerLimits.splitPast(items, today: "2026-10-16")
+        XCTAssertEqual(split.upcoming.map { $0.id }, ["todayDone", "laterDone"])
+        XCTAssertTrue(split.past.isEmpty)
     }
 }
 

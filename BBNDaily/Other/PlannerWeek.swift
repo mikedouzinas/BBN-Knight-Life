@@ -336,10 +336,11 @@ enum PlannerLimits {
     }
 
     /// Splits the Tasks list into what is coming and what is Past. Past is an item that was due before `today`
-    /// and is not done, with its steps. Everything else stays in Upcoming, finished things included (they sit
-    /// at the end, faded). Tests that have happened are in neither: they are gone (`hidingPastTests`).
+    /// and is not done, with its steps. Everything else stays in Upcoming; a finished item due today or later
+    /// sits at the end, faded, so a stray tick can be undone. Gone from both: tests that have happened
+    /// (`hidingPastTests`) and anything finished whose day has passed.
     static func splitPast(_ items: [PlannerItem], today: String) -> (upcoming: [PlannerItem], past: [PlannerItem]) {
-        let visible = hidingPastTests(items, today: today)
+        let visible = hidingPastTests(items, today: today).filter { !($0.completed && $0.dueDate < today) }
         let pastIDs = Set(visible.filter { $0.parentId == nil && !$0.completed && $0.dueDate < today }.map { $0.id })
         let isPast: (PlannerItem) -> Bool = { pastIDs.contains($0.id) || ($0.parentId.map { pastIDs.contains($0) } ?? false) }
         return (visible.filter { !isPast($0) }, visible.filter(isPast))
