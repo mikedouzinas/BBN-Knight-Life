@@ -365,6 +365,29 @@ final class PlannerItemEditorVC: UIViewController, UITextFieldDelegate {
             alert(problem)
             return
         }
+        // A class can have three homework due on one day. Checked against what is saved for that day, since
+        // the sheet does not hold the list. If the read fails (no signal) the save goes ahead.
+        if PlannerLimits.needsHomeworkCheck(item, replacing: existing), let block = item.classBlock {
+            saveButton.isEnabled = false
+            store.items(from: item.dueDate, through: item.dueDate) { [weak self] result in
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    self.updateSaveEnabled()
+                    if case .success(let items) = result,
+                       PlannerLimits.homeworkIsFull(block: block, day: item.dueDate, in: items, excluding: item.id) {
+                        self.alert(PlannerLimits.fullMessage)
+                        return
+                    }
+                    self.commit(item)
+                }
+            }
+            return
+        }
+        commit(item)
+    }
+
+    /// The rest of a save, once the item has passed every check.
+    private func commit(_ item: PlannerItem) {
         // Moving a parent earlier moves the steps that would now be late, in the same atomic write,
         // and the student is told. Leaving them would be a plan that contradicts itself.
         let movedSteps = existing == nil ? [] : PlannerSteps.reconcile(steps: context.steps, toParentDue: item.dueDate)
@@ -549,10 +572,13 @@ enum PlannerQuickAdd {
 
     /// `isFree`: the block is one the student has free. It offers Homework and Meeting (a place to plan
     /// something) instead of Homework and Test.
+    /// `homeworkFull`: the class already has the most homework allowed that day (PlannerLimits), so Homework is
+    /// switched off and the prompt says why.
     static func present(from vc: UIViewController, subject: String, block: String, day: String, isFree: Bool = false,
-                        store: PlannerStore = .shared, onChange: @escaping () -> Void) {
+                        homeworkFull: Bool = false, store: PlannerStore = .shared, onChange: @escaping () -> Void) {
         let alert = UIAlertController(title: isFree ? "Plan something in your Free block" : "Add to \(subject)",
-                                      message: "Block \(block) · due \(PlannerListing.dayLabel(forDay: day))",
+                                      message: "Block \(block) · due \(PlannerListing.dayLabel(forDay: day))"
+                                          + (homeworkFull ? "\nThis class already has \(PlannerLimits.maxHomeworkPerClassDay) homework that day." : ""),
                                       preferredStyle: .alert)
         func typed() -> String { alert.textFields?.first?.text ?? "" }
         let homework = UIAlertAction(title: "Homework", style: .default) { [weak vc] _ in
@@ -580,7 +606,7 @@ enum PlannerQuickAdd {
             field.addAction(UIAction { [weak homework, weak test] action in
                 let text = (action.sender as? UITextField)?.text ?? ""
                 let has = !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                homework?.isEnabled = has
+                homework?.isEnabled = has && !homeworkFull
                 test?.isEnabled = has
             }, for: .editingChanged)
         }

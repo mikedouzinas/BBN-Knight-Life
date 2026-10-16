@@ -327,7 +327,9 @@ class CalendarVC: AuthVC, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDe
             let subject = assignment.getValues()[0]
             cell.setAddAction { [weak self] in
                 guard let self = self else { return }
-                PlannerQuickAdd.present(from: self, subject: subject, block: letter, day: self.selectedPlannerDay, isFree: isFree) { [weak self] in
+                PlannerQuickAdd.present(from: self, subject: subject, block: letter, day: self.selectedPlannerDay, isFree: isFree,
+                                        homeworkFull: PlannerLimits.homeworkIsFull(block: letter, day: self.selectedPlannerDay,
+                                                                                   in: self.plannerIndex.allItems)) { [weak self] in
                     self?.loadPlanner(force: true)
                 }
             }

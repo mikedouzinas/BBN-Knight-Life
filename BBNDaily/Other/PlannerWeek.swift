@@ -187,7 +187,8 @@ enum PlannerWeek {
     static func hidingPast(_ days: [PlannerWeekDay], today: String) -> [PlannerWeekDay] {
         days.compactMap { day in
             guard day.day < today else { return day }
-            let open = day.items.filter { !$0.completed }
+            // A test that has happened is gone, not overdue.
+            let open = day.items.filter { !$0.completed && !($0.kind == .test && $0.parentId == nil) }
             guard !open.isEmpty else { return nil }
             var kept = day
             kept.info = WeekDayInfo(weekdayName: day.info.weekdayName, classes: [], emptyMessage: nil)
@@ -278,11 +279,70 @@ struct TomorrowClassItems: Equatable {
     static let plainHeight: CGFloat = 100
     static let testsOnlyHeight: CGFloat = 132
 
-    /// The row's height. With homework lines there is a 44pt header, 36pt per line, and a 46pt row below for
-    /// the blocks and the + (which is always there once something has been added).
+    // The lines inside a class card all share one size and one gap, so nothing can overlap or drift.
+    static let lineHeight: CGFloat = 30
+    static let lineGap: CGFloat = 6
+    static let headerHeight: CGFloat = 44
+    static let bottomPad: CGFloat = 14
+
+    /// The row's height. With homework lines the card is a column of equal lines: one per homework, then
+    /// the + (its own line, in the checkbox column), then one for the tests if there are any.
     var rowHeight: CGFloat {
-        if !homework.isEmpty { return 84 + 36 * CGFloat(homework.count) }
-        return tests.isEmpty ? TomorrowClassItems.plainHeight : TomorrowClassItems.testsOnlyHeight
+        guard !homework.isEmpty else { return tests.isEmpty ? TomorrowClassItems.plainHeight : TomorrowClassItems.testsOnlyHeight }
+        let lines = CGFloat(homework.count + 1 + (tests.isEmpty ? 0 : 1))
+        return TomorrowClassItems.headerHeight + lines * TomorrowClassItems.lineHeight
+            + (lines - 1) * TomorrowClassItems.lineGap + TomorrowClassItems.bottomPad
+    }
+}
+
+// MARK: - Limits and what can be ticked
+
+enum PlannerLimits {
+    /// The most homework a class can have due on one day.
+    static let maxHomeworkPerClassDay = 3
+
+    /// Homework (not steps) for `block` due `day`, finished or not, other than the item `excluding`.
+    static func homeworkCount(block: String, day: String, in items: [PlannerItem], excluding id: String? = nil) -> Int {
+        items.filter {
+            $0.kind == .homework && $0.parentId == nil && $0.dueDate == day && $0.id != id
+                && $0.classBlock?.uppercased() == block.uppercased()
+        }.count
+    }
+
+    static func homeworkIsFull(block: String, day: String, in items: [PlannerItem], excluding id: String? = nil) -> Bool {
+        homeworkCount(block: block, day: day, in: items, excluding: id) >= maxHomeworkPerClassDay
+    }
+
+    static let fullMessage = "A class can have 3 homework due on one day. Finish or delete one first."
+
+    /// Whether saving `item` could take a class over the limit and needs checking: new homework for a class,
+    /// or homework moved to another class or day. An unchanged edit never does.
+    static func needsHomeworkCheck(_ item: PlannerItem, replacing existing: PlannerItem?) -> Bool {
+        guard item.kind == .homework, item.parentId == nil, item.classBlock != nil else { return false }
+        guard let existing = existing else { return true }
+        return existing.kind != .homework || existing.classBlock != item.classBlock || existing.dueDate != item.dueDate
+    }
+
+    /// A test is not ticked off: it happens, and then it is gone. A step of a test is homework-like work and
+    /// can be.
+    static func canTick(_ item: PlannerItem) -> Bool {
+        !(item.kind == .test && item.parentId == nil)
+    }
+
+    /// `items` without the tests that have happened (due before `today`) and the steps of those tests.
+    static func hidingPastTests(_ items: [PlannerItem], today: String) -> [PlannerItem] {
+        let past = Set(items.filter { $0.kind == .test && $0.parentId == nil && $0.dueDate < today }.map { $0.id })
+        return items.filter { !past.contains($0.id) && !($0.parentId.map { past.contains($0) } ?? false) }
+    }
+
+    /// Splits the Tasks list into what is coming and what is Past. Past is an item that was due before `today`
+    /// and is not done, with its steps. Everything else stays in Upcoming, finished things included (they sit
+    /// at the end, faded). Tests that have happened are in neither: they are gone (`hidingPastTests`).
+    static func splitPast(_ items: [PlannerItem], today: String) -> (upcoming: [PlannerItem], past: [PlannerItem]) {
+        let visible = hidingPastTests(items, today: today)
+        let pastIDs = Set(visible.filter { $0.parentId == nil && !$0.completed && $0.dueDate < today }.map { $0.id })
+        let isPast: (PlannerItem) -> Bool = { pastIDs.contains($0.id) || ($0.parentId.map { pastIDs.contains($0) } ?? false) }
+        return (visible.filter { !isPast($0) }, visible.filter(isPast))
     }
 }
 

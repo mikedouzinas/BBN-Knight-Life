@@ -23,16 +23,17 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // Section 0 is tomorrow's classes (HQ-779), section 1 is what the student has planned
     // (HQ-2181): tests, homework, games and appointments, from PlannerStore.
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 2
+        return 3
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return section == 0 ? entries.count : plannerRows.count
+        return section == 0 ? entries.count : (section == 1 ? plannerRows.count : pastRows.count)
     }
     // A header only on a section that has rows, so an empty one does not leave a title with
     // nothing under it.
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if section == 0 { return entries.isEmpty ? nil : "Classes" }
-        return plannerRows.isEmpty ? nil : "Upcoming"
+        if section == 1 { return plannerRows.isEmpty ? nil : "Upcoming" }
+        return pastRows.isEmpty ? nil : "Past"
     }
     func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         // Said out loud: an empty Upcoming list that is really a failed load looks exactly like
@@ -47,15 +48,15 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         presentPlannerEditor(for: nil)
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath.section == 1 {
+        if indexPath.section >= 1 {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: PlannerItemCell.identifier, for: indexPath) as? PlannerItemCell,
-                  plannerRows.indices.contains(indexPath.row) else {
+                  let row = plannerRow(at: indexPath) else {
                 return UITableViewCell()
             }
-            let row = plannerRows[indexPath.row]
             let item = row.item
+            // A test is not ticked off: it happens and is gone.
             cell.configure(with: item, today: PlannerItem.dayString(from: Date()), depth: row.depth, progress: row.progress,
-                           expanded: row.expanded)
+                           expanded: row.expanded, checkable: PlannerLimits.canTick(item))
             cell.onCheckBoxTapped = { [weak self] in self?.togglePlannerItem(id: item.id) }
             cell.onToggleSteps = { [weak self] in self?.toggleSteps(of: item.id) }
             return cell
@@ -69,7 +70,8 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
                        onHomeworkToggled: { [weak self] item in self?.togglePlannerItem(id: item.id) })
         cell.onAddTapped = { [weak self] in
             guard let self = self else { return }
-            PlannerQuickAdd.present(from: self, subject: entry.subject, block: entry.block, day: self.resolvedPlannerDay) { [weak self] in
+            PlannerQuickAdd.present(from: self, subject: entry.subject, block: entry.block, day: self.resolvedPlannerDay,
+                                    homeworkFull: self.homeworkIsFull(block: entry.block, day: self.resolvedPlannerDay)) { [weak self] in
                 self?.loadPlanner()
             }
         }
@@ -86,15 +88,15 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         return tableView
     } ()
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        if indexPath.section == 1 { return 72 }
+        if indexPath.section >= 1 { return 72 }
         guard entries.indices.contains(indexPath.row) else { return TomorrowClassItems.plainHeight }
         return tomorrowItems(for: entries[indexPath.row]).rowHeight
     }
     // Upcoming items swipe: right to mark done, left to delete (HQ-116 had delete-by-swipe
     // before HQ-779 removed the freeform list). Classes have nothing to delete, so no swipes.
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        guard indexPath.section == 1, plannerRows.indices.contains(indexPath.row) else { return nil }
-        let id = plannerRows[indexPath.row].item.id
+        guard let row = plannerRow(at: indexPath) else { return nil }
+        let id = row.item.id
         let delete = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, done in
             self?.requestDeletePlannerItem(id: id)
             done(true)
@@ -102,8 +104,8 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         return UISwipeActionsConfiguration(actions: [delete])
     }
     func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        guard indexPath.section == 1, plannerRows.indices.contains(indexPath.row) else { return nil }
-        let item = plannerRows[indexPath.row].item
+        guard let item = plannerRow(at: indexPath)?.item else { return nil }
+        guard PlannerLimits.canTick(item) else { return nil }
         let action = UIContextualAction(style: .normal, title: item.completed ? "Not done" : "Done") { [weak self] _, _, done in
             self?.togglePlannerItem(id: item.id)
             done(true)
@@ -121,9 +123,9 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // homework - type it, tap out, done. Not a separate detail screen.
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        if indexPath.section == 1 {
-            guard plannerRows.indices.contains(indexPath.row) else { return }
-            presentPlannerEditor(for: plannerRows[indexPath.row].item)
+        if indexPath.section >= 1 {
+            guard let item = plannerRow(at: indexPath)?.item else { return }
+            presentPlannerEditor(for: item)
             return
         }
         guard entries.indices.contains(indexPath.row), entries[indexPath.row].holdsHomework else { return }
@@ -134,9 +136,14 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             presentHomeworkEntry(at: indexPath.row)
             return
         }
-        PlannerQuickAdd.present(from: self, subject: entry.subject, block: entry.block, day: resolvedPlannerDay) { [weak self] in
+        PlannerQuickAdd.present(from: self, subject: entry.subject, block: entry.block, day: resolvedPlannerDay,
+                                homeworkFull: homeworkIsFull(block: entry.block, day: resolvedPlannerDay)) { [weak self] in
             self?.loadPlanner()
         }
+    }
+
+    private func homeworkIsFull(block: String, day: String) -> Bool {
+        PlannerLimits.homeworkIsFull(block: block, day: day, in: plannerItems)
     }
 
     // A keyword match on the subject, not a real classification - there is no dedicated
@@ -179,8 +186,13 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     // HQ-2194: a test or homework for one of tomorrow's classes is a badge on that class, so it is
     // left out of the Upcoming list below it.
     private func rebuildPlannerRows() {
-        let listed = PlannerWeekDay.withoutBadged(plannerItems, day: resolvedPlannerDay, classBlocks: entries.map { $0.block })
-        plannerRows = PlannerSteps.rows(listed, today: PlannerItem.dayString(from: Date()), collapsed: collapsedParents)
+        // A test that has happened is gone from the list, not overdue.
+        let today = PlannerItem.dayString(from: Date())
+        let split = PlannerLimits.splitPast(plannerItems, today: today)
+        let listed = PlannerWeekDay.withoutBadged(split.upcoming, day: resolvedPlannerDay, classBlocks: entries.map { $0.block })
+        plannerRows = PlannerSteps.rows(listed, today: today, collapsed: collapsedParents)
+        // What is overdue sits below Upcoming, in its own section.
+        pastRows = PlannerSteps.rows(split.past, today: today, collapsed: collapsedParents)
     }
     // Tests the student has folded up in Upcoming. Kept for the session only.
     private var collapsedParents = Set<String>()
@@ -197,6 +209,12 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         TomorrowClassItems.split(tomorrowBadges(forBlock: entry.block), legacyNote: entry.text)
     }
     private var plannerRows = [PlannerListRow]()
+    private var pastRows = [PlannerListRow]()
+    /// The planner row at a table position: Upcoming is section 1, Past is section 2.
+    private func plannerRow(at indexPath: IndexPath) -> PlannerListRow? {
+        let rows = indexPath.section == 1 ? plannerRows : (indexPath.section == 2 ? pastRows : [])
+        return rows.indices.contains(indexPath.row) ? rows[indexPath.row] : nil
+    }
     private var plannerLoadFailed = false
     // HQ-2184: Tomorrow (the classes list, as before) or This Week (the game plan).
     private enum Mode { case tomorrow, week }
@@ -254,7 +272,8 @@ class WorkVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         weekSource.onSelectClass = { [weak self] schoolClass, day in
             guard let self = self, day >= PlannerItem.dayString(from: Date()) else { return }
             PlannerQuickAdd.present(from: self, subject: schoolClass.subject, block: schoolClass.block, day: day,
-                                    isFree: schoolClass.isFree) { [weak self] in self?.loadPlanner() }
+                                    isFree: schoolClass.isFree,
+                                    homeworkFull: self.homeworkIsFull(block: schoolClass.block, day: day)) { [weak self] in self?.loadPlanner() }
         }
         // HQ-2182: what the four colors mean.
         navigationItem.leftBarButtonItem = UIBarButtonItem(
