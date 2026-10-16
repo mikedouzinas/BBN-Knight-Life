@@ -16,6 +16,8 @@ final class PlannerWeekDataSource: NSObject, UITableViewDataSource, UITableViewD
     var today = PlannerItem.dayString(from: Date())
     /// Called when a student's own item is tapped. School key dates never reach this.
     var onSelectItem: ((PlannerItem) -> Void)?
+    /// Called when a class (or Free block) row is tapped, with the day of its section: add something to it.
+    var onSelectClass: ((WeekClass, String) -> Void)?
 
     // MARK: Sections
 
@@ -91,7 +93,7 @@ final class PlannerWeekDataSource: NSObject, UITableViewDataSource, UITableViewD
             return cell
         case .schoolClass(let schoolClass):
             let attached = days[indexPath.section].itemsOnClassRow(schoolClass.block)
-            if attached.isEmpty { return plainCell("\(schoolClass.block) · \(schoolClass.subject)", secondary: false) }
+            if attached.isEmpty { return plainCell("\(schoolClass.block) · \(schoolClass.subject)", secondary: schoolClass.isFree) }
             // Tests and homework for this class sit on its row, in their kind's color (HQ-2194).
             let cell = PlannerClassRowCell(style: .default, reuseIdentifier: nil)
             cell.configure(block: schoolClass.block, subject: schoolClass.subject, items: attached)
@@ -115,8 +117,14 @@ final class PlannerWeekDataSource: NSObject, UITableViewDataSource, UITableViewD
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        guard days.indices.contains(indexPath.section), days[indexPath.section].rows.indices.contains(indexPath.row),
-              case .item(let item) = days[indexPath.section].rows[indexPath.row], !item.isSchoolKeyDate else { return }
-        onSelectItem?(item)
+        guard days.indices.contains(indexPath.section), days[indexPath.section].rows.indices.contains(indexPath.row) else { return }
+        switch days[indexPath.section].rows[indexPath.row] {
+        case .item(let item):
+            if !item.isSchoolKeyDate { onSelectItem?(item) }
+        case .schoolClass(let schoolClass):
+            onSelectClass?(schoolClass, days[indexPath.section].day)
+        case .note:
+            break
+        }
     }
 }

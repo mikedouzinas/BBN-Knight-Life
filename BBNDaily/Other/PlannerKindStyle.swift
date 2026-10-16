@@ -62,7 +62,7 @@ extension PlannerKind {
         case .test: return "Tests and quizzes"
         case .homework: return "Homework and assignments"
         case .sports: return "Practices and games"
-        case .appointment: return "Appointments and other commitments"
+        case .appointment: return "Meetings and other commitments"
         }
     }
 }

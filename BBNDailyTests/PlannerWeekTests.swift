@@ -336,6 +336,11 @@ final class PlannerPastDaysTests: XCTestCase {
         XCTAssertEqual(days[0].rows.count, 1, "just the open item, no class rows")
     }
 
+    func testAPastTestIsGoneNotOverdue() {
+        let days = PlannerWeek.hidingPast(week([item("exam", "2026-10-05", kind: .test)]), today: "2026-10-07")
+        XCTAssertFalse(days.map { $0.day }.contains("2026-10-05"))
+    }
+
     func testTodayIsNeverTrimmed() {
         let today = PlannerWeek.hidingPast(week([item("done", "2026-10-07", completed: true)]), today: "2026-10-07")[0]
         XCTAssertEqual(today.items.map { $0.id }, ["done"])
@@ -402,3 +407,172 @@ final class PlannerScheduleRowsTests: XCTestCase {
         XCTAssertEqual(left, ["b", "c", "d"])
     }
 }
+
+/// A Free block takes any kind of item, on the Schedule and the week view.
+final class PlannerFreeBlockTests: XCTestCase {
+
+    private func item(_ id: String, _ kind: PlannerKind, block: String?, parent: String? = nil) -> PlannerItem {
+        PlannerItem(id: id, kind: kind, title: id, dueDate: "2026-10-16", classBlock: block, createdAt: Date(timeIntervalSince1970: 0), parentId: parent)
+    }
+    private func day(_ items: [PlannerItem]) -> PlannerWeekDay {
+        PlannerWeekDay(day: "2026-10-16",
+                       info: WeekDayInfo(weekdayName: "friday",
+                                         classes: [WeekClass(block: "A", subject: "Spanish"), WeekClass(block: "B", subject: "Free", isFree: true)],
+                                         emptyMessage: nil),
+                       items: items)
+    }
+
+    func testAnyKindOfItemSitsOnAFreeBlockButOnlyTestsAndHomeworkOnAClass() {
+        let d = day([item("meet", .appointment, block: "B"), item("game", .sports, block: "B"), item("study", .homework, block: "B"),
+                     item("dentist", .appointment, block: "A"), item("exam", .test, block: "A")])
+        XCTAssertEqual(d.itemsOnClassRow("B").map { $0.id }, ["study", "meet", "game"], "homework first, then the rest in order")
+        XCTAssertEqual(d.itemsOnClassRow("A").map { $0.id }, ["exam"])
+    }
+
+    func testEachItemIsOnItsRowOrInTheListExactlyOnce() {
+        let items = [item("meet", .appointment, block: "B"), item("dentist", .appointment, block: "A"), item("loose", .appointment, block: nil)]
+        let d = day(items)
+        let onRows = ["A", "B"].flatMap { d.itemsOnClassRow($0).map { $0.id } }
+        let below = d.rows.compactMap { row -> String? in if case .item(let i) = row { return i.id } else { return nil } }
+        XCTAssertEqual((onRows + below).sorted(), ["dentist", "loose", "meet"])
+        XCTAssertEqual(onRows, ["meet"])
+    }
+
+    func testAStepIsNeverPutOnAFreeBlock() {
+        XCTAssertTrue(day([item("s", .homework, block: "B", parent: "p")]).itemsOnClassRow("B").isEmpty)
+    }
+
+    func testTheScheduleAttachesAnythingToAFreeBlockButNotToAnUnsetOne() {
+        let items = [item("meet", .appointment, block: "B"), item("lost", .appointment, block: "C")]
+        let a = PlannerSchedule.attachments(blockLetters: ["A", "B", "C"], hasClass: { $0 == "A" }, isFree: { $0 == "B" },
+                                            items: items, day: "2026-10-16")
+        XCTAssertEqual(a.map { $0.map { $0.id } }, [[], ["meet"], []])
+        XCTAssertEqual(PlannerSchedule.unattached(items, attachments: a).map { $0.id }, ["lost"])
+    }
+
+    func testAMeetingHasItsOwnWordButIsStoredAsBefore() {
+        XCTAssertEqual(PlannerKind.appointment.label, "Meeting")
+        XCTAssertEqual(PlannerKind.appointment.rawValue, "appointment", "the rules validate this word")
+    }
+}
+
+/// Tomorrow's class row: each homework on its own line, tests as blocks.
+final class TomorrowClassItemsTests: XCTestCase {
+
+    private func item(_ id: String, _ kind: PlannerKind) -> PlannerItem {
+        PlannerItem(id: id, kind: kind, title: id, dueDate: "2026-10-16", classBlock: "A", createdAt: Date(timeIntervalSince1970: 0))
+    }
+
+    func testHomeworkGetsALineEachAndTestsStayBlocks() {
+        let split = TomorrowClassItems.split([item("exam", .test), item("memorize", .homework), item("read", .homework)], legacyNote: "")
+        XCTAssertEqual(split.homework.map { $0.id }, ["memorize", "read"])
+        XCTAssertEqual(split.tests.map { $0.id }, ["exam"])
+    }
+
+    func testAnOldStyleNoteKeepsTheLineSoHomeworkStaysABlock() {
+        let split = TomorrowClassItems.split([item("memorize", .homework), item("exam", .test)], legacyNote: "do p. 40")
+        XCTAssertTrue(split.homework.isEmpty)
+        XCTAssertEqual(split.tests.map { $0.id }, ["memorize", "exam"])
+    }
+
+    func testEveryItemIsInExactlyOnePlace() {
+        let all = [item("t", .test), item("h1", .homework), item("h2", .homework), item("s", .sports)]
+        let split = TomorrowClassItems.split(all, legacyNote: "")
+        XCTAssertEqual((split.homework + split.tests).map { $0.id }.sorted(), ["h1", "h2", "s", "t"])
+    }
+
+    func testTheRowIsTallEnoughForItsLines() {
+        XCTAssertEqual(TomorrowClassItems.split([], legacyNote: "").rowHeight, 100, "nothing added: as before")
+        XCTAssertEqual(TomorrowClassItems.split([item("t", .test)], legacyNote: "").rowHeight, 132, "tests only: as before")
+        let one = TomorrowClassItems.split([item("h", .homework)], legacyNote: "").rowHeight
+        let two = TomorrowClassItems.split([item("h", .homework), item("h2", .homework)], legacyNote: "").rowHeight
+        XCTAssertEqual(two - one, 36, "each homework line adds one line")
+        XCTAssertGreaterThan(one, 100)
+        let withTest = TomorrowClassItems.split([item("h", .homework), item("t", .test)], legacyNote: "").rowHeight
+        XCTAssertEqual(withTest - one, 36, "tests add one more equal line")
+    }
+}
+
+/// The three-homework limit, tests that cannot be ticked, and tests that go away once they happen.
+final class PlannerLimitsTests: XCTestCase {
+
+    private func item(_ id: String, _ kind: PlannerKind, block: String? = "A", day: String = "2026-10-16", parent: String? = nil,
+                      done: Bool = false) -> PlannerItem {
+        PlannerItem(id: id, kind: kind, title: id, dueDate: day, classBlock: block, completed: done,
+                    createdAt: Date(timeIntervalSince1970: 0), parentId: parent)
+    }
+
+    func testAClassHoldsThreeHomeworkADayAndFinishedOnesStillCount() {
+        let three = [item("a", .homework), item("b", .homework), item("c", .homework, done: true)]
+        XCTAssertTrue(PlannerLimits.homeworkIsFull(block: "a", day: "2026-10-16", in: three))
+        XCTAssertFalse(PlannerLimits.homeworkIsFull(block: "A", day: "2026-10-16", in: Array(three.prefix(2))))
+    }
+
+    func testOnlyTheSameClassAndDayAndOnlyHomeworkCount() {
+        let items = [item("a", .homework), item("b", .homework, block: "C"), item("c", .homework, day: "2026-10-17"),
+                     item("d", .test), item("e", .sports), item("s", .homework, parent: "d")]
+        XCTAssertEqual(PlannerLimits.homeworkCount(block: "A", day: "2026-10-16", in: items), 1)
+    }
+
+    func testEditingOneOfTheThreeIsNotOverTheLimit() {
+        let three = [item("a", .homework), item("b", .homework), item("c", .homework)]
+        XCTAssertFalse(PlannerLimits.homeworkIsFull(block: "A", day: "2026-10-16", in: three, excluding: "a"))
+        XCTAssertEqual(PlannerLimits.homeworkCount(block: "A", day: "2026-10-16", in: three, excluding: "a"), 2)
+    }
+
+    func testOnlyNewOrMovedHomeworkIsChecked() {
+        let hw = item("a", .homework)
+        XCTAssertTrue(PlannerLimits.needsHomeworkCheck(hw, replacing: nil))
+        XCTAssertFalse(PlannerLimits.needsHomeworkCheck(hw, replacing: hw), "an unchanged edit")
+        XCTAssertTrue(PlannerLimits.needsHomeworkCheck(hw, replacing: item("a", .homework, day: "2026-10-20")), "moved to this day")
+        XCTAssertTrue(PlannerLimits.needsHomeworkCheck(hw, replacing: item("a", .test)), "a test turned into homework")
+        XCTAssertFalse(PlannerLimits.needsHomeworkCheck(item("t", .test), replacing: nil))
+        XCTAssertFalse(PlannerLimits.needsHomeworkCheck(item("n", .homework, block: nil), replacing: nil), "no class, no limit")
+    }
+
+    func testATestCannotBeTickedButItsStepsAndHomeworkCan() {
+        XCTAssertFalse(PlannerLimits.canTick(item("t", .test)))
+        XCTAssertTrue(PlannerLimits.canTick(item("s", .test, parent: "t")))
+        XCTAssertTrue(PlannerLimits.canTick(item("h", .homework)))
+        XCTAssertTrue(PlannerLimits.canTick(item("m", .appointment)))
+    }
+
+    func testAPastTestAndItsStepsAreGoneButTodaysStaysAndHomeworkIsUntouched() {
+        let items = [item("old", .test, day: "2026-10-08"), item("oldStep", .test, day: "2026-10-07", parent: "old"),
+                     item("today", .test, day: "2026-10-16"), item("late", .homework, day: "2026-10-08"),
+                     item("soon", .test, day: "2026-10-20")]
+        XCTAssertEqual(PlannerLimits.hidingPastTests(items, today: "2026-10-16").map { $0.id }, ["today", "late", "soon"])
+    }
+
+    func testOverdueUndoneItemsGoToPastWithTheirStepsAndNothingElseDoes() {
+        let items = [item("late", .homework, day: "2026-10-10"), item("lateStep", .homework, day: "2026-10-09", parent: "late"),
+                     item("doneLate", .homework, day: "2026-10-10", done: true), item("today", .homework, day: "2026-10-16"),
+                     item("soon", .test, day: "2026-10-20"), item("game", .sports, day: "2026-10-12")]
+        let split = PlannerLimits.splitPast(items, today: "2026-10-16")
+        XCTAssertEqual(split.past.map { $0.id }, ["late", "lateStep", "game"])
+        XCTAssertEqual(split.upcoming.map { $0.id }, ["today", "soon"], "a finished item from a past day is gone")
+    }
+
+    func testAPastTestIsInNeitherSection() {
+        let items = [item("old", .test, day: "2026-10-08"), item("oldStep", .homework, day: "2026-10-07", parent: "old")]
+        let split = PlannerLimits.splitPast(items, today: "2026-10-16")
+        XCTAssertTrue(split.past.isEmpty)
+        XCTAssertTrue(split.upcoming.isEmpty)
+    }
+
+    func testEveryVisibleItemIsInExactlyOneSection() {
+        let items = [item("a", .homework, day: "2026-10-01"), item("b", .test, day: "2026-10-01"), item("c", .homework, day: "2026-10-30"),
+                     item("d", .appointment, day: "2026-10-16"), item("e", .homework, day: "2026-10-01", done: true)]
+        let split = PlannerLimits.splitPast(items, today: "2026-10-16")
+        XCTAssertEqual((split.upcoming + split.past).map { $0.id }.sorted(), ["a", "c", "d"], "b is a past test, e is finished and past")
+    }
+
+    func testAFinishedItemStaysFadedUntilItsDayHasPassed() {
+        let items = [item("todayDone", .homework, day: "2026-10-16", done: true), item("laterDone", .homework, day: "2026-10-20", done: true),
+                     item("yesterdayDone", .homework, day: "2026-10-15", done: true)]
+        let split = PlannerLimits.splitPast(items, today: "2026-10-16")
+        XCTAssertEqual(split.upcoming.map { $0.id }, ["todayDone", "laterDone"])
+        XCTAssertTrue(split.past.isEmpty)
+    }
+}
+
