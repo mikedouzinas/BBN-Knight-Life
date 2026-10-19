@@ -127,8 +127,17 @@ jobs:
           key: cocoapods-${{ runner.os }}-${{ hashFiles('Podfile.lock') }}
           restore-keys: cocoapods-${{ runner.os }}-
 
+      # The cached spec index first, the CDN only when it is missing something. From 2026-10-15
+      # every `--repo-update` run failed with "Error in the HTTP2 framing layer" fetching one
+      # podspec from cdn.jsdelivr.net, while the same URL loaded fine elsewhere. The lockfile
+      # drift check below still catches a cached index that resolved something different.
       - name: pod install
-        run: pod install --repo-update
+        run: |
+          pod install || {
+            echo "::notice::pod install from the cached index failed; retrying with --repo-update"
+            for attempt in 1 2 3; do pod install --repo-update && exit 0; sleep 20; done
+            exit 1
+          }
 
       # `pod install` must not drift from the committed lockfile. If it does, the
       # lockfile is not actually pinning the build.
