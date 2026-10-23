@@ -16,7 +16,9 @@ final class PlannerBadgeButton: UIButton {
     let item: PlannerItem
     var onTap: ((PlannerItem) -> Void)?
 
-    init(item: PlannerItem) {
+    /// `maxTitleWidth` caps the title so two blocks fit side by side on one row. A block that has its line to
+    /// itself (a homework line on Tomorrow's class card) passes nil and takes the line's width.
+    init(item: PlannerItem, maxTitleWidth: CGFloat? = 110) {
         self.item = item
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
@@ -53,8 +55,10 @@ final class PlannerBadgeButton: UIButton {
             stack.rightAnchor.constraint(equalTo: rightAnchor, constant: -8),
             stack.topAnchor.constraint(equalTo: topAnchor, constant: 5),
             stack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -5),
-            label.widthAnchor.constraint(lessThanOrEqualToConstant: 110),
         ])
+        if let maxTitleWidth = maxTitleWidth {
+            label.widthAnchor.constraint(lessThanOrEqualToConstant: maxTitleWidth).isActive = true
+        }
         alpha = item.completed ? 0.45 : 1
         accessibilityLabel = "\(item.kind.label): \(item.title)"
         accessibilityHint = "Opens it"

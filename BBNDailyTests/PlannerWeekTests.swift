@@ -491,13 +491,30 @@ final class TomorrowClassItemsTests: XCTestCase {
 
     func testTheRowIsTallEnoughForItsLines() {
         XCTAssertEqual(TomorrowClassItems.split([], legacyNote: "").rowHeight, 100, "nothing added: as before")
-        XCTAssertEqual(TomorrowClassItems.split([item("t", .test)], legacyNote: "").rowHeight, 132, "tests only: as before")
         let one = TomorrowClassItems.split([item("h", .homework)], legacyNote: "").rowHeight
         let two = TomorrowClassItems.split([item("h", .homework), item("h2", .homework)], legacyNote: "").rowHeight
         XCTAssertEqual(two - one, 36, "each homework line adds one line")
         XCTAssertGreaterThan(one, 100)
         let withTest = TomorrowClassItems.split([item("h", .homework), item("t", .test)], legacyNote: "").rowHeight
         XCTAssertEqual(withTest - one, 36, "tests add one more equal line")
+    }
+
+    func testATestsOnlyClassIsTheSameColumnWithoutHomeworkLines() {
+        let testsOnly = TomorrowClassItems.split([item("t1", .test), item("t2", .test)], legacyNote: "")
+        XCTAssertTrue(testsOnly.usesLines, "no empty class checkbox or placeholder")
+        let withHomework = TomorrowClassItems.split([item("h", .homework), item("t", .test)], legacyNote: "")
+        // The + line and the tests line, exactly the lines the homework card has under its homework.
+        XCTAssertEqual(testsOnly.rowHeight, withHomework.rowHeight - 36)
+        XCTAssertEqual(testsOnly.rowHeight, 44 + 2 * 30 + 6 + 14)
+    }
+
+    func testNothingAddedOrAnOldNoteKeepsTheEarlierRow() {
+        let empty = TomorrowClassItems.split([], legacyNote: "")
+        XCTAssertFalse(empty.usesLines)
+        XCTAssertEqual(empty.rowHeight, 100)
+        let note = TomorrowClassItems.split([item("t", .test)], legacyNote: "do p. 40")
+        XCTAssertFalse(note.usesLines, "the note keeps its line and checkbox")
+        XCTAssertEqual(note.rowHeight, 132)
     }
 }
 
