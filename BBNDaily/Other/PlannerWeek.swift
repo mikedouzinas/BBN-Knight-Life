@@ -266,13 +266,16 @@ enum PlannerSchedule {
 struct TomorrowClassItems: Equatable {
     /// Homework: each is its own line with its own checkbox, under the class name.
     var homework: [PlannerItem]
-    /// Everything else (tests): blocks along the bottom, with the + after them.
+    /// Everything else (tests): blocks indented under the homework column, below the +.
     var tests: [PlannerItem]
+    /// The row holds an old-style typed note, which keeps its line and checkbox, with every item a block
+    /// along the bottom.
+    var hasLegacyNote = false
 
     /// `badged` split for one class row. A row that already holds an old-style typed note keeps that note on
     /// its line and checkbox, so planner homework stays a block there rather than a line of its own.
     static func split(_ badged: [PlannerItem], legacyNote: String) -> TomorrowClassItems {
-        guard legacyNote.isEmpty else { return TomorrowClassItems(homework: [], tests: badged) }
+        guard legacyNote.isEmpty else { return TomorrowClassItems(homework: [], tests: badged, hasLegacyNote: true) }
         return TomorrowClassItems(homework: badged.filter { $0.kind == .homework },
                                   tests: badged.filter { $0.kind != .homework })
     }
@@ -286,10 +289,16 @@ struct TomorrowClassItems: Equatable {
     static let headerHeight: CGFloat = 44
     static let bottomPad: CGFloat = 14
 
-    /// The row's height. With homework lines the card is a column of equal lines: one per homework, then
-    /// the + (its own line, in the checkbox column), then one for the tests if there are any.
+    /// Whether the card is the column of equal lines; TaskCell draws from this same answer. Any homework or
+    /// test puts it there, a class with only tests included. An old-style note keeps the earlier layout.
+    var usesLines: Bool {
+        !hasLegacyNote && !(homework.isEmpty && tests.isEmpty)
+    }
+
+    /// The row's height. In the column the card is equal lines: one per homework, then the + (its own line,
+    /// in the checkbox column), then one for the tests if there are any.
     var rowHeight: CGFloat {
-        guard !homework.isEmpty else { return tests.isEmpty ? TomorrowClassItems.plainHeight : TomorrowClassItems.testsOnlyHeight }
+        guard usesLines else { return tests.isEmpty ? TomorrowClassItems.plainHeight : TomorrowClassItems.testsOnlyHeight }
         let lines = CGFloat(homework.count + 1 + (tests.isEmpty ? 0 : 1))
         return TomorrowClassItems.headerHeight + lines * TomorrowClassItems.lineHeight
             + (lines - 1) * TomorrowClassItems.lineGap + TomorrowClassItems.bottomPad

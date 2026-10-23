@@ -181,7 +181,8 @@ class TaskCell: UITableViewCell {
     }
 
     /// The class card's column: one line per homework (checkbox + blue block), then the + under the checkboxes,
-    /// then the tests as blocks. Every line is `lineHeight` tall with `lineGap` between, so they cannot overlap.
+    /// then the tests as blocks. A class with tests and no homework is the same column without homework lines.
+    /// Every line is `lineHeight` tall with `lineGap` between, so they cannot overlap.
     private func setHomework(_ items: [PlannerItem], tests: [PlannerItem], onTap: @escaping (PlannerItem) -> Void,
                              onToggle: @escaping (PlannerItem) -> Void) {
         homeworkStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
@@ -199,11 +200,12 @@ class TaskCell: UITableViewCell {
         for item in items {
             let box = ItemCheckButton(item: item)
             box.onToggle = onToggle
-            let badge = PlannerBadgeButton(item: item)
+            // Alone on its line, so the block runs to the card's edge and truncates only when the title does not fit.
+            let badge = PlannerBadgeButton(item: item, maxTitleWidth: nil)
             badge.onTap = onTap
             homeworkStack.addArrangedSubview(line([box, badge]))
         }
-        guard !items.isEmpty else { homeworkStack.isHidden = true; return }
+        guard !items.isEmpty || !tests.isEmpty else { homeworkStack.isHidden = true; return }
         let plus = UIButton(type: .system)
         plus.setImage(UIImage(systemName: "plus.circle", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)), for: .normal)
         plus.tintColor = UIColor(named: "inverse")
@@ -254,15 +256,16 @@ class TaskCell: UITableViewCell {
     // HQ-779: checked homework fades rather than disappearing - still there to reopen and
     // edit, just visually out of the way once it's done.
     // HQ-2194 / HQ-2632: `items` are this class's planner items for the day shown (split by
-    // TomorrowClassItems): each homework is a line of its own with its own checkbox, tests are blocks along the
-    // bottom, and a + after them adds another. With none of either, the row shows the old placeholder and
-    // checkbox, and tapping the row adds the first.
+    // TomorrowClassItems): each homework is a line of its own with its own checkbox, then the + on its own line,
+    // then the tests indented under the blocks. With none of either, or with an old-style typed note, the row
+    // shows the placeholder or note and the class checkbox, and tapping the row adds the first.
     func configure(with entry: HomeworkEntry, items: TomorrowClassItems = TomorrowClassItems(homework: [], tests: []),
                    onItemTapped: @escaping (PlannerItem) -> Void = { _ in },
                    onHomeworkToggled: @escaping (PlannerItem) -> Void = { _ in }) {
-        let hasLines = !items.homework.isEmpty
-        setHomework(items.homework, tests: items.tests, onTap: onItemTapped, onToggle: onHomeworkToggled)
-        // With homework lines the tests are part of that column; otherwise they are the row's bottom blocks.
+        let hasLines = items.usesLines
+        setHomework(hasLines ? items.homework : [], tests: hasLines ? items.tests : [],
+                    onTap: onItemTapped, onToggle: onHomeworkToggled)
+        // In the column the tests are part of it; with an old-style note they are the row's bottom blocks.
         setBadges(hasLines ? [] : items.tests, onTap: onItemTapped)
         isComplete = entry.completed
         TitleLabel.text = entry.subject
