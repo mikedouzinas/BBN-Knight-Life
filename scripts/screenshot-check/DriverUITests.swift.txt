@@ -1,0 +1,75 @@
+// LOCAL VERIFY PATCH (never commit): a command-file driver for on-screen checks.
+import XCTest
+
+class BBNDailyUITests: XCTestCase {
+    let base = "/Users/mikeveson/kl-verify/drv/"  // must match KL_DRV in drv.sh; the simulator reads the host path
+    func testDrive() throws {
+        continueAfterFailure = true
+        let app = XCUIApplication()
+        var last = ""
+        let fm = FileManager.default
+        try? fm.createDirectory(atPath: base + "shots", withIntermediateDirectories: true)
+        func respond(_ s: String) { try? s.write(toFile: base + "resp.txt", atomically: true, encoding: .utf8) }
+        func find(_ label: String) -> XCUIElement {
+            let pred = NSPredicate(format: "label == %@ OR identifier == %@", label, label)
+            return app.descendants(matching: .any).matching(pred).firstMatch
+        }
+        func findContains(_ label: String) -> XCUIElement {
+            let pred = NSPredicate(format: "label CONTAINS %@", label)
+            return app.descendants(matching: .any).matching(pred).firstMatch
+        }
+        respond("#0\nready\n")
+        while true {
+            guard let raw = try? String(contentsOfFile: base + "cmd.txt", encoding: .utf8), raw != last, raw.hasPrefix("#") else {
+                Thread.sleep(forTimeInterval: 0.3); continue
+            }
+            last = raw
+            let lines = raw.split(separator: "\n").map(String.init)
+            var out = lines[0] + "\n"
+            for line in lines.dropFirst() {
+                let parts = line.split(separator: " ", maxSplits: 1).map(String.init)
+                guard let cmd = parts.first else { continue }
+                let arg = parts.count > 1 ? parts[1] : ""
+                switch cmd {
+                case "launch":
+                    app.terminate()
+                    app.launchEnvironment = ["KL_EMU": "1"]
+                    app.launch()
+                    out += "launched\n"
+                case "terminate": app.terminate(); out += "terminated\n"
+                case "tap":
+                    let e = find(arg)
+                    if e.waitForExistence(timeout: 5) { e.tap(); out += "tapped \(arg)\n" } else { out += "NOTFOUND \(arg)\n" }
+                case "tapc":
+                    let e = findContains(arg)
+                    if e.waitForExistence(timeout: 5) { e.tap(); out += "tapped~ \(arg)\n" } else { out += "NOTFOUND~ \(arg)\n" }
+                case "tapxy":
+                    let n = arg.split(separator: " ").compactMap { Double($0) }
+                    app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: n[0], dy: n[1])).tap()
+                    out += "tapxy \(arg)\n"
+                case "type":
+                    app.typeText(arg); out += "typed\n"
+                case "swipeup": app.swipeUp(); out += "swiped up\n"
+                case "swipedown": app.swipeDown(); out += "swiped down\n"
+                case "drag":
+                    let n = arg.split(separator: " ").compactMap { Double($0) }
+                    let o = app.coordinate(withNormalizedOffset: .zero)
+                    o.withOffset(CGVector(dx: n[0], dy: n[1])).press(forDuration: 0.1, thenDragTo: o.withOffset(CGVector(dx: n[2], dy: n[3])))
+                    out += "dragged\n"
+                case "wait": Thread.sleep(forTimeInterval: Double(arg) ?? 1); out += "waited\n"
+                case "shot":
+                    let png = XCUIScreen.main.screenshot().pngRepresentation
+                    try? png.write(to: URL(fileURLWithPath: base + "shots/" + arg + ".png"))
+                    out += "shot \(arg)\n"
+                case "dump":
+                    try? app.debugDescription.write(toFile: base + "dump.txt", atomically: true, encoding: .utf8)
+                    out += "dumped\n"
+                case "quit":
+                    respond(out + "bye\n"); return
+                default: out += "unknown \(cmd)\n"
+                }
+            }
+            respond(out + "done\n")
+        }
+    }
+}
