@@ -16,7 +16,8 @@ target 'BBNDaily' do
 	pod 'Firebase/Analytics'
 	pod 'Firebase/Auth'
 	pod 'Firebase/Core'
-	pod 'Firebase/Firestore'
+	# 12.19.3 is the floor: earlier Firestore builds trust the revoked eMudhra intermediate CA (HQ-3279)
+	pod 'Firebase/Firestore', '>= 12.19.3'
 	pod 'Firebase/Storage'
 	pod 'Firebase/Messaging'
 	pod 'GoogleSignIn'
