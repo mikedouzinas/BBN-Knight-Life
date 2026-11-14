@@ -14,6 +14,17 @@
     "Both packages are clean as of 2026-09-10, which is why both are empty. That is the",
     "state to try to stay in."
   ],
-  "web": {},
+  "web": {
+    "GHSA-m9gg-hp2v-232j": {
+      "date": "2026-11-14",
+      "ticket": "HQ-2862",
+      "reason": "@grpc/grpc-js 1.9.16 is pinned (~1.9.0) by @firebase/firestore, even in its latest release 4.20.0, so no non-major or any current client release carries the fix (<=1.13.5 affected). It is only reachable through the Firestore client SDK, which web/ loads only in rules.emulator.test.ts (dev). The shipped client imports firebase/app and firebase/auth only, and the server uses firebase-admin, whose grpc-js is 1.14.7 (patched). Remove when @firebase/firestore moves its grpc-js range."
+    },
+    "GHSA-f596-whhp-79r4": {
+      "date": "2026-11-14",
+      "ticket": "HQ-2862",
+      "reason": "@grpc/grpc-js 1.9.16 is pinned (~1.9.0) by @firebase/firestore, even in its latest release 4.20.0, so no non-major or any current client release carries the fix (<=1.13.5 affected). It is only reachable through the Firestore client SDK, which web/ loads only in rules.emulator.test.ts (dev). The shipped client imports firebase/app and firebase/auth only, and the server uses firebase-admin, whose grpc-js is 1.14.7 (patched). Remove when @firebase/firestore moves its grpc-js range."
+    }
+  },
   "mcp": {}
 }
